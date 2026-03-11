@@ -33,6 +33,7 @@ from .agents import (
 from .embeddings.backend import SynapsekitEmbeddings
 from .graph import (
     END,
+    BaseCheckpointer,
     CompiledGraph,
     ConditionalEdge,
     ConditionFn,
@@ -40,8 +41,10 @@ from .graph import (
     GraphConfigError,
     GraphRuntimeError,
     GraphState,
+    InMemoryCheckpointer,
     Node,
     NodeFn,
+    SQLiteCheckpointer,
     StateGraph,
     agent_node,
     rag_node,
@@ -148,4 +151,8 @@ __all__ = [
     "ConditionFn",
     "StateGraph",
     "CompiledGraph",
+    # Checkpointers
+    "BaseCheckpointer",
+    "InMemoryCheckpointer",
+    "SQLiteCheckpointer",
 ]

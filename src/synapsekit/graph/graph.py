@@ -58,13 +58,17 @@ class StateGraph:
     # Compile
     # ------------------------------------------------------------------ #
 
-    def compile(self) -> CompiledGraph:
-        self._validate()
+    def compile(
+        self,
+        allow_cycles: bool = False,
+        max_steps: int | None = None,
+    ) -> CompiledGraph:
+        self._validate(allow_cycles=allow_cycles)
         from .compiled import CompiledGraph
 
-        return CompiledGraph(self)
+        return CompiledGraph(self, max_steps=max_steps)
 
-    def _validate(self) -> None:
+    def _validate(self, allow_cycles: bool = False) -> None:
         if not self._entry_point:
             raise GraphConfigError("Entry point not set. Call set_entry_point() before compile().")
 
@@ -88,8 +92,9 @@ class StateGraph:
                             f"{dst!r} is not a registered node."
                         )
 
-        # Cycle detection on static edges only
-        self._check_cycles()
+        # Cycle detection on static edges only (skip if cycles are allowed)
+        if not allow_cycles:
+            self._check_cycles()
 
     def _check_cycles(self) -> None:
         """DFS cycle detection using only static (non-conditional) edges."""

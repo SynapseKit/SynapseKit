@@ -1,3 +1,4 @@
+from .checkpointers import BaseCheckpointer, InMemoryCheckpointer, SQLiteCheckpointer
 from .compiled import CompiledGraph
 from .edge import ConditionalEdge, ConditionFn, Edge
 from .errors import GraphConfigError, GraphRuntimeError
@@ -7,6 +8,7 @@ from .state import END, GraphState
 
 __all__ = [
     "END",
+    "BaseCheckpointer",
     "CompiledGraph",
     "ConditionFn",
     "ConditionalEdge",
@@ -14,8 +16,10 @@ __all__ = [
     "GraphConfigError",
     "GraphRuntimeError",
     "GraphState",
+    "InMemoryCheckpointer",
     "Node",
     "NodeFn",
+    "SQLiteCheckpointer",
     "StateGraph",
     "agent_node",
     "rag_node",
