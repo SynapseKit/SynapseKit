@@ -1,9 +1,9 @@
-# NimbleAI
+lets # SynapseKit
 
 Lightweight, async-first RAG framework. Streaming-native, minimal dependencies.
 
 ```python
-from nimbleai import RAG
+from synapsekit import RAG
 
 rag = RAG(model="gpt-4o-mini", api_key="sk-...")
 rag.add("Your document text here")
@@ -22,9 +22,9 @@ answer = rag.ask_sync("What is the main topic?")
 ## Install
 
 ```bash
-pip install nimbleai[openai]      # OpenAI
-pip install nimbleai[anthropic]   # Anthropic
-pip install nimbleai[all]         # Everything
+pip install synapsekit[openai]      # OpenAI
+pip install synapsekit[anthropic]   # Anthropic
+[ai-letters-05-substack.html](../../engineersofai/engineersofai-ui/blog-drafts/ai-letters-05-substack.html)pip install synapsekit[all]         # Everything
 ```
 
 ## vs LangChain / LlamaIndex
