@@ -92,7 +92,9 @@ class GeminiLLM(BaseLLM):
                     {
                         "id": f"call_{uuid.uuid4().hex[:24]}",
                         "name": part.function_call.name,
-                        "arguments": dict(part.function_call.args) if part.function_call.args else {},
+                        "arguments": dict(part.function_call.args)
+                        if part.function_call.args
+                        else {},
                     }
                 )
             elif hasattr(part, "text") and part.text:

@@ -198,9 +198,7 @@ class _FailingLLM(BaseLLM):
 
 class TestBaseLLMRetry:
     async def test_retry_succeeds_after_failures(self):
-        config = LLMConfig(
-            model="m", api_key="k", provider="test", max_retries=3, retry_delay=0.01
-        )
+        config = LLMConfig(model="m", api_key="k", provider="test", max_retries=3, retry_delay=0.01)
         llm = _FailingLLM(config, fail_count=2)
         result = await llm.generate("test")
         assert result == "success"
