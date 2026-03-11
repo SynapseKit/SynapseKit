@@ -123,11 +123,24 @@ Output parsers (JSON, Pydantic, List), prompt templates (standard, chat, few-sho
 
 ## Install
 
+**pip**
 ```bash
 pip install synapsekit[openai]       # OpenAI
 pip install synapsekit[anthropic]    # Anthropic
 pip install synapsekit[ollama]       # Ollama (local)
 pip install synapsekit[all]          # Everything
+```
+
+**uv**
+```bash
+uv add synapsekit[openai]
+uv add synapsekit[all]
+```
+
+**Poetry**
+```bash
+poetry add synapsekit[openai]
+poetry add "synapsekit[all]"
 ```
 
 Full installation options → [docs](https://synapsekit.github.io/synapsekit-docs/docs/getting-started/installation)
