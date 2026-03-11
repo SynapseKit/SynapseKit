@@ -55,7 +55,23 @@ from .agents import (
     WebSearchTool,
 )
 
-__version__ = "0.3.0"
+from .graph import (
+    END,
+    CompiledGraph,
+    ConditionalEdge,
+    ConditionFn,
+    Edge,
+    GraphConfigError,
+    GraphRuntimeError,
+    GraphState,
+    Node,
+    NodeFn,
+    StateGraph,
+    agent_node,
+    rag_node,
+)
+
+__version__ = "0.4.0"
 __all__ = [
     # Facade
     "RAG",
@@ -109,6 +125,20 @@ __all__ = [
     "PythonREPLTool",
     "SQLQueryTool",
     "WebSearchTool",
+    # Graph workflows
+    "END",
+    "GraphState",
+    "GraphConfigError",
+    "GraphRuntimeError",
+    "Node",
+    "NodeFn",
+    "agent_node",
+    "rag_node",
+    "Edge",
+    "ConditionalEdge",
+    "ConditionFn",
+    "StateGraph",
+    "CompiledGraph",
 ]
 
 

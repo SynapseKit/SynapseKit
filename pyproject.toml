@@ -1,16 +1,15 @@
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.poetry]
+[project]
 name = "synapsekit"
-version = "0.3.0"
+version = "0.4.0"
 description = "Lightweight, async-first RAG framework. Streaming-native, minimal dependencies."
-authors = ["Amit Nautiyal <de.amit.nautiyal@gmail.com>"]
-license = "MIT"
+authors = [{ name = "Amit Nautiyal", email = "de.amit.nautiyal@gmail.com" }]
+license = { text = "MIT" }
 readme = "README.md"
-homepage = "https://github.com/SynapseKit/SynapseKit"
-repository = "https://github.com/SynapseKit/SynapseKit"
+requires-python = ">=3.14"
 keywords = ["rag", "llm", "ai", "async", "streaming", "retrieval"]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -20,133 +19,58 @@ classifiers = [
     "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
-packages = [{include = "synapsekit"}]
+dependencies = [
+    "numpy>=1.26",
+    "rank-bm25>=0.2.2",
+]
 
-[tool.poetry.dependencies]
-python = ">=3.14,<4.0"
-numpy = ">=1.26"
-rank-bm25 = ">=0.2.2"
+[project.urls]
+Homepage = "https://github.com/SynapseKit/SynapseKit"
+Repository = "https://github.com/SynapseKit/SynapseKit"
 
-[tool.poetry.extras]
-openai = ["openai"]
-anthropic = ["anthropic"]
-semantic = ["sentence-transformers"]
-pdf = ["pypdf"]
-html = ["beautifulsoup4", "lxml"]
-web = ["httpx", "beautifulsoup4"]
-chroma = ["chromadb"]
-faiss = ["faiss-cpu"]
-qdrant = ["qdrant-client"]
-pinecone = ["pinecone"]
-ollama = ["ollama"]
-cohere = ["cohere"]
-mistral = ["mistralai"]
-gemini = ["google-generativeai"]
-bedrock = ["boto3"]
-search = ["duckduckgo-search"]
-all = ["openai", "anthropic", "sentence-transformers", "pypdf", "beautifulsoup4", "lxml", "httpx", "chromadb", "ollama", "cohere", "mistralai", "google-generativeai", "boto3", "duckduckgo-search"]
+[project.optional-dependencies]
+openai = ["openai>=1.0"]
+anthropic = ["anthropic>=0.25"]
+semantic = ["sentence-transformers>=2.7"]
+pdf = ["pypdf>=4.0"]
+html = ["beautifulsoup4>=4.12", "lxml>=5.0"]
+web = ["httpx>=0.27", "beautifulsoup4>=4.12"]
+chroma = ["chromadb>=0.5"]
+faiss = ["faiss-cpu>=1.7"]
+qdrant = ["qdrant-client>=1.9"]
+pinecone = ["pinecone>=3.0"]
+ollama = ["ollama>=0.2"]
+cohere = ["cohere>=5.0"]
+mistral = ["mistralai>=1.0"]
+gemini = ["google-generativeai>=0.7"]
+bedrock = ["boto3>=1.34"]
+search = ["duckduckgo-search>=6.0"]
+all = [
+    "openai>=1.0",
+    "anthropic>=0.25",
+    "sentence-transformers>=2.7",
+    "pypdf>=4.0",
+    "beautifulsoup4>=4.12",
+    "lxml>=5.0",
+    "httpx>=0.27",
+    "chromadb>=0.5",
+    "ollama>=0.2",
+    "cohere>=5.0",
+    "mistralai>=1.0",
+    "google-generativeai>=0.7",
+    "boto3>=1.34",
+    "duckduckgo-search>=6.0",
+]
 
-[tool.poetry.group.openai]
-optional = true
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "hatchling",
+]
 
-[tool.poetry.group.openai.dependencies]
-openai = ">=1.0"
-
-[tool.poetry.group.anthropic]
-optional = true
-
-[tool.poetry.group.anthropic.dependencies]
-anthropic = ">=0.25"
-
-[tool.poetry.group.semantic]
-optional = true
-
-[tool.poetry.group.semantic.dependencies]
-sentence-transformers = ">=2.7"
-
-[tool.poetry.group.pdf]
-optional = true
-
-[tool.poetry.group.pdf.dependencies]
-pypdf = ">=4.0"
-
-[tool.poetry.group.html]
-optional = true
-
-[tool.poetry.group.html.dependencies]
-beautifulsoup4 = ">=4.12"
-lxml = ">=5.0"
-
-[tool.poetry.group.web]
-optional = true
-
-[tool.poetry.group.web.dependencies]
-httpx = ">=0.27"
-beautifulsoup4 = ">=4.12"
-
-[tool.poetry.group.chroma]
-optional = true
-
-[tool.poetry.group.chroma.dependencies]
-chromadb = ">=0.5"
-
-[tool.poetry.group.faiss]
-optional = true
-
-[tool.poetry.group.faiss.dependencies]
-faiss-cpu = ">=1.7"
-
-[tool.poetry.group.qdrant]
-optional = true
-
-[tool.poetry.group.qdrant.dependencies]
-qdrant-client = ">=1.9"
-
-[tool.poetry.group.pinecone]
-optional = true
-
-[tool.poetry.group.pinecone.dependencies]
-pinecone = ">=3.0"
-
-[tool.poetry.group.ollama]
-optional = true
-
-[tool.poetry.group.ollama.dependencies]
-ollama = ">=0.2"
-
-[tool.poetry.group.cohere]
-optional = true
-
-[tool.poetry.group.cohere.dependencies]
-cohere = ">=5.0"
-
-[tool.poetry.group.mistral]
-optional = true
-
-[tool.poetry.group.mistral.dependencies]
-mistralai = ">=1.0"
-
-[tool.poetry.group.gemini]
-optional = true
-
-[tool.poetry.group.gemini.dependencies]
-google-generativeai = ">=0.7"
-
-[tool.poetry.group.bedrock]
-optional = true
-
-[tool.poetry.group.bedrock.dependencies]
-boto3 = ">=1.34"
-
-[tool.poetry.group.search]
-optional = true
-
-[tool.poetry.group.search.dependencies]
-duckduckgo-search = ">=6.0"
-
-[tool.poetry.group.dev.dependencies]
-pytest = ">=8.0"
-pytest-asyncio = ">=0.23"
+[tool.hatch.build.targets.wheel]
+packages = ["synapsekit"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
