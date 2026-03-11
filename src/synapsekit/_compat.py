@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Coroutine, TypeVar
+from collections.abc import Coroutine
+from typing import Any, TypeVar
 
 T = TypeVar("T")
 
@@ -20,6 +21,7 @@ def run_sync(coro: Coroutine[Any, Any, T]) -> T:
         # Running inside an existing loop (e.g., Jupyter).
         # Use a new thread with its own loop to avoid deadlock.
         import concurrent.futures
+
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
             future = pool.submit(asyncio.run, coro)
             return future.result()

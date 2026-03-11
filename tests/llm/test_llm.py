@@ -1,17 +1,19 @@
 """Tests for LLM layer — OpenAI and Anthropic with mocked clients."""
+
 from __future__ import annotations
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
+from synapsekit.llm.anthropic import AnthropicLLM
 from synapsekit.llm.base import LLMConfig, _messages_to_prompt
 from synapsekit.llm.openai import OpenAILLM
-from synapsekit.llm.anthropic import AnthropicLLM
-
 
 # ------------------------------------------------------------------ #
 # Helpers
 # ------------------------------------------------------------------ #
+
 
 def make_openai_config(model="gpt-4o-mini"):
     return LLMConfig(model=model, api_key="test-key", provider="openai")
@@ -24,6 +26,7 @@ def make_anthropic_config(model="claude-haiku-4-5-20251001"):
 # ------------------------------------------------------------------ #
 # BaseLLM
 # ------------------------------------------------------------------ #
+
 
 class TestBaseLLM:
     def test_messages_to_prompt_formats_correctly(self):
@@ -43,6 +46,7 @@ class TestBaseLLM:
 # ------------------------------------------------------------------ #
 # OpenAILLM
 # ------------------------------------------------------------------ #
+
 
 class TestOpenAILLM:
     @pytest.fixture
@@ -106,6 +110,7 @@ class TestOpenAILLM:
 # ------------------------------------------------------------------ #
 # AnthropicLLM
 # ------------------------------------------------------------------ #
+
 
 class TestAnthropicLLM:
     @pytest.fixture

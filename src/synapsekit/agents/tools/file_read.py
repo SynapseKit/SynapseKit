@@ -9,10 +9,7 @@ class FileReadTool(BaseTool):
     """Read the contents of a local file."""
 
     name = "file_read"
-    description = (
-        "Read the contents of a file from disk. "
-        "Input: an absolute or relative file path."
-    )
+    description = "Read the contents of a file from disk. Input: an absolute or relative file path."
     parameters = {
         "type": "object",
         "properties": {

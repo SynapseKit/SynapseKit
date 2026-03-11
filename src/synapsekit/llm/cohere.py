@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import AsyncGenerator, List
+from collections.abc import AsyncGenerator
 
-from .base import BaseLLM, LLMConfig, _messages_to_prompt
+from .base import BaseLLM, LLMConfig
 
 
 class CohereLLM(BaseLLM):
@@ -17,11 +17,11 @@ class CohereLLM(BaseLLM):
             try:
                 import cohere
             except ImportError:
-                raise ImportError("cohere required: pip install synapsekit[cohere]")
+                raise ImportError("cohere required: pip install synapsekit[cohere]") from None
             self._client = cohere.AsyncClientV2(api_key=self.config.api_key)
         return self._client
 
-    async def stream(self, prompt: str, **kw) -> AsyncGenerator[str, None]:
+    async def stream(self, prompt: str, **kw) -> AsyncGenerator[str]:
         messages = [
             {"role": "system", "content": self.config.system_prompt},
             {"role": "user", "content": prompt},
@@ -29,9 +29,7 @@ class CohereLLM(BaseLLM):
         async for token in self.stream_with_messages(messages, **kw):
             yield token
 
-    async def stream_with_messages(
-        self, messages: List[dict], **kw
-    ) -> AsyncGenerator[str, None]:
+    async def stream_with_messages(self, messages: list[dict], **kw) -> AsyncGenerator[str]:
         client = self._get_client()
         stream = client.chat_stream(
             model=self.config.model,

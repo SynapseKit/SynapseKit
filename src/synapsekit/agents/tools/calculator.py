@@ -7,15 +7,34 @@ from ..base import BaseTool, ToolResult
 
 _SAFE_GLOBALS = {
     "__builtins__": {},
-    "abs": abs, "round": round, "min": min, "max": max, "sum": sum,
-    "pow": pow, "divmod": divmod, "int": int, "float": float,
+    "abs": abs,
+    "round": round,
+    "min": min,
+    "max": max,
+    "sum": sum,
+    "pow": pow,
+    "divmod": divmod,
+    "int": int,
+    "float": float,
     # math module
-    "sqrt": math.sqrt, "ceil": math.ceil, "floor": math.floor,
-    "log": math.log, "log2": math.log2, "log10": math.log10,
-    "sin": math.sin, "cos": math.cos, "tan": math.tan,
-    "asin": math.asin, "acos": math.acos, "atan": math.atan,
-    "exp": math.exp, "pi": math.pi, "e": math.e, "tau": math.tau,
-    "factorial": math.factorial, "gcd": math.gcd,
+    "sqrt": math.sqrt,
+    "ceil": math.ceil,
+    "floor": math.floor,
+    "log": math.log,
+    "log2": math.log2,
+    "log10": math.log10,
+    "sin": math.sin,
+    "cos": math.cos,
+    "tan": math.tan,
+    "asin": math.asin,
+    "acos": math.acos,
+    "atan": math.atan,
+    "exp": math.exp,
+    "pi": math.pi,
+    "e": math.e,
+    "tau": math.tau,
+    "factorial": math.factorial,
+    "gcd": math.gcd,
     "inf": math.inf,
 }
 
@@ -45,7 +64,7 @@ class CalculatorTool(BaseTool):
         if not expr:
             return ToolResult(output="", error="No expression provided.")
         try:
-            result = eval(expr, _SAFE_GLOBALS, {})  # noqa: S307
+            result = eval(expr, _SAFE_GLOBALS, {})
             return ToolResult(output=str(result))
         except ZeroDivisionError:
             return ToolResult(output="", error="Division by zero.")

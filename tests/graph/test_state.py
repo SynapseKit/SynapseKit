@@ -1,4 +1,5 @@
 """Tests for graph state module — END sentinel and GraphState."""
+
 from synapsekit.graph.state import END, GraphState
 
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, AsyncGenerator, Dict, List
+from collections.abc import AsyncGenerator
+from typing import Any
 
 from .base import BaseLLM, LLMConfig
 
@@ -19,11 +20,11 @@ class AnthropicLLM(BaseLLM):
             except ImportError:
                 raise ImportError(
                     "anthropic package required: pip install synapsekit[anthropic]"
-                )
+                ) from None
             self._client = anthropic.AsyncAnthropic(api_key=self.config.api_key)
         return self._client
 
-    async def stream(self, prompt: str, **kw) -> AsyncGenerator[str, None]:
+    async def stream(self, prompt: str, **kw) -> AsyncGenerator[str]:
         client = self._get_client()
         async with client.messages.stream(
             model=self.config.model,
@@ -39,9 +40,7 @@ class AnthropicLLM(BaseLLM):
             self._input_tokens += message.usage.input_tokens or 0
             self._output_tokens += message.usage.output_tokens or 0
 
-    async def stream_with_messages(
-        self, messages: List[dict], **kw
-    ) -> AsyncGenerator[str, None]:
+    async def stream_with_messages(self, messages: list[dict], **kw) -> AsyncGenerator[str]:
         client = self._get_client()
         # Filter out system messages — Anthropic takes system separately
         system = self.config.system_prompt
@@ -67,9 +66,9 @@ class AnthropicLLM(BaseLLM):
 
     async def call_with_tools(
         self,
-        messages: List[dict],
-        tools: List[dict],
-    ) -> Dict[str, Any]:
+        messages: list[dict],
+        tools: list[dict],
+    ) -> dict[str, Any]:
         """Native tool use. Returns {"content": str|None, "tool_calls": list|None}."""
         client = self._get_client()
         system = self.config.system_prompt
@@ -79,16 +78,18 @@ class AnthropicLLM(BaseLLM):
                 system = m["content"]
             elif m.get("role") == "tool":
                 # Convert OpenAI tool-result format to Anthropic
-                user_messages.append({
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "tool_result",
-                            "tool_use_id": m["tool_call_id"],
-                            "content": m["content"],
-                        }
-                    ],
-                })
+                user_messages.append(
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "tool_result",
+                                "tool_use_id": m["tool_call_id"],
+                                "content": m["content"],
+                            }
+                        ],
+                    }
+                )
             else:
                 user_messages.append(m)
 
@@ -117,8 +118,7 @@ class AnthropicLLM(BaseLLM):
             return {
                 "content": None,
                 "tool_calls": [
-                    {"id": tu.id, "name": tu.name, "arguments": tu.input}
-                    for tu in tool_uses
+                    {"id": tu.id, "name": tu.name, "arguments": tu.input} for tu in tool_uses
                 ],
             }
         text_blocks = [b for b in response.content if b.type == "text"]

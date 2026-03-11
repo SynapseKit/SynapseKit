@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Any
-
 from .edge import ConditionalEdge, ConditionFn, Edge
 from .errors import GraphConfigError
 from .node import Node, NodeFn
@@ -31,11 +29,11 @@ class StateGraph:
     # Builder API
     # ------------------------------------------------------------------ #
 
-    def add_node(self, name: str, fn: NodeFn) -> "StateGraph":
+    def add_node(self, name: str, fn: NodeFn) -> StateGraph:
         self._nodes[name] = Node(name=name, fn=fn)
         return self
 
-    def add_edge(self, src: str, dst: str) -> "StateGraph":
+    def add_edge(self, src: str, dst: str) -> StateGraph:
         self._edges.append(Edge(src=src, dst=dst))
         return self
 
@@ -44,15 +42,15 @@ class StateGraph:
         src: str,
         condition_fn: ConditionFn,
         mapping: dict[str, str],
-    ) -> "StateGraph":
+    ) -> StateGraph:
         self._edges.append(ConditionalEdge(src=src, condition_fn=condition_fn, mapping=mapping))
         return self
 
-    def set_entry_point(self, name: str) -> "StateGraph":
+    def set_entry_point(self, name: str) -> StateGraph:
         self._entry_point = name
         return self
 
-    def set_finish_point(self, name: str) -> "StateGraph":
+    def set_finish_point(self, name: str) -> StateGraph:
         """Adds Edge(name, END) — shorthand for the final node."""
         return self.add_edge(name, END)
 
@@ -60,9 +58,10 @@ class StateGraph:
     # Compile
     # ------------------------------------------------------------------ #
 
-    def compile(self) -> "CompiledGraph":
+    def compile(self) -> CompiledGraph:
         self._validate()
         from .compiled import CompiledGraph
+
         return CompiledGraph(self)
 
     def _validate(self) -> None:
@@ -70,16 +69,12 @@ class StateGraph:
             raise GraphConfigError("Entry point not set. Call set_entry_point() before compile().")
 
         if self._entry_point not in self._nodes:
-            raise GraphConfigError(
-                f"Entry point {self._entry_point!r} is not a registered node."
-            )
+            raise GraphConfigError(f"Entry point {self._entry_point!r} is not a registered node.")
 
         # Validate that all edge endpoints exist (except END)
         for edge in self._edges:
             if edge.src not in self._nodes:
-                raise GraphConfigError(
-                    f"Edge source {edge.src!r} is not a registered node."
-                )
+                raise GraphConfigError(f"Edge source {edge.src!r} is not a registered node.")
             if isinstance(edge, Edge):
                 if edge.dst != END and edge.dst not in self._nodes:
                     raise GraphConfigError(
@@ -113,9 +108,7 @@ class StateGraph:
                 if nb not in visited:
                     dfs(nb)
                 elif nb in rec_stack:
-                    raise GraphConfigError(
-                        f"Cycle detected in static edges involving node {nb!r}."
-                    )
+                    raise GraphConfigError(f"Cycle detected in static edges involving node {nb!r}.")
             rec_stack.discard(node)
 
         for node in self._nodes:
@@ -124,4 +117,4 @@ class StateGraph:
 
 
 # Avoid circular import — import here so type checkers see it
-from .compiled import CompiledGraph  # noqa: E402, F401
+from .compiled import CompiledGraph  # noqa: E402

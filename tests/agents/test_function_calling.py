@@ -1,17 +1,18 @@
 """Tests for FunctionCallingAgent."""
+
 from __future__ import annotations
 
-import json
-import pytest
 from unittest.mock import AsyncMock, MagicMock
 
-from synapsekit.agents.function_calling import FunctionCallingAgent
-from synapsekit.agents.base import BaseTool, ToolResult
+import pytest
 
+from synapsekit.agents.base import BaseTool, ToolResult
+from synapsekit.agents.function_calling import FunctionCallingAgent
 
 # ------------------------------------------------------------------ #
 # Helpers
 # ------------------------------------------------------------------ #
+
 
 class AddTool(BaseTool):
     name = "add"
@@ -45,6 +46,7 @@ def make_no_fc_llm():
 # ------------------------------------------------------------------ #
 # FunctionCallingAgent tests
 # ------------------------------------------------------------------ #
+
 
 class TestFunctionCallingAgent:
     @pytest.mark.asyncio

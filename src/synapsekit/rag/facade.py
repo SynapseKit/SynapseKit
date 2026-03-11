@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import AsyncGenerator, List, Optional
+from collections.abc import AsyncGenerator
 
 from .._compat import run_sync
 from ..embeddings.backend import SynapsekitEmbeddings
@@ -18,7 +18,7 @@ from .pipeline import RAGConfig, RAGPipeline
 def _make_llm(
     model: str,
     api_key: str,
-    provider: Optional[str],
+    provider: str | None,
     system_prompt: str,
     temperature: float,
     max_tokens: int,
@@ -47,24 +47,31 @@ def _make_llm(
 
     if provider == "openai":
         from ..llm.openai import OpenAILLM
+
         return OpenAILLM(config)
     elif provider == "anthropic":
         from ..llm.anthropic import AnthropicLLM
+
         return AnthropicLLM(config)
     elif provider == "ollama":
         from ..llm.ollama import OllamaLLM
+
         return OllamaLLM(config)
     elif provider == "cohere":
         from ..llm.cohere import CohereLLM
+
         return CohereLLM(config)
     elif provider == "mistral":
         from ..llm.mistral import MistralLLM
+
         return MistralLLM(config)
     elif provider == "gemini":
         from ..llm.gemini import GeminiLLM
+
         return GeminiLLM(config)
     elif provider == "bedrock":
         from ..llm.bedrock import BedrockLLM
+
         return BedrockLLM(config)
     else:
         raise ValueError(
@@ -88,7 +95,7 @@ class RAG:
         self,
         model: str,
         api_key: str,
-        provider: Optional[str] = None,
+        provider: str | None = None,
         embedding_model: str = "all-MiniLM-L6-v2",
         rerank: bool = False,
         memory_window: int = 10,
@@ -130,11 +137,11 @@ class RAG:
         """Async: chunk and embed text into the vectorstore."""
         await self._pipeline.add(text, metadata)
 
-    def add_documents(self, docs: List[Document]) -> None:
+    def add_documents(self, docs: list[Document]) -> None:
         """Sync: chunk and embed a list of Documents into the vectorstore."""
         run_sync(self._pipeline.add_documents(docs))
 
-    async def add_documents_async(self, docs: List[Document]) -> None:
+    async def add_documents_async(self, docs: list[Document]) -> None:
         """Async: chunk and embed a list of Documents into the vectorstore."""
         await self._pipeline.add_documents(docs)
 
@@ -142,7 +149,7 @@ class RAG:
     # Querying
     # ------------------------------------------------------------------ #
 
-    async def stream(self, query: str, **kw) -> AsyncGenerator[str, None]:
+    async def stream(self, query: str, **kw) -> AsyncGenerator[str]:
         """Async generator that yields tokens as they arrive from the LLM."""
         async for token in self._pipeline.stream(query, **kw):
             yield token

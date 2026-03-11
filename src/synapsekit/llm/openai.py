@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import json
-from typing import Any, AsyncGenerator, Dict, List
+from collections.abc import AsyncGenerator
+from typing import Any
 
 from .base import BaseLLM, LLMConfig
 
@@ -20,11 +21,11 @@ class OpenAILLM(BaseLLM):
             except ImportError:
                 raise ImportError(
                     "openai package required: pip install synapsekit[openai]"
-                )
+                ) from None
             self._client = AsyncOpenAI(api_key=self.config.api_key)
         return self._client
 
-    async def stream(self, prompt: str, **kw) -> AsyncGenerator[str, None]:
+    async def stream(self, prompt: str, **kw) -> AsyncGenerator[str]:
         client = self._get_client()
         messages = [
             {"role": "system", "content": self.config.system_prompt},
@@ -45,9 +46,7 @@ class OpenAILLM(BaseLLM):
             if chunk.choices and chunk.choices[0].delta.content:
                 yield chunk.choices[0].delta.content
 
-    async def stream_with_messages(
-        self, messages: List[dict], **kw
-    ) -> AsyncGenerator[str, None]:
+    async def stream_with_messages(self, messages: list[dict], **kw) -> AsyncGenerator[str]:
         client = self._get_client()
         stream = await client.chat.completions.create(
             model=self.config.model,
@@ -66,9 +65,9 @@ class OpenAILLM(BaseLLM):
 
     async def call_with_tools(
         self,
-        messages: List[dict],
-        tools: List[dict],
-    ) -> Dict[str, Any]:
+        messages: list[dict],
+        tools: list[dict],
+    ) -> dict[str, Any]:
         """Native function-calling. Returns {"content": str|None, "tool_calls": list|None}."""
         client = self._get_client()
         response = await client.chat.completions.create(

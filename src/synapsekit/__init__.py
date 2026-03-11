@@ -14,8 +14,38 @@ SynapseKit — lightweight, async-first RAG framework.
 
 from __future__ import annotations
 
-from ._compat import run_sync
+from .agents import (
+    AgentConfig,
+    AgentExecutor,
+    AgentMemory,
+    AgentStep,
+    BaseTool,
+    CalculatorTool,
+    FileReadTool,
+    FunctionCallingAgent,
+    PythonREPLTool,
+    ReActAgent,
+    SQLQueryTool,
+    ToolRegistry,
+    ToolResult,
+    WebSearchTool,
+)
 from .embeddings.backend import SynapsekitEmbeddings
+from .graph import (
+    END,
+    CompiledGraph,
+    ConditionalEdge,
+    ConditionFn,
+    Edge,
+    GraphConfigError,
+    GraphRuntimeError,
+    GraphState,
+    Node,
+    NodeFn,
+    StateGraph,
+    agent_node,
+    rag_node,
+)
 from .llm.base import BaseLLM, LLMConfig
 from .loaders.base import Document
 from .loaders.csv import CSVLoader
@@ -36,39 +66,6 @@ from .rag.pipeline import RAGConfig, RAGPipeline
 from .retrieval.base import VectorStore
 from .retrieval.retriever import Retriever
 from .retrieval.vectorstore import InMemoryVectorStore
-
-from .agents import (
-    AgentConfig,
-    AgentExecutor,
-    AgentMemory,
-    AgentStep,
-    BaseTool,
-    CalculatorTool,
-    FileReadTool,
-    FunctionCallingAgent,
-    PythonREPLTool,
-    ReActAgent,
-    SQLQueryTool,
-    ToolRegistry,
-    ToolResult,
-    WebSearchTool,
-)
-
-from .graph import (
-    END,
-    CompiledGraph,
-    ConditionalEdge,
-    ConditionFn,
-    Edge,
-    GraphConfigError,
-    GraphRuntimeError,
-    GraphState,
-    Node,
-    NodeFn,
-    StateGraph,
-    agent_node,
-    rag_node,
-)
 
 __version__ = "0.4.0"
 __all__ = [

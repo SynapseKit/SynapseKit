@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import List, Optional
-
 from .base import VectorStore
 
 
@@ -21,24 +19,24 @@ class Retriever:
 
     async def add(
         self,
-        texts: List[str],
-        metadata: Optional[List[dict]] = None,
+        texts: list[str],
+        metadata: list[dict] | None = None,
     ) -> None:
         """Add texts to the underlying vector store."""
         await self._store.add(texts, metadata)
 
-    def _bm25_rerank(self, query: str, texts: List[str], top_k: int) -> List[str]:
+    def _bm25_rerank(self, query: str, texts: list[str], top_k: int) -> list[str]:
         try:
             from rank_bm25 import BM25Okapi
         except ImportError:
-            raise ImportError("rank-bm25 required: pip install rank-bm25")
+            raise ImportError("rank-bm25 required: pip install rank-bm25") from None
         tokenized = [t.lower().split() for t in texts]
         bm25 = BM25Okapi(tokenized)
         scores = bm25.get_scores(query.lower().split())
         ranked_indices = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)
         return [texts[i] for i in ranked_indices[:top_k]]
 
-    async def retrieve(self, query: str, top_k: int = 5) -> List[str]:
+    async def retrieve(self, query: str, top_k: int = 5) -> list[str]:
         """Return top_k relevant text chunks for query."""
         fetch_k = top_k * 3 if self._rerank else top_k
         results = await self._store.search(query, top_k=fetch_k)
@@ -53,9 +51,7 @@ class Retriever:
 
         return texts[:top_k]
 
-    async def retrieve_with_scores(
-        self, query: str, top_k: int = 5
-    ) -> List[dict]:
+    async def retrieve_with_scores(self, query: str, top_k: int = 5) -> list[dict]:
         """Return top_k results with scores and metadata."""
         fetch_k = top_k * 3 if self._rerank else top_k
         results = await self._store.search(query, top_k=fetch_k)

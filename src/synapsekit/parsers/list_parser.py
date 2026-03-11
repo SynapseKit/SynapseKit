@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 import re
-from typing import List
 
 
 class ListParser:
     """Parse bullet or numbered list from LLM output into a Python list."""
 
-    def parse(self, text: str) -> List[str]:
+    def parse(self, text: str) -> list[str]:
         lines = text.strip().splitlines()
         result = []
         for line in lines:

@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import asyncio
 import inspect
-from typing import TYPE_CHECKING, Any, AsyncGenerator
+from collections.abc import AsyncGenerator
+from typing import TYPE_CHECKING, Any
 
 from .edge import ConditionalEdge, Edge
 from .errors import GraphRuntimeError
@@ -21,7 +22,7 @@ class CompiledGraph:
     Executes nodes wave by wave; parallel nodes in the same wave run concurrently.
     """
 
-    def __init__(self, graph: "StateGraph") -> None:
+    def __init__(self, graph: StateGraph) -> None:
         self._graph = graph
 
     # ------------------------------------------------------------------ #
@@ -35,7 +36,7 @@ class CompiledGraph:
             pass
         return state
 
-    async def stream(self, state: dict[str, Any]) -> AsyncGenerator[dict[str, Any], None]:
+    async def stream(self, state: dict[str, Any]) -> AsyncGenerator[dict[str, Any]]:
         """
         Yield ``{"node": name, "state": snapshot}`` for each completed node.
         The caller receives incremental state updates as nodes finish.
@@ -47,6 +48,7 @@ class CompiledGraph:
     def run_sync(self, state: dict[str, Any]) -> dict[str, Any]:
         """Synchronous wrapper — works inside and outside a running event loop."""
         from .._compat import run_sync
+
         return run_sync(self.run(state))
 
     def get_mermaid(self) -> str:
@@ -56,9 +58,7 @@ class CompiledGraph:
     # Execution engine
     # ------------------------------------------------------------------ #
 
-    async def _execute(
-        self, state: dict[str, Any]
-    ) -> AsyncGenerator[dict[str, Any], None]:
+    async def _execute(self, state: dict[str, Any]) -> AsyncGenerator[dict[str, Any]]:
         graph = self._graph
         current_wave: list[str] = [graph._entry_point]  # type: ignore[list-item]
         steps = 0
@@ -72,12 +72,10 @@ class CompiledGraph:
             steps += 1
 
             # Run all nodes in this wave concurrently
-            results = await asyncio.gather(
-                *[self._call_node(name, state) for name in current_wave]
-            )
+            results = await asyncio.gather(*[self._call_node(name, state) for name in current_wave])
 
             # Merge partial results into state and yield events
-            for name, partial in zip(current_wave, results):
+            for name, partial in zip(current_wave, results, strict=False):
                 state.update(partial)
                 yield {"node": name, "state": dict(state)}
 
@@ -97,9 +95,7 @@ class CompiledGraph:
             )
         return result
 
-    async def _next_wave(
-        self, completed: list[str], state: dict[str, Any]
-    ) -> list[str]:
+    async def _next_wave(self, completed: list[str], state: dict[str, Any]) -> list[str]:
         """Determine which nodes to run next based on completed nodes and state."""
         next_nodes: list[str] = []
         seen: set[str] = set()

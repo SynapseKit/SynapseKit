@@ -1,12 +1,14 @@
 """Tests for RAGPipeline — end-to-end with mocks."""
+
 from __future__ import annotations
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
-from synapsekit.rag.pipeline import RAGConfig, RAGPipeline
+import pytest
+
 from synapsekit.memory.conversation import ConversationMemory
 from synapsekit.observability.tracer import TokenTracer
+from synapsekit.rag.pipeline import RAGConfig, RAGPipeline
 
 
 def make_mock_llm(tokens=("Hello", " world")):

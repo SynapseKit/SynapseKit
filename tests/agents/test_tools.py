@@ -1,22 +1,22 @@
 """Tests for built-in agent tools."""
+
 from __future__ import annotations
 
-import json
-import os
-import pytest
 from unittest.mock import MagicMock, patch
 
-from synapsekit.agents.base import BaseTool, ToolResult
-from synapsekit.agents.tools.calculator import CalculatorTool
-from synapsekit.agents.tools.python_repl import PythonREPLTool
-from synapsekit.agents.tools.file_read import FileReadTool
-from synapsekit.agents.tools.web_search import WebSearchTool
-from synapsekit.agents.tools.sql_query import SQLQueryTool
+import pytest
 
+from synapsekit.agents.base import ToolResult
+from synapsekit.agents.tools.calculator import CalculatorTool
+from synapsekit.agents.tools.file_read import FileReadTool
+from synapsekit.agents.tools.python_repl import PythonREPLTool
+from synapsekit.agents.tools.sql_query import SQLQueryTool
+from synapsekit.agents.tools.web_search import WebSearchTool
 
 # ------------------------------------------------------------------ #
 # ToolResult
 # ------------------------------------------------------------------ #
+
 
 class TestToolResult:
     def test_output_only(self):
@@ -36,6 +36,7 @@ class TestToolResult:
 # BaseTool schema
 # ------------------------------------------------------------------ #
 
+
 class TestBaseToolSchema:
     def test_schema_format(self):
         calc = CalculatorTool()
@@ -54,6 +55,7 @@ class TestBaseToolSchema:
 # ------------------------------------------------------------------ #
 # CalculatorTool
 # ------------------------------------------------------------------ #
+
 
 class TestCalculatorTool:
     @pytest.mark.asyncio
@@ -108,6 +110,7 @@ class TestCalculatorTool:
 # PythonREPLTool
 # ------------------------------------------------------------------ #
 
+
 class TestPythonREPLTool:
     @pytest.mark.asyncio
     async def test_print_output(self):
@@ -161,6 +164,7 @@ class TestPythonREPLTool:
 # FileReadTool
 # ------------------------------------------------------------------ #
 
+
 class TestFileReadTool:
     @pytest.mark.asyncio
     async def test_read_existing_file(self, tmp_path):
@@ -200,6 +204,7 @@ class TestFileReadTool:
 # WebSearchTool (mocked)
 # ------------------------------------------------------------------ #
 
+
 class TestWebSearchTool:
     @pytest.mark.asyncio
     async def test_import_error_without_duckduckgo(self):
@@ -225,6 +230,7 @@ class TestWebSearchTool:
 
         with patch.dict("sys.modules", {"duckduckgo_search": mock_module}):
             from synapsekit.agents.tools.web_search import WebSearchTool as WST
+
             tool = WST()
             r = await tool.run(query="SynapseKit")
             assert not r.is_error
@@ -244,9 +250,11 @@ class TestWebSearchTool:
 # SQLQueryTool
 # ------------------------------------------------------------------ #
 
+
 class TestSQLQueryTool:
     def _make_db(self, tmp_path):
         import sqlite3
+
         db = str(tmp_path / "test.db")
         conn = sqlite3.connect(db)
         conn.execute("CREATE TABLE users (id INTEGER, name TEXT, age INTEGER)")

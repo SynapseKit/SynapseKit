@@ -1,4 +1,5 @@
 """Tests for prompt templates."""
+
 from __future__ import annotations
 
 import pytest
@@ -9,10 +10,10 @@ from synapsekit.prompts.template import (
     PromptTemplate,
 )
 
-
 # ------------------------------------------------------------------ #
 # PromptTemplate
 # ------------------------------------------------------------------ #
+
 
 class TestPromptTemplate:
     def test_basic_format(self):
@@ -42,12 +43,15 @@ class TestPromptTemplate:
 # ChatPromptTemplate
 # ------------------------------------------------------------------ #
 
+
 class TestChatPromptTemplate:
     def test_format_messages_basic(self):
-        cpt = ChatPromptTemplate([
-            {"role": "system", "content": "You are {persona}."},
-            {"role": "user", "content": "Tell me about {topic}."},
-        ])
+        cpt = ChatPromptTemplate(
+            [
+                {"role": "system", "content": "You are {persona}."},
+                {"role": "user", "content": "Tell me about {topic}."},
+            ]
+        )
         messages = cpt.format_messages(persona="a chef", topic="pasta")
         assert messages[0]["role"] == "system"
         assert "a chef" in messages[0]["content"]
@@ -79,6 +83,7 @@ class TestChatPromptTemplate:
 # ------------------------------------------------------------------ #
 # FewShotPromptTemplate
 # ------------------------------------------------------------------ #
+
 
 class TestFewShotPromptTemplate:
     def test_renders_examples_and_suffix(self):

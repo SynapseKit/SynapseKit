@@ -1,9 +1,8 @@
 """Tests for TokenTracer."""
+
 from __future__ import annotations
 
-import pytest
-
-from synapsekit.observability.tracer import TokenTracer, COST_TABLE
+from synapsekit.observability.tracer import COST_TABLE, TokenTracer
 
 
 class TestTokenTracer:
@@ -28,7 +27,9 @@ class TestTokenTracer:
         tracer = TokenTracer(model="gpt-4o-mini")
         tracer.record(input_tokens=1_000_000, output_tokens=1_000_000, latency_ms=0)
         s = tracer.summary()
-        expected = COST_TABLE["gpt-4o-mini"]["input"] * 1e6 + COST_TABLE["gpt-4o-mini"]["output"] * 1e6
+        expected = (
+            COST_TABLE["gpt-4o-mini"]["input"] * 1e6 + COST_TABLE["gpt-4o-mini"]["output"] * 1e6
+        )
         assert abs(s["estimated_cost_usd"] - expected) < 1e-6
 
     def test_accumulates_multiple_records(self):

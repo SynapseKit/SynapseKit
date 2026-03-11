@@ -42,7 +42,7 @@ class PythonREPLTool(BaseTool):
         old_stdout = sys.stdout
         sys.stdout = buf = io.StringIO()
         try:
-            exec(src, self._namespace)  # noqa: S102
+            exec(src, self._namespace)
             output = buf.getvalue()
             return ToolResult(output=output or "(no output)")
         except Exception as e:

@@ -1,7 +1,6 @@
 """Tests for CompiledGraph.stream() and run_sync()."""
-import pytest
+
 from synapsekit.graph.graph import StateGraph
-from synapsekit.graph.state import END
 
 
 async def _inc(state):
@@ -15,6 +14,7 @@ async def _double(state):
 # ------------------------------------------------------------------ #
 # stream() yields events
 # ------------------------------------------------------------------ #
+
 
 async def test_stream_yields_node_events():
     g = StateGraph()
@@ -99,6 +99,7 @@ async def test_stream_single_node():
 # ------------------------------------------------------------------ #
 # run_sync()
 # ------------------------------------------------------------------ #
+
 
 def test_run_sync_basic():
     async def sq(state):

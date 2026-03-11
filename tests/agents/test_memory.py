@@ -1,7 +1,6 @@
 """Tests for AgentMemory."""
-from __future__ import annotations
 
-import pytest
+from __future__ import annotations
 
 from synapsekit.agents.memory import AgentMemory, AgentStep
 
@@ -27,22 +26,26 @@ class TestAgentMemory:
     def test_multiple_steps(self):
         mem = AgentMemory()
         for i in range(3):
-            mem.add_step(AgentStep(
-                thought=f"thought {i}",
-                action="calc",
-                action_input=str(i),
-                observation=str(i * 2),
-            ))
+            mem.add_step(
+                AgentStep(
+                    thought=f"thought {i}",
+                    action="calc",
+                    action_input=str(i),
+                    observation=str(i * 2),
+                )
+            )
         assert len(mem) == 3
 
     def test_format_scratchpad(self):
         mem = AgentMemory()
-        mem.add_step(AgentStep(
-            thought="I need to add",
-            action="calculator",
-            action_input="1+1",
-            observation="2",
-        ))
+        mem.add_step(
+            AgentStep(
+                thought="I need to add",
+                action="calculator",
+                action_input="1+1",
+                observation="2",
+            )
+        )
         scratchpad = mem.format_scratchpad()
         assert "Thought: I need to add" in scratchpad
         assert "Action: calculator" in scratchpad

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import List
+from dataclasses import dataclass
 
 
 @dataclass
@@ -19,13 +18,13 @@ class AgentMemory:
 
     def __init__(self, max_steps: int = 20) -> None:
         self._max_steps = max_steps
-        self._steps: List[AgentStep] = []
+        self._steps: list[AgentStep] = []
 
     def add_step(self, step: AgentStep) -> None:
         self._steps.append(step)
 
     @property
-    def steps(self) -> List[AgentStep]:
+    def steps(self) -> list[AgentStep]:
         return list(self._steps)
 
     def format_scratchpad(self) -> str:

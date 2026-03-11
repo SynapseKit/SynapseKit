@@ -1,9 +1,11 @@
 """Tests for InMemoryVectorStore."""
+
 from __future__ import annotations
+
+from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
-from unittest.mock import AsyncMock, MagicMock
 
 from synapsekit.retrieval.vectorstore import InMemoryVectorStore
 
@@ -15,7 +17,7 @@ def make_mock_embeddings(dim=4):
     async def embed(texts):
         # Unique, normalised vectors based on text length
         vecs = []
-        for i, t in enumerate(texts):
+        for i, _t in enumerate(texts):
             v = np.zeros(dim, dtype=np.float32)
             v[i % dim] = 1.0
             vecs.append(v)

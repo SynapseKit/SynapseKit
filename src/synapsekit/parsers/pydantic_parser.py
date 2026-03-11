@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Type, TypeVar
+from typing import Any, TypeVar
 
 T = TypeVar("T")
 
@@ -8,14 +8,14 @@ T = TypeVar("T")
 class PydanticParser:
     """Parse LLM JSON output into a Pydantic model."""
 
-    def __init__(self, model: Type[T]) -> None:
+    def __init__(self, model: type[T]) -> None:
         self._model = model
 
     def parse(self, text: str) -> Any:
         try:
             from pydantic import BaseModel  # noqa: F401
         except ImportError:
-            raise ImportError("pydantic required: pip install pydantic")
+            raise ImportError("pydantic required: pip install pydantic") from None
 
         from .json_parser import JSONParser
 

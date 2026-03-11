@@ -2,14 +2,14 @@ from .base import Document
 from .text import StringLoader, TextLoader
 
 __all__ = [
+    "CSVLoader",
+    "DirectoryLoader",
     "Document",
+    "HTMLLoader",
+    "JSONLoader",
+    "PDFLoader",
     "StringLoader",
     "TextLoader",
-    "PDFLoader",
-    "HTMLLoader",
-    "CSVLoader",
-    "JSONLoader",
-    "DirectoryLoader",
     "WebLoader",
 ]
 
@@ -26,6 +26,7 @@ _LOADERS = {
 def __getattr__(name: str):
     if name in _LOADERS:
         import importlib
+
         mod = importlib.import_module(_LOADERS[name], __name__)
         cls = getattr(mod, name)
         globals()[name] = cls

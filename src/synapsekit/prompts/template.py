@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any
 
 
 class PromptTemplate:
@@ -16,13 +16,12 @@ class PromptTemplate:
 class ChatPromptTemplate:
     """Build a List[dict] messages structure for chat LLMs."""
 
-    def __init__(self, messages: List[Dict[str, str]]) -> None:
+    def __init__(self, messages: list[dict[str, str]]) -> None:
         self._messages = messages
 
-    def format_messages(self, **kwargs: Any) -> List[Dict[str, str]]:
+    def format_messages(self, **kwargs: Any) -> list[dict[str, str]]:
         return [
-            {"role": m["role"], "content": m["content"].format(**kwargs)}
-            for m in self._messages
+            {"role": m["role"], "content": m["content"].format(**kwargs)} for m in self._messages
         ]
 
 
@@ -31,7 +30,7 @@ class FewShotPromptTemplate:
 
     def __init__(
         self,
-        examples: List[Dict[str, str]],
+        examples: list[dict[str, str]],
         example_template: str,
         suffix: str,
     ) -> None:

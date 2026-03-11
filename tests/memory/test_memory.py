@@ -1,7 +1,6 @@
 """Tests for ConversationMemory."""
-from __future__ import annotations
 
-import pytest
+from __future__ import annotations
 
 from synapsekit.memory.conversation import ConversationMemory
 

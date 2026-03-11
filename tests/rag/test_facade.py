@@ -1,13 +1,14 @@
 """Tests for the RAG facade — 3-line API."""
+
 from __future__ import annotations
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
 from synapsekit import RAG
-from synapsekit.llm.base import LLMConfig
-from synapsekit.observability.tracer import TokenTracer
 from synapsekit.memory.conversation import ConversationMemory
+from synapsekit.observability.tracer import TokenTracer
 
 
 def _patch_rag(rag: RAG, tokens=("Answer", " here")):

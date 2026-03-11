@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import List
-
 from .base import Document
 
 
@@ -15,15 +13,15 @@ class WebLoader:
         try:
             from bs4 import BeautifulSoup
         except ImportError:
-            raise ImportError("beautifulsoup4 required: pip install synapsekit[web]")
+            raise ImportError("beautifulsoup4 required: pip install synapsekit[web]") from None
         soup = BeautifulSoup(html, "html.parser")
         return soup.get_text(separator="\n", strip=True)
 
-    async def load(self) -> List[Document]:
+    async def load(self) -> list[Document]:
         try:
             import httpx
         except ImportError:
-            raise ImportError("httpx required: pip install synapsekit[web]")
+            raise ImportError("httpx required: pip install synapsekit[web]") from None
 
         async with httpx.AsyncClient() as client:
             response = await client.get(self._url)
@@ -32,11 +30,11 @@ class WebLoader:
         text = self._parse(response.text)
         return [Document(text=text, metadata={"source": self._url})]
 
-    def load_sync(self) -> List[Document]:
+    def load_sync(self) -> list[Document]:
         try:
             import httpx
         except ImportError:
-            raise ImportError("httpx required: pip install synapsekit[web]")
+            raise ImportError("httpx required: pip install synapsekit[web]") from None
 
         with httpx.Client() as client:
             response = client.get(self._url)

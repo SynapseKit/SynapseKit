@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from ..base import BaseTool, ToolResult
 
@@ -44,15 +44,18 @@ class SQLQueryTool(BaseTool):
     def _get_connection(self):
         if self._is_sqlite:
             import sqlite3
+
             return sqlite3.connect(self._connection_string)
         try:
-            from sqlalchemy import create_engine, text as sa_text
+            from sqlalchemy import create_engine
+            from sqlalchemy import text as sa_text
+
             engine = create_engine(self._connection_string)
             return engine.connect(), sa_text, True
         except ImportError:
             raise ImportError(
                 "sqlalchemy required for non-SQLite databases: pip install sqlalchemy"
-            )
+            ) from None
 
     async def run(self, query: str = "", **kwargs: Any) -> ToolResult:
         sql = query or kwargs.get("input", "")
@@ -70,6 +73,7 @@ class SQLQueryTool(BaseTool):
         try:
             if self._is_sqlite:
                 import sqlite3
+
                 conn = sqlite3.connect(self._connection_string)
                 try:
                     cursor = conn.cursor()
@@ -79,7 +83,9 @@ class SQLQueryTool(BaseTool):
                 finally:
                     conn.close()
             else:
-                from sqlalchemy import create_engine, text as sa_text
+                from sqlalchemy import create_engine
+                from sqlalchemy import text as sa_text
+
                 engine = create_engine(self._connection_string)
                 with engine.connect() as conn:
                     result = conn.execute(sa_text(sql))
@@ -93,7 +99,7 @@ class SQLQueryTool(BaseTool):
             header = " | ".join(cols)
             separator = " | ".join(["---"] * len(cols))
             data_rows = [" | ".join(str(v) for v in row) for row in rows]
-            table = "\n".join([header, separator] + data_rows)
+            table = "\n".join([header, separator, *data_rows])
             return ToolResult(output=table)
 
         except Exception as e:

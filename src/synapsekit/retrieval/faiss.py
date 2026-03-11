@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import List, Optional
-
 import numpy as np
 
 from ..embeddings.backend import SynapsekitEmbeddings
@@ -15,18 +13,18 @@ class FAISSVectorStore(VectorStore):
         try:
             import faiss
         except ImportError:
-            raise ImportError("faiss-cpu required: pip install synapsekit[faiss]")
+            raise ImportError("faiss-cpu required: pip install synapsekit[faiss]") from None
 
         self._embeddings = embedding_backend
         self._faiss = faiss
         self._index = None
-        self._texts: List[str] = []
-        self._metadata: List[dict] = []
+        self._texts: list[str] = []
+        self._metadata: list[dict] = []
 
     async def add(
         self,
-        texts: List[str],
-        metadata: Optional[List[dict]] = None,
+        texts: list[str],
+        metadata: list[dict] | None = None,
     ) -> None:
         if not texts:
             return
@@ -39,14 +37,12 @@ class FAISSVectorStore(VectorStore):
         self._texts.extend(texts)
         self._metadata.extend(meta)
 
-    async def search(self, query: str, top_k: int = 5) -> List[dict]:
+    async def search(self, query: str, top_k: int = 5) -> list[dict]:
         if self._index is None or not self._texts:
             return []
         q_vec = await self._embeddings.embed_one(query)
         k = min(top_k, len(self._texts))
-        scores, indices = self._index.search(
-            q_vec.reshape(1, -1).astype(np.float32), k
-        )
+        scores, indices = self._index.search(q_vec.reshape(1, -1).astype(np.float32), k)
         return [
             {
                 "text": self._texts[idx],

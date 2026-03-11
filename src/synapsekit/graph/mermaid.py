@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 from .state import END
 
 
-def get_mermaid(graph: "StateGraph") -> str:
+def get_mermaid(graph: StateGraph) -> str:
     """Return a Mermaid flowchart string for the compiled graph."""
     lines = ["flowchart TD"]
 
@@ -17,7 +17,8 @@ def get_mermaid(graph: "StateGraph") -> str:
         lines.append(f"    __start__ --> {graph._entry_point}")
 
     # Static edges
-    from .edge import Edge, ConditionalEdge
+    from .edge import ConditionalEdge, Edge
+
     for edge in graph._edges:
         if isinstance(edge, Edge):
             dst = "__end__" if edge.dst == END else edge.dst

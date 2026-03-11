@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
-from typing import Any, Awaitable, Callable, Union
+from typing import Any
 
 # A condition function takes the current state and returns a node name (or END).
-ConditionFn = Callable[[dict[str, Any]], Union[str, Awaitable[str]]]
+ConditionFn = Callable[[dict[str, Any]], str | Awaitable[str]]
 
 
 @dataclass

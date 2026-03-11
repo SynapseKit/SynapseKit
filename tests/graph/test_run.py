@@ -1,13 +1,15 @@
 """Tests for CompiledGraph.run() — linear, conditional, parallel."""
+
 import pytest
+
 from synapsekit.graph.errors import GraphRuntimeError
 from synapsekit.graph.graph import StateGraph
 from synapsekit.graph.state import END
 
-
 # ------------------------------------------------------------------ #
 # Linear pipeline
 # ------------------------------------------------------------------ #
+
 
 async def test_linear_two_nodes():
     async def add_greeting(state):
@@ -39,6 +41,7 @@ async def test_single_node_with_finish():
 
 async def test_state_is_not_mutated_by_caller():
     """Original dict passed by caller should not be modified."""
+
     async def add_key(state):
         return {"extra": True}
 
@@ -54,6 +57,7 @@ async def test_state_is_not_mutated_by_caller():
 # ------------------------------------------------------------------ #
 # Conditional routing (sync route fn)
 # ------------------------------------------------------------------ #
+
 
 async def test_conditional_sync_route_left():
     async def classify(state):
@@ -116,8 +120,10 @@ async def test_conditional_async_route():
 # Parallel nodes (same wave)
 # ------------------------------------------------------------------ #
 
+
 async def test_parallel_nodes():
     """Two nodes with no order dependency should both execute."""
+
     async def fetch_a(state):
         return {"a": "result_a"}
 
@@ -153,6 +159,7 @@ async def test_parallel_nodes():
 # Sync node function
 # ------------------------------------------------------------------ #
 
+
 async def test_sync_node_fn():
     def sync_fn(state):
         return {"doubled": state["x"] * 2}
@@ -168,6 +175,7 @@ async def test_sync_node_fn():
 # ------------------------------------------------------------------ #
 # Error cases
 # ------------------------------------------------------------------ #
+
 
 async def test_node_returning_non_dict_raises():
     def bad_fn(state):

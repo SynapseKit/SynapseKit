@@ -1,18 +1,19 @@
 """Tests for AgentExecutor and ToolRegistry."""
+
 from __future__ import annotations
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 from synapsekit.agents.executor import AgentConfig, AgentExecutor
 from synapsekit.agents.registry import ToolRegistry
-from synapsekit.agents.base import BaseTool, ToolResult
 from synapsekit.agents.tools.calculator import CalculatorTool
-
 
 # ------------------------------------------------------------------ #
 # ToolRegistry
 # ------------------------------------------------------------------ #
+
 
 class TestToolRegistry:
     def test_get_existing(self):
@@ -61,6 +62,7 @@ class TestToolRegistry:
 # AgentExecutor — react
 # ------------------------------------------------------------------ #
 
+
 class TestAgentExecutorReAct:
     def _make_react_llm(self, answer="42"):
         llm = MagicMock()
@@ -103,20 +105,17 @@ class TestAgentExecutorReAct:
 # AgentExecutor — function_calling
 # ------------------------------------------------------------------ #
 
+
 class TestAgentExecutorFunctionCalling:
     def _make_fc_llm(self, answer="done"):
         llm = MagicMock()
-        llm.call_with_tools = AsyncMock(
-            return_value={"content": answer, "tool_calls": None}
-        )
+        llm.call_with_tools = AsyncMock(return_value={"content": answer, "tool_calls": None})
         return llm
 
     @pytest.mark.asyncio
     async def test_run_function_calling(self):
         llm = self._make_fc_llm("function answer")
-        executor = AgentExecutor(AgentConfig(
-            llm=llm, tools=[], agent_type="function_calling"
-        ))
+        executor = AgentExecutor(AgentConfig(llm=llm, tools=[], agent_type="function_calling"))
         result = await executor.run("test?")
         assert result == "function answer"
 
@@ -128,18 +127,24 @@ class TestAgentExecutorFunctionCalling:
     @pytest.mark.asyncio
     async def test_with_calculator_tool(self):
         llm = MagicMock()
-        llm.call_with_tools = AsyncMock(side_effect=[
-            {
-                "content": None,
-                "tool_calls": [{"id": "t1", "name": "calculator", "arguments": {"expression": "2 ** 8"}}],
-            },
-            {"content": "The answer is 256.", "tool_calls": None},
-        ])
-        executor = AgentExecutor(AgentConfig(
-            llm=llm,
-            tools=[CalculatorTool()],
-            agent_type="function_calling",
-        ))
+        llm.call_with_tools = AsyncMock(
+            side_effect=[
+                {
+                    "content": None,
+                    "tool_calls": [
+                        {"id": "t1", "name": "calculator", "arguments": {"expression": "2 ** 8"}}
+                    ],
+                },
+                {"content": "The answer is 256.", "tool_calls": None},
+            ]
+        )
+        executor = AgentExecutor(
+            AgentConfig(
+                llm=llm,
+                tools=[CalculatorTool()],
+                agent_type="function_calling",
+            )
+        )
         result = await executor.run("What is 2 to the power of 8?")
         assert result == "The answer is 256."
         assert executor.memory.steps[0].observation == "256"

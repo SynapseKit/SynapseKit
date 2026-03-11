@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, Iterator, List
+from collections.abc import Iterator
 
 from .base import BaseTool
 
@@ -8,8 +8,8 @@ from .base import BaseTool
 class ToolRegistry:
     """Lookup table mapping tool name → BaseTool instance."""
 
-    def __init__(self, tools: List[BaseTool]) -> None:
-        self._tools: Dict[str, BaseTool] = {t.name: t for t in tools}
+    def __init__(self, tools: list[BaseTool]) -> None:
+        self._tools: dict[str, BaseTool] = {t.name: t for t in tools}
 
     def get(self, name: str) -> BaseTool:
         if name not in self._tools:
@@ -17,11 +17,11 @@ class ToolRegistry:
             raise KeyError(f"Tool {name!r} not found. Available: {available}")
         return self._tools[name]
 
-    def schemas(self) -> List[dict]:
+    def schemas(self) -> list[dict]:
         """Return OpenAI-compatible function schemas for all tools."""
         return [t.schema() for t in self._tools.values()]
 
-    def anthropic_schemas(self) -> List[dict]:
+    def anthropic_schemas(self) -> list[dict]:
         """Return Anthropic-compatible tool schemas for all tools."""
         return [t.anthropic_schema() for t in self._tools.values()]
 

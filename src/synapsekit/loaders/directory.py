@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 from glob import glob
-from typing import List
 
 from .base import Document
 
@@ -11,18 +10,23 @@ def _loader_for(path: str):
     ext = os.path.splitext(path)[1].lower()
     if ext == ".pdf":
         from .pdf import PDFLoader
+
         return PDFLoader(path)
     elif ext in (".html", ".htm"):
         from .html import HTMLLoader
+
         return HTMLLoader(path)
     elif ext == ".csv":
         from .csv import CSVLoader
+
         return CSVLoader(path)
     elif ext == ".json":
         from .json_loader import JSONLoader
+
         return JSONLoader(path)
     else:
         from .text import TextLoader
+
         return TextLoader(path)
 
 
@@ -39,10 +43,10 @@ class DirectoryLoader:
         self._glob = glob_pattern
         self._recursive = recursive
 
-    def load(self) -> List[Document]:
+    def load(self) -> list[Document]:
         pattern = os.path.join(self._path, self._glob)
         paths = glob(pattern, recursive=self._recursive)
-        docs: List[Document] = []
+        docs: list[Document] = []
         for p in sorted(paths):
             if os.path.isfile(p):
                 try:

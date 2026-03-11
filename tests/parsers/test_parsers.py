@@ -1,4 +1,5 @@
 """Tests for output parsers."""
+
 from __future__ import annotations
 
 import pytest
@@ -7,10 +8,10 @@ from synapsekit.parsers.json_parser import JSONParser
 from synapsekit.parsers.list_parser import ListParser
 from synapsekit.parsers.pydantic_parser import PydanticParser
 
-
 # ------------------------------------------------------------------ #
 # JSONParser
 # ------------------------------------------------------------------ #
+
 
 class TestJSONParser:
     def test_parses_clean_json_object(self):
@@ -18,7 +19,7 @@ class TestJSONParser:
         assert result == {"key": "value"}
 
     def test_parses_clean_json_array(self):
-        result = JSONParser().parse('[1, 2, 3]')
+        result = JSONParser().parse("[1, 2, 3]")
         assert result == [1, 2, 3]
 
     def test_extracts_json_from_text(self):
@@ -47,6 +48,7 @@ class TestJSONParser:
 # ------------------------------------------------------------------ #
 # ListParser
 # ------------------------------------------------------------------ #
+
 
 class TestListParser:
     def test_parses_bullet_list(self):
@@ -88,9 +90,10 @@ class TestListParser:
 # PydanticParser
 # ------------------------------------------------------------------ #
 
+
 class TestPydanticParser:
     def test_parses_into_model(self):
-        pydantic = pytest.importorskip("pydantic")
+        pytest.importorskip("pydantic")
         from pydantic import BaseModel
 
         class Person(BaseModel):
@@ -103,8 +106,8 @@ class TestPydanticParser:
         assert result.age == 25
 
     def test_raises_on_missing_field(self):
-        pydantic = pytest.importorskip("pydantic")
-        from pydantic import BaseModel, ValidationError
+        pytest.importorskip("pydantic")
+        from pydantic import BaseModel
 
         class Strict(BaseModel):
             required_field: str
@@ -114,7 +117,7 @@ class TestPydanticParser:
             parser.parse('{"other": "value"}')
 
     def test_raises_on_bad_json(self):
-        pydantic = pytest.importorskip("pydantic")
+        pytest.importorskip("pydantic")
         from pydantic import BaseModel
 
         class M(BaseModel):

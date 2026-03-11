@@ -1,8 +1,10 @@
 """Tests for new LLM providers (Ollama, Cohere, Mistral, Gemini, Bedrock) — mocked."""
+
 from __future__ import annotations
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from synapsekit.llm.base import LLMConfig
 
@@ -22,10 +24,12 @@ def make_config(provider="openai", model="test-model"):
 # OllamaLLM
 # ------------------------------------------------------------------ #
 
+
 class TestOllamaLLM:
     def test_import_error_without_ollama(self):
         with patch.dict("sys.modules", {"ollama": None}):
             from synapsekit.llm.ollama import OllamaLLM
+
             llm = OllamaLLM(make_config("ollama", "llama3"))
             llm._client = None  # force re-init
             with pytest.raises(ImportError, match="ollama"):
@@ -49,6 +53,7 @@ class TestOllamaLLM:
 
         with patch.dict("sys.modules", {"ollama": mock_ollama}):
             from synapsekit.llm.ollama import OllamaLLM
+
             llm = OllamaLLM(make_config("ollama", "llama3"))
             tokens = []
             async for t in llm.stream("hi"):
@@ -70,6 +75,7 @@ class TestOllamaLLM:
 
         with patch.dict("sys.modules", {"ollama": mock_ollama}):
             from synapsekit.llm.ollama import OllamaLLM
+
             llm = OllamaLLM(make_config("ollama"))
             tokens = []
             async for t in llm.stream_with_messages([{"role": "user", "content": "hi"}]):
@@ -81,10 +87,12 @@ class TestOllamaLLM:
 # CohereLLM
 # ------------------------------------------------------------------ #
 
+
 class TestCohereLLM:
     def test_import_error_without_cohere(self):
         with patch.dict("sys.modules", {"cohere": None}):
             from synapsekit.llm.cohere import CohereLLM
+
             llm = CohereLLM(make_config("cohere", "command-r"))
             llm._client = None
             with pytest.raises(ImportError, match="cohere"):
@@ -110,6 +118,7 @@ class TestCohereLLM:
 
         with patch.dict("sys.modules", {"cohere": mock_cohere}):
             from synapsekit.llm.cohere import CohereLLM
+
             llm = CohereLLM(make_config("cohere"))
             tokens = []
             async for t in llm.stream_with_messages([{"role": "user", "content": "hi"}]):
@@ -121,10 +130,12 @@ class TestCohereLLM:
 # MistralLLM
 # ------------------------------------------------------------------ #
 
+
 class TestMistralLLM:
     def test_import_error_without_mistralai(self):
         with patch.dict("sys.modules", {"mistralai": None}):
             from synapsekit.llm.mistral import MistralLLM
+
             llm = MistralLLM(make_config("mistral", "mistral-small"))
             llm._client = None
             with pytest.raises(ImportError, match="mistralai"):
@@ -151,6 +162,7 @@ class TestMistralLLM:
 
         with patch.dict("sys.modules", {"mistralai": mock_mistralai}):
             from synapsekit.llm.mistral import MistralLLM
+
             llm = MistralLLM(make_config("mistral", "mistral-small"))
             tokens = []
             async for t in llm.stream_with_messages([{"role": "user", "content": "hi"}]):
@@ -162,10 +174,12 @@ class TestMistralLLM:
 # GeminiLLM
 # ------------------------------------------------------------------ #
 
+
 class TestGeminiLLM:
     def test_import_error_without_google_generativeai(self):
         with patch.dict("sys.modules", {"google.generativeai": None, "google": None}):
             from synapsekit.llm.gemini import GeminiLLM
+
             llm = GeminiLLM(make_config("gemini", "gemini-pro"))
             llm._model = None
             with pytest.raises((ImportError, AttributeError)):
@@ -188,11 +202,15 @@ class TestGeminiLLM:
         mock_genai = MagicMock()
         mock_genai.GenerativeModel.return_value = mock_model
 
-        with patch.dict("sys.modules", {
-            "google": MagicMock(),
-            "google.generativeai": mock_genai,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "google": MagicMock(),
+                "google.generativeai": mock_genai,
+            },
+        ):
             from synapsekit.llm.gemini import GeminiLLM
+
             llm = GeminiLLM(make_config("gemini", "gemini-pro"))
             llm._model = mock_model
             tokens = []
@@ -205,10 +223,12 @@ class TestGeminiLLM:
 # BedrockLLM
 # ------------------------------------------------------------------ #
 
+
 class TestBedrockLLM:
     def test_import_error_without_boto3(self):
         with patch.dict("sys.modules", {"boto3": None}):
             from synapsekit.llm.bedrock import BedrockLLM
+
             llm = BedrockLLM(make_config("bedrock", "anthropic.claude-v2"))
             llm._client = None
             with pytest.raises(ImportError, match="boto3"):
@@ -216,6 +236,7 @@ class TestBedrockLLM:
 
     def test_build_body_claude(self):
         from synapsekit.llm.bedrock import BedrockLLM
+
         llm = BedrockLLM(make_config("bedrock", "anthropic.claude-v2"))
         body = llm._build_body("hello")
         assert "messages" in body
@@ -223,24 +244,28 @@ class TestBedrockLLM:
 
     def test_build_body_titan(self):
         from synapsekit.llm.bedrock import BedrockLLM
+
         llm = BedrockLLM(make_config("bedrock", "amazon.titan-text"))
         body = llm._build_body("hello")
         assert "inputText" in body
 
     def test_build_body_llama(self):
         from synapsekit.llm.bedrock import BedrockLLM
+
         llm = BedrockLLM(make_config("bedrock", "meta.llama2-13b"))
         body = llm._build_body("hello")
         assert "prompt" in body
 
     def test_extract_chunk_claude(self):
         from synapsekit.llm.bedrock import BedrockLLM
+
         llm = BedrockLLM(make_config("bedrock", "anthropic.claude-v2"))
         text = llm._extract_chunk({"delta": {"text": "hi"}}, "anthropic.claude-v2")
         assert text == "hi"
 
     def test_extract_chunk_titan(self):
         from synapsekit.llm.bedrock import BedrockLLM
+
         llm = BedrockLLM(make_config("bedrock", "amazon.titan-text"))
         text = llm._extract_chunk({"outputText": "yo"}, "amazon.titan-text")
         assert text == "yo"
@@ -248,6 +273,7 @@ class TestBedrockLLM:
     @pytest.mark.asyncio
     async def test_stream_with_messages(self):
         import json
+
         from synapsekit.llm.bedrock import BedrockLLM
 
         chunk_bytes = json.dumps({"delta": {"text": "AWS!"}}).encode()

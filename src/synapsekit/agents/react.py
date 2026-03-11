@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import AsyncGenerator, List, Optional
+from collections.abc import AsyncGenerator
 
 from ..llm.base import BaseLLM
 from .base import BaseTool
@@ -34,7 +34,9 @@ Rules:
 
 _ACTION_RE = re.compile(r"Action:\s*(.+)", re.IGNORECASE)
 _ACTION_INPUT_RE = re.compile(r"Action Input:\s*(.+)", re.IGNORECASE | re.DOTALL)
-_THOUGHT_RE = re.compile(r"Thought:\s*(.+?)(?=\n(?:Action|Final Answer)|$)", re.IGNORECASE | re.DOTALL)
+_THOUGHT_RE = re.compile(
+    r"Thought:\s*(.+?)(?=\n(?:Action|Final Answer)|$)", re.IGNORECASE | re.DOTALL
+)
 _FINAL_ANSWER_RE = re.compile(r"Final Answer:\s*(.+)", re.IGNORECASE | re.DOTALL)
 
 
@@ -67,9 +69,9 @@ class ReActAgent:
     def __init__(
         self,
         llm: BaseLLM,
-        tools: List[BaseTool],
+        tools: list[BaseTool],
         max_iterations: int = 10,
-        memory: Optional[AgentMemory] = None,
+        memory: AgentMemory | None = None,
     ) -> None:
         self._llm = llm
         self._registry = ToolRegistry(tools)
@@ -79,7 +81,7 @@ class ReActAgent:
     def _build_system_prompt(self) -> str:
         return _REACT_SYSTEM.format(tools=self._registry.describe())
 
-    def _build_messages(self, query: str) -> List[dict]:
+    def _build_messages(self, query: str) -> list[dict]:
         scratchpad = self._memory.format_scratchpad()
         user_content = f"Question: {query}"
         if scratchpad:
@@ -120,16 +122,18 @@ class ReActAgent:
             except Exception as e:
                 observation = f"Tool error: {e}"
 
-            self._memory.add_step(AgentStep(
-                thought=thought,
-                action=action_name,
-                action_input=action_input,
-                observation=observation,
-            ))
+            self._memory.add_step(
+                AgentStep(
+                    thought=thought,
+                    action=action_name,
+                    action_input=action_input,
+                    observation=observation,
+                )
+            )
 
         return "I was unable to find the answer within the allowed number of steps."
 
-    async def stream(self, query: str) -> AsyncGenerator[str, None]:
+    async def stream(self, query: str) -> AsyncGenerator[str]:
         """
         Stream the final answer. Intermediate tool calls run silently.
         Yields the final answer string (may be multi-token on last LLM call).

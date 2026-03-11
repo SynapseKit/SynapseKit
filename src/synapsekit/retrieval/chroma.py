@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import List, Optional
-
 from ..embeddings.backend import SynapsekitEmbeddings
 from .base import VectorStore
 
@@ -13,12 +11,12 @@ class ChromaVectorStore(VectorStore):
         self,
         embedding_backend: SynapsekitEmbeddings,
         collection_name: str = "synapsekit",
-        persist_directory: Optional[str] = None,
+        persist_directory: str | None = None,
     ) -> None:
         try:
             import chromadb
         except ImportError:
-            raise ImportError("chromadb required: pip install synapsekit[chroma]")
+            raise ImportError("chromadb required: pip install synapsekit[chroma]") from None
 
         self._embeddings = embedding_backend
         self._collection_name = collection_name
@@ -33,8 +31,8 @@ class ChromaVectorStore(VectorStore):
 
     async def add(
         self,
-        texts: List[str],
-        metadata: Optional[List[dict]] = None,
+        texts: list[str],
+        metadata: list[dict] | None = None,
     ) -> None:
         if not texts:
             return
@@ -49,7 +47,7 @@ class ChromaVectorStore(VectorStore):
         )
         self._offset += len(texts)
 
-    async def search(self, query: str, top_k: int = 5) -> List[dict]:
+    async def search(self, query: str, top_k: int = 5) -> list[dict]:
         count = self._collection.count()
         if count == 0:
             return []
@@ -60,9 +58,11 @@ class ChromaVectorStore(VectorStore):
         )
         out = []
         for i, doc in enumerate(results["documents"][0]):
-            out.append({
-                "text": doc,
-                "score": 1.0 - results["distances"][0][i],
-                "metadata": results["metadatas"][0][i],
-            })
+            out.append(
+                {
+                    "text": doc,
+                    "score": 1.0 - results["distances"][0][i],
+                    "metadata": results["metadatas"][0][i],
+                }
+            )
         return out

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import AsyncGenerator, List
+from collections.abc import AsyncGenerator
 
 from .base import BaseLLM, LLMConfig, _messages_to_prompt
 
@@ -19,7 +19,7 @@ class BedrockLLM(BaseLLM):
             try:
                 import boto3
             except ImportError:
-                raise ImportError("boto3 required: pip install synapsekit[bedrock]")
+                raise ImportError("boto3 required: pip install synapsekit[bedrock]") from None
             self._client = boto3.client(
                 "bedrock-runtime",
                 region_name=self._region,
@@ -68,7 +68,7 @@ class BedrockLLM(BaseLLM):
         else:
             return chunk.get("generation", "")
 
-    async def stream(self, prompt: str, **kw) -> AsyncGenerator[str, None]:
+    async def stream(self, prompt: str, **kw) -> AsyncGenerator[str]:
         import asyncio
 
         client = self._get_client()
@@ -91,9 +91,7 @@ class BedrockLLM(BaseLLM):
                 self._output_tokens += 1
                 yield text
 
-    async def stream_with_messages(
-        self, messages: List[dict], **kw
-    ) -> AsyncGenerator[str, None]:
+    async def stream_with_messages(self, messages: list[dict], **kw) -> AsyncGenerator[str]:
         prompt = _messages_to_prompt(messages)
         async for token in self.stream(prompt, **kw):
             yield token

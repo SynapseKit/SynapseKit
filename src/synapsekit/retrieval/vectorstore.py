@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import List, Optional
-
 import numpy as np
 
 from ..embeddings.backend import SynapsekitEmbeddings
@@ -16,14 +14,14 @@ class InMemoryVectorStore(VectorStore):
 
     def __init__(self, embedding_backend: SynapsekitEmbeddings) -> None:
         self._embeddings = embedding_backend
-        self._vectors: Optional[np.ndarray] = None   # (N, D)
-        self._texts: List[str] = []
-        self._metadata: List[dict] = []
+        self._vectors: np.ndarray | None = None  # (N, D)
+        self._texts: list[str] = []
+        self._metadata: list[dict] = []
 
     async def add(
         self,
-        texts: List[str],
-        metadata: Optional[List[dict]] = None,
+        texts: list[str],
+        metadata: list[dict] | None = None,
     ) -> None:
         if not texts:
             return
@@ -38,7 +36,7 @@ class InMemoryVectorStore(VectorStore):
         self._texts.extend(texts)
         self._metadata.extend(meta)
 
-    async def search(self, query: str, top_k: int = 5) -> List[dict]:
+    async def search(self, query: str, top_k: int = 5) -> list[dict]:
         """Returns top_k results sorted by cosine similarity (desc)."""
         if self._vectors is None or len(self._texts) == 0:
             return []
@@ -64,18 +62,18 @@ class InMemoryVectorStore(VectorStore):
         if self._vectors is None:
             raise ValueError("Nothing to save — store is empty.")
         import json
+
         np.savez(
             path,
             vectors=self._vectors,
             texts=np.array(self._texts, dtype=object),
-            metadata=np.array(
-                [json.dumps(m) for m in self._metadata], dtype=object
-            ),
+            metadata=np.array([json.dumps(m) for m in self._metadata], dtype=object),
         )
 
     def load(self, path: str) -> None:
         """Load vectors, texts, and metadata from a .npz file."""
         import json
+
         data = np.load(path, allow_pickle=True)
         self._vectors = data["vectors"].astype(np.float32)
         self._texts = list(data["texts"])

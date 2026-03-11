@@ -1,22 +1,22 @@
 """Tests for all loaders."""
+
 from __future__ import annotations
 
-import csv
 import json
-import os
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from synapsekit.loaders.base import Document
-from synapsekit.loaders.text import StringLoader, TextLoader
-from synapsekit.loaders.csv import CSVLoader
-from synapsekit.loaders.json_loader import JSONLoader
-from synapsekit.loaders.directory import DirectoryLoader
+import pytest
 
+from synapsekit.loaders.base import Document
+from synapsekit.loaders.csv import CSVLoader
+from synapsekit.loaders.directory import DirectoryLoader
+from synapsekit.loaders.json_loader import JSONLoader
+from synapsekit.loaders.text import StringLoader, TextLoader
 
 # ------------------------------------------------------------------ #
 # Document dataclass
 # ------------------------------------------------------------------ #
+
 
 class TestDocument:
     def test_defaults(self):
@@ -38,6 +38,7 @@ class TestDocument:
 # ------------------------------------------------------------------ #
 # StringLoader
 # ------------------------------------------------------------------ #
+
 
 class TestStringLoader:
     def test_load_returns_single_document(self):
@@ -66,6 +67,7 @@ class TestStringLoader:
 # TextLoader
 # ------------------------------------------------------------------ #
 
+
 class TestTextLoader:
     def test_load_file(self, tmp_path):
         f = tmp_path / "doc.txt"
@@ -90,9 +92,11 @@ class TestTextLoader:
 # PDFLoader (mocked)
 # ------------------------------------------------------------------ #
 
+
 class TestPDFLoader:
     def test_import_error_without_pypdf(self):
         from synapsekit.loaders.pdf import PDFLoader
+
         with patch.dict("sys.modules", {"pypdf": None}):
             loader = PDFLoader("dummy.pdf")
             with pytest.raises(ImportError, match="pypdf"):
@@ -123,9 +127,11 @@ class TestPDFLoader:
 # HTMLLoader (mocked)
 # ------------------------------------------------------------------ #
 
+
 class TestHTMLLoader:
     def test_import_error_without_bs4(self):
         from synapsekit.loaders.html import HTMLLoader
+
         with patch.dict("sys.modules", {"bs4": None}):
             loader = HTMLLoader("dummy.html")
             with pytest.raises(ImportError, match="beautifulsoup4"):
@@ -133,10 +139,11 @@ class TestHTMLLoader:
 
     def test_strips_html_tags(self, tmp_path):
         from synapsekit.loaders.html import HTMLLoader
+
         f = tmp_path / "test.html"
         f.write_text("<html><body><h1>Title</h1><p>Para</p></body></html>")
 
-        bs4 = pytest.importorskip("bs4")
+        pytest.importorskip("bs4")
         docs = HTMLLoader(str(f)).load()
         assert len(docs) == 1
         assert "Title" in docs[0].text
@@ -146,6 +153,7 @@ class TestHTMLLoader:
 # ------------------------------------------------------------------ #
 # CSVLoader
 # ------------------------------------------------------------------ #
+
 
 class TestCSVLoader:
     def test_load_all_columns_as_text(self, tmp_path):
@@ -185,6 +193,7 @@ class TestCSVLoader:
 # JSONLoader
 # ------------------------------------------------------------------ #
 
+
 class TestJSONLoader:
     def test_load_list(self, tmp_path):
         f = tmp_path / "data.json"
@@ -217,6 +226,7 @@ class TestJSONLoader:
 # ------------------------------------------------------------------ #
 # DirectoryLoader
 # ------------------------------------------------------------------ #
+
 
 class TestDirectoryLoader:
     def test_loads_txt_files(self, tmp_path):
@@ -253,9 +263,11 @@ class TestDirectoryLoader:
 # WebLoader (mocked)
 # ------------------------------------------------------------------ #
 
+
 class TestWebLoader:
     def test_import_error_without_httpx(self):
         from synapsekit.loaders.web import WebLoader
+
         with patch.dict("sys.modules", {"httpx": None}):
             loader = WebLoader("http://example.com")
             with pytest.raises(ImportError, match="httpx"):
@@ -274,7 +286,7 @@ class TestWebLoader:
         mock_client.__aexit__ = AsyncMock(return_value=False)
         mock_client.get = AsyncMock(return_value=mock_response)
 
-        bs4 = pytest.importorskip("bs4")
+        pytest.importorskip("bs4")
 
         with patch("httpx.AsyncClient", return_value=mock_client):
             loader = WebLoader("http://example.com")
@@ -296,7 +308,7 @@ class TestWebLoader:
         mock_client.__exit__ = MagicMock(return_value=False)
         mock_client.get = MagicMock(return_value=mock_response)
 
-        bs4 = pytest.importorskip("bs4")
+        pytest.importorskip("bs4")
 
         with patch("httpx.Client", return_value=mock_client):
             docs = WebLoader("http://example.com").load_sync()

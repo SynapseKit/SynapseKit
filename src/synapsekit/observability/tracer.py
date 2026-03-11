@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass, field
-from typing import List, Optional
+from dataclasses import dataclass
 
 # Cost per token in USD (input, output)
 COST_TABLE: dict[str, dict[str, float]] = {
@@ -29,7 +28,7 @@ class TokenTracer:
     def __init__(self, model: str, enabled: bool = True) -> None:
         self.model = model
         self.enabled = enabled
-        self._records: List[_Record] = []
+        self._records: list[_Record] = []
 
     def record(
         self,

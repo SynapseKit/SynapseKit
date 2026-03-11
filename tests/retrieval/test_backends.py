@@ -1,9 +1,11 @@
 """Tests for vector store backends (Chroma, FAISS, Qdrant, Pinecone) — mocked."""
+
 from __future__ import annotations
+
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 
 
 def make_mock_embeddings(dim=4):
@@ -11,7 +13,7 @@ def make_mock_embeddings(dim=4):
 
     async def embed(texts):
         vecs = []
-        for i, t in enumerate(texts):
+        for i, _t in enumerate(texts):
             v = np.zeros(dim, dtype=np.float32)
             v[i % dim] = 1.0
             vecs.append(v)
@@ -30,9 +32,11 @@ def make_mock_embeddings(dim=4):
 # VectorStore ABC
 # ------------------------------------------------------------------ #
 
+
 class TestVectorStoreABC:
     def test_abc_cannot_be_instantiated(self):
         from synapsekit.retrieval.base import VectorStore
+
         with pytest.raises(TypeError):
             VectorStore()
 
@@ -40,8 +44,11 @@ class TestVectorStoreABC:
         from synapsekit.retrieval.base import VectorStore
 
         class Minimal(VectorStore):
-            async def add(self, texts, metadata=None): pass
-            async def search(self, query, top_k=5): return []
+            async def add(self, texts, metadata=None):
+                pass
+
+            async def search(self, query, top_k=5):
+                return []
 
         vs = Minimal()
         with pytest.raises(NotImplementedError):
@@ -51,8 +58,11 @@ class TestVectorStoreABC:
         from synapsekit.retrieval.base import VectorStore
 
         class Minimal(VectorStore):
-            async def add(self, texts, metadata=None): pass
-            async def search(self, query, top_k=5): return []
+            async def add(self, texts, metadata=None):
+                pass
+
+            async def search(self, query, top_k=5):
+                return []
 
         vs = Minimal()
         with pytest.raises(NotImplementedError):
@@ -63,15 +73,18 @@ class TestVectorStoreABC:
 # InMemoryVectorStore implements VectorStore
 # ------------------------------------------------------------------ #
 
+
 class TestInMemoryImplementsABC:
     def test_is_subclass_of_vectorstore(self):
         from synapsekit.retrieval.base import VectorStore
         from synapsekit.retrieval.vectorstore import InMemoryVectorStore
+
         assert issubclass(InMemoryVectorStore, VectorStore)
 
     @pytest.mark.asyncio
     async def test_add_and_search(self):
         from synapsekit.retrieval.vectorstore import InMemoryVectorStore
+
         store = InMemoryVectorStore(make_mock_embeddings())
         await store.add(["hello", "world"])
         results = await store.search("hello", top_k=2)
@@ -81,6 +94,7 @@ class TestInMemoryImplementsABC:
 # ------------------------------------------------------------------ #
 # ChromaVectorStore (mocked chromadb)
 # ------------------------------------------------------------------ #
+
 
 class TestChromaVectorStore:
     def _make_chroma_mocks(self):
@@ -100,9 +114,10 @@ class TestChromaVectorStore:
 
     def test_import_error_without_chromadb(self):
         with patch.dict("sys.modules", {"chromadb": None}):
-            from importlib import import_module
             import importlib
+
             import synapsekit.retrieval.chroma as chroma_mod
+
             importlib.reload(chroma_mod)  # force re-evaluation
             with pytest.raises(ImportError, match="chromadb"):
                 chroma_mod.ChromaVectorStore(make_mock_embeddings())
@@ -112,6 +127,7 @@ class TestChromaVectorStore:
         mock_chromadb, mock_collection = self._make_chroma_mocks()
         with patch.dict("sys.modules", {"chromadb": mock_chromadb}):
             from synapsekit.retrieval.chroma import ChromaVectorStore
+
             store = ChromaVectorStore(make_mock_embeddings())
             await store.add(["text1", "text2"])
             mock_collection.add.assert_called_once()
@@ -126,6 +142,7 @@ class TestChromaVectorStore:
         mock_chromadb, mock_collection = self._make_chroma_mocks()
         with patch.dict("sys.modules", {"chromadb": mock_chromadb}):
             from synapsekit.retrieval.chroma import ChromaVectorStore
+
             store = ChromaVectorStore(make_mock_embeddings())
             await store.add([])
             mock_collection.add.assert_not_called()
@@ -136,6 +153,7 @@ class TestChromaVectorStore:
         mock_collection.count.return_value = 0
         with patch.dict("sys.modules", {"chromadb": mock_chromadb}):
             from synapsekit.retrieval.chroma import ChromaVectorStore
+
             store = ChromaVectorStore(make_mock_embeddings())
             results = await store.search("query")
             assert results == []
@@ -144,6 +162,7 @@ class TestChromaVectorStore:
 # ------------------------------------------------------------------ #
 # FAISSVectorStore (mocked faiss)
 # ------------------------------------------------------------------ #
+
 
 class TestFAISSVectorStore:
     def _make_faiss_mock(self):
@@ -159,16 +178,19 @@ class TestFAISSVectorStore:
     def test_import_error_without_faiss(self):
         with patch.dict("sys.modules", {"faiss": None}):
             import importlib
+
             import synapsekit.retrieval.faiss as faiss_mod
+
             importlib.reload(faiss_mod)
             with pytest.raises(ImportError, match="faiss-cpu"):
                 faiss_mod.FAISSVectorStore(make_mock_embeddings())
 
     @pytest.mark.asyncio
     async def test_add_and_search(self):
-        mock_faiss, mock_index = self._make_faiss_mock()
+        mock_faiss, _mock_index = self._make_faiss_mock()
         with patch.dict("sys.modules", {"faiss": mock_faiss}):
             from synapsekit.retrieval.faiss import FAISSVectorStore
+
             store = FAISSVectorStore(make_mock_embeddings())
             await store.add(["alpha", "beta"], metadata=[{"id": 1}, {"id": 2}])
             assert len(store._texts) == 2
@@ -182,15 +204,17 @@ class TestFAISSVectorStore:
         mock_faiss, _ = self._make_faiss_mock()
         with patch.dict("sys.modules", {"faiss": mock_faiss}):
             from synapsekit.retrieval.faiss import FAISSVectorStore
+
             store = FAISSVectorStore(make_mock_embeddings())
             results = await store.search("q")
             assert results == []
 
     @pytest.mark.asyncio
     async def test_add_empty_does_nothing(self):
-        mock_faiss, mock_index = self._make_faiss_mock()
+        mock_faiss, _mock_index = self._make_faiss_mock()
         with patch.dict("sys.modules", {"faiss": mock_faiss}):
             from synapsekit.retrieval.faiss import FAISSVectorStore
+
             store = FAISSVectorStore(make_mock_embeddings())
             await store.add([])
             assert store._index is None
@@ -199,6 +223,7 @@ class TestFAISSVectorStore:
 # ------------------------------------------------------------------ #
 # QdrantVectorStore (mocked qdrant_client)
 # ------------------------------------------------------------------ #
+
 
 class TestQdrantVectorStore:
     def _make_qdrant_mocks(self):
@@ -220,11 +245,15 @@ class TestQdrantVectorStore:
     @pytest.mark.asyncio
     async def test_add_and_search(self):
         mock_qc, mock_models, mock_client = self._make_qdrant_mocks()
-        with patch.dict("sys.modules", {
-            "qdrant_client": mock_qc,
-            "qdrant_client.models": mock_models,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "qdrant_client": mock_qc,
+                "qdrant_client.models": mock_models,
+            },
+        ):
             from synapsekit.retrieval.qdrant import QdrantVectorStore
+
             store = QdrantVectorStore(make_mock_embeddings())
             await store.add(["test text"])
             mock_client.upsert.assert_called_once()
@@ -237,7 +266,9 @@ class TestQdrantVectorStore:
     def test_import_error_without_qdrant(self):
         with patch.dict("sys.modules", {"qdrant_client": None}):
             import importlib
+
             import synapsekit.retrieval.qdrant as qdrant_mod
+
             importlib.reload(qdrant_mod)
             with pytest.raises(ImportError, match="qdrant-client"):
                 qdrant_mod.QdrantVectorStore(make_mock_embeddings())
@@ -246,6 +277,7 @@ class TestQdrantVectorStore:
 # ------------------------------------------------------------------ #
 # PineconeVectorStore (mocked pinecone)
 # ------------------------------------------------------------------ #
+
 
 class TestPineconeVectorStore:
     def _make_pinecone_mocks(self):
@@ -272,9 +304,8 @@ class TestPineconeVectorStore:
         mock_pinecone, mock_index = self._make_pinecone_mocks()
         with patch.dict("sys.modules", {"pinecone": mock_pinecone}):
             from synapsekit.retrieval.pinecone import PineconeVectorStore
-            store = PineconeVectorStore(
-                make_mock_embeddings(), index_name="test", api_key="key"
-            )
+
+            store = PineconeVectorStore(make_mock_embeddings(), index_name="test", api_key="key")
             await store.add(["pine text"], metadata=[{"category": "test"}])
             mock_index.upsert.assert_called_once()
 
@@ -288,16 +319,17 @@ class TestPineconeVectorStore:
         mock_pinecone, mock_index = self._make_pinecone_mocks()
         with patch.dict("sys.modules", {"pinecone": mock_pinecone}):
             from synapsekit.retrieval.pinecone import PineconeVectorStore
-            store = PineconeVectorStore(
-                make_mock_embeddings(), index_name="test", api_key="key"
-            )
+
+            store = PineconeVectorStore(make_mock_embeddings(), index_name="test", api_key="key")
             await store.add([])
             mock_index.upsert.assert_not_called()
 
     def test_import_error_without_pinecone(self):
         with patch.dict("sys.modules", {"pinecone": None}):
             import importlib
+
             import synapsekit.retrieval.pinecone as pine_mod
+
             importlib.reload(pine_mod)
             with pytest.raises(ImportError, match="pinecone"):
                 pine_mod.PineconeVectorStore(

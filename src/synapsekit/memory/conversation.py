@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import List
-
 
 class ConversationMemory:
     """
@@ -11,7 +9,7 @@ class ConversationMemory:
 
     def __init__(self, window: int = 10) -> None:
         self._window = window
-        self._messages: List[dict] = []
+        self._messages: list[dict] = []
 
     def add(self, role: str, content: str) -> None:
         """Append a message. Role should be 'user' or 'assistant'."""
@@ -21,7 +19,7 @@ class ConversationMemory:
         if len(self._messages) > max_messages:
             self._messages = self._messages[-max_messages:]
 
-    def get_messages(self) -> List[dict]:
+    def get_messages(self) -> list[dict]:
         """Return the current message history."""
         return list(self._messages)
 

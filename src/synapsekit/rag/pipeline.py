@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import AsyncGenerator, List, Optional
+from collections.abc import AsyncGenerator
+from dataclasses import dataclass
 
 from ..llm.base import BaseLLM
 from ..loaders.base import Document
@@ -20,7 +20,7 @@ class TextSplitter:
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
 
-    def split(self, text: str) -> List[str]:
+    def split(self, text: str) -> list[str]:
         text = text.strip()
         if not text:
             return []
@@ -34,9 +34,12 @@ class TextSplitter:
                 return self._merge(parts, sep)
 
         # Hard split as last resort
-        return [text[i:i + self.chunk_size] for i in range(0, len(text), self.chunk_size - self.chunk_overlap)]
+        return [
+            text[i : i + self.chunk_size]
+            for i in range(0, len(text), self.chunk_size - self.chunk_overlap)
+        ]
 
-    def _merge(self, parts: List[str], sep: str) -> List[str]:
+    def _merge(self, parts: list[str], sep: str) -> list[str]:
         chunks, current = [], ""
         for part in parts:
             candidate = current + (sep if current else "") + part
@@ -60,7 +63,7 @@ class TextSplitter:
 
         overlapped = [chunks[0]]
         for i in range(1, len(chunks)):
-            tail = chunks[i - 1][-self.chunk_overlap:]
+            tail = chunks[i - 1][-self.chunk_overlap :]
             overlapped.append(tail + chunks[i])
         return overlapped
 
@@ -70,7 +73,7 @@ class RAGConfig:
     llm: BaseLLM
     retriever: Retriever
     memory: ConversationMemory
-    tracer: Optional[TokenTracer] = None
+    tracer: TokenTracer | None = None
     retrieval_top_k: int = 5
     system_prompt: str = "Answer using only the provided context. If the context does not contain the answer, say so."
     chunk_size: int = 512
@@ -96,14 +99,12 @@ class RAGPipeline:
         meta = [metadata or {} for _ in chunks]
         await self.config.retriever.add(chunks, meta)
 
-    async def add_documents(self, docs: List[Document]) -> None:
+    async def add_documents(self, docs: list[Document]) -> None:
         """Chunk and add a list of Documents to the vectorstore."""
         for doc in docs:
             await self.add(doc.text, doc.metadata)
 
-    async def stream(
-        self, query: str, top_k: int | None = None
-    ) -> AsyncGenerator[str, None]:
+    async def stream(self, query: str, top_k: int | None = None) -> AsyncGenerator[str]:
         """Retrieve context, build prompt, stream LLM response, update memory."""
         k = top_k or self.config.retrieval_top_k
         chunks = await self.config.retriever.retrieve(query, top_k=k)
@@ -111,22 +112,24 @@ class RAGPipeline:
         context = "\n\n".join(chunks) if chunks else "No context available."
         history = self.config.memory.format_context()
 
-        messages: List[dict] = [
+        messages: list[dict] = [
             {"role": "system", "content": self.config.system_prompt},
         ]
         if history:
             messages.append({"role": "user", "content": f"Previous conversation:\n{history}"})
             messages.append({"role": "assistant", "content": "Understood."})
 
-        messages.append({
-            "role": "user",
-            "content": f"Context:\n{context}\n\nQuestion: {query}",
-        })
+        messages.append(
+            {
+                "role": "user",
+                "content": f"Context:\n{context}\n\nQuestion: {query}",
+            }
+        )
 
         tracer = self.config.tracer
         t0 = tracer.start_timer() if tracer else 0.0
 
-        answer_parts: List[str] = []
+        answer_parts: list[str] = []
         async for token in self.config.llm.stream_with_messages(messages):
             answer_parts.append(token)
             yield token

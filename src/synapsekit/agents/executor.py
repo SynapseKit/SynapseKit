@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import AsyncGenerator, List, Literal
+from collections.abc import AsyncGenerator
+from dataclasses import dataclass
+from typing import Literal
 
 from .._compat import run_sync
 from ..llm.base import BaseLLM
@@ -14,7 +15,7 @@ from .react import ReActAgent
 @dataclass
 class AgentConfig:
     llm: BaseLLM
-    tools: List[BaseTool]
+    tools: list[BaseTool]
     agent_type: Literal["react", "function_calling"] = "react"
     max_iterations: int = 10
     system_prompt: str = "You are a helpful AI assistant."
@@ -68,7 +69,7 @@ class AgentExecutor:
         """Async: run agent and return final answer."""
         return await self._agent.run(query)
 
-    async def stream(self, query: str) -> AsyncGenerator[str, None]:
+    async def stream(self, query: str) -> AsyncGenerator[str]:
         """Async: stream final answer tokens."""
         async for token in self._agent.stream(query):
             yield token

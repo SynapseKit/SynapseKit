@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import List, Optional
 
 
 class VectorStore(ABC):
@@ -10,14 +9,12 @@ class VectorStore(ABC):
     @abstractmethod
     async def add(
         self,
-        texts: List[str],
-        metadata: Optional[List[dict]] = None,
-    ) -> None:
-        ...
+        texts: list[str],
+        metadata: list[dict] | None = None,
+    ) -> None: ...
 
     @abstractmethod
-    async def search(self, query: str, top_k: int = 5) -> List[dict]:
-        ...
+    async def search(self, query: str, top_k: int = 5) -> list[dict]: ...
 
     def save(self, path: str) -> None:
         raise NotImplementedError(f"{type(self).__name__} does not support save()")

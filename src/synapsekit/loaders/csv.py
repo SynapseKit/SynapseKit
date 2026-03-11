@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import csv
-from typing import List, Optional
 
 from .base import Document
 
@@ -12,14 +11,14 @@ class CSVLoader:
     def __init__(
         self,
         path: str,
-        text_column: Optional[str] = None,
+        text_column: str | None = None,
         encoding: str = "utf-8",
     ) -> None:
         self._path = path
         self._text_column = text_column
         self._encoding = encoding
 
-    def load(self) -> List[Document]:
+    def load(self) -> list[Document]:
         docs = []
         with open(self._path, encoding=self._encoding, newline="") as f:
             reader = csv.DictReader(f)

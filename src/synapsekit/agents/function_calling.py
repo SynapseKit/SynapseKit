@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import json
-from typing import Any, AsyncGenerator, Dict, List, Optional
+from collections.abc import AsyncGenerator
+from typing import Any
 
 from ..llm.base import BaseLLM
 from .base import BaseTool
@@ -20,9 +21,9 @@ class FunctionCallingAgent:
     def __init__(
         self,
         llm: BaseLLM,
-        tools: List[BaseTool],
+        tools: list[BaseTool],
         max_iterations: int = 10,
-        memory: Optional[AgentMemory] = None,
+        memory: AgentMemory | None = None,
         system_prompt: str = "You are a helpful AI assistant.",
     ) -> None:
         self._llm = llm
@@ -43,7 +44,7 @@ class FunctionCallingAgent:
         self._check_support()
         self._memory.clear()
 
-        messages: List[dict] = [
+        messages: list[dict] = [
             {"role": "system", "content": self._system_prompt},
             {"role": "user", "content": query},
         ]
@@ -51,7 +52,7 @@ class FunctionCallingAgent:
         tool_schemas = self._registry.schemas()
 
         for _ in range(self._max_iterations):
-            result: Dict[str, Any] = await self._llm.call_with_tools(messages, tool_schemas)
+            result: dict[str, Any] = await self._llm.call_with_tools(messages, tool_schemas)
 
             tool_calls = result.get("tool_calls")
             content = result.get("content")
@@ -61,21 +62,23 @@ class FunctionCallingAgent:
                 return content or ""
 
             # Append assistant message with tool_calls
-            messages.append({
-                "role": "assistant",
-                "content": None,
-                "tool_calls": [
-                    {
-                        "id": tc["id"],
-                        "type": "function",
-                        "function": {
-                            "name": tc["name"],
-                            "arguments": json.dumps(tc["arguments"]),
-                        },
-                    }
-                    for tc in tool_calls
-                ],
-            })
+            messages.append(
+                {
+                    "role": "assistant",
+                    "content": None,
+                    "tool_calls": [
+                        {
+                            "id": tc["id"],
+                            "type": "function",
+                            "function": {
+                                "name": tc["name"],
+                                "arguments": json.dumps(tc["arguments"]),
+                            },
+                        }
+                        for tc in tool_calls
+                    ],
+                }
+            )
 
             # Execute each tool and append observations
             for tc in tool_calls:
@@ -88,22 +91,26 @@ class FunctionCallingAgent:
                 except Exception as e:
                     observation = f"Tool error: {e}"
 
-                messages.append({
-                    "role": "tool",
-                    "tool_call_id": tc["id"],
-                    "content": observation,
-                })
+                messages.append(
+                    {
+                        "role": "tool",
+                        "tool_call_id": tc["id"],
+                        "content": observation,
+                    }
+                )
 
-                self._memory.add_step(AgentStep(
-                    thought="",
-                    action=tc["name"],
-                    action_input=json.dumps(tc["arguments"]),
-                    observation=observation,
-                ))
+                self._memory.add_step(
+                    AgentStep(
+                        thought="",
+                        action=tc["name"],
+                        action_input=json.dumps(tc["arguments"]),
+                        observation=observation,
+                    )
+                )
 
         return "I was unable to complete the task within the allowed number of steps."
 
-    async def stream(self, query: str) -> AsyncGenerator[str, None]:
+    async def stream(self, query: str) -> AsyncGenerator[str]:
         """Stream the final answer (intermediate tool calls run silently)."""
         answer = await self.run(query)
         for word in answer.split(" "):

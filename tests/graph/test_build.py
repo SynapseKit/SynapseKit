@@ -1,5 +1,7 @@
 """Tests for StateGraph builder and compile-time validation."""
+
 import pytest
+
 from synapsekit.graph.errors import GraphConfigError
 from synapsekit.graph.graph import StateGraph
 from synapsekit.graph.state import END
@@ -12,6 +14,7 @@ async def _noop(state):
 # ------------------------------------------------------------------ #
 # Basic construction
 # ------------------------------------------------------------------ #
+
 
 def test_add_node_returns_self():
     g = StateGraph()
@@ -41,6 +44,7 @@ def test_set_finish_point_adds_end_edge():
 
 def test_compile_returns_compiled_graph():
     from synapsekit.graph.compiled import CompiledGraph
+
     g = StateGraph()
     g.add_node("a", _noop).set_entry_point("a")
     compiled = g.compile()
@@ -50,6 +54,7 @@ def test_compile_returns_compiled_graph():
 # ------------------------------------------------------------------ #
 # Validation errors
 # ------------------------------------------------------------------ #
+
 
 def test_compile_no_entry_point_raises():
     g = StateGraph()
@@ -112,6 +117,7 @@ def test_conditional_edge_mapping_to_end_is_valid():
 # ------------------------------------------------------------------ #
 # Cycle detection
 # ------------------------------------------------------------------ #
+
 
 def test_cycle_detection_simple():
     g = StateGraph()

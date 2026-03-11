@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import List, Optional
-
 from ..embeddings.backend import SynapsekitEmbeddings
 from .base import VectorStore
 
@@ -19,7 +17,7 @@ class PineconeVectorStore(VectorStore):
         try:
             from pinecone import Pinecone
         except ImportError:
-            raise ImportError("pinecone required: pip install synapsekit[pinecone]")
+            raise ImportError("pinecone required: pip install synapsekit[pinecone]") from None
 
         self._embeddings = embedding_backend
         self._pc = Pinecone(api_key=api_key)
@@ -28,8 +26,8 @@ class PineconeVectorStore(VectorStore):
 
     async def add(
         self,
-        texts: List[str],
-        metadata: Optional[List[dict]] = None,
+        texts: list[str],
+        metadata: list[dict] | None = None,
     ) -> None:
         if not texts:
             return
@@ -42,11 +40,9 @@ class PineconeVectorStore(VectorStore):
         self._index.upsert(vectors=vectors)
         self._count += len(texts)
 
-    async def search(self, query: str, top_k: int = 5) -> List[dict]:
+    async def search(self, query: str, top_k: int = 5) -> list[dict]:
         q_vec = await self._embeddings.embed_one(query)
-        results = self._index.query(
-            vector=q_vec.tolist(), top_k=top_k, include_metadata=True
-        )
+        results = self._index.query(vector=q_vec.tolist(), top_k=top_k, include_metadata=True)
         return [
             {
                 "text": m.metadata.get("text", ""),

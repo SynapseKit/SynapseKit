@@ -1,22 +1,27 @@
 """Tests for ReActAgent."""
+
 from __future__ import annotations
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock
 
-from synapsekit.agents.react import ReActAgent, _parse_final_answer, _parse_action, _parse_thought
-from synapsekit.agents.base import BaseTool, ToolResult
-from synapsekit.agents.memory import AgentMemory
+import pytest
 
+from synapsekit.agents.base import BaseTool, ToolResult
+from synapsekit.agents.react import ReActAgent, _parse_action, _parse_final_answer, _parse_thought
 
 # ------------------------------------------------------------------ #
 # Helpers
 # ------------------------------------------------------------------ #
 
+
 class EchoTool(BaseTool):
     name = "echo"
     description = "Echoes the input back."
-    parameters = {"type": "object", "properties": {"input": {"type": "string"}}, "required": ["input"]}
+    parameters = {
+        "type": "object",
+        "properties": {"input": {"type": "string"}},
+        "required": ["input"],
+    }
 
     async def run(self, input: str = "", **kwargs) -> ToolResult:
         return ToolResult(output=f"ECHO: {input}")
@@ -41,6 +46,7 @@ def make_mock_llm(responses):
 # ------------------------------------------------------------------ #
 # Parser unit tests
 # ------------------------------------------------------------------ #
+
 
 class TestParsers:
     def test_parse_final_answer(self):
@@ -71,6 +77,7 @@ class TestParsers:
 # ------------------------------------------------------------------ #
 # ReActAgent
 # ------------------------------------------------------------------ #
+
 
 class TestReActAgent:
     @pytest.mark.asyncio
@@ -140,10 +147,12 @@ class TestReActAgent:
 
     @pytest.mark.asyncio
     async def test_memory_cleared_on_new_run(self):
-        llm = make_mock_llm([
-            "Thought: done\nFinal Answer: A",
-            "Thought: done\nFinal Answer: B",
-        ])
+        llm = make_mock_llm(
+            [
+                "Thought: done\nFinal Answer: A",
+                "Thought: done\nFinal Answer: B",
+            ]
+        )
         agent = ReActAgent(llm=llm, tools=[])
         await agent.run("first")
         assert len(agent.memory) == 0  # no tool calls

@@ -40,7 +40,7 @@ class WebSearchTool(BaseTool):
         except ImportError:
             raise ImportError(
                 "duckduckgo-search required: pip install synapsekit[search]"
-            )
+            ) from None
 
         try:
             results = []

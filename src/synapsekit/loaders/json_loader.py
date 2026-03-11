@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-from typing import List, Optional
 
 from .base import Document
 
@@ -13,7 +12,7 @@ class JSONLoader:
         self,
         path: str,
         text_key: str = "text",
-        metadata_keys: Optional[List[str]] = None,
+        metadata_keys: list[str] | None = None,
         encoding: str = "utf-8",
     ) -> None:
         self._path = path
@@ -21,7 +20,7 @@ class JSONLoader:
         self._metadata_keys = metadata_keys or []
         self._encoding = encoding
 
-    def load(self) -> List[Document]:
+    def load(self) -> list[Document]:
         with open(self._path, encoding=self._encoding) as f:
             data = json.load(f)
 

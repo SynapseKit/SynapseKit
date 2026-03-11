@@ -1,4 +1,5 @@
 """Tests for get_mermaid() output."""
+
 from synapsekit.graph.graph import StateGraph
 from synapsekit.graph.state import END
 

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import List
-
 from .base import Document
 
 
@@ -12,11 +10,11 @@ class HTMLLoader:
         self._path = path
         self._encoding = encoding
 
-    def load(self) -> List[Document]:
+    def load(self) -> list[Document]:
         try:
             from bs4 import BeautifulSoup
         except ImportError:
-            raise ImportError("beautifulsoup4 required: pip install synapsekit[html]")
+            raise ImportError("beautifulsoup4 required: pip install synapsekit[html]") from None
 
         with open(self._path, encoding=self._encoding) as f:
             content = f.read()

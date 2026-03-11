@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import AsyncGenerator, List
+from collections.abc import AsyncGenerator
 
 from .base import BaseLLM, LLMConfig
 
@@ -17,11 +17,11 @@ class MistralLLM(BaseLLM):
             try:
                 from mistralai import Mistral
             except ImportError:
-                raise ImportError("mistralai required: pip install synapsekit[mistral]")
+                raise ImportError("mistralai required: pip install synapsekit[mistral]") from None
             self._client = Mistral(api_key=self.config.api_key)
         return self._client
 
-    async def stream(self, prompt: str, **kw) -> AsyncGenerator[str, None]:
+    async def stream(self, prompt: str, **kw) -> AsyncGenerator[str]:
         messages = [
             {"role": "system", "content": self.config.system_prompt},
             {"role": "user", "content": prompt},
@@ -29,9 +29,7 @@ class MistralLLM(BaseLLM):
         async for token in self.stream_with_messages(messages, **kw):
             yield token
 
-    async def stream_with_messages(
-        self, messages: List[dict], **kw
-    ) -> AsyncGenerator[str, None]:
+    async def stream_with_messages(self, messages: list[dict], **kw) -> AsyncGenerator[str]:
         client = self._get_client()
         async for chunk in client.chat.stream_async(
             model=self.config.model,

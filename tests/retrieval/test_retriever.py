@@ -1,9 +1,10 @@
 """Tests for Retriever — vector search + optional rerank."""
+
 from __future__ import annotations
 
-import numpy as np
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from synapsekit.retrieval.retriever import Retriever
 from synapsekit.retrieval.vectorstore import InMemoryVectorStore
