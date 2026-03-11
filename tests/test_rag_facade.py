@@ -44,7 +44,7 @@ class TestRAGFacade:
 
     def test_init_unknown_provider_raises(self):
         with pytest.raises(ValueError, match="Unknown provider"):
-            RAG(model="gpt-4o-mini", api_key="sk-test", provider="cohere")
+            RAG(model="gpt-4o-mini", api_key="sk-test", provider="unknownxyz")
 
     def test_add_sync(self):
         rag = RAG(model="gpt-4o-mini", api_key="sk-test")

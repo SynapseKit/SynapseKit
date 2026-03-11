@@ -24,8 +24,7 @@ def make_mock_llm(tokens=("Hello", " world")):
 def make_mock_retriever(chunks=None):
     retriever = MagicMock()
     retriever.retrieve = AsyncMock(return_value=chunks or ["Context chunk 1.", "Context chunk 2."])
-    retriever._store = MagicMock()
-    retriever._store.add = AsyncMock()
+    retriever.add = AsyncMock()
     return retriever
 
 
@@ -79,7 +78,7 @@ class TestRAGPipeline:
 
         await pipeline.add("Some long text to chunk.")
         mock_splitter.split.assert_called_once()
-        pipeline.config.retriever._store.add.assert_called_once()
+        pipeline.config.retriever.add.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_empty_retrieval_uses_no_context_message(self, pipeline):
