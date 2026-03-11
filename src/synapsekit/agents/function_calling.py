@@ -36,7 +36,7 @@ class FunctionCallingAgent:
         if not hasattr(self._llm, "call_with_tools"):
             raise RuntimeError(
                 f"{type(self._llm).__name__} does not support native function calling. "
-                "Use ReActAgent instead, or switch to OpenAILLM / AnthropicLLM."
+                "Use ReActAgent instead, or switch to OpenAILLM / AnthropicLLM / GeminiLLM / MistralLLM."
             )
 
     async def run(self, query: str) -> str:

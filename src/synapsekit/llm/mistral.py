@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 from collections.abc import AsyncGenerator
+from typing import Any
 
 from .base import BaseLLM, LLMConfig
 
@@ -41,3 +43,32 @@ class MistralLLM(BaseLLM):
             if delta:
                 self._output_tokens += 1
                 yield delta
+
+    async def call_with_tools(
+        self,
+        messages: list[dict],
+        tools: list[dict],
+    ) -> dict[str, Any]:
+        """Native function-calling (OpenAI-compatible). Returns {"content": str|None, "tool_calls": list|None}."""
+        client = self._get_client()
+        response = await client.chat.complete_async(
+            model=self.config.model,
+            messages=messages,
+            tools=tools,
+            tool_choice="auto",
+        )
+        msg = response.choices[0].message
+
+        if msg.tool_calls:
+            return {
+                "content": None,
+                "tool_calls": [
+                    {
+                        "id": tc.id,
+                        "name": tc.function.name,
+                        "arguments": json.loads(tc.function.arguments),
+                    }
+                    for tc in msg.tool_calls
+                ],
+            }
+        return {"content": msg.content or "", "tool_calls": None}
