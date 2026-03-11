@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import time
-from typing import AsyncGenerator, List
+import json
+from typing import Any, AsyncGenerator, Dict, List
 
 from .base import BaseLLM, LLMConfig
 
@@ -63,3 +63,34 @@ class OpenAILLM(BaseLLM):
                 self._output_tokens += chunk.usage.completion_tokens or 0
             if chunk.choices and chunk.choices[0].delta.content:
                 yield chunk.choices[0].delta.content
+
+    async def call_with_tools(
+        self,
+        messages: List[dict],
+        tools: List[dict],
+    ) -> Dict[str, Any]:
+        """Native function-calling. Returns {"content": str|None, "tool_calls": list|None}."""
+        client = self._get_client()
+        response = await client.chat.completions.create(
+            model=self.config.model,
+            messages=messages,
+            tools=tools,
+            tool_choice="auto",
+        )
+        msg = response.choices[0].message
+        self._input_tokens += response.usage.prompt_tokens or 0
+        self._output_tokens += response.usage.completion_tokens or 0
+
+        if msg.tool_calls:
+            return {
+                "content": None,
+                "tool_calls": [
+                    {
+                        "id": tc.id,
+                        "name": tc.function.name,
+                        "arguments": json.loads(tc.function.arguments),
+                    }
+                    for tc in msg.tool_calls
+                ],
+            }
+        return {"content": msg.content, "tool_calls": None}
