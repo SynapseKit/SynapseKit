@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import os
+from typing import List
+
+from .base import Document
 
 
 class StringLoader:
@@ -10,8 +13,8 @@ class StringLoader:
         self._text = text
         self.metadata = metadata or {}
 
-    def load(self) -> str:
-        return self._text
+    def load(self) -> List[Document]:
+        return [Document(text=self._text, metadata=self.metadata)]
 
 
 class TextLoader:
@@ -20,10 +23,10 @@ class TextLoader:
     def __init__(self, path: str, encoding: str = "utf-8") -> None:
         self._path = path
         self._encoding = encoding
-        self.metadata: dict = {"source": path}
 
-    def load(self) -> str:
+    def load(self) -> List[Document]:
         if not os.path.exists(self._path):
             raise FileNotFoundError(f"File not found: {self._path}")
         with open(self._path, encoding=self._encoding) as f:
-            return f.read()
+            text = f.read()
+        return [Document(text=text, metadata={"source": self._path})]
