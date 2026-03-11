@@ -1,71 +1,18 @@
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from ..llm.base import BaseLLM
 from ..loaders.base import Document
 from ..memory.conversation import ConversationMemory
 from ..observability.tracer import TokenTracer
 from ..retrieval.retriever import Retriever
+from ..text_splitters.base import BaseSplitter
+from ..text_splitters.recursive import RecursiveCharacterTextSplitter
 
-
-class TextSplitter:
-    """
-    Simple recursive character text splitter. Zero external dependencies.
-    Splits on paragraphs → sentences → words until chunks fit chunk_size.
-    """
-
-    def __init__(self, chunk_size: int = 512, chunk_overlap: int = 50) -> None:
-        self.chunk_size = chunk_size
-        self.chunk_overlap = chunk_overlap
-
-    def split(self, text: str) -> list[str]:
-        text = text.strip()
-        if not text:
-            return []
-        if len(text) <= self.chunk_size:
-            return [text]
-
-        # Try splitting by paragraph, then sentence, then words
-        for sep in ["\n\n", "\n", ". ", " "]:
-            parts = text.split(sep)
-            if len(parts) > 1:
-                return self._merge(parts, sep)
-
-        # Hard split as last resort
-        return [
-            text[i : i + self.chunk_size]
-            for i in range(0, len(text), self.chunk_size - self.chunk_overlap)
-        ]
-
-    def _merge(self, parts: list[str], sep: str) -> list[str]:
-        chunks, current = [], ""
-        for part in parts:
-            candidate = current + (sep if current else "") + part
-            if len(candidate) <= self.chunk_size:
-                current = candidate
-            else:
-                if current:
-                    chunks.append(current)
-                # If a single part exceeds chunk_size, split it recursively
-                if len(part) > self.chunk_size:
-                    chunks.extend(self.split(part))
-                    current = ""
-                else:
-                    current = part
-        if current:
-            chunks.append(current)
-
-        # Apply overlap: prepend tail of previous chunk
-        if self.chunk_overlap <= 0 or len(chunks) < 2:
-            return chunks
-
-        overlapped = [chunks[0]]
-        for i in range(1, len(chunks)):
-            tail = chunks[i - 1][-self.chunk_overlap :]
-            overlapped.append(tail + chunks[i])
-        return overlapped
+# Backward-compatible alias
+TextSplitter = RecursiveCharacterTextSplitter
 
 
 @dataclass
@@ -78,6 +25,7 @@ class RAGConfig:
     system_prompt: str = "Answer using only the provided context. If the context does not contain the answer, say so."
     chunk_size: int = 512
     chunk_overlap: int = 50
+    splitter: BaseSplitter | None = field(default=None)
 
 
 class RAGPipeline:
@@ -88,7 +36,7 @@ class RAGPipeline:
 
     def __init__(self, config: RAGConfig) -> None:
         self.config = config
-        self._splitter = TextSplitter(
+        self._splitter: BaseSplitter = config.splitter or TextSplitter(
             chunk_size=config.chunk_size,
             chunk_overlap=config.chunk_overlap,
         )

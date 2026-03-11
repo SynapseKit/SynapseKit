@@ -66,6 +66,13 @@ from .rag.pipeline import RAGConfig, RAGPipeline
 from .retrieval.base import VectorStore
 from .retrieval.retriever import Retriever
 from .retrieval.vectorstore import InMemoryVectorStore
+from .text_splitters import (
+    BaseSplitter,
+    CharacterTextSplitter,
+    RecursiveCharacterTextSplitter,
+    SemanticSplitter,
+    TokenAwareSplitter,
+)
 
 __version__ = "0.4.0"
 __all__ = [
@@ -121,6 +128,12 @@ __all__ = [
     "PythonREPLTool",
     "SQLQueryTool",
     "WebSearchTool",
+    # Text splitters
+    "BaseSplitter",
+    "CharacterTextSplitter",
+    "RecursiveCharacterTextSplitter",
+    "TokenAwareSplitter",
+    "SemanticSplitter",
     # Graph workflows
     "END",
     "GraphState",
