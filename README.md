@@ -10,7 +10,7 @@
 [![Tests](https://img.shields.io/badge/tests-267%20passing-22c55e?logo=pytest&logoColor=white)]()
 [![Docs](https://img.shields.io/badge/docs-online-0a7bbd?logo=readthedocs&logoColor=white)](https://synapsekit.github.io/synapsekit-docs/)
 
-**[Documentation](https://synapsekit.github.io/synapsekit-docs/) · [Quickstart](https://synapsekit.github.io/synapsekit-docs/docs/getting-started/quickstart) · [API Reference](https://synapsekit.github.io/synapsekit-docs/docs/api/llm) · [Report a Bug](https://github.com/SynapseKit/SynapseKit/issues)**
+**[Documentation](https://synapsekit.github.io/synapsekit-docs/) · [Quickstart](https://synapsekit.github.io/synapsekit-docs/docs/getting-started/quickstart) · [API Reference](https://synapsekit.github.io/synapsekit-docs/docs/api/llm) · [Changelog](CHANGELOG.md) · [Report a Bug](https://github.com/SynapseKit/SynapseKit/issues/new?template=bug_report.yml)**
 
 </div>
 
@@ -64,7 +64,60 @@ SynapseKit is for Python developers who want to ship LLM features without fighti
 - **Backend engineers** adding AI features to existing Python services
 - **ML engineers** building RAG or agent pipelines who need full control over retrieval, prompting, and tool use
 - **Researchers and hackers** who want a clean, readable codebase they can understand and extend
-- **Teams** who need something they can actually debug and maintain
+- **Teams** who need something they can actually debug and maintain in production
+
+---
+
+## What it covers
+
+<div align="center">
+
+<table>
+<tr>
+<td width="50%">
+
+**🗂 RAG Pipelines**<br/>
+Retrieval-augmented generation with streaming, BM25 reranking, conversation memory, and token tracing. Load from PDFs, URLs, CSVs, HTML, directories, and more.
+
+</td>
+<td width="50%">
+
+**🤖 Agents**<br/>
+ReAct loop (any LLM) and native function calling (OpenAI / Anthropic). Built-in tools for calculator, Python REPL, file read, web search, and SQL. Fully extensible.
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**🔀 Graph Workflows**<br/>
+DAG-based async pipelines. Nodes run in waves — parallel nodes execute concurrently. Conditional routing, compile-time validation, cycle detection, and Mermaid export.
+
+</td>
+<td width="50%">
+
+**🧠 LLM Providers**<br/>
+OpenAI, Anthropic, Ollama, Gemini, Cohere, Mistral, Bedrock — all behind one interface. Auto-detected from the model name. Swap without rewriting.
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**🗄 Vector Stores**<br/>
+InMemory (built-in, `.npz` persistence), ChromaDB, FAISS, Qdrant, Pinecone. One interface for all backends.
+
+</td>
+<td width="50%">
+
+**🔧 Utilities**<br/>
+Output parsers (JSON, Pydantic, List), prompt templates (standard, chat, few-shot), token tracing with cost estimation.
+
+</td>
+</tr>
+</table>
+
+</div>
 
 ---
 
@@ -74,256 +127,25 @@ SynapseKit is for Python developers who want to ship LLM features without fighti
 pip install synapsekit[openai]       # OpenAI
 pip install synapsekit[anthropic]    # Anthropic
 pip install synapsekit[ollama]       # Ollama (local)
-pip install synapsekit[gemini]       # Google Gemini
-pip install synapsekit[cohere]       # Cohere
-pip install synapsekit[mistral]      # Mistral AI
-pip install synapsekit[bedrock]      # AWS Bedrock
 pip install synapsekit[all]          # Everything
 ```
 
----
-
-## Quick Start
-
-<details open>
-<summary><strong>RAG — 3 lines</strong></summary>
-
-```python
-from synapsekit import RAG
-
-rag = RAG(model="gpt-4o-mini", api_key="sk-...")
-rag.add("SynapseKit is a Python framework for building LLM applications.")
-
-async for token in rag.stream("What is SynapseKit?"):
-    print(token, end="", flush=True)
-```
-
-</details>
-
-<details>
-<summary><strong>Agent with tools</strong></summary>
-
-```python
-from synapsekit import AgentExecutor, AgentConfig, CalculatorTool, WebSearchTool
-from synapsekit.llm.openai import OpenAILLM
-from synapsekit.llm.base import LLMConfig
-
-llm = OpenAILLM(LLMConfig(model="gpt-4o-mini", api_key="sk-..."))
-
-executor = AgentExecutor(AgentConfig(
-    llm=llm,
-    tools=[CalculatorTool(), WebSearchTool()],
-    agent_type="function_calling",
-))
-
-answer = await executor.run("What is the square root of 1764?")
-```
-
-</details>
-
-<details>
-<summary><strong>Graph workflow</strong></summary>
-
-```python
-from synapsekit import StateGraph, END
-
-async def fetch(state):    return {"data": await api_call(state["query"])}
-async def summarise(state): return {"result": await llm_call(state["data"])}
-
-graph = (
-    StateGraph()
-    .add_node("fetch", fetch)
-    .add_node("summarise", summarise)
-    .add_edge("fetch", "summarise")
-    .set_entry_point("fetch")
-    .set_finish_point("summarise")
-    .compile()
-)
-
-result = await graph.run({"query": "latest AI research"})
-```
-
-</details>
+Full installation options → [docs](https://synapsekit.github.io/synapsekit-docs/docs/getting-started/installation)
 
 ---
 
-## RAG
+## Documentation
 
-Full retrieval-augmented generation with streaming, BM25 reranking, conversation memory, and token tracing.
+Everything you need to get started and go deep is in the docs.
 
-```python
-from synapsekit import RAG, PDFLoader, DirectoryLoader
-
-rag = RAG(model="gpt-4o-mini", api_key="sk-...", rerank=True, memory_window=10)
-
-# Load from any source
-rag.add_documents(PDFLoader("report.pdf").load())
-rag.add_documents(DirectoryLoader("./docs/").load())   # .txt .pdf .csv .json .html
-rag.add_documents(await WebLoader("https://example.com").load())
-
-# Ask
-answer = rag.ask_sync("Summarise the key findings")
-
-# Token usage and cost
-print(rag.tracer.summary())
-# {'total_calls': 1, 'total_tokens': 412, 'total_cost_usd': 0.000062}
-
-# Persist and reload
-rag.save("my_index.npz")
-rag.load("my_index.npz")
-```
-
----
-
-## Agents
-
-Two strategies, one interface. Both support `run()`, `stream()`, and `run_sync()`.
-
-| Strategy | Class | Best for |
-|---|---|---|
-| **ReAct** | `ReActAgent` | Any LLM — structured Thought → Action → Observation loop |
-| **Function Calling** | `FunctionCallingAgent` | OpenAI / Anthropic — native tool_calls for reliable selection |
-
-```python
-executor = AgentExecutor(AgentConfig(
-    llm=llm,
-    tools=[CalculatorTool(), FileReadTool(), WebSearchTool(), SQLQueryTool()],
-    agent_type="function_calling",
-    max_iterations=10,
-))
-
-answer = await executor.run("What is 15% of 48,320?")
-answer = executor.run_sync("Read ./report.txt and summarise it")
-
-async for token in executor.stream("Explain your reasoning"):
-    print(token, end="")
-```
-
-**Built-in tools:**
-
-| Tool | Description |
+| | |
 |---|---|
-| `CalculatorTool` | Safe math expression evaluator |
-| `PythonREPLTool` | Execute Python with persistent namespace |
-| `FileReadTool` | Read local files |
-| `WebSearchTool` | DuckDuckGo search (`pip install synapsekit[search]`) |
-| `SQLQueryTool` | SQLite / SQLAlchemy SELECT queries |
-
-**Custom tools** — one class, one method:
-
-```python
-from synapsekit import BaseTool, ToolResult
-
-class WeatherTool(BaseTool):
-    name = "weather"
-    description = "Get current weather for a city. Input: city name."
-
-    async def run(self, city: str) -> ToolResult:
-        data = await fetch_weather_api(city)
-        return ToolResult(output=f"{data['temp']}°C, {data['condition']}")
-```
-
----
-
-## Graph Workflows
-
-Build async DAG pipelines. Nodes in the same wave run concurrently via `asyncio.gather`. Conditional routing at runtime. Compile-time cycle detection.
-
-```python
-from synapsekit import StateGraph, END
-
-graph = (
-    StateGraph()
-    .add_node("ingest",   ingest_fn)
-    .add_node("enrich",   enrich_fn)
-    .add_node("store",    store_fn)    # ─┐ these two nodes
-    .add_node("notify",   notify_fn)   # ─┘ run in parallel
-    .add_edge("ingest", "enrich")
-    .add_edge("enrich", "store")       # fan-out:
-    .add_edge("enrich", "notify")      # store + notify run concurrently
-    .add_edge("store",  END)
-    .add_edge("notify", END)
-    .set_entry_point("ingest")
-    .compile()
-)
-```
-
-**Conditional routing:**
-
-```python
-def route(state):
-    return "urgent" if state["priority"] == "high" else "normal"
-
-graph.add_conditional_edge("classify", route, {
-    "urgent": "fast_handler",
-    "normal": "slow_handler",
-})
-```
-
-**Stream node-by-node progress:**
-
-```python
-async for event in graph.stream({"query": "..."}):
-    print(f"✓ {event['node']}")
-```
-
-**Mermaid diagram export:**
-
-```python
-print(graph.get_mermaid())
-# flowchart TD
-#     __start__ --> ingest
-#     ingest --> enrich
-#     enrich --> store
-#     enrich --> notify
-#     ...
-```
-
-**Wrap agents or RAG pipelines as nodes:**
-
-```python
-from synapsekit import agent_node, rag_node
-
-graph.add_node("agent", agent_node(executor, input_key="question", output_key="answer"))
-graph.add_node("rag",   rag_node(pipeline,   input_key="query",    output_key="context"))
-```
-
----
-
-## LLM Providers
-
-Nine providers behind one interface. Auto-detected from the model name.
-
-```python
-from synapsekit import RAG
-
-RAG(model="gpt-4o-mini",                             api_key="sk-...")
-RAG(model="claude-sonnet-4-6",                       api_key="sk-ant-...")
-RAG(model="gemini-1.5-pro",                          api_key="...",  provider="gemini")
-RAG(model="command-r-plus",                          api_key="...",  provider="cohere")
-RAG(model="mistral-large-latest",                    api_key="...",  provider="mistral")
-RAG(model="llama3",                                  api_key="",     provider="ollama")
-RAG(model="anthropic.claude-3-sonnet-20240229-v1:0", api_key="env",  provider="bedrock")
-```
-
----
-
-## Vector Stores
-
-Four backends, one interface.
-
-```python
-from synapsekit import InMemoryVectorStore, SynapsekitEmbeddings, Retriever
-from synapsekit.retrieval.chroma import ChromaVectorStore    # pip install synapsekit[chroma]
-from synapsekit.retrieval.faiss  import FAISSVectorStore     # pip install synapsekit[faiss]
-from synapsekit.retrieval.qdrant import QdrantVectorStore    # pip install synapsekit[qdrant]
-
-embeddings = SynapsekitEmbeddings()
-
-retriever = Retriever(InMemoryVectorStore(embeddings), rerank=True)
-await retriever.add(["chunk one", "chunk two", "chunk three"])
-results = await retriever.retrieve("my query", top_k=5)
-```
+| 🚀 [Quickstart](https://synapsekit.github.io/synapsekit-docs/docs/getting-started/quickstart) | Up and running in 5 minutes |
+| 🗂 [RAG](https://synapsekit.github.io/synapsekit-docs/docs/rag/pipeline) | Pipelines, loaders, retrieval, vector stores |
+| 🤖 [Agents](https://synapsekit.github.io/synapsekit-docs/docs/agents/overview) | ReAct, function calling, tools, executor |
+| 🔀 [Graph Workflows](https://synapsekit.github.io/synapsekit-docs/docs/graph/overview) | DAG pipelines, conditional routing, parallel execution |
+| 🧠 [LLM Providers](https://synapsekit.github.io/synapsekit-docs/docs/llms/overview) | All 9 providers with examples |
+| 📖 [API Reference](https://synapsekit.github.io/synapsekit-docs/docs/api/llm) | Full class and method reference |
 
 ---
 
@@ -332,17 +154,9 @@ results = await retriever.retrieve("my query", top_k=5)
 ```bash
 git clone https://github.com/SynapseKit/SynapseKit
 cd SynapseKit
-
 uv sync --group dev
 uv run pytest tests/ -q
-# 267 passed, 6 skipped
 ```
-
----
-
-## Documentation
-
-Full docs at **[synapsekit.github.io/synapsekit-docs](https://synapsekit.github.io/synapsekit-docs/)**
 
 ---
 
@@ -356,16 +170,10 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) to get started. Look for issues tagged [
 
 ## Community
 
-- 💬 **Discussions** — [Ask questions, share ideas](https://github.com/SynapseKit/SynapseKit/discussions)
-- 🐛 **Bug reports** — [Open an issue](https://github.com/SynapseKit/SynapseKit/issues/new?template=bug_report.yml)
-- 💡 **Feature requests** — [Open an issue](https://github.com/SynapseKit/SynapseKit/issues/new?template=feature_request.yml)
-- 🔒 **Security** — [Security policy](SECURITY.md)
-
----
-
-## Changelog
-
-See [CHANGELOG.md](CHANGELOG.md) for a full history of releases.
+- 💬 [Discussions](https://github.com/SynapseKit/SynapseKit/discussions) — ask questions, share ideas
+- 🐛 [Bug reports](https://github.com/SynapseKit/SynapseKit/issues/new?template=bug_report.yml)
+- 💡 [Feature requests](https://github.com/SynapseKit/SynapseKit/issues/new?template=feature_request.yml)
+- 🔒 [Security policy](SECURITY.md)
 
 ---
 
