@@ -1,0 +1,22 @@
+labels: ["idea"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share your ideas for SynapseKit — new features, integrations, design changes. No idea is too small.
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+      description: Describe your idea.
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Why?
+      description: What would this enable that isn't possible today?
+    validations:
+      required: false

@@ -346,6 +346,29 @@ Full docs at **[synapsekit.github.io/synapsekit-docs](https://synapsekit.github.
 
 ---
 
+## Contributing
+
+Contributions are welcome — bug reports, documentation fixes, new providers, new features.
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) to get started. Look for issues tagged [`good first issue`](https://github.com/SynapseKit/SynapseKit/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) if you're new.
+
+---
+
+## Community
+
+- 💬 **Discussions** — [Ask questions, share ideas](https://github.com/SynapseKit/SynapseKit/discussions)
+- 🐛 **Bug reports** — [Open an issue](https://github.com/SynapseKit/SynapseKit/issues/new?template=bug_report.yml)
+- 💡 **Feature requests** — [Open an issue](https://github.com/SynapseKit/SynapseKit/issues/new?template=feature_request.yml)
+- 🔒 **Security** — [Security policy](SECURITY.md)
+
+---
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for a full history of releases.
+
+---
+
 ## License
 
 [MIT](LICENSE)
