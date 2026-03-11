@@ -115,5 +115,13 @@ strict_equality = true
 show_error_codes = true
 
 [tool.deptry]
+pep621_dev_dependency_groups = ["dev"]
+
+[tool.deptry.package_module_name_map]
+google-generativeai = "google"
+beautifulsoup4 = "bs4"
+faiss-cpu = "faiss"
+
 [tool.deptry.per_rule_ignores]
-DEP002 = ["numpy", "rank-bm25"]
+DEP001 = ["sqlalchemy", "pydantic"]
+DEP002 = ["numpy", "rank-bm25", "beautifulsoup4", "lxml", "faiss-cpu", "google-generativeai"]
