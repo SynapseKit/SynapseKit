@@ -10,7 +10,7 @@
 [![Tests](https://img.shields.io/badge/tests-267%20passing-22c55e?logo=pytest&logoColor=white)]()
 [![Docs](https://img.shields.io/badge/docs-online-0a7bbd?logo=readthedocs&logoColor=white)](https://synapsekit.github.io/synapsekit-docs/)
 
-**[Documentation](https://synapsekit.github.io/synapsekit-docs/) · [Quickstart](https://synapsekit.github.io/synapsekit-docs/getting-started/quickstart) · [API Reference](https://synapsekit.github.io/synapsekit-docs/api/llm) · [Report a Bug](https://github.com/SynapseKit/SynapseKit/issues)**
+**[Documentation](https://synapsekit.github.io/synapsekit-docs/) · [Quickstart](https://synapsekit.github.io/synapsekit-docs/docs/getting-started/quickstart) · [API Reference](https://synapsekit.github.io/synapsekit-docs/docs/api/llm) · [Report a Bug](https://github.com/SynapseKit/SynapseKit/issues)**
 
 </div>
 
