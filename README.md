@@ -7,7 +7,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/synapsekit?color=0a7bbd&label=pypi&logo=pypi&logoColor=white)](https://pypi.org/project/synapsekit/)
 [![Python](https://img.shields.io/badge/python-3.14%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-22c55e)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-267%20passing-22c55e?logo=pytest&logoColor=white)]()
+[![Tests](https://img.shields.io/badge/tests-332%20passing-22c55e?logo=pytest&logoColor=white)]()
 [![Docs](https://img.shields.io/badge/docs-online-0a7bbd?logo=readthedocs&logoColor=white)](https://synapsekit.github.io/synapsekit-docs/)
 
 **[Documentation](https://synapsekit.github.io/synapsekit-docs/) · [Quickstart](https://synapsekit.github.io/synapsekit-docs/docs/getting-started/quickstart) · [API Reference](https://synapsekit.github.io/synapsekit-docs/docs/api/llm) · [Changelog](CHANGELOG.md) · [Report a Bug](https://github.com/SynapseKit/SynapseKit/issues/new?template=bug_report.yml)**
@@ -16,7 +16,7 @@
 
 ---
 
-SynapseKit is a Python framework for building production-grade LLM applications. It is **async-native** and **streaming-first** by design — not retrofitted. Every abstraction is composable, transparent, and replaceable. No magic. No hidden callbacks. No lock-in.
+SynapseKit is a Python framework for building production-grade LLM applications. Built **async-native** and **streaming-first** from day one — not retrofitted. Two hard dependencies. Every abstraction is composable, transparent, and replaceable: plain Python you can read, debug, and extend. No magic. No hidden chains. No lock-in.
 
 ---
 

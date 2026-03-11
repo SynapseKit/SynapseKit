@@ -7,6 +7,31 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [0.5.0] — 2026-03-12
+
+### Added
+
+- **Text Splitters** — `BaseSplitter` ABC, `CharacterTextSplitter`, `RecursiveCharacterTextSplitter`, `TokenAwareSplitter`, `SemanticSplitter` (cosine similarity boundaries)
+- **Function calling** — `call_with_tools()` added to `GeminiLLM` and `MistralLLM` (now 4 providers support native tool use)
+- **LLM Caching** — `AsyncLRUCache` with SHA-256 cache keys, opt-in via `LLMConfig(cache=True)`
+- **LLM Retries** — exponential backoff via `retry_async()`, skips auth errors, opt-in via `LLMConfig(max_retries=N)`
+- **Graph Cycles** — `compile(allow_cycles=True)` skips static cycle detection for intentional loops
+- **Configurable max_steps** — `compile(max_steps=N)` overrides the default `_MAX_STEPS=100` guard
+- **Graph Checkpointing** — `BaseCheckpointer` ABC, `InMemoryCheckpointer`, `SQLiteCheckpointer`
+- `CompiledGraph.resume(graph_id, checkpointer)` — re-execute from saved state
+- Adjacency index optimization for `CompiledGraph._next_wave()`
+- `RAGConfig.splitter` — plug any `BaseSplitter` into the RAG pipeline
+- `TextSplitter` alias preserved for backward compatibility
+- 65 new tests (332 total)
+
+### Changed
+
+- `LLMConfig` gains `cache`, `cache_maxsize`, `max_retries`, `retry_delay` fields (all off by default)
+- `pyproject.toml` description updated
+- Version bumped to `0.5.0`
+
+---
+
 ## [0.4.0] — 2026-03-11
 
 ### Added
