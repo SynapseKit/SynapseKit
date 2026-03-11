@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "synapsekit"
-version = "0.1.0"
+version = "0.3.0"
 description = "Lightweight, async-first RAG framework. Streaming-native, minimal dependencies."
 authors = ["Amit Nautiyal <de.amit.nautiyal@gmail.com>"]
 license = "MIT"
@@ -31,7 +31,20 @@ rank-bm25 = ">=0.2.2"
 openai = ["openai"]
 anthropic = ["anthropic"]
 semantic = ["sentence-transformers"]
-all = ["openai", "anthropic", "sentence-transformers", "cohere"]
+pdf = ["pypdf"]
+html = ["beautifulsoup4", "lxml"]
+web = ["httpx", "beautifulsoup4"]
+chroma = ["chromadb"]
+faiss = ["faiss-cpu"]
+qdrant = ["qdrant-client"]
+pinecone = ["pinecone"]
+ollama = ["ollama"]
+cohere = ["cohere"]
+mistral = ["mistralai"]
+gemini = ["google-generativeai"]
+bedrock = ["boto3"]
+search = ["duckduckgo-search"]
+all = ["openai", "anthropic", "sentence-transformers", "pypdf", "beautifulsoup4", "lxml", "httpx", "chromadb", "ollama", "cohere", "mistralai", "google-generativeai", "boto3", "duckduckgo-search"]
 
 [tool.poetry.group.openai]
 optional = true
@@ -50,6 +63,86 @@ optional = true
 
 [tool.poetry.group.semantic.dependencies]
 sentence-transformers = ">=2.7"
+
+[tool.poetry.group.pdf]
+optional = true
+
+[tool.poetry.group.pdf.dependencies]
+pypdf = ">=4.0"
+
+[tool.poetry.group.html]
+optional = true
+
+[tool.poetry.group.html.dependencies]
+beautifulsoup4 = ">=4.12"
+lxml = ">=5.0"
+
+[tool.poetry.group.web]
+optional = true
+
+[tool.poetry.group.web.dependencies]
+httpx = ">=0.27"
+beautifulsoup4 = ">=4.12"
+
+[tool.poetry.group.chroma]
+optional = true
+
+[tool.poetry.group.chroma.dependencies]
+chromadb = ">=0.5"
+
+[tool.poetry.group.faiss]
+optional = true
+
+[tool.poetry.group.faiss.dependencies]
+faiss-cpu = ">=1.7"
+
+[tool.poetry.group.qdrant]
+optional = true
+
+[tool.poetry.group.qdrant.dependencies]
+qdrant-client = ">=1.9"
+
+[tool.poetry.group.pinecone]
+optional = true
+
+[tool.poetry.group.pinecone.dependencies]
+pinecone = ">=3.0"
+
+[tool.poetry.group.ollama]
+optional = true
+
+[tool.poetry.group.ollama.dependencies]
+ollama = ">=0.2"
+
+[tool.poetry.group.cohere]
+optional = true
+
+[tool.poetry.group.cohere.dependencies]
+cohere = ">=5.0"
+
+[tool.poetry.group.mistral]
+optional = true
+
+[tool.poetry.group.mistral.dependencies]
+mistralai = ">=1.0"
+
+[tool.poetry.group.gemini]
+optional = true
+
+[tool.poetry.group.gemini.dependencies]
+google-generativeai = ">=0.7"
+
+[tool.poetry.group.bedrock]
+optional = true
+
+[tool.poetry.group.bedrock.dependencies]
+boto3 = ">=1.34"
+
+[tool.poetry.group.search]
+optional = true
+
+[tool.poetry.group.search.dependencies]
+duckduckgo-search = ">=6.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=8.0"

@@ -14,32 +14,101 @@ SynapseKit — lightweight, async-first RAG framework.
 
 from __future__ import annotations
 
-from typing import AsyncGenerator, Optional
+from typing import AsyncGenerator, List, Optional
 
 from ._compat import run_sync
 from .embeddings.backend import SynapsekitEmbeddings
 from .llm.base import BaseLLM, LLMConfig
+from .loaders.base import Document
+from .loaders.csv import CSVLoader
+from .loaders.directory import DirectoryLoader
+from .loaders.html import HTMLLoader
+from .loaders.json_loader import JSONLoader
+from .loaders.pdf import PDFLoader
 from .loaders.text import StringLoader, TextLoader
+from .loaders.web import WebLoader
 from .memory.conversation import ConversationMemory
 from .observability.tracer import TokenTracer
+from .parsers.json_parser import JSONParser
+from .parsers.list_parser import ListParser
+from .parsers.pydantic_parser import PydanticParser
+from .prompts.template import ChatPromptTemplate, FewShotPromptTemplate, PromptTemplate
 from .rag.pipeline import RAGConfig, RAGPipeline
+from .retrieval.base import VectorStore
 from .retrieval.retriever import Retriever
 from .retrieval.vectorstore import InMemoryVectorStore
 
-__version__ = "0.1.0"
+from .agents import (
+    AgentConfig,
+    AgentExecutor,
+    AgentMemory,
+    AgentStep,
+    BaseTool,
+    CalculatorTool,
+    FileReadTool,
+    FunctionCallingAgent,
+    PythonREPLTool,
+    ReActAgent,
+    SQLQueryTool,
+    ToolRegistry,
+    ToolResult,
+    WebSearchTool,
+)
+
+__version__ = "0.3.0"
 __all__ = [
+    # Facade
     "RAG",
+    # Pipeline
     "RAGPipeline",
     "RAGConfig",
+    # LLM
     "BaseLLM",
     "LLMConfig",
+    # Embeddings
     "SynapsekitEmbeddings",
+    # Vector stores
+    "VectorStore",
     "InMemoryVectorStore",
+    # Retrieval
     "Retriever",
+    # Memory / observability
     "ConversationMemory",
     "TokenTracer",
+    # Loaders
+    "Document",
     "TextLoader",
     "StringLoader",
+    "PDFLoader",
+    "HTMLLoader",
+    "CSVLoader",
+    "JSONLoader",
+    "DirectoryLoader",
+    "WebLoader",
+    # Parsers
+    "JSONParser",
+    "PydanticParser",
+    "ListParser",
+    # Prompts
+    "PromptTemplate",
+    "ChatPromptTemplate",
+    "FewShotPromptTemplate",
+    # Agents
+    "BaseTool",
+    "ToolResult",
+    "ToolRegistry",
+    "AgentMemory",
+    "AgentStep",
+    "ReActAgent",
+    "FunctionCallingAgent",
+    "AgentExecutor",
+    "AgentConfig",
+    # Built-in tools
+    "CalculatorTool",
+    "FileReadTool",
+    "PythonREPLTool",
+    "SQLQueryTool",
+    "WebSearchTool",
 ]
 
 
@@ -55,6 +124,12 @@ def _make_llm(
     if provider is None:
         if model.startswith("claude"):
             provider = "anthropic"
+        elif model.startswith("gemini"):
+            provider = "gemini"
+        elif model.startswith("command"):
+            provider = "cohere"
+        elif model.startswith("mistral") or model.startswith("open-mistral"):
+            provider = "mistral"
         else:
             provider = "openai"
 
@@ -73,8 +148,26 @@ def _make_llm(
     elif provider == "anthropic":
         from .llm.anthropic import AnthropicLLM
         return AnthropicLLM(config)
+    elif provider == "ollama":
+        from .llm.ollama import OllamaLLM
+        return OllamaLLM(config)
+    elif provider == "cohere":
+        from .llm.cohere import CohereLLM
+        return CohereLLM(config)
+    elif provider == "mistral":
+        from .llm.mistral import MistralLLM
+        return MistralLLM(config)
+    elif provider == "gemini":
+        from .llm.gemini import GeminiLLM
+        return GeminiLLM(config)
+    elif provider == "bedrock":
+        from .llm.bedrock import BedrockLLM
+        return BedrockLLM(config)
     else:
-        raise ValueError(f"Unknown provider: {provider!r}. Use 'openai' or 'anthropic'.")
+        raise ValueError(
+            f"Unknown provider: {provider!r}. "
+            "Use 'openai', 'anthropic', 'ollama', 'cohere', 'mistral', 'gemini', or 'bedrock'."
+        )
 
 
 class RAG:
@@ -133,6 +226,14 @@ class RAG:
     async def add_async(self, text: str, metadata: dict | None = None) -> None:
         """Async: chunk and embed text into the vectorstore."""
         await self._pipeline.add(text, metadata)
+
+    def add_documents(self, docs: List[Document]) -> None:
+        """Sync: chunk and embed a list of Documents into the vectorstore."""
+        run_sync(self._pipeline.add_documents(docs))
+
+    async def add_documents_async(self, docs: List[Document]) -> None:
+        """Async: chunk and embed a list of Documents into the vectorstore."""
+        await self._pipeline.add_documents(docs)
 
     # ------------------------------------------------------------------ #
     # Querying

@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from typing import AsyncGenerator, List, Optional
 
 from ..llm.base import BaseLLM
+from ..loaders.base import Document
 from ..memory.conversation import ConversationMemory
 from ..observability.tracer import TokenTracer
 from ..retrieval.retriever import Retriever
@@ -93,7 +94,12 @@ class RAGPipeline:
         """Chunk text and add to the vectorstore."""
         chunks = self._splitter.split(text)
         meta = [metadata or {} for _ in chunks]
-        await self.config.retriever._store.add(chunks, meta)
+        await self.config.retriever.add(chunks, meta)
+
+    async def add_documents(self, docs: List[Document]) -> None:
+        """Chunk and add a list of Documents to the vectorstore."""
+        for doc in docs:
+            await self.add(doc.text, doc.metadata)
 
     async def stream(
         self, query: str, top_k: int | None = None
