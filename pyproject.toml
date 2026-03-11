@@ -113,6 +113,27 @@ check_untyped_defs = true
 no_implicit_optional = true
 strict_equality = true
 show_error_codes = true
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = [
+    "synapsekit.llm.openai",
+    "synapsekit.llm.anthropic",
+    "synapsekit.llm.ollama",
+    "synapsekit.llm.cohere",
+    "synapsekit.llm.mistral",
+    "synapsekit.llm.gemini",
+    "synapsekit.llm.bedrock",
+    "synapsekit.embeddings.backend",
+    "synapsekit.retrieval.chroma",
+    "synapsekit.retrieval.faiss",
+    "synapsekit.retrieval.qdrant",
+    "synapsekit.retrieval.pinecone",
+]
+warn_return_any = false
+# from __future__ import annotations causes mypy to misinterpret
+# async generator return types as Coroutine[..., AsyncGenerator]
+disable_error_code = ["override"]
 
 [tool.deptry]
 pep621_dev_dependency_groups = ["dev"]

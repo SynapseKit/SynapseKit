@@ -8,6 +8,7 @@ import pytest
 
 from synapsekit.agents.base import BaseTool, ToolResult
 from synapsekit.agents.function_calling import FunctionCallingAgent
+from synapsekit.llm.base import BaseLLM, LLMConfig
 
 # ------------------------------------------------------------------ #
 # Helpers
@@ -38,9 +39,13 @@ def make_fc_llm(responses):
 
 
 def make_no_fc_llm():
-    """LLM without call_with_tools — simulates Ollama/Gemini etc."""
-    llm = MagicMock(spec=[])  # no call_with_tools attribute
-    return llm
+    """LLM that does not override call_with_tools — simulates Ollama etc."""
+
+    class _NoFCLLM(BaseLLM):
+        async def stream(self, prompt, **kw):
+            yield "x"
+
+    return _NoFCLLM(LLMConfig(model="test", api_key="test", provider="test"))
 
 
 # ------------------------------------------------------------------ #
