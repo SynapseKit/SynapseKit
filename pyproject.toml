@@ -70,7 +70,7 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["synapsekit"]
+packages = ["src/synapsekit"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
