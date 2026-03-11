@@ -33,7 +33,9 @@ class FunctionCallingAgent:
         self._system_prompt = system_prompt
 
     def _check_support(self) -> None:
-        if not hasattr(self._llm, "call_with_tools"):
+        # Check if the provider has overridden call_with_tools (not just the base NotImplementedError)
+        method = getattr(type(self._llm), "call_with_tools", None)
+        if method is getattr(BaseLLM, "call_with_tools", None):
             raise RuntimeError(
                 f"{type(self._llm).__name__} does not support native function calling. "
                 "Use ReActAgent instead, or switch to OpenAILLM / AnthropicLLM / GeminiLLM / MistralLLM."

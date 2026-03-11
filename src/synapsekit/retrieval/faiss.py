@@ -33,7 +33,7 @@ class FAISSVectorStore(VectorStore):
 
         if self._index is None:
             self._index = self._faiss.IndexFlatIP(vecs.shape[1])
-        self._index.add(vecs.astype(np.float32))
+        self._index.add(vecs.astype(np.float32))  # type: ignore[attr-defined]
         self._texts.extend(texts)
         self._metadata.extend(meta)
 

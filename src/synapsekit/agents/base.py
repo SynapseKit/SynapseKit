@@ -17,7 +17,7 @@ class ToolResult:
         return self.error is not None
 
     def __str__(self) -> str:
-        return self.error if self.is_error else self.output
+        return self.error if self.error is not None else self.output
 
 
 class BaseTool(ABC):

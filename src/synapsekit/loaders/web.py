@@ -15,7 +15,7 @@ class WebLoader:
         except ImportError:
             raise ImportError("beautifulsoup4 required: pip install synapsekit[web]") from None
         soup = BeautifulSoup(html, "html.parser")
-        return soup.get_text(separator="\n", strip=True)
+        return str(soup.get_text(separator="\n", strip=True))
 
     async def load(self) -> list[Document]:
         try:

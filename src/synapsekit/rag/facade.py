@@ -179,7 +179,7 @@ class RAG:
     # ------------------------------------------------------------------ #
 
     @property
-    def tracer(self) -> TokenTracer:
+    def tracer(self) -> TokenTracer | None:
         return self._pipeline.config.tracer
 
     @property
