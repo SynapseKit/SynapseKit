@@ -14,8 +14,6 @@ SynapseKit — lightweight, async-first RAG framework.
 
 from __future__ import annotations
 
-from typing import AsyncGenerator, List, Optional
-
 from ._compat import run_sync
 from .embeddings.backend import SynapsekitEmbeddings
 from .llm.base import BaseLLM, LLMConfig
@@ -33,6 +31,7 @@ from .parsers.json_parser import JSONParser
 from .parsers.list_parser import ListParser
 from .parsers.pydantic_parser import PydanticParser
 from .prompts.template import ChatPromptTemplate, FewShotPromptTemplate, PromptTemplate
+from .rag.facade import RAG
 from .rag.pipeline import RAGConfig, RAGPipeline
 from .retrieval.base import VectorStore
 from .retrieval.retriever import Retriever
@@ -140,168 +139,3 @@ __all__ = [
     "StateGraph",
     "CompiledGraph",
 ]
-
-
-def _make_llm(
-    model: str,
-    api_key: str,
-    provider: Optional[str],
-    system_prompt: str,
-    temperature: float,
-    max_tokens: int,
-) -> BaseLLM:
-    """Auto-detect provider from model name, or use explicit provider."""
-    if provider is None:
-        if model.startswith("claude"):
-            provider = "anthropic"
-        elif model.startswith("gemini"):
-            provider = "gemini"
-        elif model.startswith("command"):
-            provider = "cohere"
-        elif model.startswith("mistral") or model.startswith("open-mistral"):
-            provider = "mistral"
-        else:
-            provider = "openai"
-
-    config = LLMConfig(
-        model=model,
-        api_key=api_key,
-        provider=provider,
-        system_prompt=system_prompt,
-        temperature=temperature,
-        max_tokens=max_tokens,
-    )
-
-    if provider == "openai":
-        from .llm.openai import OpenAILLM
-        return OpenAILLM(config)
-    elif provider == "anthropic":
-        from .llm.anthropic import AnthropicLLM
-        return AnthropicLLM(config)
-    elif provider == "ollama":
-        from .llm.ollama import OllamaLLM
-        return OllamaLLM(config)
-    elif provider == "cohere":
-        from .llm.cohere import CohereLLM
-        return CohereLLM(config)
-    elif provider == "mistral":
-        from .llm.mistral import MistralLLM
-        return MistralLLM(config)
-    elif provider == "gemini":
-        from .llm.gemini import GeminiLLM
-        return GeminiLLM(config)
-    elif provider == "bedrock":
-        from .llm.bedrock import BedrockLLM
-        return BedrockLLM(config)
-    else:
-        raise ValueError(
-            f"Unknown provider: {provider!r}. "
-            "Use 'openai', 'anthropic', 'ollama', 'cohere', 'mistral', 'gemini', or 'bedrock'."
-        )
-
-
-class RAG:
-    """
-    3-line RAG facade with sane defaults.
-
-    Example::
-
-        rag = RAG(model="gpt-4o-mini", api_key="sk-...")
-        rag.add("Your document text here")
-        answer = rag.ask_sync("What is the main topic?")
-    """
-
-    def __init__(
-        self,
-        model: str,
-        api_key: str,
-        provider: Optional[str] = None,
-        embedding_model: str = "all-MiniLM-L6-v2",
-        rerank: bool = False,
-        memory_window: int = 10,
-        retrieval_top_k: int = 5,
-        system_prompt: str = "Answer using only the provided context. If the context does not contain the answer, say so.",
-        temperature: float = 0.2,
-        max_tokens: int = 1024,
-        trace: bool = True,
-    ) -> None:
-        llm = _make_llm(model, api_key, provider, system_prompt, temperature, max_tokens)
-        embeddings = SynapsekitEmbeddings(model=embedding_model)
-        vectorstore = InMemoryVectorStore(embeddings)
-        retriever = Retriever(vectorstore, rerank=rerank)
-        memory = ConversationMemory(window=memory_window)
-        tracer = TokenTracer(model=model, enabled=trace)
-
-        self._pipeline = RAGPipeline(
-            RAGConfig(
-                llm=llm,
-                retriever=retriever,
-                memory=memory,
-                tracer=tracer,
-                retrieval_top_k=retrieval_top_k,
-                system_prompt=system_prompt,
-            )
-        )
-        self._embeddings = embeddings
-        self._vectorstore = vectorstore
-
-    # ------------------------------------------------------------------ #
-    # Document ingestion
-    # ------------------------------------------------------------------ #
-
-    def add(self, text: str, metadata: dict | None = None) -> None:
-        """Sync: chunk and embed text into the vectorstore."""
-        run_sync(self._pipeline.add(text, metadata))
-
-    async def add_async(self, text: str, metadata: dict | None = None) -> None:
-        """Async: chunk and embed text into the vectorstore."""
-        await self._pipeline.add(text, metadata)
-
-    def add_documents(self, docs: List[Document]) -> None:
-        """Sync: chunk and embed a list of Documents into the vectorstore."""
-        run_sync(self._pipeline.add_documents(docs))
-
-    async def add_documents_async(self, docs: List[Document]) -> None:
-        """Async: chunk and embed a list of Documents into the vectorstore."""
-        await self._pipeline.add_documents(docs)
-
-    # ------------------------------------------------------------------ #
-    # Querying
-    # ------------------------------------------------------------------ #
-
-    async def stream(self, query: str, **kw) -> AsyncGenerator[str, None]:
-        """Async generator that yields tokens as they arrive from the LLM."""
-        async for token in self._pipeline.stream(query, **kw):
-            yield token
-
-    async def ask(self, query: str, **kw) -> str:
-        """Async: retrieve and answer, returns full string."""
-        return await self._pipeline.ask(query, **kw)
-
-    def ask_sync(self, query: str, **kw) -> str:
-        """Sync: retrieve and answer (use in scripts/notebooks)."""
-        return run_sync(self._pipeline.ask(query, **kw))
-
-    # ------------------------------------------------------------------ #
-    # Persistence
-    # ------------------------------------------------------------------ #
-
-    def save(self, path: str) -> None:
-        """Persist the vectorstore to a .npz file."""
-        self._vectorstore.save(path)
-
-    def load(self, path: str) -> None:
-        """Load a previously saved vectorstore from a .npz file."""
-        self._vectorstore.load(path)
-
-    # ------------------------------------------------------------------ #
-    # Observability
-    # ------------------------------------------------------------------ #
-
-    @property
-    def tracer(self) -> TokenTracer:
-        return self._pipeline.config.tracer
-
-    @property
-    def memory(self) -> ConversationMemory:
-        return self._pipeline.config.memory
