@@ -5,9 +5,10 @@ from typing import List, Optional
 import numpy as np
 
 from ..embeddings.backend import SynapsekitEmbeddings
+from .base import VectorStore
 
 
-class InMemoryVectorStore:
+class InMemoryVectorStore(VectorStore):
     """
     Numpy-backed in-memory vector store.
     Supports cosine similarity search, save/load via .npz.

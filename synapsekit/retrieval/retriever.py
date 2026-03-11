@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import List
+from typing import List, Optional
 
-from .vectorstore import InMemoryVectorStore
+from .base import VectorStore
 
 
 class Retriever:
@@ -13,11 +13,19 @@ class Retriever:
 
     def __init__(
         self,
-        vectorstore: InMemoryVectorStore,
+        vectorstore: VectorStore,
         rerank: bool = False,
     ) -> None:
         self._store = vectorstore
         self._rerank = rerank
+
+    async def add(
+        self,
+        texts: List[str],
+        metadata: Optional[List[dict]] = None,
+    ) -> None:
+        """Add texts to the underlying vector store."""
+        await self._store.add(texts, metadata)
 
     def _bm25_rerank(self, query: str, texts: List[str], top_k: int) -> List[str]:
         try:
