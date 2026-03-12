@@ -193,3 +193,8 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) to get started. Look for issues tagged [
 ## License
 
 [MIT](LICENSE)
+
+
+## 🔧 Recent Fixes
+
+- Fixed issue #100: Add Coda document loader
