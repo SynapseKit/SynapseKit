@@ -32,6 +32,11 @@ class FunctionCallingAgent:
         self._memory = memory or AgentMemory(max_steps=max_iterations)
         self._system_prompt = system_prompt
 
+    def __repr__(self) -> str:
+        llm_name = type(self._llm).__name__
+        num_tools = len(self._registry.schemas())
+        return f"FunctionCallingAgent(llm={llm_name!r}, tools={num_tools}, max_iterations={self._max_iterations})"
+
     def _check_support(self) -> None:
         # Check if the provider has overridden call_with_tools (not just the base NotImplementedError)
         method = getattr(type(self._llm), "call_with_tools", None)

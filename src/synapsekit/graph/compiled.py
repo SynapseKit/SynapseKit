@@ -32,6 +32,11 @@ class CompiledGraph:
             if edge.src in self._adj:
                 self._adj[edge.src].append(edge)
 
+    def __repr__(self) -> str:
+        num_nodes = len(self._graph._nodes)
+        num_edges = len(self._graph._edges)
+        return f"CompiledGraph(nodes={num_nodes}, edges={num_edges}, entry_point={self._graph._entry_point!r})"
+
     # ------------------------------------------------------------------ #
     # Public API
     # ------------------------------------------------------------------ #

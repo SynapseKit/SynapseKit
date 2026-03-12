@@ -41,6 +41,11 @@ class RAGPipeline:
             chunk_overlap=config.chunk_overlap,
         )
 
+    def __repr__(self) -> str:
+        model_name = getattr(self.config.llm, "model", type(self.config.llm).__name__)
+        splitter_name = type(self._splitter).__name__
+        return f"RAGPipeline(model={model_name!r}, splitter={splitter_name!r})"
+
     async def add(self, text: str, metadata: dict | None = None) -> None:
         """Chunk text and add to the vectorstore."""
         chunks = self._splitter.split(text)
