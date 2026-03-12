@@ -23,9 +23,7 @@ class GroqLLM(BaseLLM):
             try:
                 from groq import AsyncGroq
             except ImportError:
-                raise ImportError(
-                    "groq package required: pip install synapsekit[groq]"
-                ) from None
+                raise ImportError("groq package required: pip install synapsekit[groq]") from None
             self._client = AsyncGroq(api_key=self.config.api_key)
         return self._client
 

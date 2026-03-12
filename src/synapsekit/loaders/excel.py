@@ -20,9 +20,7 @@ class ExcelLoader:
         try:
             from openpyxl import load_workbook
         except ImportError:
-            raise ImportError(
-                "openpyxl required: pip install synapsekit[excel]"
-            ) from None
+            raise ImportError("openpyxl required: pip install synapsekit[excel]") from None
 
         wb = load_workbook(self._path, read_only=True, data_only=True)
         docs = []

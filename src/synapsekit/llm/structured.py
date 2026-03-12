@@ -39,7 +39,7 @@ async def generate_structured(
     except ImportError:
         raise ImportError("pydantic required: pip install pydantic") from None
 
-    json_schema = schema.model_json_schema()  # type: ignore[union-attr]
+    json_schema = schema.model_json_schema()  # type: ignore[attr-defined]
     schema_str = json.dumps(json_schema, indent=2)
 
     messages = [

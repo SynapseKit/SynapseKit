@@ -27,17 +27,14 @@ class SQLiteLLMCache:
         self._db_path = db_path
         self._conn = sqlite3.connect(db_path)
         self._conn.execute(
-            "CREATE TABLE IF NOT EXISTS llm_cache "
-            "(key TEXT PRIMARY KEY, value TEXT)"
+            "CREATE TABLE IF NOT EXISTS llm_cache (key TEXT PRIMARY KEY, value TEXT)"
         )
         self._conn.commit()
         self.hits: int = 0
         self.misses: int = 0
 
     def get(self, key: str) -> Any | None:
-        row = self._conn.execute(
-            "SELECT value FROM llm_cache WHERE key = ?", (key,)
-        ).fetchone()
+        row = self._conn.execute("SELECT value FROM llm_cache WHERE key = ?", (key,)).fetchone()
         if row is not None:
             self.hits += 1
             return row[0]

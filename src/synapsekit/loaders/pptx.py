@@ -20,9 +20,7 @@ class PowerPointLoader:
         try:
             from pptx import Presentation
         except ImportError:
-            raise ImportError(
-                "python-pptx required: pip install synapsekit[pptx]"
-            ) from None
+            raise ImportError("python-pptx required: pip install synapsekit[pptx]") from None
 
         prs = Presentation(self._path)
         docs = []

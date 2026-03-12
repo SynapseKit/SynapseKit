@@ -44,6 +44,10 @@ cohere = ["cohere>=5.0"]
 mistral = ["mistralai>=1.0"]
 gemini = ["google-generativeai>=0.7"]
 bedrock = ["boto3>=1.34"]
+groq = ["groq>=0.9"]
+excel = ["openpyxl>=3.1"]
+pptx = ["python-pptx>=0.6"]
+http = ["aiohttp>=3.9"]
 search = ["duckduckgo-search>=6.0"]
 all = [
     "openai>=1.0",
@@ -130,6 +134,14 @@ module = [
     "synapsekit.retrieval.faiss",
     "synapsekit.retrieval.qdrant",
     "synapsekit.retrieval.pinecone",
+    "synapsekit.llm.groq",
+    "synapsekit.llm.azure_openai",
+    "synapsekit.llm.deepseek",
+    "synapsekit.llm.openrouter",
+    "synapsekit.llm.together",
+    "synapsekit.llm.fireworks",
+    "synapsekit.loaders.excel",
+    "synapsekit.loaders.pptx",
 ]
 warn_return_any = false
 # from __future__ import annotations causes mypy to misinterpret
@@ -143,7 +155,9 @@ pep621_dev_dependency_groups = ["dev"]
 google-generativeai = "google"
 beautifulsoup4 = "bs4"
 faiss-cpu = "faiss"
+python-pptx = "pptx"
 
 [tool.deptry.per_rule_ignores]
-DEP001 = ["sqlalchemy", "pydantic"]
+DEP001 = ["sqlalchemy", "pydantic", "aiohttp"]
 DEP002 = ["numpy", "rank-bm25", "beautifulsoup4", "lxml", "faiss-cpu", "google-generativeai"]
+DEP004 = ["pydantic"]

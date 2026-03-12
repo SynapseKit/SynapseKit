@@ -440,9 +440,7 @@ def test_import_sentence_window_retriever():
 def test_sentence_splitting():
     from synapsekit.retrieval.sentence_window import SentenceWindowRetriever
 
-    sentences = SentenceWindowRetriever._split_sentences(
-        "Hello world. How are you? I am fine!"
-    )
+    sentences = SentenceWindowRetriever._split_sentences("Hello world. How are you? I am fine!")
     assert len(sentences) == 3
     assert sentences[0] == "Hello world."
     assert sentences[1] == "How are you?"
@@ -484,7 +482,14 @@ def test_tool_schemas():
         RegexTool,
     )
 
-    for tool_cls in [DateTimeTool, FileListTool, FileWriteTool, HTTPRequestTool, JSONQueryTool, RegexTool]:
+    for tool_cls in [
+        DateTimeTool,
+        FileListTool,
+        FileWriteTool,
+        HTTPRequestTool,
+        JSONQueryTool,
+        RegexTool,
+    ]:
         tool = tool_cls()
         schema = tool.schema()
         assert schema["type"] == "function"

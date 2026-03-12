@@ -66,7 +66,9 @@ class RegexTool(BaseTool):
 
             if action == "findall":
                 matches = re.findall(pattern, text, re_flags)
-                return ToolResult(output="\n".join(str(m) for m in matches) if matches else "(no matches)")
+                return ToolResult(
+                    output="\n".join(str(m) for m in matches) if matches else "(no matches)"
+                )
 
             elif action == "match":
                 m = re.match(pattern, text, re_flags)

@@ -54,11 +54,13 @@ class SentenceWindowRetriever:
 
             for sent_idx, sentence in enumerate(sentences):
                 all_sentences.append(sentence)
-                all_metadata.append({
-                    **base_meta[doc_idx],
-                    "_sw_doc": doc_ref,
-                    "_sw_sent": sent_idx,
-                })
+                all_metadata.append(
+                    {
+                        **base_meta[doc_idx],
+                        "_sw_doc": doc_ref,
+                        "_sw_sent": sent_idx,
+                    }
+                )
 
         if all_sentences:
             await self._retriever.add(all_sentences, all_metadata)

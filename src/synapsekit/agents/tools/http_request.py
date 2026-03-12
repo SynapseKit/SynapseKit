@@ -56,9 +56,7 @@ class HTTPRequestTool(BaseTool):
         try:
             import aiohttp
         except ImportError:
-            raise ImportError(
-                "aiohttp required for HTTPRequestTool: pip install aiohttp"
-            ) from None
+            raise ImportError("aiohttp required for HTTPRequestTool: pip install aiohttp") from None
 
         method = method.upper()
         req_headers = headers or {}

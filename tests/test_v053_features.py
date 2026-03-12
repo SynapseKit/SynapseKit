@@ -253,9 +253,7 @@ class TestRAGFusion:
 
         retriever = MagicMock()
         calls = []
-        retriever.retrieve = AsyncMock(
-            side_effect=lambda q, **kw: calls.append(q) or ["doc1"]
-        )
+        retriever.retrieve = AsyncMock(side_effect=lambda q, **kw: calls.append(q) or ["doc1"])
 
         fusion = RAGFusionRetriever(retriever=retriever, llm=llm, num_queries=2)
         await fusion.retrieve("original query", top_k=3)

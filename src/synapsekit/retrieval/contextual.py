@@ -61,6 +61,4 @@ class ContextualRetriever:
         metadata_filter: dict | None = None,
     ) -> list[str]:
         """Retrieve using the enriched chunks."""
-        return await self._retriever.retrieve(
-            query, top_k=top_k, metadata_filter=metadata_filter
-        )
+        return await self._retriever.retrieve(query, top_k=top_k, metadata_filter=metadata_filter)
