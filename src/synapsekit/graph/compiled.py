@@ -32,6 +32,12 @@ class CompiledGraph:
             if edge.src in self._adj:
                 self._adj[edge.src].append(edge)
 
+    def __repr__(self) -> str:
+        node_count = len(self._graph._nodes)
+        edge_count = len(self._graph._edges)
+        entry = self._graph._entry_point or "None"
+        return f"CompiledGraph(nodes={node_count}, edges={edge_count}, entry={entry!r})"
+
     # ------------------------------------------------------------------ #
     # Public API
     # ------------------------------------------------------------------ #
@@ -148,17 +154,23 @@ class CompiledGraph:
                 if isinstance(edge, Edge):
                     dst = edge.dst
                 elif isinstance(edge, ConditionalEdge):
-                    key = edge.condition_fn(state)
-                    if inspect.isawaitable(key):
-                        key = await key
-                    dst = edge.mapping.get(str(key), END)
+                    try:
+                        dst = edge.condition_fn(state, edge.mapping)
+                    except Exception as e:
+                        raise GraphRuntimeError(
+                            f"Conditional edge from {src!r} raised {type(e).__name__}: {e}"
+                        ) from e
                 else:
                     continue
 
                 if dst == END:
                     continue
-                if dst not in seen:
-                    seen.add(dst)
-                    next_nodes.append(dst)
+                if dst not in self._graph._nodes:
+                    raise GraphRuntimeError(f"Edge destination {dst!r} is not a registered node.")
+                if dst in seen:
+                    continue
+
+                seen.add(dst)
+                next_nodes.append(dst)
 
         return next_nodes
