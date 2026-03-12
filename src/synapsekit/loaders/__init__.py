@@ -4,6 +4,7 @@ from .text import StringLoader, TextLoader
 __all__ = [
     "CSVLoader",
     "DirectoryLoader",
+    "DiscordLoader",
     "Document",
     "HTMLLoader",
     "JSONLoader",
@@ -19,6 +20,7 @@ _LOADERS = {
     "CSVLoader": ".csv",
     "JSONLoader": ".json_loader",
     "DirectoryLoader": ".directory",
+    "DiscordLoader": ".discord",
     "WebLoader": ".web",
 }
 
