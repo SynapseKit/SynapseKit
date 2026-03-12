@@ -3,10 +3,13 @@ from .structured import generate_structured
 
 __all__ = [
     "AnthropicLLM",
+    "AzureOpenAILLM",
     "BaseLLM",
     "BedrockLLM",
     "CohereLLM",
+    "DeepSeekLLM",
     "GeminiLLM",
+    "GroqLLM",
     "LLMConfig",
     "MistralLLM",
     "OllamaLLM",
@@ -16,12 +19,15 @@ __all__ = [
 
 _PROVIDERS = {
     "OpenAILLM": ".openai",
+    "AzureOpenAILLM": ".azure_openai",
     "AnthropicLLM": ".anthropic",
     "OllamaLLM": ".ollama",
     "CohereLLM": ".cohere",
     "MistralLLM": ".mistral",
     "GeminiLLM": ".gemini",
     "BedrockLLM": ".bedrock",
+    "GroqLLM": ".groq",
+    "DeepSeekLLM": ".deepseek",
 }
 
 

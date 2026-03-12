@@ -69,6 +69,7 @@ from .prompts.template import ChatPromptTemplate, FewShotPromptTemplate, PromptT
 from .rag.facade import RAG
 from .rag.pipeline import RAGConfig, RAGPipeline
 from .retrieval.base import VectorStore
+from .retrieval.rag_fusion import RAGFusionRetriever
 from .retrieval.retriever import Retriever
 from .retrieval.vectorstore import InMemoryVectorStore
 from .text_splitters import (
@@ -79,7 +80,7 @@ from .text_splitters import (
     TokenAwareSplitter,
 )
 
-__version__ = "0.5.2"
+__version__ = "0.5.3"
 __all__ = [
     # Facade
     "RAG",
@@ -89,6 +90,9 @@ __all__ = [
     # LLM
     "BaseLLM",
     "LLMConfig",
+    "AzureOpenAILLM",
+    "GroqLLM",
+    "DeepSeekLLM",
     # Embeddings
     "SynapsekitEmbeddings",
     # Vector stores
@@ -100,6 +104,7 @@ __all__ = [
     "PineconeVectorStore",
     # Retrieval
     "Retriever",
+    "RAGFusionRetriever",
     # Memory / observability
     "ConversationMemory",
     "TokenTracer",
@@ -113,6 +118,8 @@ __all__ = [
     "JSONLoader",
     "DirectoryLoader",
     "WebLoader",
+    "ExcelLoader",
+    "PowerPointLoader",
     # Parsers
     "JSONParser",
     "PydanticParser",
@@ -167,20 +174,28 @@ __all__ = [
     "generate_structured",
 ]
 
-# Lazy imports for optional vector store backends
-_OPTIONAL_VECTOR_STORES = {
+# Lazy imports for optional backends
+_LAZY_IMPORTS = {
+    # Vector stores
     "ChromaVectorStore": "retrieval.chroma",
     "FAISSVectorStore": "retrieval.faiss",
     "QdrantVectorStore": "retrieval.qdrant",
     "PineconeVectorStore": "retrieval.pinecone",
+    # LLM providers
+    "AzureOpenAILLM": "llm.azure_openai",
+    "GroqLLM": "llm.groq",
+    "DeepSeekLLM": "llm.deepseek",
+    # Loaders
+    "ExcelLoader": "loaders.excel",
+    "PowerPointLoader": "loaders.pptx",
 }
 
 
 def __getattr__(name: str):
-    if name in _OPTIONAL_VECTOR_STORES:
+    if name in _LAZY_IMPORTS:
         import importlib
 
-        mod = importlib.import_module(f".{_OPTIONAL_VECTOR_STORES[name]}", __name__)
+        mod = importlib.import_module(f".{_LAZY_IMPORTS[name]}", __name__)
         cls = getattr(mod, name)
         globals()[name] = cls
         return cls

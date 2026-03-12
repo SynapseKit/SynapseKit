@@ -69,3 +69,4 @@ docs/
 
 # Saved vectorstores
 *.npz
+typescript

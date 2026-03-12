@@ -33,6 +33,10 @@ def _make_llm(
             provider = "cohere"
         elif model.startswith("mistral") or model.startswith("open-mistral"):
             provider = "mistral"
+        elif model.startswith("deepseek"):
+            provider = "deepseek"
+        elif model.startswith("llama") or model.startswith("mixtral") or model.startswith("gemma"):
+            provider = "groq"
         else:
             provider = "openai"
 
@@ -73,10 +77,19 @@ def _make_llm(
         from ..llm.bedrock import BedrockLLM
 
         return BedrockLLM(config)
+    elif provider == "groq":
+        from ..llm.groq import GroqLLM
+
+        return GroqLLM(config)
+    elif provider == "deepseek":
+        from ..llm.deepseek import DeepSeekLLM
+
+        return DeepSeekLLM(config)
     else:
         raise ValueError(
             f"Unknown provider: {provider!r}. "
-            "Use 'openai', 'anthropic', 'ollama', 'cohere', 'mistral', 'gemini', or 'bedrock'."
+            "Use 'openai', 'anthropic', 'ollama', 'cohere', 'mistral', 'gemini', "
+            "'bedrock', 'groq', or 'deepseek'."
         )
 
 

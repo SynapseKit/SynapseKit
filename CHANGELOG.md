@@ -7,6 +7,27 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [0.5.3] — 2026-03-12
+
+### Added
+
+- **Azure OpenAI LLM provider** — `AzureOpenAILLM` for enterprise Azure OpenAI deployments with streaming and function calling (closes #183)
+- **Groq LLM provider** — `GroqLLM` for ultra-fast inference with Llama, Mixtral, Gemma models (closes #166)
+- **DeepSeek LLM provider** — `DeepSeekLLM` with OpenAI-compatible API, supports function calling (closes #170)
+- **SQLite LLM cache** — persistent `cache_backend="sqlite"` option via `LLMConfig(cache=True, cache_backend="sqlite")`, survives process restarts (closes #191)
+- **RAG Fusion retrieval** — `RAGFusionRetriever` generates query variations with an LLM and fuses results via Reciprocal Rank Fusion for better recall (closes #158)
+- **Excel loader** — `ExcelLoader` for `.xlsx` files, one Document per sheet (closes #63)
+- **PowerPoint loader** — `PowerPointLoader` for `.pptx` files, one Document per slide (closes #62)
+- RAG facade auto-detects `deepseek` and `groq` providers from model names
+- 26 new tests (415 total)
+
+### Changed
+
+- `LLMConfig` gains `cache_backend` (`"memory"` or `"sqlite"`) and `cache_db_path` fields
+- Lazy imports extended for new providers (`AzureOpenAILLM`, `GroqLLM`, `DeepSeekLLM`) and loaders (`ExcelLoader`, `PowerPointLoader`)
+
+---
+
 ## [0.5.2] — 2026-03-12
 
 ### Added

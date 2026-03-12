@@ -15,6 +15,8 @@ class LLMConfig:
     # Caching
     cache: bool = False
     cache_maxsize: int = 128
+    cache_backend: str = "memory"  # "memory" or "sqlite"
+    cache_db_path: str = "synapsekit_llm_cache.db"
     # Retries
     max_retries: int = 0
     retry_delay: float = 1.0
@@ -32,9 +34,14 @@ class BaseLLM(ABC):
         self._cache: Any = None
         self._rate_limiter: Any = None
         if config.cache:
-            from ._cache import AsyncLRUCache
+            if config.cache_backend == "sqlite":
+                from ._sqlite_cache import SQLiteLLMCache
 
-            self._cache = AsyncLRUCache(maxsize=config.cache_maxsize)
+                self._cache = SQLiteLLMCache(db_path=config.cache_db_path)
+            else:
+                from ._cache import AsyncLRUCache
+
+                self._cache = AsyncLRUCache(maxsize=config.cache_maxsize)
         if config.requests_per_minute is not None:
             from ._rate_limit import TokenBucketRateLimiter
 
