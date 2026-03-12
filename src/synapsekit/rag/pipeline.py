@@ -41,6 +41,11 @@ class RAGPipeline:
             chunk_overlap=config.chunk_overlap,
         )
 
+    def __repr__(self) -> str:
+        model_name = type(self.config.llm).__name__
+        splitter_name = type(self._splitter).__name__
+        return f"RAGPipeline(model={model_name!r}, splitter={splitter_name!r})"
+
     async def add(self, text: str, metadata: dict | None = None) -> None:
         """Chunk text and add to the vectorstore."""
         chunks = self._splitter.split(text)
@@ -60,7 +65,7 @@ class RAGPipeline:
         context = "\n\n".join(chunks) if chunks else "No context available."
         history = self.config.memory.format_context()
 
-        messages: list[dict] = [
+        messages: list[dict]  = [
             {"role": "system", "content": self.config.system_prompt},
         ]
         if history:
