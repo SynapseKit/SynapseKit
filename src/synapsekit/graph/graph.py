@@ -25,6 +25,11 @@ class StateGraph:
         self._edges: list[Edge | ConditionalEdge] = []
         self._entry_point: str | None = None
 
+    def __repr__(self) -> str:
+        node_count = len(self._nodes)
+        edge_count = len(self._edges)
+        return f"StateGraph(nodes={node_count}, edges={edge_count})"
+
     # ------------------------------------------------------------------ #
     # Builder API
     # ------------------------------------------------------------------ #
