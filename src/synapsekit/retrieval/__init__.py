@@ -1,18 +1,26 @@
 from .base import VectorStore
+from .contextual_compression import ContextualCompressionRetriever
+from .crag import CRAGRetriever
 from .cross_encoder import CrossEncoderReranker
+from .ensemble import EnsembleRetriever
 from .parent_document import ParentDocumentRetriever
+from .query_decomposition import QueryDecompositionRetriever
 from .retriever import Retriever
 from .self_query import SelfQueryRetriever
 from .vectorstore import InMemoryVectorStore
 
 __all__ = [
     "ChromaVectorStore",
+    "ContextualCompressionRetriever",
+    "CRAGRetriever",
     "CrossEncoderReranker",
+    "EnsembleRetriever",
     "FAISSVectorStore",
     "InMemoryVectorStore",
     "ParentDocumentRetriever",
     "PineconeVectorStore",
     "QdrantVectorStore",
+    "QueryDecompositionRetriever",
     "Retriever",
     "SelfQueryRetriever",
     "VectorStore",

@@ -27,6 +27,7 @@ from .agents import (
     FileWriteTool,
     FunctionCallingAgent,
     HTTPRequestTool,
+    HumanInputTool,
     JSONQueryTool,
     PythonREPLTool,
     ReActAgent,
@@ -35,6 +36,7 @@ from .agents import (
     ToolRegistry,
     ToolResult,
     WebSearchTool,
+    WikipediaTool,
     tool,
 )
 from .embeddings.backend import SynapsekitEmbeddings
@@ -72,6 +74,8 @@ from .loaders.text import StringLoader, TextLoader
 from .loaders.web import WebLoader
 from .memory.conversation import ConversationMemory
 from .memory.hybrid import HybridMemory
+from .memory.sqlite import SQLiteConversationMemory
+from .memory.summary_buffer import SummaryBufferMemory
 from .observability.tracer import TokenTracer
 from .parsers.json_parser import JSONParser
 from .parsers.list_parser import ListParser
@@ -81,8 +85,12 @@ from .rag.facade import RAG
 from .rag.pipeline import RAGConfig, RAGPipeline
 from .retrieval.base import VectorStore
 from .retrieval.contextual import ContextualRetriever
+from .retrieval.contextual_compression import ContextualCompressionRetriever
+from .retrieval.crag import CRAGRetriever
 from .retrieval.cross_encoder import CrossEncoderReranker
+from .retrieval.ensemble import EnsembleRetriever
 from .retrieval.parent_document import ParentDocumentRetriever
+from .retrieval.query_decomposition import QueryDecompositionRetriever
 from .retrieval.rag_fusion import RAGFusionRetriever
 from .retrieval.retriever import Retriever
 from .retrieval.self_query import SelfQueryRetriever
@@ -96,7 +104,7 @@ from .text_splitters import (
     TokenAwareSplitter,
 )
 
-__version__ = "0.6.1"
+__version__ = "0.6.2"
 __all__ = [
     # Facade
     "RAG",
@@ -125,13 +133,19 @@ __all__ = [
     "Retriever",
     "RAGFusionRetriever",
     "ContextualRetriever",
+    "ContextualCompressionRetriever",
+    "CRAGRetriever",
     "CrossEncoderReranker",
+    "EnsembleRetriever",
     "ParentDocumentRetriever",
+    "QueryDecompositionRetriever",
     "SelfQueryRetriever",
     "SentenceWindowRetriever",
     # Memory / observability
     "ConversationMemory",
     "HybridMemory",
+    "SQLiteConversationMemory",
+    "SummaryBufferMemory",
     "TokenTracer",
     # Loaders
     "Document",
@@ -172,11 +186,13 @@ __all__ = [
     "FileReadTool",
     "FileWriteTool",
     "HTTPRequestTool",
+    "HumanInputTool",
     "JSONQueryTool",
     "PythonREPLTool",
     "RegexTool",
     "SQLQueryTool",
     "WebSearchTool",
+    "WikipediaTool",
     # Text splitters
     "BaseSplitter",
     "CharacterTextSplitter",

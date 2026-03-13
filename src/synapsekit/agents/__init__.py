@@ -12,11 +12,13 @@ from .tools import (
     FileReadTool,
     FileWriteTool,
     HTTPRequestTool,
+    HumanInputTool,
     JSONQueryTool,
     PythonREPLTool,
     RegexTool,
     SQLQueryTool,
     WebSearchTool,
+    WikipediaTool,
 )
 
 __all__ = [
@@ -40,9 +42,11 @@ __all__ = [
     "FileReadTool",
     "FileWriteTool",
     "HTTPRequestTool",
+    "HumanInputTool",
     "JSONQueryTool",
     "PythonREPLTool",
     "RegexTool",
     "SQLQueryTool",
     "WebSearchTool",
+    "WikipediaTool",
 ]
