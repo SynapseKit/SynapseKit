@@ -46,15 +46,19 @@ from .graph import (
     ConditionFn,
     Edge,
     GraphConfigError,
+    GraphInterrupt,
     GraphRuntimeError,
     GraphState,
     InMemoryCheckpointer,
+    InterruptState,
     Node,
     NodeFn,
     SQLiteCheckpointer,
     StateGraph,
     agent_node,
+    llm_node,
     rag_node,
+    subgraph_node,
 )
 from .llm.base import BaseLLM, LLMConfig
 from .llm.structured import generate_structured
@@ -67,6 +71,7 @@ from .loaders.pdf import PDFLoader
 from .loaders.text import StringLoader, TextLoader
 from .loaders.web import WebLoader
 from .memory.conversation import ConversationMemory
+from .memory.hybrid import HybridMemory
 from .observability.tracer import TokenTracer
 from .parsers.json_parser import JSONParser
 from .parsers.list_parser import ListParser
@@ -76,8 +81,11 @@ from .rag.facade import RAG
 from .rag.pipeline import RAGConfig, RAGPipeline
 from .retrieval.base import VectorStore
 from .retrieval.contextual import ContextualRetriever
+from .retrieval.cross_encoder import CrossEncoderReranker
+from .retrieval.parent_document import ParentDocumentRetriever
 from .retrieval.rag_fusion import RAGFusionRetriever
 from .retrieval.retriever import Retriever
+from .retrieval.self_query import SelfQueryRetriever
 from .retrieval.sentence_window import SentenceWindowRetriever
 from .retrieval.vectorstore import InMemoryVectorStore
 from .text_splitters import (
@@ -88,7 +96,7 @@ from .text_splitters import (
     TokenAwareSplitter,
 )
 
-__version__ = "0.6.0"
+__version__ = "0.6.1"
 __all__ = [
     # Facade
     "RAG",
@@ -117,9 +125,13 @@ __all__ = [
     "Retriever",
     "RAGFusionRetriever",
     "ContextualRetriever",
+    "CrossEncoderReranker",
+    "ParentDocumentRetriever",
+    "SelfQueryRetriever",
     "SentenceWindowRetriever",
     # Memory / observability
     "ConversationMemory",
+    "HybridMemory",
     "TokenTracer",
     # Loaders
     "Document",
@@ -179,7 +191,11 @@ __all__ = [
     "Node",
     "NodeFn",
     "agent_node",
+    "llm_node",
     "rag_node",
+    "subgraph_node",
+    "GraphInterrupt",
+    "InterruptState",
     "Edge",
     "ConditionalEdge",
     "ConditionFn",

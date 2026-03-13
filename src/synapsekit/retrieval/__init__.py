@@ -1,14 +1,20 @@
 from .base import VectorStore
+from .cross_encoder import CrossEncoderReranker
+from .parent_document import ParentDocumentRetriever
 from .retriever import Retriever
+from .self_query import SelfQueryRetriever
 from .vectorstore import InMemoryVectorStore
 
 __all__ = [
     "ChromaVectorStore",
+    "CrossEncoderReranker",
     "FAISSVectorStore",
     "InMemoryVectorStore",
+    "ParentDocumentRetriever",
     "PineconeVectorStore",
     "QdrantVectorStore",
     "Retriever",
+    "SelfQueryRetriever",
     "VectorStore",
 ]
 

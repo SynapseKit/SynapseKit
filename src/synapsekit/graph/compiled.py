@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 
 from .edge import ConditionalEdge, Edge
 from .errors import GraphRuntimeError
+from .interrupt import GraphInterrupt
 from .mermaid import get_mermaid
 from .state import END
 
@@ -71,12 +72,22 @@ class CompiledGraph:
         self,
         graph_id: str,
         checkpointer: BaseCheckpointer,
+        updates: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Resume execution from a checkpointed state."""
+        """Resume execution from a checkpointed state.
+
+        Args:
+            graph_id: The graph execution ID to resume.
+            checkpointer: The checkpointer that holds the saved state.
+            updates: Optional state updates to apply before resuming
+                (e.g. human-provided edits after a ``GraphInterrupt``).
+        """
         saved = checkpointer.load(graph_id)
         if saved is None:
             raise GraphRuntimeError(f"No checkpoint found for graph_id={graph_id!r}.")
         _step, state = saved
+        if updates:
+            state.update(updates)
         return await self.run(state, checkpointer=checkpointer, graph_id=graph_id)
 
     def run_sync(
@@ -89,6 +100,62 @@ class CompiledGraph:
         from .._compat import run_sync
 
         return run_sync(self.run(state, checkpointer=checkpointer, graph_id=graph_id))
+
+    async def stream_tokens(
+        self,
+        state: dict[str, Any],
+    ) -> AsyncGenerator[dict[str, Any]]:
+        """Yield token-level events from LLM nodes.
+
+        Yields dicts with either:
+        - ``{"type": "token", "node": name, "token": str}`` for streaming tokens
+        - ``{"type": "node_complete", "node": name, "state": dict}`` for non-streaming nodes
+
+        LLM nodes are detected by checking if the node function's return dict
+        contains a ``"__stream__"`` key with an async generator.
+        """
+        state = dict(state)
+        graph = self._graph
+        current_wave: list[str] = [graph._entry_point]  # type: ignore[list-item]
+        steps = 0
+
+        while current_wave:
+            if steps >= self._max_steps:
+                raise GraphRuntimeError(
+                    f"Graph exceeded _MAX_STEPS={self._max_steps}. "
+                    "Check for infinite loops in conditional edges."
+                )
+            steps += 1
+
+            for name in current_wave:
+                node = graph._nodes.get(name)
+                if node is None:
+                    raise GraphRuntimeError(f"Node {name!r} not found in graph.")
+
+                result = node.fn(state)
+                if inspect.isawaitable(result):
+                    result = await result
+
+                if not isinstance(result, dict):
+                    raise GraphRuntimeError(
+                        f"Node {name!r} must return a dict, got {type(result).__name__!r}."
+                    )
+
+                # Check for streaming token generator
+                stream_gen = result.pop("__stream__", None)
+                if stream_gen is not None:
+                    collected: list[str] = []
+                    async for token in stream_gen:
+                        collected.append(token)
+                        yield {"type": "token", "node": name, "token": token}
+                    # Store the full text in the result
+                    if "__stream_key__" in result:
+                        result[result.pop("__stream_key__")] = "".join(collected)
+
+                state.update(result)
+                yield {"type": "node_complete", "node": name, "state": dict(state)}
+
+            current_wave = await self._next_wave(current_wave, state)
 
     def get_mermaid(self) -> str:
         return get_mermaid(self._graph)
@@ -116,7 +183,15 @@ class CompiledGraph:
             steps += 1
 
             # Run all nodes in this wave concurrently
-            results = await asyncio.gather(*[self._call_node(name, state) for name in current_wave])
+            try:
+                results = await asyncio.gather(
+                    *[self._call_node(name, state) for name in current_wave]
+                )
+            except GraphInterrupt as exc:
+                # Save state and raise InterruptState for the caller
+                if checkpointer is not None and graph_id is not None:
+                    checkpointer.save(graph_id, steps, dict(state))
+                raise GraphInterrupt(exc.message, exc.data) from None
 
             # Merge partial results into state and yield events
             for name, partial in zip(current_wave, results, strict=False):

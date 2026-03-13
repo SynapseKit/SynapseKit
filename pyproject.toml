@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "synapsekit"
-version = "0.6.0"
+version = "0.6.1"
 description = "Async-native Python framework for building production-grade LLM applications. Streaming-first, 2 dependencies, fully transparent."
 authors = [{ name = "Amit Nautiyal", email = "de.amit.nautiyal@gmail.com" }]
 license = { text = "MIT" }
