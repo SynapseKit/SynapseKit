@@ -7,6 +7,49 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [0.6.1] — 2026-03-13
+
+### Added
+
+- **Human-in-the-Loop** — `GraphInterrupt` exception pauses graph execution for human review; `InterruptState` holds interrupt details; `resume(updates=...)` applies human edits and continues from checkpoint
+- **Subgraphs** — `subgraph_node(compiled_graph, input_mapping, output_mapping)` nests a `CompiledGraph` as a node in a parent graph with key mapping
+- **Token-level streaming** — `llm_node(llm, stream=True)` wraps any `BaseLLM` as a graph node; `stream_tokens()` yields `{"type": "token", ...}` events for real-time output
+- **Self-Query retrieval** — `SelfQueryRetriever` uses an LLM to decompose natural-language queries into semantic search + metadata filters automatically
+- **Parent Document retrieval** — `ParentDocumentRetriever` embeds small chunks for precision search, returns full parent documents for richer context
+- **Cross-Encoder reranking** — `CrossEncoderReranker` reranks retrieval results with cross-encoder models for higher accuracy (requires `synapsekit[semantic]`)
+- **Hybrid memory** — `HybridMemory` keeps a sliding window of recent messages in full, plus an LLM-generated summary of older messages for token-efficient long conversations
+- 30 new tests (482 total)
+
+---
+
+## [0.6.0] — 2026-03-13
+
+### Added
+
+- **Built-in tools** (6 new):
+  - `HTTPRequestTool` — GET/POST/PUT/DELETE/PATCH with aiohttp, configurable timeout and max response length
+  - `FileWriteTool` — write/append files with auto-mkdir
+  - `FileListTool` — list directories with glob patterns, recursive mode
+  - `DateTimeTool` — current time, parse, format with timezone support
+  - `RegexTool` — findall, match, search, replace, split with flag support
+  - `JSONQueryTool` — dot-notation path queries on JSON data
+- **LLM providers** (3 new, all OpenAI-compatible):
+  - `OpenRouterLLM` — unified API for 200+ models (auto-detected from `/` in model name)
+  - `TogetherLLM` — Together AI fast inference
+  - `FireworksLLM` — Fireworks AI optimized serving
+- **Advanced retrieval** (2 new):
+  - `ContextualRetriever` — Anthropic-style contextual retrieval (LLM prepends context before embedding)
+  - `SentenceWindowRetriever` — sentence-level embedding with configurable window expansion at retrieval time
+- RAG facade auto-detects `openrouter` (model names with `/`), `together`, and `fireworks` providers
+- 37 new tests (452 total)
+
+### Changed
+
+- Lazy imports extended for new providers (`OpenRouterLLM`, `TogetherLLM`, `FireworksLLM`)
+- `agents/tools/__init__.py` exports 11 built-in tools (was 5)
+
+---
+
 ## [0.5.3] — 2026-03-12
 
 ### Added
