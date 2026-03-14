@@ -14,6 +14,7 @@ from .summarization import SummarizationTool
 from .translation import TranslationTool
 from .web_search import WebSearchTool
 from .wikipedia import WikipediaTool
+from .web_scraper import WebScraperTool
 
 __all__ = [
     "CalculatorTool",
@@ -32,4 +33,5 @@ __all__ = [
     "TranslationTool",
     "WebSearchTool",
     "WikipediaTool",
+    "WebScraperTool",
 ]
