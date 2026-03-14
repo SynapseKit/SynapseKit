@@ -7,6 +7,22 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [0.6.3] — 2026-03-14
+
+### Added
+
+- **Typed state with reducers** — `TypedState` and `StateField` for safe parallel state merging in graph workflows; per-field reducers control how concurrent node outputs are combined (closes #253)
+- **Parallel subgraph execution** — `fan_out_node()` runs multiple subgraphs concurrently with `asyncio.gather()`, supports per-subgraph input mappings and custom merge functions (closes #248)
+- **SSE streaming** — `sse_stream()` streams graph execution as Server-Sent Events for HTTP responses (closes #238)
+- **Event callbacks** — `EventHooks` and `GraphEvent` for registering callbacks on node_start, node_complete, wave_start, wave_complete events during graph execution (closes #240)
+- **Semantic LLM cache** — `SemanticCache` uses embeddings for similarity-based cache lookup instead of exact match; configurable threshold and maxsize (closes #196)
+- **Summarization tool** — `SummarizationTool` summarizes text using an LLM with concise, bullet_points, or detailed styles (closes #223)
+- **Sentiment analysis tool** — `SentimentAnalysisTool` analyzes text sentiment (positive/negative/neutral) with confidence and explanation (closes #225)
+- **Translation tool** — `TranslationTool` translates text between languages with optional source language specification (closes #224)
+- 28 new tests (540 total)
+
+---
+
 ## [0.6.2] — 2026-03-13
 
 ### Added
