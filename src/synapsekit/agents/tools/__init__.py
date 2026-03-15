@@ -1,11 +1,14 @@
 from .calculator import CalculatorTool
 from .datetime_tool import DateTimeTool
+from .duck_search import DuckDuckGoSearchTool
 from .file_list import FileListTool
 from .file_read import FileReadTool
 from .file_write import FileWriteTool
+from .graphql import GraphQLTool
 from .http_request import HTTPRequestTool
 from .human_input import HumanInputTool
 from .json_query import JSONQueryTool
+from .pdf_reader import PDFReaderTool
 from .python_repl import PythonREPLTool
 from .regex_tool import RegexTool
 from .sentiment import SentimentAnalysisTool
@@ -21,12 +24,15 @@ from .wikipedia import WikipediaTool
 __all__ = [
     "CalculatorTool",
     "DateTimeTool",
+    "DuckDuckGoSearchTool",
     "FileListTool",
     "FileReadTool",
     "FileWriteTool",
+    "GraphQLTool",
     "HTTPRequestTool",
     "HumanInputTool",
     "JSONQueryTool",
+    "PDFReaderTool",
     "PythonREPLTool",
     "RegexTool",
     "SentimentAnalysisTool",

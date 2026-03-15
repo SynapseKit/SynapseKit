@@ -1,22 +1,27 @@
 from .base import VectorStore
+from .cohere_reranker import CohereReranker
 from .contextual_compression import ContextualCompressionRetriever
 from .crag import CRAGRetriever
 from .cross_encoder import CrossEncoderReranker
 from .ensemble import EnsembleRetriever
+from .flare import FLARERetriever
 from .hyde import HyDERetriever
 from .parent_document import ParentDocumentRetriever
 from .query_decomposition import QueryDecompositionRetriever
 from .retriever import Retriever
 from .self_query import SelfQueryRetriever
+from .step_back import StepBackRetriever
 from .vectorstore import InMemoryVectorStore
 
 __all__ = [
     "ChromaVectorStore",
+    "CohereReranker",
     "ContextualCompressionRetriever",
     "CRAGRetriever",
     "CrossEncoderReranker",
     "EnsembleRetriever",
     "FAISSVectorStore",
+    "FLARERetriever",
     "HyDERetriever",
     "InMemoryVectorStore",
     "ParentDocumentRetriever",
@@ -25,6 +30,7 @@ __all__ = [
     "QueryDecompositionRetriever",
     "Retriever",
     "SelfQueryRetriever",
+    "StepBackRetriever",
     "VectorStore",
 ]
 
