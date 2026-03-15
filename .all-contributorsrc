@@ -14,6 +14,41 @@
       "avatar_url": "https://avatars.githubusercontent.com/u/34062684?v=4",
       "profile": "https://github.com/AmitoVrito",
       "contributions": ["code", "doc", "maintenance"]
+    },
+    {
+      "login": "gordienkoas",
+      "name": "Gordienko Andrey",
+      "avatar_url": "https://avatars.githubusercontent.com/u/127838071?v=4",
+      "profile": "https://github.com/gordienkoas",
+      "contributions": ["code"]
+    },
+    {
+      "login": "icysun",
+      "name": "scriptsec",
+      "avatar_url": "https://avatars.githubusercontent.com/u/17241351?v=4",
+      "profile": "https://github.com/icysun",
+      "contributions": ["code"]
+    },
+    {
+      "login": "Deepak8858",
+      "name": "Deepak singh",
+      "avatar_url": "https://avatars.githubusercontent.com/u/88921480?v=4",
+      "profile": "https://github.com/Deepak8858",
+      "contributions": ["code"]
+    },
+    {
+      "login": "by22Jy",
+      "name": "by22Jy",
+      "avatar_url": "https://avatars.githubusercontent.com/u/122969909?v=4",
+      "profile": "https://github.com/by22Jy",
+      "contributions": ["code"]
+    },
+    {
+      "login": "Arjunkundapur",
+      "name": "Arjun Kundapur",
+      "avatar_url": "https://avatars.githubusercontent.com/u/64265396?v=4",
+      "profile": "https://github.com/Arjunkundapur",
+      "contributions": ["code"]
     }
   ],
   "contributorsPerLine": 7
