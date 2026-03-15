@@ -1,0 +1,20 @@
+{
+  "projectName": "SynapseKit",
+  "projectOwner": "SynapseKit",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "files": ["README.md"],
+  "imageSize": 100,
+  "commit": true,
+  "commitConvention": "none",
+  "contributors": [
+    {
+      "login": "AmitoVrito",
+      "name": "Nautiverse",
+      "avatar_url": "https://avatars.githubusercontent.com/u/34062684?v=4",
+      "profile": "https://github.com/AmitoVrito",
+      "contributions": ["code", "doc", "maintenance"]
+    }
+  ],
+  "contributorsPerLine": 7
+}
