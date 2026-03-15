@@ -158,6 +158,7 @@ google-generativeai = "google"
 beautifulsoup4 = "bs4"
 faiss-cpu = "faiss"
 python-pptx = "pptx"
+python-docx = "docx"
 
 [tool.deptry.per_rule_ignores]
 DEP001 = ["sqlalchemy", "pydantic", "aiohttp"]
