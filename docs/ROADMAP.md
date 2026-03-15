@@ -71,7 +71,7 @@
 - [x] `WikipediaTool` — Wikipedia article search and summaries
 - [x] 13 providers, 13 tools, 12 loaders, 10 retrieval strategies, 4 memory backends, 512 tests passing
 
-## v0.6.3 — Typed State, Fan-Out, SSE & LLM Tools (current)
+## v0.6.3 — Typed State, Fan-Out, SSE & LLM Tools
 
 - [x] `TypedState` + `StateField` — typed state with per-field reducers for parallel merge
 - [x] `fan_out_node()` — parallel subgraph execution with custom merge
@@ -83,12 +83,24 @@
 - [x] `TranslationTool` — translate text with LLM
 - [x] 13 providers, 16 tools, 12 loaders, 10 retrieval strategies, 4 memory backends, 540 tests passing
 
+## v0.6.4 — Loaders, HyDE, Tools & Persistence (current)
+
+- [x] `DocxLoader` — Word document loading via `python-docx`
+- [x] `MarkdownLoader` — Markdown loading with optional YAML frontmatter stripping
+- [x] `HyDERetriever` — Hypothetical Document Embeddings retrieval strategy
+- [x] `ShellTool` — shell command execution with timeout and allowed-commands filter
+- [x] `SQLSchemaInspectionTool` — database schema inspection (list tables, describe columns)
+- [x] `FilesystemLLMCache` — persistent JSON file-based LLM cache backend
+- [x] `JSONFileCheckpointer` — JSON file-based graph checkpoint persistence
+- [x] `TokenTracer` COST_TABLE — GPT-4.1, o3, o4-mini, Gemini 2.5, DeepSeek-V3/R1, Groq models
+- [x] 13 providers, 19 tools, 14 loaders, 11 retrieval strategies, 5 memory backends, 587 tests passing
+
 ## v0.7.0 (planned)
 
 - [ ] Multi-modal support (image inputs for vision models)
 - [ ] `Evaluator` — faithfulness, relevancy, groundedness
 - [ ] RAGAS-style metrics
-- [ ] Advanced retrieval: HyDE, FLARE, Step-Back Prompting
+- [ ] Advanced retrieval: FLARE, Step-Back Prompting
 - [ ] Conversation branching and tree-of-thought
 
 ## v0.8.0 (planned)
