@@ -39,9 +39,7 @@ class TestHyDERetriever:
         mock_retriever.retrieve.return_value = []
 
         template = "Answer this: {query}"
-        hyde = HyDERetriever(
-            retriever=mock_retriever, llm=mock_llm, prompt_template=template
-        )
+        hyde = HyDERetriever(retriever=mock_retriever, llm=mock_llm, prompt_template=template)
         await hyde.retrieve("test query")
 
         prompt_arg = mock_llm.generate.call_args[0][0]

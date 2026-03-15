@@ -85,7 +85,9 @@ class SQLSchemaInspectionTool(BaseTool):
         engine = create_engine(self._connection_string)
         inspector = inspect(engine)
         columns = inspector.get_columns(table_name)
-        pk_cols = {c for c in (inspector.get_pk_constraint(table_name).get("constrained_columns") or [])}
+        pk_cols = {
+            c for c in (inspector.get_pk_constraint(table_name).get("constrained_columns") or [])
+        }
         return [
             {
                 "name": col["name"],
@@ -96,9 +98,7 @@ class SQLSchemaInspectionTool(BaseTool):
             for col in columns
         ]
 
-    async def run(
-        self, action: str = "", table_name: str = "", **kwargs: Any
-    ) -> ToolResult:
+    async def run(self, action: str = "", table_name: str = "", **kwargs: Any) -> ToolResult:
         if not action:
             return ToolResult(output="", error="action is required.")
 
@@ -118,7 +118,9 @@ class SQLSchemaInspectionTool(BaseTool):
                 else:
                     cols = self._describe_table_sqlalchemy(table_name)
                 if not cols:
-                    return ToolResult(output="", error=f"Table {table_name!r} not found or has no columns.")
+                    return ToolResult(
+                        output="", error=f"Table {table_name!r} not found or has no columns."
+                    )
                 lines = [
                     f"{c['name']} ({c['type']}, nullable={c['nullable']}, pk={c['pk']})"
                     for c in cols

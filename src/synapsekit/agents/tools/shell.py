@@ -54,9 +54,7 @@ class ShellTool(BaseTool):
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
-            stdout, stderr = await asyncio.wait_for(
-                proc.communicate(), timeout=self.timeout
-            )
+            stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=self.timeout)
             output = stdout.decode() if stdout else ""
             err = stderr.decode() if stderr else ""
 

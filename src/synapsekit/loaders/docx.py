@@ -23,9 +23,7 @@ class DocxLoader:
         try:
             from docx import Document as DocxDocument
         except ImportError:
-            raise ImportError(
-                "python-docx required: pip install synapsekit[docx]"
-            ) from None
+            raise ImportError("python-docx required: pip install synapsekit[docx]") from None
 
         doc = DocxDocument(self._path)
         text = "\n".join(p.text for p in doc.paragraphs if p.text)

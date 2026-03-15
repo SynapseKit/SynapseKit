@@ -11,12 +11,8 @@ from synapsekit.agents.tools.sql_schema import SQLSchemaInspectionTool
 def sqlite_db(tmp_path):
     db_path = str(tmp_path / "test.db")
     conn = sqlite3.connect(db_path)
-    conn.execute(
-        "CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT)"
-    )
-    conn.execute(
-        "CREATE TABLE posts (id INTEGER PRIMARY KEY, user_id INTEGER, title TEXT)"
-    )
+    conn.execute("CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT)")
+    conn.execute("CREATE TABLE posts (id INTEGER PRIMARY KEY, user_id INTEGER, title TEXT)")
     conn.commit()
     conn.close()
     return db_path
