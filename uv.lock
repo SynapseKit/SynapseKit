@@ -2461,6 +2461,15 @@ wheels = [
 ]
 
 [[package]]
+name = "redis"
+version = "7.3.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/da/82/4d1a5279f6c1251d3d2a603a798a1137c657de9b12cfc1fba4858232c4d2/redis-7.3.0.tar.gz", hash = "sha256:4d1b768aafcf41b01022410b3cc4f15a07d9b3d6fe0c66fc967da2c88e551034", size = 4928081, upload-time = "2026-03-06T18:18:16.287Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f0/28/84e57fce7819e81ec5aa1bd31c42b89607241f4fb1a3ea5b0d2dbeaea26c/redis-7.3.0-py3-none-any.whl", hash = "sha256:9d4fcb002a12a5e3c3fbe005d59c48a2cc231f87fbb2f6b70c2d89bb64fec364", size = 404379, upload-time = "2026-03-06T18:18:14.583Z" },
+]
+
+[[package]]
 name = "referencing"
 version = "0.37.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2809,7 +2818,7 @@ wheels = [
 
 [[package]]
 name = "synapsekit"
-version = "0.6.4"
+version = "0.6.5"
 source = { editable = "." }
 dependencies = [
     { name = "numpy" },
@@ -2834,6 +2843,7 @@ all = [
     { name = "pinecone" },
     { name = "pypdf" },
     { name = "qdrant-client" },
+    { name = "redis" },
     { name = "sentence-transformers" },
 ]
 anthropic = [
@@ -2890,6 +2900,9 @@ pptx = [
 ]
 qdrant = [
     { name = "qdrant-client" },
+]
+redis = [
+    { name = "redis" },
 ]
 search = [
     { name = "duckduckgo-search" },
@@ -2957,10 +2970,12 @@ requires-dist = [
     { name = "qdrant-client", marker = "extra == 'all'", specifier = ">=1.9" },
     { name = "qdrant-client", marker = "extra == 'qdrant'", specifier = ">=1.9" },
     { name = "rank-bm25", specifier = ">=0.2.2" },
+    { name = "redis", marker = "extra == 'all'", specifier = ">=5.0" },
+    { name = "redis", marker = "extra == 'redis'", specifier = ">=5.0" },
     { name = "sentence-transformers", marker = "extra == 'all'", specifier = ">=2.7" },
     { name = "sentence-transformers", marker = "extra == 'semantic'", specifier = ">=2.7" },
 ]
-provides-extras = ["openai", "anthropic", "semantic", "pdf", "html", "web", "chroma", "faiss", "qdrant", "pinecone", "ollama", "cohere", "mistral", "gemini", "bedrock", "groq", "excel", "pptx", "docx", "http", "search", "all"]
+provides-extras = ["openai", "anthropic", "semantic", "pdf", "html", "web", "chroma", "faiss", "qdrant", "pinecone", "ollama", "cohere", "mistral", "gemini", "bedrock", "groq", "excel", "pptx", "docx", "http", "search", "redis", "all"]
 
 [package.metadata.requires-dev]
 dev = [

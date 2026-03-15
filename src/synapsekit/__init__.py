@@ -22,13 +22,16 @@ from .agents import (
     BaseTool,
     CalculatorTool,
     DateTimeTool,
+    DuckDuckGoSearchTool,
     FileListTool,
     FileReadTool,
     FileWriteTool,
     FunctionCallingAgent,
+    GraphQLTool,
     HTTPRequestTool,
     HumanInputTool,
     JSONQueryTool,
+    PDFReaderTool,
     PythonREPLTool,
     ReActAgent,
     RegexTool,
@@ -90,6 +93,7 @@ from .memory.conversation import ConversationMemory
 from .memory.hybrid import HybridMemory
 from .memory.sqlite import SQLiteConversationMemory
 from .memory.summary_buffer import SummaryBufferMemory
+from .memory.token_buffer import TokenBufferMemory
 from .observability.tracer import TokenTracer
 from .parsers.json_parser import JSONParser
 from .parsers.list_parser import ListParser
@@ -98,11 +102,13 @@ from .prompts.template import ChatPromptTemplate, FewShotPromptTemplate, PromptT
 from .rag.facade import RAG
 from .rag.pipeline import RAGConfig, RAGPipeline
 from .retrieval.base import VectorStore
+from .retrieval.cohere_reranker import CohereReranker
 from .retrieval.contextual import ContextualRetriever
 from .retrieval.contextual_compression import ContextualCompressionRetriever
 from .retrieval.crag import CRAGRetriever
 from .retrieval.cross_encoder import CrossEncoderReranker
 from .retrieval.ensemble import EnsembleRetriever
+from .retrieval.flare import FLARERetriever
 from .retrieval.hyde import HyDERetriever
 from .retrieval.parent_document import ParentDocumentRetriever
 from .retrieval.query_decomposition import QueryDecompositionRetriever
@@ -110,6 +116,7 @@ from .retrieval.rag_fusion import RAGFusionRetriever
 from .retrieval.retriever import Retriever
 from .retrieval.self_query import SelfQueryRetriever
 from .retrieval.sentence_window import SentenceWindowRetriever
+from .retrieval.step_back import StepBackRetriever
 from .retrieval.vectorstore import InMemoryVectorStore
 from .text_splitters import (
     BaseSplitter,
@@ -119,7 +126,7 @@ from .text_splitters import (
     TokenAwareSplitter,
 )
 
-__version__ = "0.6.4"
+__version__ = "0.6.5"
 __all__ = [
     # Facade
     "RAG",
@@ -146,22 +153,26 @@ __all__ = [
     "PineconeVectorStore",
     # Retrieval
     "Retriever",
+    "CohereReranker",
     "RAGFusionRetriever",
     "ContextualRetriever",
     "ContextualCompressionRetriever",
     "CRAGRetriever",
     "CrossEncoderReranker",
     "EnsembleRetriever",
+    "FLARERetriever",
     "HyDERetriever",
     "ParentDocumentRetriever",
     "QueryDecompositionRetriever",
     "SelfQueryRetriever",
     "SentenceWindowRetriever",
+    "StepBackRetriever",
     # Memory / observability
     "ConversationMemory",
     "HybridMemory",
     "SQLiteConversationMemory",
     "SummaryBufferMemory",
+    "TokenBufferMemory",
     "TokenTracer",
     # Loaders
     "Document",
@@ -200,12 +211,15 @@ __all__ = [
     # Built-in tools
     "CalculatorTool",
     "DateTimeTool",
+    "DuckDuckGoSearchTool",
     "FileListTool",
     "FileReadTool",
     "FileWriteTool",
+    "GraphQLTool",
     "HTTPRequestTool",
     "HumanInputTool",
     "JSONQueryTool",
+    "PDFReaderTool",
     "PythonREPLTool",
     "RegexTool",
     "SentimentAnalysisTool",
