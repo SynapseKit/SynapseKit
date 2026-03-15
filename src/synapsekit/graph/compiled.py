@@ -60,7 +60,9 @@ class CompiledGraph:
     ) -> dict[str, Any]:
         """Run the graph to completion and return the final state."""
         state = dict(state)
-        async for _ in self._execute(state, checkpointer=checkpointer, graph_id=graph_id, hooks=hooks):
+        async for _ in self._execute(
+            state, checkpointer=checkpointer, graph_id=graph_id, hooks=hooks
+        ):
             pass
         return state
 
@@ -76,7 +78,9 @@ class CompiledGraph:
         The caller receives incremental state updates as nodes finish.
         """
         state = dict(state)
-        async for event in self._execute(state, checkpointer=checkpointer, graph_id=graph_id, hooks=hooks):
+        async for event in self._execute(
+            state, checkpointer=checkpointer, graph_id=graph_id, hooks=hooks
+        ):
             yield event
 
     async def resume(
@@ -197,10 +201,12 @@ class CompiledGraph:
 
             # Emit wave_start event
             if hooks is not None:
-                await hooks.emit(GraphEvent(
-                    event_type="wave_start",
-                    data={"wave": current_wave, "step": steps},
-                ))
+                await hooks.emit(
+                    GraphEvent(
+                        event_type="wave_start",
+                        data={"wave": current_wave, "step": steps},
+                    )
+                )
 
             # Emit node_start events
             if hooks is not None:
@@ -225,19 +231,23 @@ class CompiledGraph:
 
                 # Emit node_complete event
                 if hooks is not None:
-                    await hooks.emit(GraphEvent(
-                        event_type="node_complete",
-                        node=name,
-                        state=dict(state),
-                    ))
+                    await hooks.emit(
+                        GraphEvent(
+                            event_type="node_complete",
+                            node=name,
+                            state=dict(state),
+                        )
+                    )
 
             # Emit wave_complete event
             if hooks is not None:
-                await hooks.emit(GraphEvent(
-                    event_type="wave_complete",
-                    data={"wave": current_wave, "step": steps},
-                    state=dict(state),
-                ))
+                await hooks.emit(
+                    GraphEvent(
+                        event_type="wave_complete",
+                        data={"wave": current_wave, "step": steps},
+                        state=dict(state),
+                    )
+                )
 
             # Save checkpoint after wave completion
             if checkpointer is not None and graph_id is not None:

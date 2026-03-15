@@ -5,13 +5,32 @@ from dataclasses import dataclass
 
 # Cost per token in USD (input, output)
 COST_TABLE: dict[str, dict[str, float]] = {
+    # OpenAI — GPT-4o family
     "gpt-4o-mini": {"input": 0.15 / 1e6, "output": 0.60 / 1e6},
     "gpt-4o": {"input": 2.50 / 1e6, "output": 10.00 / 1e6},
     "gpt-4o-2024-11-20": {"input": 2.50 / 1e6, "output": 10.00 / 1e6},
     "gpt-4-turbo": {"input": 10.00 / 1e6, "output": 30.00 / 1e6},
+    # OpenAI — GPT-4.1 family
+    "gpt-4.1": {"input": 2.00 / 1e6, "output": 8.00 / 1e6},
+    "gpt-4.1-mini": {"input": 0.40 / 1e6, "output": 1.60 / 1e6},
+    "gpt-4.1-nano": {"input": 0.10 / 1e6, "output": 0.40 / 1e6},
+    # OpenAI — o-series reasoning
+    "o3": {"input": 10.00 / 1e6, "output": 40.00 / 1e6},
+    "o3-mini": {"input": 1.10 / 1e6, "output": 4.40 / 1e6},
+    "o4-mini": {"input": 1.10 / 1e6, "output": 4.40 / 1e6},
+    # Anthropic
     "claude-haiku-4-5-20251001": {"input": 0.80 / 1e6, "output": 4.00 / 1e6},
     "claude-sonnet-4-6": {"input": 3.00 / 1e6, "output": 15.00 / 1e6},
     "claude-opus-4-6": {"input": 15.00 / 1e6, "output": 75.00 / 1e6},
+    # Google Gemini
+    "gemini-2.5-pro": {"input": 1.25 / 1e6, "output": 10.00 / 1e6},
+    "gemini-2.5-flash": {"input": 0.15 / 1e6, "output": 0.60 / 1e6},
+    # DeepSeek
+    "deepseek-chat": {"input": 0.27 / 1e6, "output": 1.10 / 1e6},
+    "deepseek-reasoner": {"input": 0.55 / 1e6, "output": 2.19 / 1e6},
+    # Groq-hosted models
+    "llama-3.3-70b-versatile": {"input": 0.59 / 1e6, "output": 0.79 / 1e6},
+    "mixtral-8x7b-32768": {"input": 0.24 / 1e6, "output": 0.24 / 1e6},
 }
 
 

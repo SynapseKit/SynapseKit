@@ -1,12 +1,15 @@
 from .base import Document
+from .markdown import MarkdownLoader
 from .text import StringLoader, TextLoader
 
 __all__ = [
     "CSVLoader",
     "DirectoryLoader",
+    "DocxLoader",
     "Document",
     "HTMLLoader",
     "JSONLoader",
+    "MarkdownLoader",
     "PDFLoader",
     "StringLoader",
     "TextLoader",
@@ -20,6 +23,7 @@ _LOADERS = {
     "JSONLoader": ".json_loader",
     "DirectoryLoader": ".directory",
     "WebLoader": ".web",
+    "DocxLoader": ".docx",
 }
 
 

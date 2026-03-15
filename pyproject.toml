@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "synapsekit"
-version = "0.6.3"
+version = "0.6.4"
 description = "Async-native Python framework for building production-grade LLM applications. Streaming-first, 2 dependencies, fully transparent."
 authors = [{ name = "Amit", email = "de.amit.nautiyal@gmail.com" }]
 license = { text = "MIT" }
@@ -48,6 +48,7 @@ bedrock = ["boto3>=1.34"]
 groq = ["groq>=0.9"]
 excel = ["openpyxl>=3.1"]
 pptx = ["python-pptx>=0.6"]
+docx = ["python-docx>=1.0"]
 http = ["aiohttp>=3.9"]
 search = ["duckduckgo-search>=6.0"]
 all = [
@@ -157,6 +158,7 @@ google-generativeai = "google"
 beautifulsoup4 = "bs4"
 faiss-cpu = "faiss"
 python-pptx = "pptx"
+python-docx = "docx"
 
 [tool.deptry.per_rule_ignores]
 DEP001 = ["sqlalchemy", "pydantic", "aiohttp"]

@@ -33,7 +33,9 @@ from .agents import (
     ReActAgent,
     RegexTool,
     SentimentAnalysisTool,
+    ShellTool,
     SQLQueryTool,
+    SQLSchemaInspectionTool,
     SummarizationTool,
     ToolRegistry,
     ToolResult,
@@ -59,6 +61,7 @@ from .graph import (
     GraphState,
     InMemoryCheckpointer,
     InterruptState,
+    JSONFileCheckpointer,
     Node,
     NodeFn,
     SQLiteCheckpointer,
@@ -79,6 +82,7 @@ from .loaders.csv import CSVLoader
 from .loaders.directory import DirectoryLoader
 from .loaders.html import HTMLLoader
 from .loaders.json_loader import JSONLoader
+from .loaders.markdown import MarkdownLoader
 from .loaders.pdf import PDFLoader
 from .loaders.text import StringLoader, TextLoader
 from .loaders.web import WebLoader
@@ -99,6 +103,7 @@ from .retrieval.contextual_compression import ContextualCompressionRetriever
 from .retrieval.crag import CRAGRetriever
 from .retrieval.cross_encoder import CrossEncoderReranker
 from .retrieval.ensemble import EnsembleRetriever
+from .retrieval.hyde import HyDERetriever
 from .retrieval.parent_document import ParentDocumentRetriever
 from .retrieval.query_decomposition import QueryDecompositionRetriever
 from .retrieval.rag_fusion import RAGFusionRetriever
@@ -114,7 +119,7 @@ from .text_splitters import (
     TokenAwareSplitter,
 )
 
-__version__ = "0.6.3"
+__version__ = "0.6.4"
 __all__ = [
     # Facade
     "RAG",
@@ -147,6 +152,7 @@ __all__ = [
     "CRAGRetriever",
     "CrossEncoderReranker",
     "EnsembleRetriever",
+    "HyDERetriever",
     "ParentDocumentRetriever",
     "QueryDecompositionRetriever",
     "SelfQueryRetriever",
@@ -166,6 +172,8 @@ __all__ = [
     "CSVLoader",
     "JSONLoader",
     "DirectoryLoader",
+    "DocxLoader",
+    "MarkdownLoader",
     "WebLoader",
     "ExcelLoader",
     "PowerPointLoader",
@@ -201,7 +209,9 @@ __all__ = [
     "PythonREPLTool",
     "RegexTool",
     "SentimentAnalysisTool",
+    "ShellTool",
     "SQLQueryTool",
+    "SQLSchemaInspectionTool",
     "SummarizationTool",
     "TranslationTool",
     "WebScraperTool",
@@ -240,6 +250,7 @@ __all__ = [
     # Checkpointers
     "BaseCheckpointer",
     "InMemoryCheckpointer",
+    "JSONFileCheckpointer",
     "SQLiteCheckpointer",
     # Structured output
     "generate_structured",
@@ -260,6 +271,7 @@ _LAZY_IMPORTS = {
     "OpenRouterLLM": "llm.openrouter",
     "TogetherLLM": "llm.together",
     # Loaders
+    "DocxLoader": "loaders.docx",
     "ExcelLoader": "loaders.excel",
     "PowerPointLoader": "loaders.pptx",
 }
