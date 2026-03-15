@@ -7,7 +7,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/synapsekit?color=0a7bbd&label=pypi&logo=pypi&logoColor=white)](https://pypi.org/project/synapsekit/)
 [![Python](https://img.shields.io/badge/python-3.14%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-22c55e)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-540%20passing-22c55e?logo=pytest&logoColor=white)]()
+[![Tests](https://img.shields.io/badge/tests-587%20passing-22c55e?logo=pytest&logoColor=white)]()
 [![Downloads](https://img.shields.io/pypi/dm/synapsekit?color=0a7bbd&logo=pypi&logoColor=white)](https://pypistats.org/packages/synapsekit)
 [![Docs](https://img.shields.io/badge/docs-online-0a7bbd?logo=readthedocs&logoColor=white)](https://synapsekit.github.io/synapsekit-docs/)
 
@@ -84,7 +84,7 @@ Retrieval-augmented generation with streaming, BM25 reranking, conversation memo
 <td width="50%">
 
 **🤖 Agents**<br/>
-ReAct loop (any LLM) and native function calling (OpenAI / Anthropic / Gemini / Mistral). 16 built-in tools including calculator, Python REPL, web search, SQL, HTTP, summarization, sentiment analysis, and translation. Fully extensible.
+ReAct loop (any LLM) and native function calling (OpenAI / Anthropic / Gemini / Mistral). 19 built-in tools including calculator, Python REPL, web search, SQL, HTTP, shell, summarization, sentiment analysis, and translation. Fully extensible.
 
 </td>
 </tr>
@@ -188,6 +188,25 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) to get started. Look for issues tagged [
 - 🐛 [Bug reports](https://github.com/SynapseKit/SynapseKit/issues/new?template=bug_report.yml)
 - 💡 [Feature requests](https://github.com/SynapseKit/SynapseKit/issues/new?template=feature_request.yml)
 - 🔒 [Security policy](SECURITY.md)
+
+---
+
+## Contributors
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/AmitoVrito"><img src="https://avatars.githubusercontent.com/u/34062684?v=4" width="100px;" alt="Nautiverse"/><br /><sub><b>Nautiverse</b></sub></a><br /><a href="https://github.com/SynapseKit/SynapseKit/commits?author=AmitoVrito" title="Code">💻</a> <a href="https://github.com/SynapseKit/SynapseKit/commits?author=AmitoVrito" title="Documentation">📖</a> <a href="#maintenance-AmitoVrito" title="Maintenance">🚧</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/gordienkoas"><img src="https://avatars.githubusercontent.com/u/127838071?v=4" width="100px;" alt="Gordienko Andrey"/><br /><sub><b>Gordienko Andrey</b></sub></a><br /><a href="https://github.com/SynapseKit/SynapseKit/commits?author=gordienkoas" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/icysun"><img src="https://avatars.githubusercontent.com/u/17241351?v=4" width="100px;" alt="scriptsec"/><br /><sub><b>scriptsec</b></sub></a><br /><a href="https://github.com/SynapseKit/SynapseKit/commits?author=icysun" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Deepak8858"><img src="https://avatars.githubusercontent.com/u/88921480?v=4" width="100px;" alt="Deepak singh"/><br /><sub><b>Deepak singh</b></sub></a><br /><a href="https://github.com/SynapseKit/SynapseKit/commits?author=Deepak8858" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/by22Jy"><img src="https://avatars.githubusercontent.com/u/122969909?v=4" width="100px;" alt="by22Jy"/><br /><sub><b>by22Jy</b></sub></a><br /><a href="https://github.com/SynapseKit/SynapseKit/commits?author=by22Jy" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Arjunkundapur"><img src="https://avatars.githubusercontent.com/u/64265396?v=4" width="100px;" alt="Arjun Kundapur"/><br /><sub><b>Arjun Kundapur</b></sub></a><br /><a href="https://github.com/SynapseKit/SynapseKit/commits?author=Arjunkundapur" title="Code">💻</a></td>
+    </tr>
+  </tbody>
+</table>
+<!-- ALL-CONTRIBUTORS-LIST:END -->
 
 ---
 
