@@ -1,4 +1,9 @@
-from .checkpointers import BaseCheckpointer, InMemoryCheckpointer, SQLiteCheckpointer
+from .checkpointers import (
+    BaseCheckpointer,
+    InMemoryCheckpointer,
+    JSONFileCheckpointer,
+    SQLiteCheckpointer,
+)
 from .compiled import CompiledGraph
 from .edge import ConditionalEdge, ConditionFn, Edge
 from .errors import GraphConfigError, GraphRuntimeError
@@ -25,6 +30,7 @@ __all__ = [
     "GraphState",
     "InMemoryCheckpointer",
     "InterruptState",
+    "JSONFileCheckpointer",
     "Node",
     "NodeFn",
     "SQLiteCheckpointer",

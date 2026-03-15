@@ -9,7 +9,9 @@ from .json_query import JSONQueryTool
 from .python_repl import PythonREPLTool
 from .regex_tool import RegexTool
 from .sentiment import SentimentAnalysisTool
+from .shell import ShellTool
 from .sql_query import SQLQueryTool
+from .sql_schema import SQLSchemaInspectionTool
 from .summarization import SummarizationTool
 from .translation import TranslationTool
 from .web_scraper import WebScraperTool
@@ -28,7 +30,9 @@ __all__ = [
     "PythonREPLTool",
     "RegexTool",
     "SentimentAnalysisTool",
+    "ShellTool",
     "SQLQueryTool",
+    "SQLSchemaInspectionTool",
     "SummarizationTool",
     "TranslationTool",
     "WebScraperTool",

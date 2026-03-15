@@ -3,6 +3,7 @@ from .contextual_compression import ContextualCompressionRetriever
 from .crag import CRAGRetriever
 from .cross_encoder import CrossEncoderReranker
 from .ensemble import EnsembleRetriever
+from .hyde import HyDERetriever
 from .parent_document import ParentDocumentRetriever
 from .query_decomposition import QueryDecompositionRetriever
 from .retriever import Retriever
@@ -16,6 +17,7 @@ __all__ = [
     "CrossEncoderReranker",
     "EnsembleRetriever",
     "FAISSVectorStore",
+    "HyDERetriever",
     "InMemoryVectorStore",
     "ParentDocumentRetriever",
     "PineconeVectorStore",
