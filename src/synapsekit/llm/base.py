@@ -15,7 +15,7 @@ class LLMConfig:
     # Caching
     cache: bool = False
     cache_maxsize: int = 128
-    cache_backend: str = "memory"  # "memory" or "sqlite"
+    cache_backend: str = "memory"  # "memory", "sqlite", or "filesystem"
     cache_db_path: str = "synapsekit_llm_cache.db"
     # Retries
     max_retries: int = 0
@@ -38,6 +38,10 @@ class BaseLLM(ABC):
                 from ._sqlite_cache import SQLiteLLMCache
 
                 self._cache = SQLiteLLMCache(db_path=config.cache_db_path)
+            elif config.cache_backend == "filesystem":
+                from ._filesystem_cache import FilesystemLLMCache
+
+                self._cache = FilesystemLLMCache(cache_dir=config.cache_db_path)
             else:
                 from ._cache import AsyncLRUCache
 

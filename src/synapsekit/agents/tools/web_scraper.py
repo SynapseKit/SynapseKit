@@ -38,9 +38,7 @@ class WebScraperTool(BaseTool):
         try:
             from bs4 import BeautifulSoup
         except ImportError:
-            raise ImportError(
-                "beautifulsoup4 required: pip install synapsekit[web]"
-            ) from None
+            raise ImportError("beautifulsoup4 required: pip install synapsekit[web]") from None
 
         soup = BeautifulSoup(html, "html.parser")
 
@@ -51,9 +49,7 @@ class WebScraperTool(BaseTool):
             elements = soup.select(css_selector)
             if not elements:
                 return ""
-            content = "\n\n".join(
-                elem.get_text(separator="\n", strip=True) for elem in elements
-            )
+            content = "\n\n".join(elem.get_text(separator="\n", strip=True) for elem in elements)
         else:
             content = soup.get_text(separator="\n", strip=True)
 
@@ -66,9 +62,7 @@ class WebScraperTool(BaseTool):
         try:
             import httpx
         except ImportError:
-            raise ImportError(
-                "httpx required: pip install synapsekit[web]"
-            ) from None
+            raise ImportError("httpx required: pip install synapsekit[web]") from None
 
         target_url = url or kwargs.get("input", "")
         if not target_url:
