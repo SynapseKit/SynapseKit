@@ -1,0 +1,64 @@
+name: Welcome New Contributors
+
+on:
+  issues:
+    types: [opened]
+  pull_request_target:
+    types: [opened]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  welcome:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const isIssue = !!context.payload.issue;
+            const author = isIssue
+              ? context.payload.issue.user.login
+              : context.payload.pull_request.user.login;
+            const number = isIssue
+              ? context.payload.issue.number
+              : context.payload.pull_request.number;
+
+            // Skip bots
+            const authorType = isIssue
+              ? context.payload.issue.user.type
+              : context.payload.pull_request.user.type;
+            if (authorType === 'Bot') return;
+
+            // Check if this is their first issue/PR
+            const endpoint = isIssue ? 'issues' : 'pulls';
+            const { data: items } = await github.rest[endpoint === 'issues' ? 'issues' : 'pulls'].listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              creator: author,
+              state: 'all',
+              per_page: 2,
+            });
+
+            if (items.length > 1) return;
+
+            const body = isIssue
+              ? `👋 Welcome @${author}! Thanks for opening your first issue.\n\nA maintainer will review this shortly. In the meantime, follow us on [LinkedIn](https://www.linkedin.com/company/synapsekitai/) to stay updated on releases and announcements!`
+              : `👋 Welcome @${author}! Thanks for your first pull request.\n\nA maintainer will review this shortly. In the meantime, follow us on [LinkedIn](https://www.linkedin.com/company/synapsekitai/) to stay updated on releases and announcements!`;
+
+            if (isIssue) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: number,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: number,
+                body,
+              });
+            }
