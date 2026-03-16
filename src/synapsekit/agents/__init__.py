@@ -6,6 +6,7 @@ from .react import ReActAgent
 from .registry import ToolRegistry
 from .tool_decorator import tool
 from .tools import (
+    ArxivSearchTool,
     CalculatorTool,
     DateTimeTool,
     DuckDuckGoSearchTool,
@@ -24,6 +25,7 @@ from .tools import (
     SQLQueryTool,
     SQLSchemaInspectionTool,
     SummarizationTool,
+    TavilySearchTool,
     TranslationTool,
     WebScraperTool,
     WebSearchTool,
@@ -45,6 +47,7 @@ __all__ = [
     # Decorator
     "tool",
     # Built-in tools
+    "ArxivSearchTool",
     "CalculatorTool",
     "DateTimeTool",
     "DuckDuckGoSearchTool",
@@ -63,6 +66,7 @@ __all__ = [
     "SQLQueryTool",
     "SQLSchemaInspectionTool",
     "SummarizationTool",
+    "TavilySearchTool",
     "TranslationTool",
     "WebScraperTool",
     "WebSearchTool",
