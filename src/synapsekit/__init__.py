@@ -19,6 +19,7 @@ from .agents import (
     AgentExecutor,
     AgentMemory,
     AgentStep,
+    ArxivSearchTool,
     BaseTool,
     CalculatorTool,
     DateTimeTool,
@@ -40,6 +41,7 @@ from .agents import (
     SQLQueryTool,
     SQLSchemaInspectionTool,
     SummarizationTool,
+    TavilySearchTool,
     ToolRegistry,
     ToolResult,
     TranslationTool,
@@ -89,7 +91,9 @@ from .loaders.markdown import MarkdownLoader
 from .loaders.pdf import PDFLoader
 from .loaders.text import StringLoader, TextLoader
 from .loaders.web import WebLoader
+from .memory.buffer import BufferMemory
 from .memory.conversation import ConversationMemory
+from .memory.entity import EntityMemory
 from .memory.hybrid import HybridMemory
 from .memory.sqlite import SQLiteConversationMemory
 from .memory.summary_buffer import SummaryBufferMemory
@@ -101,6 +105,7 @@ from .parsers.pydantic_parser import PydanticParser
 from .prompts.template import ChatPromptTemplate, FewShotPromptTemplate, PromptTemplate
 from .rag.facade import RAG
 from .rag.pipeline import RAGConfig, RAGPipeline
+from .retrieval.adaptive import AdaptiveRAGRetriever
 from .retrieval.base import VectorStore
 from .retrieval.cohere_reranker import CohereReranker
 from .retrieval.contextual import ContextualRetriever
@@ -109,12 +114,15 @@ from .retrieval.crag import CRAGRetriever
 from .retrieval.cross_encoder import CrossEncoderReranker
 from .retrieval.ensemble import EnsembleRetriever
 from .retrieval.flare import FLARERetriever
+from .retrieval.hybrid_search import HybridSearchRetriever
 from .retrieval.hyde import HyDERetriever
+from .retrieval.multi_step import MultiStepRetriever
 from .retrieval.parent_document import ParentDocumentRetriever
 from .retrieval.query_decomposition import QueryDecompositionRetriever
 from .retrieval.rag_fusion import RAGFusionRetriever
 from .retrieval.retriever import Retriever
 from .retrieval.self_query import SelfQueryRetriever
+from .retrieval.self_rag import SelfRAGRetriever
 from .retrieval.sentence_window import SentenceWindowRetriever
 from .retrieval.step_back import StepBackRetriever
 from .retrieval.vectorstore import InMemoryVectorStore
@@ -126,7 +134,7 @@ from .text_splitters import (
     TokenAwareSplitter,
 )
 
-__version__ = "0.6.5"
+__version__ = "0.6.6"
 __all__ = [
     # Facade
     "RAG",
@@ -137,10 +145,12 @@ __all__ = [
     "BaseLLM",
     "LLMConfig",
     "AzureOpenAILLM",
+    "CerebrasLLM",
     "DeepSeekLLM",
     "FireworksLLM",
     "GroqLLM",
     "OpenRouterLLM",
+    "PerplexityLLM",
     "TogetherLLM",
     # Embeddings
     "SynapsekitEmbeddings",
@@ -153,7 +163,10 @@ __all__ = [
     "PineconeVectorStore",
     # Retrieval
     "Retriever",
+    "AdaptiveRAGRetriever",
     "CohereReranker",
+    "HybridSearchRetriever",
+    "MultiStepRetriever",
     "RAGFusionRetriever",
     "ContextualRetriever",
     "ContextualCompressionRetriever",
@@ -165,10 +178,13 @@ __all__ = [
     "ParentDocumentRetriever",
     "QueryDecompositionRetriever",
     "SelfQueryRetriever",
+    "SelfRAGRetriever",
     "SentenceWindowRetriever",
     "StepBackRetriever",
     # Memory / observability
+    "BufferMemory",
     "ConversationMemory",
+    "EntityMemory",
     "HybridMemory",
     "SQLiteConversationMemory",
     "SummaryBufferMemory",
@@ -209,6 +225,7 @@ __all__ = [
     # Tool decorator
     "tool",
     # Built-in tools
+    "ArxivSearchTool",
     "CalculatorTool",
     "DateTimeTool",
     "DuckDuckGoSearchTool",
@@ -227,6 +244,7 @@ __all__ = [
     "SQLQueryTool",
     "SQLSchemaInspectionTool",
     "SummarizationTool",
+    "TavilySearchTool",
     "TranslationTool",
     "WebScraperTool",
     "WebSearchTool",
@@ -279,10 +297,12 @@ _LAZY_IMPORTS = {
     "PineconeVectorStore": "retrieval.pinecone",
     # LLM providers
     "AzureOpenAILLM": "llm.azure_openai",
+    "CerebrasLLM": "llm.cerebras",
     "DeepSeekLLM": "llm.deepseek",
     "FireworksLLM": "llm.fireworks",
     "GroqLLM": "llm.groq",
     "OpenRouterLLM": "llm.openrouter",
+    "PerplexityLLM": "llm.perplexity",
     "TogetherLLM": "llm.together",
     # Loaders
     "DocxLoader": "loaders.docx",
