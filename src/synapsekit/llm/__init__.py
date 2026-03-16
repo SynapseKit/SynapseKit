@@ -6,6 +6,7 @@ __all__ = [
     "AzureOpenAILLM",
     "BaseLLM",
     "BedrockLLM",
+    "CerebrasLLM",
     "CohereLLM",
     "DeepSeekLLM",
     "FireworksLLM",
@@ -16,6 +17,7 @@ __all__ = [
     "OllamaLLM",
     "OpenAILLM",
     "OpenRouterLLM",
+    "PerplexityLLM",
     "TogetherLLM",
     "generate_structured",
 ]
@@ -34,6 +36,8 @@ _PROVIDERS = {
     "OpenRouterLLM": ".openrouter",
     "TogetherLLM": ".together",
     "FireworksLLM": ".fireworks",
+    "PerplexityLLM": ".perplexity",
+    "CerebrasLLM": ".cerebras",
 }
 
 

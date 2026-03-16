@@ -1,3 +1,4 @@
+from .arxiv_search import ArxivSearchTool
 from .calculator import CalculatorTool
 from .datetime_tool import DateTimeTool
 from .duck_search import DuckDuckGoSearchTool
@@ -16,12 +17,14 @@ from .shell import ShellTool
 from .sql_query import SQLQueryTool
 from .sql_schema import SQLSchemaInspectionTool
 from .summarization import SummarizationTool
+from .tavily_search import TavilySearchTool
 from .translation import TranslationTool
 from .web_scraper import WebScraperTool
 from .web_search import WebSearchTool
 from .wikipedia import WikipediaTool
 
 __all__ = [
+    "ArxivSearchTool",
     "CalculatorTool",
     "DateTimeTool",
     "DuckDuckGoSearchTool",
@@ -40,6 +43,7 @@ __all__ = [
     "SQLQueryTool",
     "SQLSchemaInspectionTool",
     "SummarizationTool",
+    "TavilySearchTool",
     "TranslationTool",
     "WebScraperTool",
     "WebSearchTool",
