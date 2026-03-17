@@ -15,7 +15,7 @@ import pytest
 def test_version():
     import synapsekit
 
-    assert synapsekit.__version__ == "0.6.6"
+    assert synapsekit.__version__ == "0.6.7"
 
 
 # ------------------------------------------------------------------ #
