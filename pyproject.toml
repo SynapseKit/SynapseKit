@@ -4,12 +4,12 @@ build-backend = "hatchling.build"
 
 [project]
 name = "synapsekit"
-version = "0.6.6"
+version = "0.6.7"
 description = "Async-native Python framework for building production-grade LLM applications. Streaming-first, 2 dependencies, fully transparent."
 authors = [{ name = "Amit", email = "de.amit.nautiyal@gmail.com" }]
 license = { text = "MIT" }
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.10"
 keywords = ["rag", "llm", "ai", "async", "streaming", "retrieval"]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -17,6 +17,10 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
@@ -96,7 +100,7 @@ asyncio_mode = "auto"
 testpaths = ["tests"]
 
 [tool.ruff]
-target-version = "py314"
+target-version = "py310"
 line-length = 100
 src = ["src"]
 

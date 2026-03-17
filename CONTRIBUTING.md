@@ -113,7 +113,7 @@ tests/
 - **Type hints.** All public functions and methods must be fully typed.
 - **No new hard dependencies.** Core functionality must work with `numpy` and `rank-bm25` only. New providers and backends go behind optional extras.
 - **No magic.** No monkey-patching, hidden callbacks, or implicit global state.
-- **Python 3.14+.** Use modern syntax freely.
+- **Python 3.10+.** Use modern syntax freely.
 
 ---
 

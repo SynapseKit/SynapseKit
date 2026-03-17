@@ -70,7 +70,7 @@ class SelfQueryRetriever:
             # Only keep filters for known fields
             filters = {k: v for k, v in filters.items() if k in self._fields and v}
             return query, filters
-        except json.JSONDecodeError, KeyError:
+        except (json.JSONDecodeError, KeyError):
             # Fallback: use original question with no filters
             return question, {}
 
