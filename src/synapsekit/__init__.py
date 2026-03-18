@@ -14,6 +14,7 @@ SynapseKit — lightweight, async-first RAG framework.
 
 from __future__ import annotations
 
+from .a2a import A2AClient, A2AMessage, A2AServer, A2ATask, AgentCard, TaskState
 from .agents import (
     AgentConfig,
     AgentExecutor,
@@ -23,6 +24,7 @@ from .agents import (
     BaseTool,
     BraveSearchTool,
     CalculatorTool,
+    ContentFilter,
     Crew,
     CrewAgent,
     CrewResult,
@@ -35,6 +37,8 @@ from .agents import (
     FunctionCallingAgent,
     GitHubAPITool,
     GraphQLTool,
+    GuardrailResult,
+    Guardrails,
     Handoff,
     HandoffChain,
     HandoffResult,
@@ -43,6 +47,7 @@ from .agents import (
     JiraTool,
     JSONQueryTool,
     PDFReaderTool,
+    PIIDetector,
     PubMedSearchTool,
     PythonREPLTool,
     ReActAgent,
@@ -58,6 +63,7 @@ from .agents import (
     TavilySearchTool,
     ToolRegistry,
     ToolResult,
+    TopicRestrictor,
     TranslationTool,
     VectorSearchTool,
     WebScraperTool,
@@ -129,7 +135,14 @@ from .memory.hybrid import HybridMemory
 from .memory.sqlite import SQLiteConversationMemory
 from .memory.summary_buffer import SummaryBufferMemory
 from .memory.token_buffer import TokenBufferMemory
-from .observability import OTelExporter, Span, TracingMiddleware, TracingUI
+from .observability import (
+    DistributedTracer,
+    OTelExporter,
+    Span,
+    TraceSpan,
+    TracingMiddleware,
+    TracingUI,
+)
 from .observability.tracer import TokenTracer
 from .parsers.json_parser import JSONParser
 from .parsers.list_parser import ListParser
@@ -166,7 +179,7 @@ from .text_splitters import (
     TokenAwareSplitter,
 )
 
-__version__ = "0.8.0"
+__version__ = "0.9.0"
 __all__ = [
     # Facade
     "RAG",
@@ -353,10 +366,25 @@ __all__ = [
     "MetricResult",
     "RelevancyMetric",
     # Observability
+    "DistributedTracer",
     "OTelExporter",
     "Span",
+    "TraceSpan",
     "TracingMiddleware",
     "TracingUI",
+    # A2A Protocol
+    "A2AClient",
+    "A2AMessage",
+    "A2AServer",
+    "A2ATask",
+    "AgentCard",
+    "TaskState",
+    # Guardrails
+    "ContentFilter",
+    "Guardrails",
+    "GuardrailResult",
+    "PIIDetector",
+    "TopicRestrictor",
 ]
 
 # Lazy imports for optional backends

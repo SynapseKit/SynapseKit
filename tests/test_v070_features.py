@@ -37,7 +37,7 @@ class MockLLM:
 def test_version():
     import synapsekit
 
-    assert synapsekit.__version__ == "0.8.0"
+    assert synapsekit.__version__ == "0.9.0"
 
 
 # ------------------------------------------------------------------ #

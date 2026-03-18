@@ -1,6 +1,13 @@
 from .base import BaseTool, ToolResult
 from .executor import AgentConfig, AgentExecutor
 from .function_calling import FunctionCallingAgent
+from .guardrails import (
+    ContentFilter,
+    GuardrailResult,
+    Guardrails,
+    PIIDetector,
+    TopicRestrictor,
+)
 from .memory import AgentMemory, AgentStep
 from .multi import (
     Crew,
@@ -63,6 +70,12 @@ __all__ = [
     "FunctionCallingAgent",
     "AgentExecutor",
     "AgentConfig",
+    # Guardrails
+    "ContentFilter",
+    "Guardrails",
+    "GuardrailResult",
+    "PIIDetector",
+    "TopicRestrictor",
     # Decorator
     "tool",
     # Built-in tools
