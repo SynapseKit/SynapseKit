@@ -12,8 +12,9 @@ from .graph import StateGraph
 from .interrupt import GraphInterrupt, InterruptState
 from .node import Node, NodeFn, agent_node, llm_node, rag_node
 from .state import END, GraphState, StateField, TypedState
-from .streaming import EventHooks, GraphEvent, sse_stream
+from .streaming import EventHooks, GraphEvent, sse_stream, ws_stream
 from .subgraph import subgraph_node
+from .trace import ExecutionTrace, TraceEntry
 
 __all__ = [
     "END",
@@ -23,6 +24,7 @@ __all__ = [
     "ConditionalEdge",
     "Edge",
     "EventHooks",
+    "ExecutionTrace",
     "GraphConfigError",
     "GraphEvent",
     "GraphInterrupt",
@@ -36,6 +38,7 @@ __all__ = [
     "SQLiteCheckpointer",
     "StateField",
     "StateGraph",
+    "TraceEntry",
     "TypedState",
     "agent_node",
     "fan_out_node",
@@ -43,4 +46,5 @@ __all__ = [
     "rag_node",
     "sse_stream",
     "subgraph_node",
+    "ws_stream",
 ]
