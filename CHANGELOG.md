@@ -7,6 +7,53 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.0.0] — 2026-03-18
+
+### Added
+
+- **Multimodal support** — `ImageContent` (from_file, from_url, from_base64), `AudioContent`, `MultimodalMessage` with OpenAI/Anthropic format conversion
+- **Image loader** — `ImageLoader` with sync/async loading and optional vision LLM description
+- **API stability markers** — `@public_api`, `@experimental` (FutureWarning), `@deprecated(reason, alternative)` (DeprecationWarning)
+- 42 new tests (1011 total)
+
+---
+
+## [0.9.0] — 2026-03-18
+
+### Added
+
+- **A2A protocol** — `A2AClient`, `A2AServer`, `AgentCard` for Google Agent-to-Agent protocol; `A2ATask`, `A2AMessage`, `TaskState` types
+- **Agent guardrails** — `ContentFilter` (blocked patterns/words/max length), `PIIDetector` (email, phone, SSN, credit card, IP), `TopicRestrictor`, `Guardrails` (composite checker)
+- **Distributed tracing** — `DistributedTracer` and `TraceSpan` with parent-child relationships, events, and timing
+- 64 new tests (1008 total)
+
+---
+
+## [0.8.0] — 2026-03-18
+
+### Added
+
+- **Evaluation metrics** — `FaithfulnessMetric` (claim verification), `RelevancyMetric` (document relevance), `GroundednessMetric` (answer grounding score 0-1)
+- **Evaluation pipeline** — `EvaluationPipeline` runs multiple metrics, `EvaluationResult` with mean_score aggregation
+- **OpenTelemetry tracing** — `OTelExporter` with optional OTLP export, `Span` spans, `TracingMiddleware` auto-traces LLM calls
+- **Tracing UI** — `TracingUI` renders traces as HTML dashboard, saves to file, or serves via local HTTP server
+- 50 new tests (944 total)
+
+---
+
+## [0.7.0] — 2026-03-18
+
+### Added
+
+- **MCP client** — `MCPClient` connects to MCP servers via stdio or SSE transport; `MCPToolAdapter` wraps MCP tools as `BaseTool` instances
+- **MCP server** — `MCPServer` exposes SynapseKit tools as MCP-compatible tools via stdio or SSE
+- **Supervisor agent** — `SupervisorAgent` delegates tasks to `WorkerAgent` instances via DELEGATE/FINAL protocol
+- **Handoff chain** — `HandoffChain` with condition-based `Handoff` transfers between agents, returns `HandoffResult`
+- **Crew** — `Crew` for role-based multi-agent teams with `CrewAgent`, `Task`, sequential and parallel execution
+- 60 new tests (844 total)
+
+---
+
 ## [0.6.9] — 2026-03-18
 
 ### Added

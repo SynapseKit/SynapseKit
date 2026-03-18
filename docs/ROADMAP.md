@@ -146,17 +146,55 @@
 - [x] `dynamic_route_node()` — route to subgraphs at runtime based on routing function
 - [x] 15 providers, 32 tools, 14 loaders, 18 retrieval strategies, 4 cache backends, 8 memory backends, 795 tests passing
 
-## v0.7.0 (planned)
+## v0.7.0 — MCP + Multi-Agent Orchestration
 
-- [ ] Multi-modal support (image inputs for vision models)
-- [ ] `Evaluator` — faithfulness, relevancy, groundedness
-- [ ] RAGAS-style metrics
-- [ ] Conversation branching and tree-of-thought
+- [x] `MCPClient` — connect to MCP servers via stdio or SSE transport
+- [x] `MCPToolAdapter` — wrap MCP tools as SynapseKit `BaseTool` instances
+- [x] `MCPServer` — expose SynapseKit tools as MCP-compatible tools
+- [x] `SupervisorAgent` + `WorkerAgent` — delegate tasks via DELEGATE/FINAL protocol
+- [x] `HandoffChain` + `Handoff` — condition-based agent transfers
+- [x] `Crew` + `CrewAgent` + `Task` — role-based multi-agent teams (sequential & parallel)
+- [x] 15 providers, 32 tools, 14 loaders, 18 retrieval strategies, MCP client/server, 3 multi-agent patterns, 844 tests passing
 
-## v0.8.0 (planned)
+## v0.8.0 — Evaluation Metrics + Observability
 
-- [ ] Local observability UI (LangSmith-style, open source)
-- [ ] Streaming UI helpers — SSE + WebSocket for FastAPI
+- [x] `FaithfulnessMetric` — verify answer claims against source contexts via LLM judge
+- [x] `RelevancyMetric` — check document relevance to query
+- [x] `GroundednessMetric` — score answer grounding in source documents (0-1)
+- [x] `EvaluationPipeline` + `EvaluationResult` — run multiple metrics with mean_score
+- [x] `OTelExporter` — lightweight tracing with optional OTLP export
+- [x] `Span` — individual trace spans
+- [x] `TracingMiddleware` — auto-trace LLM calls
+- [x] `TracingUI` — render traces as HTML dashboard, file, or local HTTP server
+- [x] 944 tests passing
+
+## v0.9.0 — A2A Protocol, Guardrails, Distributed Tracing
+
+- [x] `A2AClient` + `A2AServer` — Google Agent-to-Agent protocol support
+- [x] `AgentCard` — agent capability discovery for A2A
+- [x] `A2ATask`, `A2AMessage`, `TaskState` — A2A protocol types
+- [x] `ContentFilter` — blocked patterns, words, max length
+- [x] `PIIDetector` — email, phone, SSN, credit card, IP detection
+- [x] `TopicRestrictor` — blocked topic enforcement
+- [x] `Guardrails` — composite checker combining multiple guardrail types
+- [x] `DistributedTracer` + `TraceSpan` — parent-child span relationships with events and timing
+- [x] 1008 tests passing
+
+## v1.0.0 — Multimodal, Image Loader, API Stability
+
+- [x] `ImageContent` — from_file, from_url, from_base64 with OpenAI/Anthropic format conversion
+- [x] `AudioContent` — from_file, from_base64
+- [x] `MultimodalMessage` — combines text + images, converts to provider-specific formats
+- [x] `ImageLoader` — sync/async image loading with optional vision LLM description
+- [x] `@public_api` — mark stable public API surface
+- [x] `@experimental` — FutureWarning on first use
+- [x] `@deprecated(reason, alternative)` — DeprecationWarning with migration guidance
+- [x] 1011 tests passing
+
+## v1.1.0 (planned)
+
 - [ ] `synapsekit serve` — deploy any app as FastAPI in one command
 - [ ] Prompt hub — versioned prompt registry
 - [ ] Plugin system for community extensions
+- [ ] Postgres/Redis checkpoint backends
+- [ ] Video/audio loaders

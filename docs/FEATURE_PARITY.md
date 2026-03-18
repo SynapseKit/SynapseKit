@@ -1,6 +1,6 @@
 # SynapseKit vs LangChain — Feature Parity Report
 
-> Updated for v0.6.9 (2026-03-18)
+> Updated for v1.0.0 (2026-03-18)
 
 ## Phase 1: RAG Pipelines
 
@@ -29,9 +29,9 @@
 | Rate limiting | Built-in | Token-bucket (`requests_per_minute`) | At parity |
 | Retries | Built-in | Exponential backoff (`max_retries`) | At parity |
 | Structured output | Pydantic output parsers | `generate_structured()` with retry | At parity |
-| Callbacks / observability | LangSmith integration | TokenTracer + `ExecutionTrace` (graph event tracing with timing) | Basic vs enterprise |
+| Callbacks / observability | LangSmith integration | TokenTracer + `ExecutionTrace` + `OTelExporter` + `TracingMiddleware` + `TracingUI` + `DistributedTracer` | At parity |
 
-**Verdict:** Excellent coverage. 15 providers cover 99%+ of real usage. Caching (memory + SQLite + filesystem + Redis), retries, rate limiting, and structured output all done. Only remaining gap: deep observability.
+**Verdict:** Excellent coverage. 15 providers cover 99%+ of real usage. Caching (memory + SQLite + filesystem + Redis), retries, rate limiting, structured output, and full observability stack (OTel, tracing UI, distributed tracing) all done.
 
 ---
 
@@ -45,10 +45,10 @@
 | Custom tools | @tool decorator + StructuredTool | @tool decorator + BaseTool subclass | At parity |
 | Streaming agent steps | Yes | Yes | At parity |
 | Human input tool | Yes | Yes (`HumanInputTool`) | At parity |
-| Multi-agent orchestration | Yes (via LangGraph) | No | Missing |
+| Multi-agent orchestration | Yes (via LangGraph) | Yes (Supervisor, Handoff, Crew) | At parity |
 | Tool sandboxing/timeout | Partial | ShellTool has timeout + allowed-commands | Partial parity |
 
-**Verdict:** Strong for single-agent workflows. `@tool` decorator, function calling on 4 providers, 32 built-in tools including DuckDuckGo, PDF reader, GraphQL, shell, SQL schema, arXiv, Tavily, GitHub API, PubMed, Email, VectorSearch, YouTube, Slack, Jira, and Brave Search. Missing multi-agent orchestration.
+**Verdict:** Excellent. `@tool` decorator, function calling on 4 providers, 32 built-in tools, MCP client/server, 3 multi-agent patterns (Supervisor, Handoff, Crew), guardrails (content filter, PII detector, topic restrictor), and A2A protocol support. At parity with LangChain/LangGraph.
 
 ---
 
@@ -77,24 +77,35 @@
 
 | | LangChain | SynapseKit | Notes |
 |---|---|---|---|
-| Breadth | Massive (200+ loaders, 38+ providers, 50+ tools) | Focused (14 loaders, 15 providers, 32 tools) | SynapseKit covers the 80/20 |
+| Breadth | Massive (200+ loaders, 38+ providers, 50+ tools) | Focused (15 loaders, 15 providers, 32 tools) | SynapseKit covers the 80/20 |
 | API simplicity | Complex, lots of boilerplate | Clean, 3-line happy path | SynapseKit advantage |
 | Async/streaming | Retrofitted | Native from day 1 | SynapseKit advantage |
 | Dependencies | Heavy (langchain-core + per-provider) | 2 hard deps | SynapseKit advantage |
-| Production features | Caching, retries, rate limiting, observability | Caching (memory+SQLite+filesystem+Redis), retries, rate limiting, structured output | Close — missing deep observability |
+| Production features | Caching, retries, rate limiting, observability | Caching, retries, rate limiting, structured output, OTel tracing, tracing UI, guardrails | At parity |
 | Graph workflows | Mature (HITL, checkpoints, cycles, subgraphs, typed state) | HITL, checkpoints, cycles, subgraphs, typed state, fan-out, SSE, WebSocket, event callbacks, execution tracing | At parity |
+| Multi-agent | LangGraph supervisor, handoff | Supervisor, Handoff, Crew + MCP client/server | At parity |
+| Evaluation | RAGAS integration | Built-in faithfulness, relevancy, groundedness metrics | At parity |
 | Retrieval | 10+ strategies | 18 strategies | Exceeds LangChain |
 | Memory | 4+ types | 8 types (window, hybrid, SQLite, summary buffer, token buffer, buffer, entity) | Exceeds LangChain |
+| Multimodal | Image, audio inputs | ImageContent, AudioContent, MultimodalMessage, ImageLoader | At parity |
+| Interoperability | Hub integrations | MCP protocol + A2A protocol | Modern standards |
 
-### Where SynapseKit already wins
+### Where SynapseKit wins
 
 - Simpler API, less boilerplate
 - Truly async-native and streaming-first
 - Minimal dependencies (2 hard deps)
 - Auto-detection of providers from model name
-- 15 LLM providers, 14 loaders, 32 tools — covers real-world needs
-- 18 retrieval strategies including CRAG, ensemble, compression, HyDE, FLARE, Step-Back, Self-RAG, Adaptive RAG, and Multi-Step
-- Graph workflows at feature parity with LangGraph
+- 15 LLM providers, 15 loaders, 32 tools — covers real-world needs
+- 18 retrieval strategies exceeding LangChain
+- Graph workflows at parity with LangGraph
+- MCP + A2A protocol for modern interoperability
+- Multi-agent orchestration (Supervisor, Handoff, Crew)
+- Built-in evaluation metrics (faithfulness, relevancy, groundedness)
+- Full observability stack (OTel, tracing UI, distributed tracing)
+- Agent guardrails (content filter, PII, topic restriction)
+- Multimodal support (image, audio) with provider format conversion
+- API stability markers (@public_api, @experimental, @deprecated)
 
 ### Closed since v0.5.0
 
@@ -162,9 +173,27 @@
 61. `approval_node()` — gate graph on human approval via GraphInterrupt (v0.6.9)
 62. `dynamic_route_node()` — runtime subgraph routing (v0.6.9)
 
+63. `MCPClient` + `MCPToolAdapter` — MCP client with stdio/SSE transport (v0.7.0)
+64. `MCPServer` — expose SynapseKit tools via MCP protocol (v0.7.0)
+65. `SupervisorAgent` + `WorkerAgent` — supervisor multi-agent pattern (v0.7.0)
+66. `HandoffChain` + `Handoff` — condition-based agent handoff (v0.7.0)
+67. `Crew` + `CrewAgent` + `Task` — role-based multi-agent teams (v0.7.0)
+68. `FaithfulnessMetric` — claim verification against sources (v0.8.0)
+69. `RelevancyMetric` — document relevance scoring (v0.8.0)
+70. `GroundednessMetric` — answer grounding score (v0.8.0)
+71. `EvaluationPipeline` — multi-metric evaluation runner (v0.8.0)
+72. `OTelExporter` + `Span` + `TracingMiddleware` — OpenTelemetry tracing (v0.8.0)
+73. `TracingUI` — HTML trace visualization dashboard (v0.8.0)
+74. `A2AClient` + `A2AServer` + `AgentCard` — Google A2A protocol (v0.9.0)
+75. `ContentFilter` + `PIIDetector` + `TopicRestrictor` + `Guardrails` — agent guardrails (v0.9.0)
+76. `DistributedTracer` + `TraceSpan` — distributed tracing with parent-child spans (v0.9.0)
+77. `ImageContent` + `AudioContent` + `MultimodalMessage` — multimodal support (v1.0.0)
+78. `ImageLoader` — image loading with optional vision LLM description (v1.0.0)
+79. `@public_api`, `@experimental`, `@deprecated` — API stability markers (v1.0.0)
+
 ### Remaining priority gaps
 
-1. Multi-agent orchestration
-2. Multi-modal support (image inputs)
-3. Evaluation framework (RAGAS-style metrics)
-4. Deep observability (LangSmith equivalent)
+1. Postgres/Redis checkpoint backends
+2. Video/audio loaders
+3. `synapsekit serve` CLI
+4. Prompt hub
