@@ -1,3 +1,4 @@
+from .approval import approval_node
 from .checkpointers import (
     BaseCheckpointer,
     InMemoryCheckpointer,
@@ -5,6 +6,7 @@ from .checkpointers import (
     SQLiteCheckpointer,
 )
 from .compiled import CompiledGraph
+from .dynamic_route import dynamic_route_node
 from .edge import ConditionalEdge, ConditionFn, Edge
 from .errors import GraphConfigError, GraphRuntimeError
 from .fan_out import fan_out_node
@@ -41,6 +43,8 @@ __all__ = [
     "TraceEntry",
     "TypedState",
     "agent_node",
+    "approval_node",
+    "dynamic_route_node",
     "fan_out_node",
     "llm_node",
     "rag_node",
