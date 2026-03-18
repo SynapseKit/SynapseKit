@@ -68,6 +68,14 @@ from .agents import (
     tool,
 )
 from .embeddings.backend import SynapsekitEmbeddings
+from .evaluation import (
+    EvaluationPipeline,
+    EvaluationResult,
+    FaithfulnessMetric,
+    GroundednessMetric,
+    MetricResult,
+    RelevancyMetric,
+)
 from .graph import (
     END,
     BaseCheckpointer,
@@ -121,6 +129,7 @@ from .memory.hybrid import HybridMemory
 from .memory.sqlite import SQLiteConversationMemory
 from .memory.summary_buffer import SummaryBufferMemory
 from .memory.token_buffer import TokenBufferMemory
+from .observability import OTelExporter, Span, TracingMiddleware, TracingUI
 from .observability.tracer import TokenTracer
 from .parsers.json_parser import JSONParser
 from .parsers.list_parser import ListParser
@@ -157,7 +166,7 @@ from .text_splitters import (
     TokenAwareSplitter,
 )
 
-__version__ = "0.7.0"
+__version__ = "0.8.0"
 __all__ = [
     # Facade
     "RAG",
@@ -336,6 +345,18 @@ __all__ = [
     "SQLiteCheckpointer",
     # Structured output
     "generate_structured",
+    # Evaluation
+    "EvaluationPipeline",
+    "EvaluationResult",
+    "FaithfulnessMetric",
+    "GroundednessMetric",
+    "MetricResult",
+    "RelevancyMetric",
+    # Observability
+    "OTelExporter",
+    "Span",
+    "TracingMiddleware",
+    "TracingUI",
 ]
 
 # Lazy imports for optional backends
