@@ -121,6 +121,22 @@
 - [x] `EntityMemory` — LLM-based entity extraction with running descriptions and eviction
 - [x] 15 providers, 24 tools, 14 loaders, 18 retrieval strategies, 4 cache backends, 8 memory backends, 698 tests passing
 
+## v0.6.7 — Python Version Bump
+
+- [x] Require Python `>=3.10` (was `>=3.9`)
+- [x] Added Python 3.14 classifier
+
+## v0.6.8 — Tools, Tracing & WebSocket Streaming
+
+- [x] `EmailTool` — send emails via SMTP with env-var config
+- [x] `GitHubAPITool` — GitHub REST API search/get for repos and issues (stdlib only)
+- [x] `PubMedSearchTool` — biomedical literature search via NCBI E-utilities (stdlib only)
+- [x] `VectorSearchTool` — wrap any `Retriever` as an agent tool
+- [x] `YouTubeSearchTool` — YouTube video search (`pip install synapsekit[youtube]`)
+- [x] `ExecutionTrace` + `TraceEntry` — graph execution tracing with timing and summaries
+- [x] `ws_stream()` — WebSocket streaming for graph execution (Starlette/FastAPI compatible)
+- [x] 15 providers, 29 tools, 14 loaders, 18 retrieval strategies, 4 cache backends, 8 memory backends, 743 tests passing
+
 ## v0.7.0 (planned)
 
 - [ ] Multi-modal support (image inputs for vision models)

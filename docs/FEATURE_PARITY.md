@@ -1,6 +1,6 @@
 # SynapseKit vs LangChain — Feature Parity Report
 
-> Updated for v0.6.6 (2026-03-16)
+> Updated for v0.6.8 (2026-03-18)
 
 ## Phase 1: RAG Pipelines
 
@@ -29,7 +29,7 @@
 | Rate limiting | Built-in | Token-bucket (`requests_per_minute`) | At parity |
 | Retries | Built-in | Exponential backoff (`max_retries`) | At parity |
 | Structured output | Pydantic output parsers | `generate_structured()` with retry | At parity |
-| Callbacks / observability | LangSmith integration | TokenTracer only | Basic vs enterprise |
+| Callbacks / observability | LangSmith integration | TokenTracer + `ExecutionTrace` (graph event tracing with timing) | Basic vs enterprise |
 
 **Verdict:** Excellent coverage. 15 providers cover 99%+ of real usage. Caching (memory + SQLite + filesystem + Redis), retries, rate limiting, and structured output all done. Only remaining gap: deep observability.
 
@@ -41,14 +41,14 @@
 |---|---|---|---|
 | ReAct agent | Yes | Yes | At parity |
 | Function calling agent | Yes (any provider with tool support) | Yes (OpenAI, Anthropic, Gemini, Mistral) | 4 providers — missing Cohere |
-| Built-in tools | 50+ (search, code, DB, APIs, web) | 24 (Calculator, PythonREPL, FileRead, FileWrite, FileList, WebSearch, DuckDuckGoSearch, SQL, HTTP, GraphQL, DateTime, Regex, JSONQuery, HumanInput, Wikipedia, Summarization, SentimentAnalysis, Translation, WebScraper, Shell, SQLSchemaInspection, PDFReader, ArxivSearch, TavilySearch) | Fewer but covers essentials |
+| Built-in tools | 50+ (search, code, DB, APIs, web) | 29 (Calculator, PythonREPL, FileRead, FileWrite, FileList, WebSearch, DuckDuckGoSearch, SQL, HTTP, GraphQL, DateTime, Regex, JSONQuery, HumanInput, Wikipedia, Summarization, SentimentAnalysis, Translation, WebScraper, Shell, SQLSchemaInspection, PDFReader, ArxivSearch, TavilySearch, Email, GitHubAPI, PubMedSearch, VectorSearch, YouTubeSearch) | Fewer but covers essentials |
 | Custom tools | @tool decorator + StructuredTool | @tool decorator + BaseTool subclass | At parity |
 | Streaming agent steps | Yes | Yes | At parity |
 | Human input tool | Yes | Yes (`HumanInputTool`) | At parity |
 | Multi-agent orchestration | Yes (via LangGraph) | No | Missing |
 | Tool sandboxing/timeout | Partial | ShellTool has timeout + allowed-commands | Partial parity |
 
-**Verdict:** Strong for single-agent workflows. `@tool` decorator, function calling on 4 providers, 24 built-in tools including DuckDuckGo search, PDF reader, GraphQL, shell, SQL schema inspection, arXiv search, and Tavily search. Missing multi-agent orchestration.
+**Verdict:** Strong for single-agent workflows. `@tool` decorator, function calling on 4 providers, 29 built-in tools including DuckDuckGo, PDF reader, GraphQL, shell, SQL schema, arXiv, Tavily, GitHub API, PubMed, Email, VectorSearch, and YouTube search. Missing multi-agent orchestration.
 
 ---
 
@@ -60,7 +60,7 @@
 | Conditional routing | Yes | Yes | At parity |
 | Parallel execution | Yes (asyncio.gather) | Yes (asyncio.gather) | At parity |
 | Mermaid export | Yes | Yes | At parity |
-| Streaming | Node + token level | Node + token level (`llm_node` + `stream_tokens`) + SSE (`sse_stream`) | At parity |
+| Streaming | Node + token level | Node + token level (`llm_node` + `stream_tokens`) + SSE (`sse_stream`) + WebSocket (`ws_stream`) | At parity |
 | Cyclic graphs (loops) | Yes | Yes (`compile(allow_cycles=True)`) | At parity |
 | Human-in-the-loop | interrupt() + Command(resume=) | `GraphInterrupt` + `resume(updates=...)` | At parity |
 | Checkpointing / persistence | SQLite, Postgres, Redis | InMemory + SQLite + JSON file | Missing Postgres/Redis backends |
@@ -68,7 +68,7 @@
 | Typed state + reducers | Annotated types with reducers | `TypedState` + `StateField` with per-field reducers | At parity |
 | Event callbacks | Yes | `EventHooks` (node_start, node_complete, wave_start, wave_complete) | At parity |
 
-**Verdict:** At parity for core features. Human-in-the-loop, subgraphs, fan-out/fan-in, typed state with reducers, token streaming, SSE streaming, event callbacks, cycles, and checkpointing (InMemory, SQLite, JSON file) all done. Only remaining gap: Postgres/Redis checkpoint backends.
+**Verdict:** At parity for core features. Human-in-the-loop, subgraphs, fan-out/fan-in, typed state with reducers, token streaming, SSE + WebSocket streaming, event callbacks, execution tracing, cycles, and checkpointing (InMemory, SQLite, JSON file) all done. Only remaining gap: Postgres/Redis checkpoint backends.
 
 ---
 
@@ -76,12 +76,12 @@
 
 | | LangChain | SynapseKit | Notes |
 |---|---|---|---|
-| Breadth | Massive (200+ loaders, 38+ providers, 50+ tools) | Focused (14 loaders, 15 providers, 24 tools) | SynapseKit covers the 80/20 |
+| Breadth | Massive (200+ loaders, 38+ providers, 50+ tools) | Focused (14 loaders, 15 providers, 29 tools) | SynapseKit covers the 80/20 |
 | API simplicity | Complex, lots of boilerplate | Clean, 3-line happy path | SynapseKit advantage |
 | Async/streaming | Retrofitted | Native from day 1 | SynapseKit advantage |
 | Dependencies | Heavy (langchain-core + per-provider) | 2 hard deps | SynapseKit advantage |
 | Production features | Caching, retries, rate limiting, observability | Caching (memory+SQLite+filesystem+Redis), retries, rate limiting, structured output | Close — missing deep observability |
-| Graph workflows | Mature (HITL, checkpoints, cycles, subgraphs, typed state) | HITL, checkpoints, cycles, subgraphs, typed state, fan-out, SSE, event callbacks | At parity |
+| Graph workflows | Mature (HITL, checkpoints, cycles, subgraphs, typed state) | HITL, checkpoints, cycles, subgraphs, typed state, fan-out, SSE, WebSocket, event callbacks, execution tracing | At parity |
 | Retrieval | 10+ strategies | 18 strategies | Exceeds LangChain |
 | Memory | 4+ types | 8 types (window, hybrid, SQLite, summary buffer, token buffer, buffer, entity) | Exceeds LangChain |
 
@@ -91,7 +91,7 @@
 - Truly async-native and streaming-first
 - Minimal dependencies (2 hard deps)
 - Auto-detection of providers from model name
-- 15 LLM providers, 14 loaders, 24 tools — covers real-world needs
+- 15 LLM providers, 14 loaders, 29 tools — covers real-world needs
 - 18 retrieval strategies including CRAG, ensemble, compression, HyDE, FLARE, Step-Back, Self-RAG, Adaptive RAG, and Multi-Step
 - Graph workflows at feature parity with LangGraph
 
@@ -146,6 +146,14 @@
 47. ArxivSearchTool, TavilySearchTool — 2 new search tools (v0.6.6)
 48. BufferMemory — simple unbounded buffer (v0.6.6)
 49. EntityMemory — LLM-based entity extraction and tracking (v0.6.6)
+50. Python `>=3.10` requirement (v0.6.7)
+51. EmailTool — SMTP email sending with env-var config (v0.6.8)
+52. GitHubAPITool — GitHub REST API search/get (stdlib only) (v0.6.8)
+53. PubMedSearchTool — biomedical literature search via NCBI (v0.6.8)
+54. VectorSearchTool — wrap any Retriever as an agent tool (v0.6.8)
+55. YouTubeSearchTool — YouTube video search (v0.6.8)
+56. ExecutionTrace + TraceEntry — graph execution tracing with timing (v0.6.8)
+57. `ws_stream()` — WebSocket streaming for graph execution (v0.6.8)
 
 ### Remaining priority gaps
 

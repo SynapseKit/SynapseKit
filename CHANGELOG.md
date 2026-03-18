@@ -7,6 +7,81 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [0.6.8] — 2026-03-18
+
+### Added
+
+- **Email tool** — `EmailTool` sends emails via SMTP with configurable settings or environment variables (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`)
+- **GitHub API tool** — `GitHubAPITool` searches repos/issues and fetches details via GitHub REST API (stdlib only, no deps)
+- **PubMed search tool** — `PubMedSearchTool` searches biomedical literature on PubMed via NCBI E-utilities (stdlib only)
+- **Vector search tool** — `VectorSearchTool` wraps any `Retriever` as an agent tool for knowledge base queries
+- **YouTube search tool** — `YouTubeSearchTool` searches YouTube videos with titles, channels, durations, view counts (`pip install synapsekit[youtube]`)
+- **Execution trace** — `ExecutionTrace` and `TraceEntry` collect and analyze graph execution events with timing, durations, and human-readable summaries
+- **WebSocket streaming** — `ws_stream()` streams graph execution over WebSocket connections (works with Starlette, FastAPI, plain websockets)
+- `GraphEvent.to_ws()` — JSON serialization for WebSocket transmission
+- 45 new tests (743 total)
+
+---
+
+## [0.6.7] — 2026-03-17
+
+### Changed
+
+- **Python version requirement** — raised minimum from `>=3.9` to `>=3.10`
+- Added Python 3.14 classifier
+
+---
+
+## [0.6.6] — 2026-03-16
+
+### Added
+
+- **Perplexity LLM** — `PerplexityLLM` for Perplexity AI with Sonar models, OpenAI-compatible
+- **Cerebras LLM** — `CerebrasLLM` for Cerebras ultra-fast inference, OpenAI-compatible
+- **Hybrid search retrieval** — `HybridSearchRetriever` combines BM25 + vector similarity via Reciprocal Rank Fusion
+- **Self-RAG retrieval** — `SelfRAGRetriever` with self-reflective retrieve-grade-generate-check loop
+- **Adaptive RAG retrieval** — `AdaptiveRAGRetriever` classifies query complexity and routes to different retrieval strategies
+- **Multi-step retrieval** — `MultiStepRetriever` iterative retrieval-generation with gap identification
+- **arXiv search tool** — `ArxivSearchTool` searches arXiv for academic papers (stdlib only)
+- **Tavily search tool** — `TavilySearchTool` AI-optimized web search via Tavily API
+- **Buffer memory** — `BufferMemory` simplest unbounded message buffer
+- **Entity memory** — `EntityMemory` LLM-based entity extraction with running descriptions and eviction
+- 56 new tests (698 total)
+
+---
+
+## [0.6.5] — 2026-03-15
+
+### Added
+
+- **Cohere reranker** — `CohereReranker` reranks retrieval results using the Cohere Rerank API
+- **Step-back retrieval** — `StepBackRetriever` generates step-back questions for broader context + parallel retrieval
+- **FLARE retrieval** — `FLARERetriever` Forward-Looking Active REtrieval with iterative `[SEARCH: ...]` markers
+- **DuckDuckGo search tool** — `DuckDuckGoSearchTool` extended search with text and news types
+- **PDF reader tool** — `PDFReaderTool` reads and extracts text from PDF files with optional page selection
+- **GraphQL tool** — `GraphQLTool` executes GraphQL queries against any endpoint
+- **Token buffer memory** — `TokenBufferMemory` token-budget-aware memory that drops oldest messages (no LLM)
+- **Redis LLM cache** — `RedisLLMCache` distributed Redis cache backend (`pip install synapsekit[redis]`)
+- 55 new tests (642 total)
+
+---
+
+## [0.6.4] — 2026-03-15
+
+### Added
+
+- **Docx loader** — `DocxLoader` for Word documents via `python-docx`
+- **Markdown loader** — `MarkdownLoader` with optional YAML frontmatter stripping
+- **HyDE retrieval** — `HyDERetriever` Hypothetical Document Embeddings retrieval strategy
+- **Shell tool** — `ShellTool` shell command execution with timeout and allowed-commands filter
+- **SQL schema inspection tool** — `SQLSchemaInspectionTool` lists tables and describes columns
+- **Filesystem LLM cache** — `FilesystemLLMCache` persistent JSON file-based cache backend
+- **JSON file checkpointer** — `JSONFileCheckpointer` JSON file-based graph checkpoint persistence
+- **TokenTracer COST_TABLE** — added GPT-4.1, o3, o4-mini, Gemini 2.5, DeepSeek-V3/R1, Groq models
+- 45 new tests (587 total)
+
+---
+
 ## [0.6.3] — 2026-03-14
 
 ### Added
