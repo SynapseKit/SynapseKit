@@ -2,6 +2,17 @@ from .base import BaseTool, ToolResult
 from .executor import AgentConfig, AgentExecutor
 from .function_calling import FunctionCallingAgent
 from .memory import AgentMemory, AgentStep
+from .multi import (
+    Crew,
+    CrewAgent,
+    CrewResult,
+    Handoff,
+    HandoffChain,
+    HandoffResult,
+    SupervisorAgent,
+    Task,
+    WorkerAgent,
+)
 from .react import ReActAgent
 from .registry import ToolRegistry
 from .tool_decorator import tool
@@ -87,4 +98,14 @@ __all__ = [
     "WebSearchTool",
     "WikipediaTool",
     "YouTubeSearchTool",
+    # Multi-agent
+    "Crew",
+    "CrewAgent",
+    "CrewResult",
+    "Handoff",
+    "HandoffChain",
+    "HandoffResult",
+    "SupervisorAgent",
+    "Task",
+    "WorkerAgent",
 ]
