@@ -14,6 +14,7 @@ SynapseKit — lightweight, async-first RAG framework.
 
 from __future__ import annotations
 
+from ._api import deprecated, experimental, public_api
 from .a2a import A2AClient, A2AMessage, A2AServer, A2ATask, AgentCard, TaskState
 from .agents import (
     AgentConfig,
@@ -117,11 +118,13 @@ from .graph import (
     ws_stream,
 )
 from .llm.base import BaseLLM, LLMConfig
+from .llm.multimodal import AudioContent, ImageContent, MultimodalMessage
 from .llm.structured import generate_structured
 from .loaders.base import Document
 from .loaders.csv import CSVLoader
 from .loaders.directory import DirectoryLoader
 from .loaders.html import HTMLLoader
+from .loaders.image import ImageLoader
 from .loaders.json_loader import JSONLoader
 from .loaders.markdown import MarkdownLoader
 from .loaders.pdf import PDFLoader
@@ -179,7 +182,7 @@ from .text_splitters import (
     TokenAwareSplitter,
 )
 
-__version__ = "0.9.0"
+__version__ = "1.0.0"
 __all__ = [
     # Facade
     "RAG",
@@ -385,6 +388,15 @@ __all__ = [
     "GuardrailResult",
     "PIIDetector",
     "TopicRestrictor",
+    # Multimodal
+    "AudioContent",
+    "ImageContent",
+    "MultimodalMessage",
+    "ImageLoader",
+    # API stability markers
+    "deprecated",
+    "experimental",
+    "public_api",
 ]
 
 # Lazy imports for optional backends
