@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 import sys
-from types import ModuleType
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 
 # ------------------------------------------------------------------ #
 # Mock LLM helper
@@ -337,7 +335,7 @@ def test_supervisor_default_system_prompt_contains_workers():
 
 
 def test_supervisor_custom_system_prompt():
-    from synapsekit.agents.multi.supervisor import SupervisorAgent, WorkerAgent
+    from synapsekit.agents.multi.supervisor import SupervisorAgent
 
     llm = MockLLM(["FINAL: done"])
     sup = SupervisorAgent(llm=llm, workers=[], system_prompt="Custom prompt")
@@ -345,7 +343,7 @@ def test_supervisor_custom_system_prompt():
 
 
 async def test_supervisor_run_final():
-    from synapsekit.agents.multi.supervisor import SupervisorAgent, WorkerAgent
+    from synapsekit.agents.multi.supervisor import SupervisorAgent
 
     llm = MockLLM(["FINAL: The answer is 42"])
     sup = SupervisorAgent(llm=llm, workers=[])
@@ -373,7 +371,7 @@ async def test_supervisor_run_delegate_then_final():
 
 
 async def test_supervisor_run_unknown_worker():
-    from synapsekit.agents.multi.supervisor import SupervisorAgent, WorkerAgent
+    from synapsekit.agents.multi.supervisor import SupervisorAgent
 
     llm = MockLLM(
         [
@@ -564,7 +562,7 @@ async def test_handoff_chain_transform():
     )
     chain.add_agent("specialist", spec_exec)
 
-    result = await chain.run("triage", "help")
+    await chain.run("triage", "help")
     spec_exec.run.assert_called_once_with("Context: needs specialist")
 
 
@@ -664,10 +662,10 @@ async def test_crew_sequential_execution():
     responses = iter(["Research output", "Written article"])
 
     crew = Crew(agents=[researcher, writer], tasks=tasks, process="sequential")
-    with patch("synapsekit.agents.multi.crew.AgentExecutor") as MockExec:
+    with patch("synapsekit.agents.multi.crew.AgentExecutor") as mock_exec:
         mock_inst = AsyncMock()
         mock_inst.run = AsyncMock(side_effect=lambda q: next(responses))
-        MockExec.return_value = mock_inst
+        mock_exec.return_value = mock_inst
         result = await crew.run()
     assert result.output == "Written article"
     assert "researcher" in result.task_results
@@ -691,10 +689,10 @@ async def test_crew_parallel_execution():
     responses = iter(["Result A", "Result B", "Combined result"])
 
     crew = Crew(agents=[agent_a, agent_b, agent_c], tasks=tasks, process="parallel")
-    with patch("synapsekit.agents.multi.crew.AgentExecutor") as MockExec:
+    with patch("synapsekit.agents.multi.crew.AgentExecutor") as mock_exec:
         mock_inst = AsyncMock()
         mock_inst.run = AsyncMock(side_effect=lambda q: next(responses))
-        MockExec.return_value = mock_inst
+        mock_exec.return_value = mock_inst
         result = await crew.run()
     assert result.output is not None
     assert len(result.task_results) == 3
@@ -728,7 +726,7 @@ async def test_crew_context_passing():
     ]
 
     crew = Crew(agents=[researcher, writer], tasks=tasks, process="sequential")
-    with patch("synapsekit.agents.multi.crew.AgentExecutor") as MockExec:
+    with patch("synapsekit.agents.multi.crew.AgentExecutor") as mock_exec:
 
         async def track_run(prompt):
             prompts.append(prompt)
@@ -736,7 +734,7 @@ async def test_crew_context_passing():
 
         mock_inst = AsyncMock()
         mock_inst.run = AsyncMock(side_effect=track_run)
-        MockExec.return_value = mock_inst
+        mock_exec.return_value = mock_inst
         await crew.run()
 
     # The writer's prompt should include context from researcher
@@ -746,9 +744,9 @@ async def test_crew_context_passing():
 
 
 async def test_crew_empty_tasks():
-    from synapsekit.agents.multi.crew import Crew, CrewAgent
+    from synapsekit.agents.multi.crew import Crew
 
-    llm = MockLLM(["resp"])
+    MockLLM(["resp"])
     crew = Crew(agents=[], tasks=[], process="sequential")
     result = await crew.run()
     assert result.output == ""
@@ -765,7 +763,7 @@ async def test_crew_expected_output_in_prompt():
     tasks = [Task("Do task", agent="a", expected_output="A JSON object")]
 
     crew = Crew(agents=[agent], tasks=tasks)
-    with patch("synapsekit.agents.multi.crew.AgentExecutor") as MockExec:
+    with patch("synapsekit.agents.multi.crew.AgentExecutor") as mock_exec:
 
         async def track_run(prompt):
             prompts.append(prompt)
@@ -773,7 +771,7 @@ async def test_crew_expected_output_in_prompt():
 
         mock_inst = AsyncMock()
         mock_inst.run = AsyncMock(side_effect=track_run)
-        MockExec.return_value = mock_inst
+        mock_exec.return_value = mock_inst
         await crew.run()
 
     assert "Expected output format: A JSON object" in prompts[0]

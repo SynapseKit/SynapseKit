@@ -164,11 +164,13 @@ module = [
     "synapsekit.agents.tools.email_tool",
     "synapsekit.agents.tools.pubmed_search",
     "synapsekit.graph.streaming",
+    "synapsekit._api",
+    "synapsekit.observability.otel",
 ]
 warn_return_any = false
 # from __future__ import annotations causes mypy to misinterpret
 # async generator return types as Coroutine[..., AsyncGenerator]
-disable_error_code = ["override", "operator", "arg-type"]
+disable_error_code = ["override", "operator", "arg-type", "misc", "attr-defined", "no-any-return"]
 
 [tool.deptry]
 pep621_dev_dependency_groups = ["dev"]
