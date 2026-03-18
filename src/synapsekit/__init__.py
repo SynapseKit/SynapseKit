@@ -23,6 +23,9 @@ from .agents import (
     BaseTool,
     BraveSearchTool,
     CalculatorTool,
+    Crew,
+    CrewAgent,
+    CrewResult,
     DateTimeTool,
     DuckDuckGoSearchTool,
     EmailTool,
@@ -32,6 +35,9 @@ from .agents import (
     FunctionCallingAgent,
     GitHubAPITool,
     GraphQLTool,
+    Handoff,
+    HandoffChain,
+    HandoffResult,
     HTTPRequestTool,
     HumanInputTool,
     JiraTool,
@@ -47,6 +53,8 @@ from .agents import (
     SQLQueryTool,
     SQLSchemaInspectionTool,
     SummarizationTool,
+    SupervisorAgent,
+    Task,
     TavilySearchTool,
     ToolRegistry,
     ToolResult,
@@ -55,6 +63,7 @@ from .agents import (
     WebScraperTool,
     WebSearchTool,
     WikipediaTool,
+    WorkerAgent,
     YouTubeSearchTool,
     tool,
 )
@@ -104,6 +113,7 @@ from .loaders.markdown import MarkdownLoader
 from .loaders.pdf import PDFLoader
 from .loaders.text import StringLoader, TextLoader
 from .loaders.web import WebLoader
+from .mcp import MCPClient, MCPServer, MCPToolAdapter
 from .memory.buffer import BufferMemory
 from .memory.conversation import ConversationMemory
 from .memory.entity import EntityMemory
@@ -147,7 +157,7 @@ from .text_splitters import (
     TokenAwareSplitter,
 )
 
-__version__ = "0.6.9"
+__version__ = "0.7.0"
 __all__ = [
     # Facade
     "RAG",
@@ -237,6 +247,20 @@ __all__ = [
     "AgentConfig",
     # Tool decorator
     "tool",
+    # Multi-agent
+    "Crew",
+    "CrewAgent",
+    "CrewResult",
+    "Handoff",
+    "HandoffChain",
+    "HandoffResult",
+    "SupervisorAgent",
+    "Task",
+    "WorkerAgent",
+    # MCP
+    "MCPClient",
+    "MCPServer",
+    "MCPToolAdapter",
     # Built-in tools
     "ArxivSearchTool",
     "BraveSearchTool",
