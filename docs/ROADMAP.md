@@ -137,6 +137,15 @@
 - [x] `ws_stream()` — WebSocket streaming for graph execution (Starlette/FastAPI compatible)
 - [x] 15 providers, 29 tools, 14 loaders, 18 retrieval strategies, 4 cache backends, 8 memory backends, 743 tests passing
 
+## v0.6.9 — Tools & Graph Routing
+
+- [x] `SlackTool` — send messages via Slack webhook or bot token (stdlib only)
+- [x] `JiraTool` — Jira REST API v2: search, get, create issues, add comments (stdlib only)
+- [x] `BraveSearchTool` — web search via Brave Search API (stdlib only)
+- [x] `approval_node()` — gate graph execution on human approval via `GraphInterrupt`
+- [x] `dynamic_route_node()` — route to subgraphs at runtime based on routing function
+- [x] 15 providers, 32 tools, 14 loaders, 18 retrieval strategies, 4 cache backends, 8 memory backends, 795 tests passing
+
 ## v0.7.0 (planned)
 
 - [ ] Multi-modal support (image inputs for vision models)

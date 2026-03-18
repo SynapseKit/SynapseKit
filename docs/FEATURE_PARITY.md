@@ -1,6 +1,6 @@
 # SynapseKit vs LangChain — Feature Parity Report
 
-> Updated for v0.6.8 (2026-03-18)
+> Updated for v0.6.9 (2026-03-18)
 
 ## Phase 1: RAG Pipelines
 
@@ -41,14 +41,14 @@
 |---|---|---|---|
 | ReAct agent | Yes | Yes | At parity |
 | Function calling agent | Yes (any provider with tool support) | Yes (OpenAI, Anthropic, Gemini, Mistral) | 4 providers — missing Cohere |
-| Built-in tools | 50+ (search, code, DB, APIs, web) | 29 (Calculator, PythonREPL, FileRead, FileWrite, FileList, WebSearch, DuckDuckGoSearch, SQL, HTTP, GraphQL, DateTime, Regex, JSONQuery, HumanInput, Wikipedia, Summarization, SentimentAnalysis, Translation, WebScraper, Shell, SQLSchemaInspection, PDFReader, ArxivSearch, TavilySearch, Email, GitHubAPI, PubMedSearch, VectorSearch, YouTubeSearch) | Fewer but covers essentials |
+| Built-in tools | 50+ (search, code, DB, APIs, web) | 32 (Calculator, PythonREPL, FileRead, FileWrite, FileList, WebSearch, DuckDuckGoSearch, SQL, HTTP, GraphQL, DateTime, Regex, JSONQuery, HumanInput, Wikipedia, Summarization, SentimentAnalysis, Translation, WebScraper, Shell, SQLSchemaInspection, PDFReader, ArxivSearch, TavilySearch, Email, GitHubAPI, PubMedSearch, VectorSearch, YouTubeSearch, Slack, Jira, BraveSearch) | Fewer but covers essentials |
 | Custom tools | @tool decorator + StructuredTool | @tool decorator + BaseTool subclass | At parity |
 | Streaming agent steps | Yes | Yes | At parity |
 | Human input tool | Yes | Yes (`HumanInputTool`) | At parity |
 | Multi-agent orchestration | Yes (via LangGraph) | No | Missing |
 | Tool sandboxing/timeout | Partial | ShellTool has timeout + allowed-commands | Partial parity |
 
-**Verdict:** Strong for single-agent workflows. `@tool` decorator, function calling on 4 providers, 29 built-in tools including DuckDuckGo, PDF reader, GraphQL, shell, SQL schema, arXiv, Tavily, GitHub API, PubMed, Email, VectorSearch, and YouTube search. Missing multi-agent orchestration.
+**Verdict:** Strong for single-agent workflows. `@tool` decorator, function calling on 4 providers, 32 built-in tools including DuckDuckGo, PDF reader, GraphQL, shell, SQL schema, arXiv, Tavily, GitHub API, PubMed, Email, VectorSearch, YouTube, Slack, Jira, and Brave Search. Missing multi-agent orchestration.
 
 ---
 
@@ -62,13 +62,14 @@
 | Mermaid export | Yes | Yes | At parity |
 | Streaming | Node + token level | Node + token level (`llm_node` + `stream_tokens`) + SSE (`sse_stream`) + WebSocket (`ws_stream`) | At parity |
 | Cyclic graphs (loops) | Yes | Yes (`compile(allow_cycles=True)`) | At parity |
-| Human-in-the-loop | interrupt() + Command(resume=) | `GraphInterrupt` + `resume(updates=...)` | At parity |
+| Human-in-the-loop | interrupt() + Command(resume=) | `GraphInterrupt` + `resume(updates=...)` + `approval_node()` | At parity |
+| Dynamic routing | Conditional edges | `ConditionalEdge` + `dynamic_route_node()` | At parity |
 | Checkpointing / persistence | SQLite, Postgres, Redis | InMemory + SQLite + JSON file | Missing Postgres/Redis backends |
 | Subgraphs | Yes | Yes (`subgraph_node()`, `fan_out_node()`) | At parity |
 | Typed state + reducers | Annotated types with reducers | `TypedState` + `StateField` with per-field reducers | At parity |
 | Event callbacks | Yes | `EventHooks` (node_start, node_complete, wave_start, wave_complete) | At parity |
 
-**Verdict:** At parity for core features. Human-in-the-loop, subgraphs, fan-out/fan-in, typed state with reducers, token streaming, SSE + WebSocket streaming, event callbacks, execution tracing, cycles, and checkpointing (InMemory, SQLite, JSON file) all done. Only remaining gap: Postgres/Redis checkpoint backends.
+**Verdict:** At parity for core features. Human-in-the-loop (with `approval_node`), dynamic routing, subgraphs, fan-out/fan-in, typed state with reducers, token streaming, SSE + WebSocket streaming, event callbacks, execution tracing, cycles, and checkpointing (InMemory, SQLite, JSON file) all done. Only remaining gap: Postgres/Redis checkpoint backends.
 
 ---
 
@@ -76,7 +77,7 @@
 
 | | LangChain | SynapseKit | Notes |
 |---|---|---|---|
-| Breadth | Massive (200+ loaders, 38+ providers, 50+ tools) | Focused (14 loaders, 15 providers, 29 tools) | SynapseKit covers the 80/20 |
+| Breadth | Massive (200+ loaders, 38+ providers, 50+ tools) | Focused (14 loaders, 15 providers, 32 tools) | SynapseKit covers the 80/20 |
 | API simplicity | Complex, lots of boilerplate | Clean, 3-line happy path | SynapseKit advantage |
 | Async/streaming | Retrofitted | Native from day 1 | SynapseKit advantage |
 | Dependencies | Heavy (langchain-core + per-provider) | 2 hard deps | SynapseKit advantage |
@@ -91,7 +92,7 @@
 - Truly async-native and streaming-first
 - Minimal dependencies (2 hard deps)
 - Auto-detection of providers from model name
-- 15 LLM providers, 14 loaders, 29 tools — covers real-world needs
+- 15 LLM providers, 14 loaders, 32 tools — covers real-world needs
 - 18 retrieval strategies including CRAG, ensemble, compression, HyDE, FLARE, Step-Back, Self-RAG, Adaptive RAG, and Multi-Step
 - Graph workflows at feature parity with LangGraph
 
@@ -154,6 +155,12 @@
 55. YouTubeSearchTool — YouTube video search (v0.6.8)
 56. ExecutionTrace + TraceEntry — graph execution tracing with timing (v0.6.8)
 57. `ws_stream()` — WebSocket streaming for graph execution (v0.6.8)
+
+58. SlackTool — Slack messaging via webhook or bot token (v0.6.9)
+59. JiraTool — Jira REST API v2 (search, get, create, comment) (v0.6.9)
+60. BraveSearchTool — Brave Search API web search (v0.6.9)
+61. `approval_node()` — gate graph on human approval via GraphInterrupt (v0.6.9)
+62. `dynamic_route_node()` — runtime subgraph routing (v0.6.9)
 
 ### Remaining priority gaps
 

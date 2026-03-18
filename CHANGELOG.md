@@ -7,6 +7,19 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [0.6.9] — 2026-03-18
+
+### Added
+
+- **Slack tool** — `SlackTool` sends messages via Slack webhook URL or Web API bot token (`SLACK_WEBHOOK_URL` / `SLACK_BOT_TOKEN` env vars, stdlib only)
+- **Jira tool** — `JiraTool` interacts with Jira REST API v2: search issues (JQL), get issue, create issue, add comment (`JIRA_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`, stdlib only)
+- **Brave Search tool** — `BraveSearchTool` web search via Brave Search API (`BRAVE_API_KEY`, stdlib only)
+- **Approval node** — `approval_node()` factory returns a graph node that gates on human approval, raising `GraphInterrupt` when `state[key]` is falsy; supports dynamic messages via callable
+- **Dynamic route node** — `dynamic_route_node()` factory returns a graph node that routes to different compiled subgraphs based on a routing function; supports sync/async routing and input/output mapping
+- 52 new tests (795 total)
+
+---
+
 ## [0.6.8] — 2026-03-18
 
 ### Added
