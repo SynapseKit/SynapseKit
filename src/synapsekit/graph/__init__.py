@@ -1,3 +1,4 @@
+from .approval import approval_node
 from .checkpointers import (
     BaseCheckpointer,
     InMemoryCheckpointer,
@@ -5,6 +6,7 @@ from .checkpointers import (
     SQLiteCheckpointer,
 )
 from .compiled import CompiledGraph
+from .dynamic_route import dynamic_route_node
 from .edge import ConditionalEdge, ConditionFn, Edge
 from .errors import GraphConfigError, GraphRuntimeError
 from .fan_out import fan_out_node
@@ -12,8 +14,9 @@ from .graph import StateGraph
 from .interrupt import GraphInterrupt, InterruptState
 from .node import Node, NodeFn, agent_node, llm_node, rag_node
 from .state import END, GraphState, StateField, TypedState
-from .streaming import EventHooks, GraphEvent, sse_stream
+from .streaming import EventHooks, GraphEvent, sse_stream, ws_stream
 from .subgraph import subgraph_node
+from .trace import ExecutionTrace, TraceEntry
 
 __all__ = [
     "END",
@@ -23,6 +26,7 @@ __all__ = [
     "ConditionalEdge",
     "Edge",
     "EventHooks",
+    "ExecutionTrace",
     "GraphConfigError",
     "GraphEvent",
     "GraphInterrupt",
@@ -36,11 +40,15 @@ __all__ = [
     "SQLiteCheckpointer",
     "StateField",
     "StateGraph",
+    "TraceEntry",
     "TypedState",
     "agent_node",
+    "approval_node",
+    "dynamic_route_node",
     "fan_out_node",
     "llm_node",
     "rag_node",
     "sse_stream",
     "subgraph_node",
+    "ws_stream",
 ]

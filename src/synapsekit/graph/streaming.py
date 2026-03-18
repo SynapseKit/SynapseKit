@@ -40,6 +40,10 @@ class GraphEvent:
             result["data"] = self.data
         return result
 
+    def to_ws(self) -> str:
+        """Format as JSON string for WebSocket transmission."""
+        return json.dumps(self.to_dict())
+
 
 # Type alias for event callbacks
 EventCallback = Callable[[GraphEvent], Any]
@@ -124,3 +128,57 @@ async def sse_stream(
         )
         yield graph_event.to_sse()
     yield f"event: done\ndata: {json.dumps({'state': state})}\n\n"
+
+
+async def ws_stream(
+    compiled_graph: Any,
+    state: dict[str, Any],
+    websocket: Any,
+    hooks: EventHooks | None = None,
+) -> dict[str, Any]:
+    """Run graph and stream events over a WebSocket connection.
+
+    Works with any WebSocket object that has a ``send_text()`` or ``send()``
+    method (e.g. Starlette, FastAPI, or plain websockets).
+
+    Usage::
+
+        @app.websocket("/ws")
+        async def endpoint(websocket):
+            await websocket.accept()
+            result = await ws_stream(compiled, {"input": "hello"}, websocket)
+
+    Args:
+        compiled_graph: A compiled :class:`CompiledGraph`.
+        state: Initial graph state dict.
+        websocket: Any object with ``send_text(str)`` or ``send(str)`` method.
+        hooks: Optional extra event hooks to run alongside streaming.
+
+    Returns:
+        The final state dict after graph execution.
+    """
+    ws_hooks = EventHooks()
+    send = getattr(websocket, "send_text", None) or websocket.send
+
+    async def _send_event(event: GraphEvent) -> None:
+        await send(event.to_ws())
+
+    ws_hooks.on_node_start(_send_event)
+    ws_hooks.on_node_complete(_send_event)
+    ws_hooks.on_wave_start(_send_event)
+    ws_hooks.on_wave_complete(_send_event)
+    ws_hooks.on_error(_send_event)
+
+    # Merge user-provided hooks
+    if hooks:
+        for event_type, cbs in hooks._callbacks.items():
+            for cb in cbs:
+                ws_hooks.on(event_type, cb)
+
+    state = dict(state)
+    result = await compiled_graph.run(state, hooks=ws_hooks)
+
+    done_event = GraphEvent(event_type="done", state=result)
+    await send(done_event.to_ws())
+
+    return result

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "synapsekit"
-version = "0.6.7"
+version = "0.6.9"
 description = "Async-native Python framework for building production-grade LLM applications. Streaming-first, 2 dependencies, fully transparent."
 authors = [{ name = "Amit", email = "de.amit.nautiyal@gmail.com" }]
 license = { text = "MIT" }
@@ -56,6 +56,7 @@ docx = ["python-docx>=1.0"]
 http = ["aiohttp>=3.9"]
 search = ["duckduckgo-search>=6.0"]
 tavily = ["tavily-python>=0.3"]
+youtube = ["youtube-search-python>=1.6"]
 redis = ["redis>=5.0"]
 all = [
     "openai>=1.0",
@@ -76,6 +77,7 @@ all = [
     "boto3>=1.34",
     "duckduckgo-search>=6.0",
     "tavily-python>=0.3",
+    "youtube-search-python>=1.6",
     "redis>=5.0",
 ]
 
@@ -154,11 +156,17 @@ module = [
     "synapsekit.llm.cerebras",
     "synapsekit.loaders.excel",
     "synapsekit.loaders.pptx",
+    "synapsekit.agents.tools.slack",
+    "synapsekit.agents.tools.jira",
+    "synapsekit.agents.tools.github_api",
+    "synapsekit.agents.tools.email_tool",
+    "synapsekit.agents.tools.pubmed_search",
+    "synapsekit.graph.streaming",
 ]
 warn_return_any = false
 # from __future__ import annotations causes mypy to misinterpret
 # async generator return types as Coroutine[..., AsyncGenerator]
-disable_error_code = ["override"]
+disable_error_code = ["override", "operator", "arg-type"]
 
 [tool.deptry]
 pep621_dev_dependency_groups = ["dev"]
@@ -170,8 +178,9 @@ faiss-cpu = "faiss"
 python-pptx = "pptx"
 python-docx = "docx"
 tavily-python = "tavily"
+youtube-search-python = "youtubesearchpython"
 
 [tool.deptry.per_rule_ignores]
 DEP001 = ["sqlalchemy", "pydantic", "aiohttp"]
-DEP002 = ["numpy", "rank-bm25", "beautifulsoup4", "lxml", "faiss-cpu", "google-generativeai", "tavily-python"]
+DEP002 = ["numpy", "rank-bm25", "beautifulsoup4", "lxml", "faiss-cpu", "google-generativeai", "tavily-python", "youtube-search-python"]
 DEP004 = ["pydantic"]
