@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import base64
 import struct
-import tempfile
 import warnings
 import zlib
 from pathlib import Path
@@ -15,7 +14,6 @@ import pytest
 from synapsekit._api import deprecated, experimental, public_api
 from synapsekit.llm.multimodal import AudioContent, ImageContent, MultimodalMessage
 from synapsekit.loaders.image import ImageLoader
-
 
 # ---------------------------------------------------------------------------
 # Helpers
