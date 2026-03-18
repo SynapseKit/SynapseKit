@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "synapsekit"
-version = "0.6.9"
+version = "0.7.0"
 description = "Async-native Python framework for building production-grade LLM applications. Streaming-first, 2 dependencies, fully transparent."
 authors = [{ name = "Amit", email = "de.amit.nautiyal@gmail.com" }]
 license = { text = "MIT" }
@@ -57,6 +57,7 @@ http = ["aiohttp>=3.9"]
 search = ["duckduckgo-search>=6.0"]
 tavily = ["tavily-python>=0.3"]
 youtube = ["youtube-search-python>=1.6"]
+mcp = ["mcp>=1.0"]
 redis = ["redis>=5.0"]
 all = [
     "openai>=1.0",
@@ -78,6 +79,7 @@ all = [
     "duckduckgo-search>=6.0",
     "tavily-python>=0.3",
     "youtube-search-python>=1.6",
+    "mcp>=1.0",
     "redis>=5.0",
 ]
 
