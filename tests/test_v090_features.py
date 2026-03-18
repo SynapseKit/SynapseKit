@@ -98,7 +98,7 @@ class TestAgentCard:
         assert card.description == "A test agent"
         assert card.skills == []
         assert card.endpoint == ""
-        assert card.version == "1.0.0"
+        assert card.version == "1.0.1"
 
     def test_construction_full(self):
         card = AgentCard(
@@ -118,7 +118,7 @@ class TestAgentCard:
         assert d["name"] == "x"
         assert d["description"] == "y"
         assert d["skills"] == ["a"]
-        assert d["version"] == "1.0.0"
+        assert d["version"] == "1.0.1"
 
 
 # ===========================================================================
