@@ -6,6 +6,7 @@ from .crag import CRAGRetriever
 from .cross_encoder import CrossEncoderReranker
 from .ensemble import EnsembleRetriever
 from .flare import FLARERetriever
+from .graphrag import GraphRAGRetriever, KnowledgeGraph
 from .hybrid_search import HybridSearchRetriever
 from .hyde import HyDERetriever
 from .multi_step import MultiStepRetriever
@@ -19,6 +20,8 @@ from .vectorstore import InMemoryVectorStore
 
 __all__ = [
     "AdaptiveRAGRetriever",
+    "GraphRAGRetriever",
+    "KnowledgeGraph",
     "ChromaVectorStore",
     "CohereReranker",
     "ContextualCompressionRetriever",

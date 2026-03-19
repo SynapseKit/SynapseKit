@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "synapsekit"
-version = "1.0.1"
+version = "1.1.0"
 description = "Async-native Python framework for building production-grade LLM applications. Streaming-first, 2 dependencies, fully transparent."
 authors = [{ name = "Amit", email = "de.amit.nautiyal@gmail.com" }]
 license = { text = "Apache-2.0" }
@@ -59,6 +59,7 @@ tavily = ["tavily-python>=0.3"]
 youtube = ["youtube-search-python>=1.6"]
 mcp = ["mcp>=1.0"]
 redis = ["redis>=5.0"]
+vertex = ["google-cloud-aiplatform>=1.38"]
 all = [
     "openai>=1.0",
     "anthropic>=0.25",
@@ -81,6 +82,7 @@ all = [
     "youtube-search-python>=1.6",
     "mcp>=1.0",
     "redis>=5.0",
+    "google-cloud-aiplatform>=1.38",
 ]
 
 [dependency-groups]
@@ -156,6 +158,7 @@ module = [
     "synapsekit.llm.fireworks",
     "synapsekit.llm.perplexity",
     "synapsekit.llm.cerebras",
+    "synapsekit.llm.vertex_ai",
     "synapsekit.loaders.excel",
     "synapsekit.loaders.pptx",
     "synapsekit.agents.tools.slack",
@@ -183,6 +186,7 @@ python-pptx = "pptx"
 python-docx = "docx"
 tavily-python = "tavily"
 youtube-search-python = "youtubesearchpython"
+google-cloud-aiplatform = "vertexai"
 
 [tool.deptry.per_rule_ignores]
 DEP001 = ["sqlalchemy", "pydantic", "aiohttp", "opentelemetry"]

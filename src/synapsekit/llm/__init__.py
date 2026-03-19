@@ -19,6 +19,7 @@ __all__ = [
     "OpenRouterLLM",
     "PerplexityLLM",
     "TogetherLLM",
+    "VertexAILLM",
     "generate_structured",
 ]
 
@@ -38,6 +39,7 @@ _PROVIDERS = {
     "FireworksLLM": ".fireworks",
     "PerplexityLLM": ".perplexity",
     "CerebrasLLM": ".cerebras",
+    "VertexAILLM": ".vertex_ai",
 }
 
 

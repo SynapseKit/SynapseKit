@@ -2,6 +2,7 @@ from .buffer import BufferMemory
 from .conversation import ConversationMemory
 from .entity import EntityMemory
 from .hybrid import HybridMemory
+from .redis import RedisConversationMemory
 from .sqlite import SQLiteConversationMemory
 from .summary_buffer import SummaryBufferMemory
 from .token_buffer import TokenBufferMemory
@@ -11,6 +12,7 @@ __all__ = [
     "ConversationMemory",
     "EntityMemory",
     "HybridMemory",
+    "RedisConversationMemory",
     "SQLiteConversationMemory",
     "SummaryBufferMemory",
     "TokenBufferMemory",

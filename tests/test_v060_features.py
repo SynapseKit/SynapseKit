@@ -509,4 +509,4 @@ def test_tool_schemas():
 def test_version():
     import synapsekit
 
-    assert synapsekit.__version__ == "1.0.1"
+    assert synapsekit.__version__ == "1.1.0"

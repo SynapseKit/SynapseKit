@@ -97,6 +97,7 @@ from .graph import (
     GraphInterrupt,
     GraphRuntimeError,
     GraphState,
+    GraphVisualizer,
     InMemoryCheckpointer,
     InterruptState,
     JSONFileCheckpointer,
@@ -111,6 +112,7 @@ from .graph import (
     approval_node,
     dynamic_route_node,
     fan_out_node,
+    get_mermaid_with_trace,
     llm_node,
     rag_node,
     sse_stream,
@@ -135,6 +137,7 @@ from .memory.buffer import BufferMemory
 from .memory.conversation import ConversationMemory
 from .memory.entity import EntityMemory
 from .memory.hybrid import HybridMemory
+from .memory.redis import RedisConversationMemory
 from .memory.sqlite import SQLiteConversationMemory
 from .memory.summary_buffer import SummaryBufferMemory
 from .memory.token_buffer import TokenBufferMemory
@@ -162,6 +165,7 @@ from .retrieval.crag import CRAGRetriever
 from .retrieval.cross_encoder import CrossEncoderReranker
 from .retrieval.ensemble import EnsembleRetriever
 from .retrieval.flare import FLARERetriever
+from .retrieval.graphrag import GraphRAGRetriever, KnowledgeGraph
 from .retrieval.hybrid_search import HybridSearchRetriever
 from .retrieval.hyde import HyDERetriever
 from .retrieval.multi_step import MultiStepRetriever
@@ -177,12 +181,13 @@ from .retrieval.vectorstore import InMemoryVectorStore
 from .text_splitters import (
     BaseSplitter,
     CharacterTextSplitter,
+    MarkdownTextSplitter,
     RecursiveCharacterTextSplitter,
     SemanticSplitter,
     TokenAwareSplitter,
 )
 
-__version__ = "1.0.1"
+__version__ = "1.1.0"
 __all__ = [
     # Facade
     "RAG",
@@ -200,6 +205,7 @@ __all__ = [
     "OpenRouterLLM",
     "PerplexityLLM",
     "TogetherLLM",
+    "VertexAILLM",
     # Embeddings
     "SynapsekitEmbeddings",
     # Vector stores
@@ -228,12 +234,15 @@ __all__ = [
     "SelfQueryRetriever",
     "SelfRAGRetriever",
     "SentenceWindowRetriever",
+    "GraphRAGRetriever",
+    "KnowledgeGraph",
     "StepBackRetriever",
     # Memory / observability
     "BufferMemory",
     "ConversationMemory",
     "EntityMemory",
     "HybridMemory",
+    "RedisConversationMemory",
     "SQLiteConversationMemory",
     "SummaryBufferMemory",
     "TokenBufferMemory",
@@ -322,12 +331,15 @@ __all__ = [
     # Text splitters
     "BaseSplitter",
     "CharacterTextSplitter",
+    "MarkdownTextSplitter",
     "RecursiveCharacterTextSplitter",
     "TokenAwareSplitter",
     "SemanticSplitter",
     # Graph workflows
     "END",
     "GraphState",
+    "GraphVisualizer",
+    "get_mermaid_with_trace",
     "GraphConfigError",
     "GraphRuntimeError",
     "Node",
@@ -409,6 +421,7 @@ _LAZY_IMPORTS = {
     # LLM providers
     "AzureOpenAILLM": "llm.azure_openai",
     "CerebrasLLM": "llm.cerebras",
+    "VertexAILLM": "llm.vertex_ai",
     "DeepSeekLLM": "llm.deepseek",
     "FireworksLLM": "llm.fireworks",
     "GroqLLM": "llm.groq",

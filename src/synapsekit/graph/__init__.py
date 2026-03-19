@@ -12,11 +12,13 @@ from .errors import GraphConfigError, GraphRuntimeError
 from .fan_out import fan_out_node
 from .graph import StateGraph
 from .interrupt import GraphInterrupt, InterruptState
+from .mermaid import get_mermaid_with_trace
 from .node import Node, NodeFn, agent_node, llm_node, rag_node
 from .state import END, GraphState, StateField, TypedState
 from .streaming import EventHooks, GraphEvent, sse_stream, ws_stream
 from .subgraph import subgraph_node
 from .trace import ExecutionTrace, TraceEntry
+from .visualization import GraphVisualizer
 
 __all__ = [
     "END",
@@ -27,6 +29,7 @@ __all__ = [
     "Edge",
     "EventHooks",
     "ExecutionTrace",
+    "GraphVisualizer",
     "GraphConfigError",
     "GraphEvent",
     "GraphInterrupt",
@@ -50,5 +53,6 @@ __all__ = [
     "rag_node",
     "sse_stream",
     "subgraph_node",
+    "get_mermaid_with_trace",
     "ws_stream",
 ]
