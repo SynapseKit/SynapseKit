@@ -1,20 +1,20 @@
 # SynapseKit vs LangChain — Feature Parity Report
 
-> Updated for v1.0.0 (2026-03-18)
+> Updated for v1.1.0 (2026-03-19)
 
 ## Phase 1: RAG Pipelines
 
 | Capability | LangChain | SynapseKit | Gap |
 |---|---|---|---|
 | Document loaders | 200+ (PDF, Notion, Slack, Google Drive...) | 14 (Text, String, PDF, HTML, CSV, JSON, Directory, Web, Excel, PowerPoint, Docx, Markdown, Contextual, SentenceWindow) | Covers all common formats |
-| Text splitters | 5+ strategies (recursive, semantic, token-aware) | 5 (character, recursive, token-aware, semantic, markdown) | At parity |
+| Text splitters | 5+ strategies (recursive, semantic, token-aware) | 6 (character, recursive, token-aware, semantic, markdown, markdown-header) | At parity |
 | Vector stores | 20+ (Chroma, FAISS, Pinecone, Weaviate, PGVector...) | 5 (InMemory, Chroma, FAISS, Qdrant, Pinecone) | Solid — covers the major ones |
-| Retrieval strategies | Similarity, MMR, hybrid, self-query, ensemble, CRAG, compression | 18 strategies (vector+BM25, MMR, RAG Fusion, Contextual, SentenceWindow, SelfQuery, ParentDoc, CrossEncoder, CRAG, QueryDecomp, Compression, Ensemble, CohereRerank, StepBack, FLARE, HyDE, HybridSearch, SelfRAG, AdaptiveRAG, MultiStep) | Exceeds LangChain |
-| Conversation memory | 4+ types (buffer, summary, window, entity) | 8 (ConversationMemory, HybridMemory, SQLiteConversationMemory, SummaryBufferMemory, TokenBufferMemory, BufferMemory, EntityMemory) | Exceeds LangChain |
+| Retrieval strategies | Similarity, MMR, hybrid, self-query, ensemble, CRAG, compression | 20 strategies (vector+BM25, MMR, RAG Fusion, Contextual, SentenceWindow, SelfQuery, ParentDoc, CrossEncoder, CRAG, QueryDecomp, Compression, Ensemble, CohereRerank, StepBack, FLARE, HyDE, HybridSearch, SelfRAG, AdaptiveRAG, MultiStep, GraphRAG) | Exceeds LangChain |
+| Conversation memory | 4+ types (buffer, summary, window, entity) | 9 (ConversationMemory, HybridMemory, SQLiteConversationMemory, RedisConversationMemory, SummaryBufferMemory, TokenBufferMemory, BufferMemory, EntityMemory) | Exceeds LangChain |
 | Streaming | Yes | Yes (stream-first) | At parity |
 | HyDE, multi-query | Yes | RAG Fusion (multi-query + RRF), QueryDecomposition, HyDE | At parity |
 
-**Verdict:** Excellent. 14 loaders, 5 splitters, 18 retrieval strategies, 8 memory backends. Exceeds LangChain retrieval coverage with FLARE, Step-Back, Cohere reranking, Self-RAG, Adaptive RAG, and Multi-Step retrieval.
+**Verdict:** Excellent. 14 loaders, 6 splitters, 20 retrieval strategies, 9 memory backends. Exceeds LangChain retrieval coverage with FLARE, Step-Back, Cohere reranking, Self-RAG, Adaptive RAG, Multi-Step, and GraphRAG retrieval.
 
 ---
 
@@ -22,7 +22,7 @@
 
 | Capability | LangChain | SynapseKit | Gap |
 |---|---|---|---|
-| Providers | 38+ | 15 (OpenAI, Anthropic, Ollama, Cohere, Mistral, Gemini, Bedrock, Azure OpenAI, Groq, DeepSeek, OpenRouter, Together, Fireworks, Perplexity, Cerebras) | Covers all major ones |
+| Providers | 38+ | 16 (OpenAI, Anthropic, Ollama, Cohere, Mistral, Gemini, Vertex AI, Bedrock, Azure OpenAI, Groq, DeepSeek, OpenRouter, Together, Fireworks, Perplexity, Cerebras) | Covers all major ones |
 | Unified interface | Yes (invoke/stream/batch) | Yes (generate/stream) | At parity |
 | Auto-detect from model name | No (explicit class) | Yes | SynapseKit advantage |
 | Caching | Built-in (memory, SQLite, Redis) | In-memory LRU + SQLite + Filesystem + Redis | At parity |
@@ -31,7 +31,7 @@
 | Structured output | Pydantic output parsers | `generate_structured()` with retry | At parity |
 | Callbacks / observability | LangSmith integration | TokenTracer + `ExecutionTrace` + `OTelExporter` + `TracingMiddleware` + `TracingUI` + `DistributedTracer` | At parity |
 
-**Verdict:** Excellent coverage. 15 providers cover 99%+ of real usage. Caching (memory + SQLite + filesystem + Redis), retries, rate limiting, structured output, and full observability stack (OTel, tracing UI, distributed tracing) all done.
+**Verdict:** Excellent coverage. 16 providers cover 99%+ of real usage. Caching (memory + SQLite + filesystem + Redis), retries, rate limiting, structured output, and full observability stack (OTel, tracing UI, distributed tracing) all done.
 
 ---
 
@@ -59,7 +59,7 @@
 | StateGraph builder | Yes | Yes | At parity |
 | Conditional routing | Yes | Yes | At parity |
 | Parallel execution | Yes (asyncio.gather) | Yes (asyncio.gather) | At parity |
-| Mermaid export | Yes | Yes | At parity |
+| Mermaid export | Yes | Yes + trace highlighting + GraphVisualizer | Exceeds LangGraph |
 | Streaming | Node + token level | Node + token level (`llm_node` + `stream_tokens`) + SSE (`sse_stream`) + WebSocket (`ws_stream`) | At parity |
 | Cyclic graphs (loops) | Yes | Yes (`compile(allow_cycles=True)`) | At parity |
 | Human-in-the-loop | interrupt() + Command(resume=) | `GraphInterrupt` + `resume(updates=...)` + `approval_node()` | At parity |
@@ -77,7 +77,7 @@
 
 | | LangChain | SynapseKit | Notes |
 |---|---|---|---|
-| Breadth | Massive (200+ loaders, 38+ providers, 50+ tools) | Focused (15 loaders, 15 providers, 32 tools) | SynapseKit covers the 80/20 |
+| Breadth | Massive (200+ loaders, 38+ providers, 50+ tools) | Focused (14 loaders, 16 providers, 32 tools) | SynapseKit covers the 80/20 |
 | API simplicity | Complex, lots of boilerplate | Clean, 3-line happy path | SynapseKit advantage |
 | Async/streaming | Retrofitted | Native from day 1 | SynapseKit advantage |
 | Dependencies | Heavy (langchain-core + per-provider) | 2 hard deps | SynapseKit advantage |
@@ -85,8 +85,8 @@
 | Graph workflows | Mature (HITL, checkpoints, cycles, subgraphs, typed state) | HITL, checkpoints, cycles, subgraphs, typed state, fan-out, SSE, WebSocket, event callbacks, execution tracing | At parity |
 | Multi-agent | LangGraph supervisor, handoff | Supervisor, Handoff, Crew + MCP client/server | At parity |
 | Evaluation | RAGAS integration | Built-in faithfulness, relevancy, groundedness metrics | At parity |
-| Retrieval | 10+ strategies | 18 strategies | Exceeds LangChain |
-| Memory | 4+ types | 8 types (window, hybrid, SQLite, summary buffer, token buffer, buffer, entity) | Exceeds LangChain |
+| Retrieval | 10+ strategies | 20 strategies | Exceeds LangChain |
+| Memory | 4+ types | 9 types (window, hybrid, SQLite, Redis, summary buffer, token buffer, buffer, entity) | Exceeds LangChain |
 | Multimodal | Image, audio inputs | ImageContent, AudioContent, MultimodalMessage, ImageLoader | At parity |
 | Interoperability | Hub integrations | MCP protocol + A2A protocol | Modern standards |
 
@@ -96,8 +96,8 @@
 - Truly async-native and streaming-first
 - Minimal dependencies (2 hard deps)
 - Auto-detection of providers from model name
-- 15 LLM providers, 15 loaders, 32 tools — covers real-world needs
-- 18 retrieval strategies exceeding LangChain
+- 16 LLM providers, 14 loaders, 32 tools — covers real-world needs
+- 20 retrieval strategies exceeding LangChain
 - Graph workflows at parity with LangGraph
 - MCP + A2A protocol for modern interoperability
 - Multi-agent orchestration (Supervisor, Handoff, Crew)
@@ -190,6 +190,12 @@
 77. `ImageContent` + `AudioContent` + `MultimodalMessage` — multimodal support (v1.0.0)
 78. `ImageLoader` — image loading with optional vision LLM description (v1.0.0)
 79. `@public_api`, `@experimental`, `@deprecated` — API stability markers (v1.0.0)
+
+80. `GraphRAGRetriever` + `KnowledgeGraph` — knowledge-graph-augmented retrieval (v1.1.0)
+81. `RedisConversationMemory` — Redis-backed conversation memory with windowing (v1.1.0)
+82. `VertexAILLM` — Google Vertex AI provider with ADC and function calling (v1.1.0)
+83. `MarkdownTextSplitter` — header-aware markdown splitting with context preservation (v1.1.0)
+84. `GraphVisualizer` + `get_mermaid_with_trace()` — graph visualization and execution replay (v1.1.0)
 
 ### Remaining priority gaps
 

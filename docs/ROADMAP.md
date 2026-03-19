@@ -191,7 +191,18 @@
 - [x] `@deprecated(reason, alternative)` — DeprecationWarning with migration guidance
 - [x] 1011 tests passing
 
-## v1.1.0 (planned)
+## v1.1.0 — Retrieval, Memory, Providers & Visualization
+
+- [x] `GraphRAGRetriever` — knowledge-graph-augmented retrieval: extract entities via LLM, traverse KG, merge with vector results
+- [x] `KnowledgeGraph` — in-memory triple store with BFS traversal, entity-document linking, LLM-powered extraction
+- [x] `RedisConversationMemory` — Redis-backed conversation memory with windowing, multi-conversation, JSON serialization
+- [x] `VertexAILLM` — Google Vertex AI provider with ADC auth, streaming, native function calling
+- [x] `MarkdownTextSplitter` — header-hierarchy-aware splitting with parent context preservation
+- [x] `GraphVisualizer` — ASCII timeline, Mermaid trace highlighting, step replay, HTML export
+- [x] `get_mermaid_with_trace()` — Mermaid diagrams with CSS status classes (completed/errored/skipped)
+- [x] 16 providers, 20 retrieval strategies, 6 text splitters, 9 memory backends, 1047 tests passing
+
+## v1.2.0 (planned)
 
 - [ ] `synapsekit serve` — deploy any app as FastAPI in one command
 - [ ] Prompt hub — versioned prompt registry
