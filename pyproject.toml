@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "synapsekit"
-version = "1.1.0"
+version = "1.2.0"
 description = "Async-native Python framework for building production-grade LLM applications. Streaming-first, 2 dependencies, fully transparent."
 authors = [{ name = "Amit", email = "de.amit.nautiyal@gmail.com" }]
 license = { text = "Apache-2.0" }
@@ -33,6 +33,9 @@ dependencies = [
 Homepage = "https://github.com/SynapseKit/SynapseKit"
 Repository = "https://github.com/SynapseKit/SynapseKit"
 
+[project.scripts]
+synapsekit = "synapsekit.cli.main:main"
+
 [project.optional-dependencies]
 openai = ["openai>=1.0"]
 anthropic = ["anthropic>=0.25"]
@@ -60,6 +63,8 @@ youtube = ["youtube-search-python>=1.6"]
 mcp = ["mcp>=1.0"]
 redis = ["redis>=5.0"]
 vertex = ["google-cloud-aiplatform>=1.38"]
+serve = ["fastapi>=0.110", "uvicorn[standard]>=0.29"]
+postgres = ["psycopg[binary]>=3.1"]
 all = [
     "openai>=1.0",
     "anthropic>=0.25",
@@ -83,6 +88,9 @@ all = [
     "mcp>=1.0",
     "redis>=5.0",
     "google-cloud-aiplatform>=1.38",
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.29",
+    "psycopg[binary]>=3.1",
 ]
 
 [dependency-groups]
@@ -190,5 +198,5 @@ google-cloud-aiplatform = "vertexai"
 
 [tool.deptry.per_rule_ignores]
 DEP001 = ["sqlalchemy", "pydantic", "aiohttp", "opentelemetry"]
-DEP002 = ["numpy", "rank-bm25", "beautifulsoup4", "lxml", "faiss-cpu", "google-generativeai", "tavily-python", "youtube-search-python"]
+DEP002 = ["numpy", "rank-bm25", "beautifulsoup4", "lxml", "faiss-cpu", "google-generativeai", "tavily-python", "youtube-search-python", "psycopg"]
 DEP004 = ["pydantic"]

@@ -19,12 +19,7 @@ class TestMarkdownTextSplitter:
         assert s.split(text) == [text]
 
     def test_split_by_headers(self):
-        text = (
-            "## Section A\n"
-            "Content for section A.\n"
-            "## Section B\n"
-            "Content for section B."
-        )
+        text = "## Section A\nContent for section A.\n## Section B\nContent for section B."
         s = MarkdownTextSplitter(chunk_size=60, chunk_overlap=0)
         chunks = s.split(text)
         assert len(chunks) >= 2
@@ -48,12 +43,7 @@ class TestMarkdownTextSplitter:
                 assert "# Title" in chunk
 
     def test_nested_headers(self):
-        text = (
-            "# Top\n"
-            "## Mid\n"
-            "### Deep\n"
-            "Deep content here."
-        )
+        text = "# Top\n## Mid\n### Deep\nDeep content here."
         s = MarkdownTextSplitter(chunk_size=80, chunk_overlap=0)
         chunks = s.split(text)
         # The deep content chunk should preserve the full hierarchy
@@ -82,12 +72,7 @@ class TestMarkdownTextSplitter:
         assert len(chunks) >= 2
 
     def test_custom_headers_to_split_on(self):
-        text = (
-            "## Only H2\n"
-            "Content under H2.\n"
-            "### Only H3\n"
-            "Content under H3."
-        )
+        text = "## Only H2\nContent under H2.\n### Only H3\nContent under H3."
         # Only split on ## headers
         s = MarkdownTextSplitter(
             chunk_size=60,
@@ -117,11 +102,7 @@ class TestMarkdownTextSplitter:
 
     def test_no_headers(self):
         # Text without any headers should fall back to recursive splitting
-        text = (
-            "First paragraph of text.\n\n"
-            "Second paragraph of text.\n\n"
-            "Third paragraph of text."
-        )
+        text = "First paragraph of text.\n\nSecond paragraph of text.\n\nThird paragraph of text."
         s = MarkdownTextSplitter(chunk_size=40, chunk_overlap=0)
         chunks = s.split(text)
         assert len(chunks) >= 2

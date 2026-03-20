@@ -40,6 +40,8 @@ __all__ = [
     "JSONFileCheckpointer",
     "Node",
     "NodeFn",
+    "PostgresCheckpointer",
+    "RedisCheckpointer",
     "SQLiteCheckpointer",
     "StateField",
     "StateGraph",
@@ -56,3 +58,18 @@ __all__ = [
     "get_mermaid_with_trace",
     "ws_stream",
 ]
+
+
+def __getattr__(name: str):  # type: ignore[no-untyped-def]
+    _lazy = {
+        "RedisCheckpointer": "checkpointers.redis",
+        "PostgresCheckpointer": "checkpointers.postgres",
+    }
+    if name in _lazy:
+        import importlib
+
+        mod = importlib.import_module(f".{_lazy[name]}", __name__)
+        cls = getattr(mod, name)
+        globals()[name] = cls
+        return cls
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

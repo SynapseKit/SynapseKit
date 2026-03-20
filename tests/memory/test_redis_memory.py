@@ -39,9 +39,7 @@ class TestRedisConversationMemory:
         expected_key = "synapsekit:memory:c1:messages"
         expected_json = json.dumps({"role": "user", "content": "Hello"})
         client.rpush.assert_called_once_with(expected_key, expected_json)
-        client.sadd.assert_called_once_with(
-            "synapsekit:memory:conversations", "c1"
-        )
+        client.sadd.assert_called_once_with("synapsekit:memory:conversations", "c1")
 
     def test_add_with_window(self, _fresh_redis_client):
         client = _fresh_redis_client
@@ -49,9 +47,7 @@ class TestRedisConversationMemory:
         mem.add("user", "Hello")
 
         # window=3 -> max 6 messages, ltrim keeps last 6
-        client.ltrim.assert_called_once_with(
-            "synapsekit:memory:c1:messages", -6, -1
-        )
+        client.ltrim.assert_called_once_with("synapsekit:memory:c1:messages", -6, -1)
 
     def test_get_messages(self, _fresh_redis_client):
         client = _fresh_redis_client
@@ -65,9 +61,7 @@ class TestRedisConversationMemory:
         assert len(messages) == 2
         assert messages[0] == {"role": "user", "content": "Hi"}
         assert messages[1] == {"role": "assistant", "content": "Hello!"}
-        client.lrange.assert_called_once_with(
-            "synapsekit:memory:c1:messages", 0, -1
-        )
+        client.lrange.assert_called_once_with("synapsekit:memory:c1:messages", 0, -1)
 
     def test_format_context(self, _fresh_redis_client):
         client = _fresh_redis_client
@@ -87,9 +81,7 @@ class TestRedisConversationMemory:
         mem.clear()
 
         client.delete.assert_called_once_with("synapsekit:memory:c1:messages")
-        client.srem.assert_called_once_with(
-            "synapsekit:memory:conversations", "c1"
-        )
+        client.srem.assert_called_once_with("synapsekit:memory:conversations", "c1")
 
     def test_list_conversations(self, _fresh_redis_client):
         client = _fresh_redis_client
@@ -115,15 +107,11 @@ class TestRedisConversationMemory:
         expected_json = json.dumps(
             {"role": "user", "content": "Hello", "metadata": {"source": "web"}}
         )
-        client.rpush.assert_called_once_with(
-            "synapsekit:memory:c1:messages", expected_json
-        )
+        client.rpush.assert_called_once_with("synapsekit:memory:c1:messages", expected_json)
 
     def test_custom_prefix(self, _fresh_redis_client):
         client = _fresh_redis_client
-        mem = RedisConversationMemory(
-            conversation_id="c1", prefix="myapp:chat:"
-        )
+        mem = RedisConversationMemory(conversation_id="c1", prefix="myapp:chat:")
         mem.add("user", "test")
 
         expected_key = "myapp:chat:c1:messages"

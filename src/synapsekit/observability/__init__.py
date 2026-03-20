@@ -1,9 +1,17 @@
+from .budget_guard import BudgetExceededError, BudgetGuard, BudgetLimit, CircuitState
+from .cost_tracker import CostRecord, CostTracker
 from .distributed import DistributedTracer, TraceSpan
 from .otel import OTelExporter, Span, TracingMiddleware
 from .tracer import TokenTracer
 from .ui import TracingUI
 
 __all__ = [
+    "BudgetExceededError",
+    "BudgetGuard",
+    "BudgetLimit",
+    "CircuitState",
+    "CostRecord",
+    "CostTracker",
     "DistributedTracer",
     "OTelExporter",
     "Span",

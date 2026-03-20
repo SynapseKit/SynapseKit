@@ -71,21 +71,25 @@ class GraphVisualizer:
             if entry.event_type == "wave_start":
                 wave_num += 1
             elif entry.event_type == "node_complete" and entry.node:
-                steps.append({
-                    "node": entry.node,
-                    "duration_ms": entry.duration_ms if entry.duration_ms is not None else 0.0,
-                    "wave": wave_num,
-                    "status": "completed",
-                    "data": entry.data,
-                })
+                steps.append(
+                    {
+                        "node": entry.node,
+                        "duration_ms": entry.duration_ms if entry.duration_ms is not None else 0.0,
+                        "wave": wave_num,
+                        "status": "completed",
+                        "data": entry.data,
+                    }
+                )
             elif entry.event_type == "error" and entry.node:
-                steps.append({
-                    "node": entry.node,
-                    "duration_ms": entry.duration_ms if entry.duration_ms is not None else 0.0,
-                    "wave": wave_num,
-                    "status": "errored",
-                    "data": entry.data,
-                })
+                steps.append(
+                    {
+                        "node": entry.node,
+                        "duration_ms": entry.duration_ms if entry.duration_ms is not None else 0.0,
+                        "wave": wave_num,
+                        "status": "errored",
+                        "data": entry.data,
+                    }
+                )
 
         return steps
 
@@ -99,10 +103,7 @@ class GraphVisualizer:
         timeline_section = ""
         if trace is not None:
             ascii_timeline = self.render_trace(trace)
-            timeline_section = (
-                f'<h2>Execution Timeline</h2>\n'
-                f'<pre>{ascii_timeline}</pre>'
-            )
+            timeline_section = f"<h2>Execution Timeline</h2>\n<pre>{ascii_timeline}</pre>"
 
         return (
             "<!DOCTYPE html>\n"

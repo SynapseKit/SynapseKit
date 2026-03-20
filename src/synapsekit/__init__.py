@@ -76,12 +76,14 @@ from .agents import (
 )
 from .embeddings.backend import SynapsekitEmbeddings
 from .evaluation import (
+    EvalCaseMeta,
     EvaluationPipeline,
     EvaluationResult,
     FaithfulnessMetric,
     GroundednessMetric,
     MetricResult,
     RelevancyMetric,
+    eval_case,
 )
 from .graph import (
     END,
@@ -142,6 +144,12 @@ from .memory.sqlite import SQLiteConversationMemory
 from .memory.summary_buffer import SummaryBufferMemory
 from .memory.token_buffer import TokenBufferMemory
 from .observability import (
+    BudgetExceededError,
+    BudgetGuard,
+    BudgetLimit,
+    CircuitState,
+    CostRecord,
+    CostTracker,
     DistributedTracer,
     OTelExporter,
     Span,
@@ -153,6 +161,8 @@ from .observability.tracer import TokenTracer
 from .parsers.json_parser import JSONParser
 from .parsers.list_parser import ListParser
 from .parsers.pydantic_parser import PydanticParser
+from .plugins import PluginRegistry
+from .prompts.hub import PromptHub
 from .prompts.template import ChatPromptTemplate, FewShotPromptTemplate, PromptTemplate
 from .rag.facade import RAG
 from .rag.pipeline import RAGConfig, RAGPipeline
@@ -187,7 +197,7 @@ from .text_splitters import (
     TokenAwareSplitter,
 )
 
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __all__ = [
     # Facade
     "RAG",
@@ -237,6 +247,13 @@ __all__ = [
     "GraphRAGRetriever",
     "KnowledgeGraph",
     "StepBackRetriever",
+    # Cost intelligence
+    "CostTracker",
+    "CostRecord",
+    "BudgetGuard",
+    "BudgetLimit",
+    "BudgetExceededError",
+    "CircuitState",
     # Memory / observability
     "BufferMemory",
     "ConversationMemory",
@@ -266,6 +283,7 @@ __all__ = [
     "PydanticParser",
     "ListParser",
     # Prompts
+    "PromptHub",
     "PromptTemplate",
     "ChatPromptTemplate",
     "FewShotPromptTemplate",
@@ -370,16 +388,20 @@ __all__ = [
     "BaseCheckpointer",
     "InMemoryCheckpointer",
     "JSONFileCheckpointer",
+    "PostgresCheckpointer",
+    "RedisCheckpointer",
     "SQLiteCheckpointer",
     # Structured output
     "generate_structured",
     # Evaluation
+    "EvalCaseMeta",
     "EvaluationPipeline",
     "EvaluationResult",
     "FaithfulnessMetric",
     "GroundednessMetric",
     "MetricResult",
     "RelevancyMetric",
+    "eval_case",
     # Observability
     "DistributedTracer",
     "OTelExporter",
@@ -405,6 +427,8 @@ __all__ = [
     "ImageContent",
     "MultimodalMessage",
     "ImageLoader",
+    # Plugins
+    "PluginRegistry",
     # API stability markers
     "deprecated",
     "experimental",
@@ -428,6 +452,9 @@ _LAZY_IMPORTS = {
     "OpenRouterLLM": "llm.openrouter",
     "PerplexityLLM": "llm.perplexity",
     "TogetherLLM": "llm.together",
+    # Checkpointers
+    "RedisCheckpointer": "graph.checkpointers.redis",
+    "PostgresCheckpointer": "graph.checkpointers.postgres",
     # Loaders
     "DocxLoader": "loaders.docx",
     "ExcelLoader": "loaders.excel",

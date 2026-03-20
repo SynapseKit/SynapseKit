@@ -34,10 +34,12 @@ def _make_trace(entries):
 class TestGetMermaidWithTrace:
     def test_completed_nodes_styled(self):
         mock_graph = _make_mock_graph()
-        trace = _make_trace([
-            TraceEntry(event_type="node_complete", node="a", timestamp=1.0, duration_ms=10.0),
-            TraceEntry(event_type="node_complete", node="b", timestamp=2.0, duration_ms=5.0),
-        ])
+        trace = _make_trace(
+            [
+                TraceEntry(event_type="node_complete", node="a", timestamp=1.0, duration_ms=10.0),
+                TraceEntry(event_type="node_complete", node="b", timestamp=2.0, duration_ms=5.0),
+            ]
+        )
         result = get_mermaid_with_trace(mock_graph._graph, trace)
         assert "class a completed;" in result
         assert "class b completed;" in result
@@ -45,10 +47,12 @@ class TestGetMermaidWithTrace:
 
     def test_errored_nodes_styled(self):
         mock_graph = _make_mock_graph()
-        trace = _make_trace([
-            TraceEntry(event_type="node_complete", node="a", timestamp=1.0, duration_ms=10.0),
-            TraceEntry(event_type="error", node="b", timestamp=2.0),
-        ])
+        trace = _make_trace(
+            [
+                TraceEntry(event_type="node_complete", node="a", timestamp=1.0, duration_ms=10.0),
+                TraceEntry(event_type="error", node="b", timestamp=2.0),
+            ]
+        )
         result = get_mermaid_with_trace(mock_graph._graph, trace)
         assert "class b errored;" in result
         assert "classDef errored fill:#FFB6C1,stroke:#DC143C;" in result
@@ -57,9 +61,11 @@ class TestGetMermaidWithTrace:
 
     def test_skipped_nodes_styled(self):
         mock_graph = _make_mock_graph()
-        trace = _make_trace([
-            TraceEntry(event_type="node_complete", node="a", timestamp=1.0, duration_ms=10.0),
-        ])
+        trace = _make_trace(
+            [
+                TraceEntry(event_type="node_complete", node="a", timestamp=1.0, duration_ms=10.0),
+            ]
+        )
         result = get_mermaid_with_trace(mock_graph._graph, trace)
         assert "class a completed;" in result
         # b and c were never executed
@@ -77,15 +83,23 @@ class TestGraphVisualizer:
     def test_render_trace_ascii(self):
         mock_graph = _make_mock_graph()
         viz = GraphVisualizer(mock_graph)
-        trace = _make_trace([
-            TraceEntry(event_type="wave_start", timestamp=0.0, data={"wave": ["a", "b"], "step": 1}),
-            TraceEntry(event_type="node_complete", node="a", timestamp=1.0, duration_ms=12.3),
-            TraceEntry(event_type="node_complete", node="b", timestamp=1.1, duration_ms=8.1),
-            TraceEntry(event_type="wave_complete", timestamp=1.2, data={"wave": ["a", "b"], "step": 1}),
-            TraceEntry(event_type="wave_start", timestamp=1.3, data={"wave": ["c"], "step": 2}),
-            TraceEntry(event_type="node_complete", node="c", timestamp=2.0, duration_ms=45.2),
-            TraceEntry(event_type="wave_complete", timestamp=2.1, data={"wave": ["c"], "step": 2}),
-        ])
+        trace = _make_trace(
+            [
+                TraceEntry(
+                    event_type="wave_start", timestamp=0.0, data={"wave": ["a", "b"], "step": 1}
+                ),
+                TraceEntry(event_type="node_complete", node="a", timestamp=1.0, duration_ms=12.3),
+                TraceEntry(event_type="node_complete", node="b", timestamp=1.1, duration_ms=8.1),
+                TraceEntry(
+                    event_type="wave_complete", timestamp=1.2, data={"wave": ["a", "b"], "step": 1}
+                ),
+                TraceEntry(event_type="wave_start", timestamp=1.3, data={"wave": ["c"], "step": 2}),
+                TraceEntry(event_type="node_complete", node="c", timestamp=2.0, duration_ms=45.2),
+                TraceEntry(
+                    event_type="wave_complete", timestamp=2.1, data={"wave": ["c"], "step": 2}
+                ),
+            ]
+        )
         result = viz.render_trace(trace)
         assert "Wave 1:" in result
         assert "[a] 12.3ms" in result
@@ -97,12 +111,14 @@ class TestGraphVisualizer:
     def test_render_trace_errored_node(self):
         mock_graph = _make_mock_graph()
         viz = GraphVisualizer(mock_graph)
-        trace = _make_trace([
-            TraceEntry(event_type="wave_start", timestamp=0.0),
-            TraceEntry(event_type="error", node="a", timestamp=1.0),
-            TraceEntry(event_type="node_complete", node="a", timestamp=1.0, duration_ms=5.0),
-            TraceEntry(event_type="wave_complete", timestamp=1.1),
-        ])
+        trace = _make_trace(
+            [
+                TraceEntry(event_type="wave_start", timestamp=0.0),
+                TraceEntry(event_type="error", node="a", timestamp=1.0),
+                TraceEntry(event_type="node_complete", node="a", timestamp=1.0, duration_ms=5.0),
+                TraceEntry(event_type="wave_complete", timestamp=1.1),
+            ]
+        )
         result = viz.render_trace(trace)
         assert "[!] [a] 5.0ms" in result
 
@@ -118,9 +134,11 @@ class TestGraphVisualizer:
     def test_render_mermaid_with_trace(self):
         mock_graph = _make_mock_graph()
         viz = GraphVisualizer(mock_graph)
-        trace = _make_trace([
-            TraceEntry(event_type="node_complete", node="a", timestamp=1.0, duration_ms=10.0),
-        ])
+        trace = _make_trace(
+            [
+                TraceEntry(event_type="node_complete", node="a", timestamp=1.0, duration_ms=10.0),
+            ]
+        )
         result = viz.render_mermaid(trace)
         assert "flowchart TD" in result
         assert "classDef completed" in result
@@ -129,14 +147,22 @@ class TestGraphVisualizer:
     def test_replay_steps(self):
         mock_graph = _make_mock_graph()
         viz = GraphVisualizer(mock_graph)
-        trace = _make_trace([
-            TraceEntry(event_type="wave_start", timestamp=0.0),
-            TraceEntry(event_type="node_complete", node="a", timestamp=1.0, duration_ms=12.3, data={"key": "val"}),
-            TraceEntry(event_type="wave_complete", timestamp=1.1),
-            TraceEntry(event_type="wave_start", timestamp=1.2),
-            TraceEntry(event_type="error", node="b", timestamp=2.0, data={"error": "fail"}),
-            TraceEntry(event_type="wave_complete", timestamp=2.1),
-        ])
+        trace = _make_trace(
+            [
+                TraceEntry(event_type="wave_start", timestamp=0.0),
+                TraceEntry(
+                    event_type="node_complete",
+                    node="a",
+                    timestamp=1.0,
+                    duration_ms=12.3,
+                    data={"key": "val"},
+                ),
+                TraceEntry(event_type="wave_complete", timestamp=1.1),
+                TraceEntry(event_type="wave_start", timestamp=1.2),
+                TraceEntry(event_type="error", node="b", timestamp=2.0, data={"error": "fail"}),
+                TraceEntry(event_type="wave_complete", timestamp=2.1),
+            ]
+        )
         steps = viz.replay_steps(trace)
         assert len(steps) == 2
         assert steps[0] == {
@@ -167,11 +193,13 @@ class TestGraphVisualizer:
     def test_to_html_with_trace(self):
         mock_graph = _make_mock_graph()
         viz = GraphVisualizer(mock_graph)
-        trace = _make_trace([
-            TraceEntry(event_type="wave_start", timestamp=0.0),
-            TraceEntry(event_type="node_complete", node="a", timestamp=1.0, duration_ms=10.0),
-            TraceEntry(event_type="wave_complete", timestamp=1.1),
-        ])
+        trace = _make_trace(
+            [
+                TraceEntry(event_type="wave_start", timestamp=0.0),
+                TraceEntry(event_type="node_complete", node="a", timestamp=1.0, duration_ms=10.0),
+                TraceEntry(event_type="wave_complete", timestamp=1.1),
+            ]
+        )
         html = viz.to_html(trace)
         assert "mermaid.min.js" in html
         assert "Execution Timeline" in html
