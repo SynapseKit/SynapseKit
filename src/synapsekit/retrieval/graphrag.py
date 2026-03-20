@@ -134,14 +134,10 @@ class GraphRAGRetriever:
         entities = await self._extract_entities(query)
         graph_doc_ids: list[str] = []
         for entity in entities:
-            neighbors = self._knowledge_graph.get_neighbors(
-                entity, max_hops=self._max_hops
-            )
+            neighbors = self._knowledge_graph.get_neighbors(entity, max_hops=self._max_hops)
             all_entities = {entity} | neighbors
             for ent in all_entities:
-                graph_doc_ids.extend(
-                    self._knowledge_graph.get_related_documents(ent)
-                )
+                graph_doc_ids.extend(self._knowledge_graph.get_related_documents(ent))
 
         # Deduplicate while preserving order
         seen: set[str] = set()
@@ -174,14 +170,10 @@ class GraphRAGRetriever:
         entities = await self._extract_entities(query)
         graph_doc_ids: list[str] = []
         for entity in entities:
-            neighbors = self._knowledge_graph.get_neighbors(
-                entity, max_hops=self._max_hops
-            )
+            neighbors = self._knowledge_graph.get_neighbors(entity, max_hops=self._max_hops)
             all_entities = {entity} | neighbors
             for ent in all_entities:
-                graph_doc_ids.extend(
-                    self._knowledge_graph.get_related_documents(ent)
-                )
+                graph_doc_ids.extend(self._knowledge_graph.get_related_documents(ent))
 
         # Deduplicate while preserving order
         seen: set[str] = set()

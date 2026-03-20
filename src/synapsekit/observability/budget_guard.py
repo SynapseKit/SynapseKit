@@ -118,16 +118,19 @@ class BudgetGuard:
                 )
 
             # Daily check
-            if self._limits.daily is not None and self._daily_spend + estimated_cost > self._limits.daily:
-                    self._circuit_state = CircuitState.OPEN
-                    self._circuit_opened_at = time.monotonic()
-                    raise BudgetExceededError(
-                        f"Daily spend ${self._daily_spend + estimated_cost:.4f} would exceed "
-                        f"daily limit ${self._limits.daily:.4f}",
-                        limit_type="daily",
-                        limit_value=self._limits.daily,
-                        current=self._daily_spend,
-                    )
+            if (
+                self._limits.daily is not None
+                and self._daily_spend + estimated_cost > self._limits.daily
+            ):
+                self._circuit_state = CircuitState.OPEN
+                self._circuit_opened_at = time.monotonic()
+                raise BudgetExceededError(
+                    f"Daily spend ${self._daily_spend + estimated_cost:.4f} would exceed "
+                    f"daily limit ${self._limits.daily:.4f}",
+                    limit_type="daily",
+                    limit_value=self._limits.daily,
+                    current=self._daily_spend,
+                )
 
             # Per-user check
             if user_id is not None and self._limits.per_user is not None:

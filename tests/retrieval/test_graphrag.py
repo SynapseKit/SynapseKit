@@ -75,9 +75,7 @@ class TestGraphRAGRetriever:
         kg.add_document_link("Einstein", "doc_0")
         kg.add_document_link("relativity", "doc_1")
 
-        graphrag = GraphRAGRetriever(
-            retriever=mock_retriever, llm=mock_llm, knowledge_graph=kg
-        )
+        graphrag = GraphRAGRetriever(retriever=mock_retriever, llm=mock_llm, knowledge_graph=kg)
         results = await graphrag.retrieve("Tell me about Einstein", top_k=5)
 
         # Should contain vector results and graph docs, deduplicated
@@ -100,12 +98,8 @@ class TestGraphRAGRetriever:
         kg.add_triple("Einstein", "developed", "relativity")
         kg.add_document_link("Einstein", "doc_0")
 
-        graphrag = GraphRAGRetriever(
-            retriever=mock_retriever, llm=mock_llm, knowledge_graph=kg
-        )
-        results, metadata = await graphrag.retrieve_with_graph(
-            "Tell me about Einstein", top_k=5
-        )
+        graphrag = GraphRAGRetriever(retriever=mock_retriever, llm=mock_llm, knowledge_graph=kg)
+        results, metadata = await graphrag.retrieve_with_graph("Tell me about Einstein", top_k=5)
 
         assert isinstance(results, list)
         assert isinstance(metadata, dict)
@@ -120,9 +114,7 @@ class TestGraphRAGRetriever:
         mock_retriever = AsyncMock()
         mock_retriever.retrieve.return_value = ["chunk1", "chunk2", "chunk3"]
 
-        graphrag = GraphRAGRetriever(
-            retriever=mock_retriever, llm=mock_llm, knowledge_graph=None
-        )
+        graphrag = GraphRAGRetriever(retriever=mock_retriever, llm=mock_llm, knowledge_graph=None)
         results = await graphrag.retrieve("some query", top_k=3)
 
         assert results == ["chunk1", "chunk2", "chunk3"]

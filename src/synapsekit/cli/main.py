@@ -21,8 +21,11 @@ def _add_test_parser(subparsers: argparse._SubParsersAction) -> None:  # type: i
         "--threshold", type=float, default=0.7, help="Min score threshold (default: 0.7)"
     )
     p.add_argument(
-        "--format", dest="output_format", choices=["json", "table"], default="table",
-        help="Output format (default: table)"
+        "--format",
+        dest="output_format",
+        choices=["json", "table"],
+        default="table",
+        help="Output format (default: table)",
     )
 
 
@@ -42,14 +45,17 @@ def main(argv: list[str] | None = None) -> None:
 
     if args.version:
         from synapsekit import __version__
+
         print(f"synapsekit {__version__}")
         return
 
     if args.command == "serve":
         from .serve import run_serve
+
         run_serve(args)
     elif args.command == "test":
         from .test import run_test
+
         run_test(args)
     else:
         parser.print_help()

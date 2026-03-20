@@ -11,8 +11,7 @@ def _import_object(app_path: str) -> Any:
     """Import an object from ``module:attribute`` notation."""
     if ":" not in app_path:
         raise ValueError(
-            f"Invalid app path '{app_path}'. Expected 'module:attribute' format "
-            f"(e.g. 'my_app:rag')"
+            f"Invalid app path '{app_path}'. Expected 'module:attribute' format (e.g. 'my_app:rag')"
         )
     module_path, attr_name = app_path.rsplit(":", 1)
     mod = importlib.import_module(module_path)

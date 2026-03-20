@@ -759,13 +759,15 @@ class TestCLITest:
         from synapsekit.cli.test import run_test
 
         eval_file = tmp_path / "eval_test.py"
-        eval_file.write_text(textwrap.dedent("""
+        eval_file.write_text(
+            textwrap.dedent("""
             from synapsekit.evaluation.decorators import eval_case
 
             @eval_case(min_score=0.9)
             def eval_failing():
                 return {"score": 0.3}
-        """))
+        """)
+        )
 
         args = Mock()
         args.path = str(tmp_path)
@@ -780,13 +782,15 @@ class TestCLITest:
         from synapsekit.cli.test import run_test
 
         eval_file = tmp_path / "eval_pass.py"
-        eval_file.write_text(textwrap.dedent("""
+        eval_file.write_text(
+            textwrap.dedent("""
             from synapsekit.evaluation.decorators import eval_case
 
             @eval_case(min_score=0.5)
             def eval_passing():
                 return {"score": 0.9}
-        """))
+        """)
+        )
 
         args = Mock()
         args.path = str(tmp_path)
@@ -800,13 +804,15 @@ class TestCLITest:
         from synapsekit.cli.test import run_test
 
         eval_file = tmp_path / "eval_json.py"
-        eval_file.write_text(textwrap.dedent("""
+        eval_file.write_text(
+            textwrap.dedent("""
             from synapsekit.evaluation.decorators import eval_case
 
             @eval_case(min_score=0.5)
             def eval_good():
                 return {"score": 0.9, "cost_usd": 0.01}
-        """))
+        """)
+        )
 
         args = Mock()
         args.path = str(tmp_path)

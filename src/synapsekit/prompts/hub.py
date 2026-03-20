@@ -52,9 +52,7 @@ class PromptHub:
         """
         m = _REF_RE.match(f"{name}:{version}" if ":" not in name else name)
         if not m:
-            raise ValueError(
-                f"Invalid prompt name '{name}'. Expected format: 'org/name'"
-            )
+            raise ValueError(f"Invalid prompt name '{name}'. Expected format: 'org/name'")
         org, pname = m.group("org"), m.group("name")
         ver = m.group("version") or version
 
@@ -94,9 +92,7 @@ class PromptHub:
         if version:
             path = prompt_dir / f"{version}.json"
             if not path.exists():
-                raise FileNotFoundError(
-                    f"Version '{version}' of prompt '{org}/{name}' not found"
-                )
+                raise FileNotFoundError(f"Version '{version}' of prompt '{org}/{name}' not found")
         else:
             # Resolve latest: sort version files and pick last
             versions = sorted(prompt_dir.glob("*.json"))

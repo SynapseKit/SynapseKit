@@ -30,9 +30,7 @@ class RedisConversationMemory:
         try:
             import redis
         except ImportError:
-            raise ImportError(
-                "redis package required: pip install synapsekit[redis]"
-            ) from None
+            raise ImportError("redis package required: pip install synapsekit[redis]") from None
 
         self._url = url
         self._conversation_id = conversation_id
@@ -85,9 +83,7 @@ class RedisConversationMemory:
         """Return all conversation IDs tracked in Redis."""
         members = self._client.smembers(self._conversations_key)
         # smembers may return bytes or str depending on decode_responses
-        return sorted(
-            m.decode() if isinstance(m, bytes) else m for m in members
-        )
+        return sorted(m.decode() if isinstance(m, bytes) else m for m in members)
 
     def __len__(self) -> int:
         return int(self._client.llen(self._messages_key))

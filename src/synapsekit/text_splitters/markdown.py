@@ -88,14 +88,10 @@ class MarkdownTextSplitter(BaseSplitter):
         # Build a regex that matches any of the configured header markers
         # at the start of a line.  E.g. ^(####|###|##|#)\s+(.+)$
         markers = [re.escape(h[0]) for h in self.headers_to_split_on]
-        header_re = re.compile(
-            r"^(" + "|".join(markers) + r")\s+(.+)$", re.MULTILINE
-        )
+        header_re = re.compile(r"^(" + "|".join(markers) + r")\s+(.+)$", re.MULTILINE)
 
         # Map marker string -> label name  (e.g. "##" -> "Header2")
-        marker_to_label: dict[str, str] = {
-            h[0]: h[1] for h in self.headers_to_split_on
-        }
+        marker_to_label: dict[str, str] = {h[0]: h[1] for h in self.headers_to_split_on}
 
         sections: list[dict[str, Any]] = []
         current_headers: dict[str, str] = {}

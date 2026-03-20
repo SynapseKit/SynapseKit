@@ -94,6 +94,7 @@ def run_test(args: Any) -> None:
             try:
                 if inspect.iscoroutinefunction(fn):
                     import asyncio
+
                     result = asyncio.run(fn())
                 else:
                     result = fn()
@@ -112,16 +113,18 @@ def run_test(args: Any) -> None:
             if not passed:
                 any_failed = True
 
-            results.append({
-                "file": str(filepath),
-                "name": name,
-                "passed": passed,
-                "score": result.get("score"),
-                "cost_usd": result.get("cost_usd"),
-                "latency_ms": result.get("latency_ms"),
-                "failures": failures,
-                "tags": meta.tags,
-            })
+            results.append(
+                {
+                    "file": str(filepath),
+                    "name": name,
+                    "passed": passed,
+                    "score": result.get("score"),
+                    "cost_usd": result.get("cost_usd"),
+                    "latency_ms": result.get("latency_ms"),
+                    "failures": failures,
+                    "tags": meta.tags,
+                }
+            )
 
     # Output
     if args.output_format == "json":

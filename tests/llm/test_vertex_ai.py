@@ -100,9 +100,7 @@ class TestVertexAILLM:
     async def test_stream_with_messages(self):
         """Verify _messages_to_prompt called then stream."""
         mock_model = MagicMock()
-        mock_model.generate_content_async = AsyncMock(
-            return_value=_async_chunks(["ok"])
-        )
+        mock_model.generate_content_async = AsyncMock(return_value=_async_chunks(["ok"]))
 
         mock_vertexai = MagicMock()
         mock_gen_models = MagicMock()
@@ -119,9 +117,7 @@ class TestVertexAILLM:
             llm = VertexAILLM(make_config())
             llm._model = mock_model
             tokens = []
-            async for t in llm.stream_with_messages(
-                [{"role": "user", "content": "hi"}]
-            ):
+            async for t in llm.stream_with_messages([{"role": "user", "content": "hi"}]):
                 tokens.append(t)
             assert tokens == ["ok"]
 

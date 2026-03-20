@@ -77,11 +77,13 @@ class VertexAILLM(BaseLLM):
         func_decls = []
         for t in tools:
             fn = t["function"]
-            func_decls.append({
-                "name": fn["name"],
-                "description": fn.get("description", ""),
-                "parameters": self._convert_params(fn.get("parameters", {})),
-            })
+            func_decls.append(
+                {
+                    "name": fn["name"],
+                    "description": fn.get("description", ""),
+                    "parameters": self._convert_params(fn.get("parameters", {})),
+                }
+            )
 
         vertex_tools = [VertexTool.from_dict({"function_declarations": func_decls})]
         prompt = _messages_to_prompt(messages)
@@ -99,13 +101,15 @@ class VertexAILLM(BaseLLM):
         text_parts = []
         for part in response.candidates[0].content.parts:
             if hasattr(part, "function_call") and part.function_call.name:
-                tool_calls.append({
-                    "id": f"call_{uuid.uuid4().hex[:24]}",
-                    "name": part.function_call.name,
-                    "arguments": dict(part.function_call.args)
-                    if part.function_call.args
-                    else {},
-                })
+                tool_calls.append(
+                    {
+                        "id": f"call_{uuid.uuid4().hex[:24]}",
+                        "name": part.function_call.name,
+                        "arguments": dict(part.function_call.args)
+                        if part.function_call.args
+                        else {},
+                    }
+                )
             elif hasattr(part, "text") and part.text:
                 text_parts.append(part.text)
 
