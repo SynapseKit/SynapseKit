@@ -3,14 +3,13 @@
 from __future__ import annotations
 
 import asyncio
-import datetime
 import json
 import sys
 import textwrap
 import time
 from pathlib import Path
 from typing import Any
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 
@@ -117,20 +116,20 @@ class TestCostTracker:
 class TestBudgetGuard:
     def test_per_request_limit(self):
         from synapsekit.observability.budget_guard import (
-            BudgetExceeded,
+            BudgetExceededError,
             BudgetGuard,
             BudgetLimit,
         )
 
         guard = BudgetGuard(BudgetLimit(per_request=0.05))
         guard.check_before(0.04)  # OK
-        with pytest.raises(BudgetExceeded) as exc_info:
+        with pytest.raises(BudgetExceededError) as exc_info:
             guard.check_before(0.06)
         assert exc_info.value.limit_type == "per_request"
 
     def test_daily_limit(self):
         from synapsekit.observability.budget_guard import (
-            BudgetExceeded,
+            BudgetExceededError,
             BudgetGuard,
             BudgetLimit,
         )
@@ -140,13 +139,13 @@ class TestBudgetGuard:
         guard.record_spend(0.05)
         guard.check_before(0.04)
         guard.record_spend(0.04)
-        with pytest.raises(BudgetExceeded) as exc_info:
+        with pytest.raises(BudgetExceededError) as exc_info:
             guard.check_before(0.02)
         assert exc_info.value.limit_type == "daily"
 
     def test_per_user_limit(self):
         from synapsekit.observability.budget_guard import (
-            BudgetExceeded,
+            BudgetExceededError,
             BudgetGuard,
             BudgetLimit,
         )
@@ -154,7 +153,7 @@ class TestBudgetGuard:
         guard = BudgetGuard(BudgetLimit(per_user=0.05))
         guard.check_before(0.03, user_id="alice")
         guard.record_spend(0.03, user_id="alice")
-        with pytest.raises(BudgetExceeded) as exc_info:
+        with pytest.raises(BudgetExceededError) as exc_info:
             guard.check_before(0.03, user_id="alice")
         assert exc_info.value.limit_type == "per_user"
         # Different user should be fine
@@ -162,7 +161,7 @@ class TestBudgetGuard:
 
     def test_circuit_breaker_states(self):
         from synapsekit.observability.budget_guard import (
-            BudgetExceeded,
+            BudgetExceededError,
             BudgetGuard,
             BudgetLimit,
             CircuitState,
@@ -173,7 +172,7 @@ class TestBudgetGuard:
 
         guard.record_spend(0.04)
         # This should trip the circuit
-        with pytest.raises(BudgetExceeded):
+        with pytest.raises(BudgetExceededError):
             guard.check_before(0.02)
         assert guard.circuit_state == CircuitState.OPEN
 
@@ -384,10 +383,7 @@ class TestPluginRegistry:
         mock_ep.name = "test_plugin"
         mock_ep.load.return_value = lambda: "registered"
 
-        mock_eps = Mock()
-        mock_eps.select.return_value = [mock_ep]
-
-        with patch("importlib.metadata.entry_points", return_value=mock_eps):
+        with patch("importlib.metadata.entry_points", return_value=[mock_ep]):
             registry = PluginRegistry()
             names = registry.discover()
             assert "test_plugin" in names
@@ -399,10 +395,7 @@ class TestPluginRegistry:
         mock_ep.name = "test_plugin"
         mock_ep.load.return_value = lambda: {"name": "test"}
 
-        mock_eps = Mock()
-        mock_eps.select.return_value = [mock_ep]
-
-        with patch("importlib.metadata.entry_points", return_value=mock_eps):
+        with patch("importlib.metadata.entry_points", return_value=[mock_ep]):
             registry = PluginRegistry()
             result = registry.load("test_plugin")
             assert result == {"name": "test"}
@@ -413,10 +406,7 @@ class TestPluginRegistry:
     def test_load_nonexistent(self):
         from synapsekit.plugins import PluginRegistry
 
-        mock_eps = Mock()
-        mock_eps.select.return_value = []
-
-        with patch("importlib.metadata.entry_points", return_value=mock_eps):
+        with patch("importlib.metadata.entry_points", return_value=[]):
             registry = PluginRegistry()
             with pytest.raises(KeyError):
                 registry.load("nonexistent")
@@ -434,17 +424,13 @@ class TestPluginRegistry:
 
         all_eps = [mock_ep1, mock_ep2]
 
-        mock_eps = Mock()
-
-        def select_side_effect(**kwargs: Any) -> list[Mock]:
+        def ep_side_effect(**kwargs: Any) -> list[Mock]:
             name = kwargs.get("name")
             if name:
                 return [ep for ep in all_eps if ep.name == name]
             return all_eps
 
-        mock_eps.select.side_effect = select_side_effect
-
-        with patch("importlib.metadata.entry_points", return_value=mock_eps):
+        with patch("importlib.metadata.entry_points", side_effect=ep_side_effect):
             registry = PluginRegistry()
             all_loaded = registry.load_all()
             assert all_loaded == {"p1": "r1", "p2": "r2"}
@@ -559,7 +545,7 @@ class TestPostgresCheckpointer:
         cp.save("graph-1", 3, {"messages": ["hello"]})
         result = cp.load("graph-1")
         assert result is not None
-        step, state = result
+        step, _state = result
         assert step == 3
 
     def test_load_nonexistent(self):
@@ -572,7 +558,7 @@ class TestPostgresCheckpointer:
     def test_delete(self):
         from synapsekit.graph.checkpointers.postgres import PostgresCheckpointer
 
-        mock_conn, store = self._make_mock_conn()
+        mock_conn, _store = self._make_mock_conn()
         cp = PostgresCheckpointer(mock_conn)
         cp.save("graph-1", 1, {"x": 1})
         cp.delete("graph-1")
@@ -668,7 +654,7 @@ class TestCLIServe:
         assert "/health" in routes
 
     def test_health_endpoint(self):
-        fastapi = pytest.importorskip("fastapi")
+        pytest.importorskip("fastapi")
         pytest.importorskip("httpx")
         from starlette.testclient import TestClient
 
@@ -682,7 +668,7 @@ class TestCLIServe:
         assert resp.json() == {"status": "ok"}
 
     def test_rag_query_endpoint(self):
-        fastapi = pytest.importorskip("fastapi")
+        pytest.importorskip("fastapi")
         pytest.importorskip("httpx")
         from starlette.testclient import TestClient
 
@@ -702,13 +688,6 @@ class TestCLIServe:
 
         with pytest.raises(ValueError, match="module:attribute"):
             _import_object("no_colon_here")
-
-
-class AsyncMock(MagicMock):
-    """Simple async mock for testing."""
-
-    async def __call__(self, *args: Any, **kwargs: Any) -> Any:
-        return super().__call__(*args, **kwargs)
 
 
 # ───────────────────────────────────────────────────────────────────────
@@ -744,7 +723,7 @@ class TestCLITest:
         from synapsekit.evaluation.decorators import EvalCaseMeta
 
         meta = EvalCaseMeta(min_score=0.9)
-        passed, failures = _check_thresholds({"score": 0.5}, meta, 0.7)
+        passed, _failures = _check_thresholds({"score": 0.5}, meta, 0.7)
         assert not passed
 
     def test_check_thresholds_uses_global(self):
@@ -752,12 +731,12 @@ class TestCLITest:
         from synapsekit.evaluation.decorators import EvalCaseMeta
 
         meta = EvalCaseMeta()  # No min_score set
-        passed, failures = _check_thresholds({"score": 0.5}, meta, 0.7)
+        passed, _failures = _check_thresholds({"score": 0.5}, meta, 0.7)
         assert not passed  # Uses global threshold 0.7
 
     def test_find_eval_cases(self):
         from synapsekit.cli.test import _find_eval_cases
-        from synapsekit.evaluation.decorators import EvalCaseMeta, eval_case
+        from synapsekit.evaluation.decorators import eval_case
 
         mod = type(sys)("test_mod")
 
@@ -874,11 +853,11 @@ class TestTopLevelImports:
         assert CostTracker is not None
 
     def test_budget_guard_import(self):
-        from synapsekit import BudgetExceeded, BudgetGuard, BudgetLimit, CircuitState
+        from synapsekit import BudgetExceededError, BudgetGuard, BudgetLimit, CircuitState
 
         assert BudgetGuard is not None
         assert BudgetLimit is not None
-        assert BudgetExceeded is not None
+        assert BudgetExceededError is not None
         assert CircuitState is not None
 
     def test_eval_case_import(self):

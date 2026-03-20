@@ -51,7 +51,6 @@ def build_app(obj: Any, app_type: str | None = None) -> Any:
     """
     try:
         from fastapi import FastAPI
-        from fastapi.responses import JSONResponse
     except ImportError:
         raise ImportError(
             "FastAPI is required for 'synapsekit serve'. "

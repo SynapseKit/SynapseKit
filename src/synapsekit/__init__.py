@@ -144,7 +144,7 @@ from .memory.sqlite import SQLiteConversationMemory
 from .memory.summary_buffer import SummaryBufferMemory
 from .memory.token_buffer import TokenBufferMemory
 from .observability import (
-    BudgetExceeded,
+    BudgetExceededError,
     BudgetGuard,
     BudgetLimit,
     CircuitState,
@@ -252,7 +252,7 @@ __all__ = [
     "CostRecord",
     "BudgetGuard",
     "BudgetLimit",
-    "BudgetExceeded",
+    "BudgetExceededError",
     "CircuitState",
     # Memory / observability
     "BufferMemory",

@@ -2,19 +2,16 @@
 
 from __future__ import annotations
 
-import asyncio
-import json
-import time
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
 
 fastapi = pytest.importorskip("fastapi")
-from starlette.testclient import TestClient
 
-from synapsekit.cli.serve import build_app
+from starlette.testclient import TestClient  # noqa: E402
 
+from synapsekit.cli.serve import build_app  # noqa: E402
 
 # ───────────────────────────────────────────────────────────────────────
 # RAG endpoint integration
@@ -169,7 +166,7 @@ class TestCostBudgetIntegration:
     def test_tracker_feeds_guard(self):
         """CostTracker records can feed into BudgetGuard for cost control."""
         from synapsekit.observability.budget_guard import (
-            BudgetExceeded,
+            BudgetExceededError,
             BudgetGuard,
             BudgetLimit,
         )
@@ -186,7 +183,7 @@ class TestCostBudgetIntegration:
         # Record another call that should trigger budget exceeded
         with tracker.scope("pipeline"):
             rec2 = tracker.record("gpt-4o", 1000, 500, 200.0)
-            with pytest.raises(BudgetExceeded):
+            with pytest.raises(BudgetExceededError):
                 guard.check_before(rec2.cost_usd)
 
     def test_eval_case_with_cost_tracking(self):

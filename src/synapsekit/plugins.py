@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import importlib.metadata
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 _ENTRY_POINT_GROUP = "synapsekit.plugins"
 
@@ -30,13 +31,7 @@ class PluginRegistry:
 
     def discover(self) -> list[str]:
         """Find all installed plugins. Returns a list of plugin names."""
-        eps = importlib.metadata.entry_points()
-        if hasattr(eps, "select"):
-            # Python 3.12+
-            group_eps = eps.select(group=_ENTRY_POINT_GROUP)
-        else:
-            # Python 3.10-3.11
-            group_eps = eps.get(_ENTRY_POINT_GROUP, [])
+        group_eps = importlib.metadata.entry_points(group=_ENTRY_POINT_GROUP)
         return [ep.name for ep in group_eps]
 
     def load(self, name: str) -> Any:
@@ -53,11 +48,7 @@ class PluginRegistry:
         if name in self._loaded:
             return self._loaded[name]
 
-        eps = importlib.metadata.entry_points()
-        if hasattr(eps, "select"):
-            group_eps = list(eps.select(group=_ENTRY_POINT_GROUP, name=name))
-        else:
-            group_eps = [ep for ep in eps.get(_ENTRY_POINT_GROUP, []) if ep.name == name]
+        group_eps = list(importlib.metadata.entry_points(group=_ENTRY_POINT_GROUP, name=name))
 
         if not group_eps:
             raise KeyError(f"Plugin '{name}' not found in entry point group '{_ENTRY_POINT_GROUP}'")

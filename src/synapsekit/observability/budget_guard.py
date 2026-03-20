@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import threading
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
-from typing import Any
 
 
-class BudgetExceeded(Exception):
+class BudgetExceededError(Exception):
     """Raised when a budget limit is exceeded."""
 
     def __init__(self, message: str, limit_type: str, limit_value: float, current: float) -> None:
@@ -94,14 +93,14 @@ class BudgetGuard:
     def check_before(self, estimated_cost: float, user_id: str | None = None) -> None:
         """Check if the estimated cost would exceed any limit.
 
-        Raises ``BudgetExceeded`` if any limit would be exceeded.
+        Raises ``BudgetExceededError`` if any limit would be exceeded.
         """
         with self._lock:
             self._maybe_reset_daily()
             self._update_circuit()
 
             if self._circuit_state == CircuitState.OPEN:
-                raise BudgetExceeded(
+                raise BudgetExceededError(
                     "Circuit breaker is OPEN — budget exceeded, waiting for cooldown",
                     limit_type="circuit_breaker",
                     limit_value=0,
@@ -110,7 +109,7 @@ class BudgetGuard:
 
             # Per-request check
             if self._limits.per_request is not None and estimated_cost > self._limits.per_request:
-                raise BudgetExceeded(
+                raise BudgetExceededError(
                     f"Estimated cost ${estimated_cost:.4f} exceeds per-request limit "
                     f"${self._limits.per_request:.4f}",
                     limit_type="per_request",
@@ -119,11 +118,10 @@ class BudgetGuard:
                 )
 
             # Daily check
-            if self._limits.daily is not None:
-                if self._daily_spend + estimated_cost > self._limits.daily:
+            if self._limits.daily is not None and self._daily_spend + estimated_cost > self._limits.daily:
                     self._circuit_state = CircuitState.OPEN
                     self._circuit_opened_at = time.monotonic()
-                    raise BudgetExceeded(
+                    raise BudgetExceededError(
                         f"Daily spend ${self._daily_spend + estimated_cost:.4f} would exceed "
                         f"daily limit ${self._limits.daily:.4f}",
                         limit_type="daily",
@@ -135,7 +133,7 @@ class BudgetGuard:
             if user_id is not None and self._limits.per_user is not None:
                 user_total = self._user_spend.get(user_id, 0.0) + estimated_cost
                 if user_total > self._limits.per_user:
-                    raise BudgetExceeded(
+                    raise BudgetExceededError(
                         f"User '{user_id}' spend ${user_total:.4f} would exceed "
                         f"per-user limit ${self._limits.per_user:.4f}",
                         limit_type="per_user",
@@ -152,9 +150,10 @@ class BudgetGuard:
                 self._user_spend[user_id] = self._user_spend.get(user_id, 0.0) + cost
 
             # If in HALF_OPEN and spend is under limits, close the circuit
-            if self._circuit_state == CircuitState.HALF_OPEN:
-                if self._limits.daily is None or self._daily_spend <= self._limits.daily:
-                    self._circuit_state = CircuitState.CLOSED
+            if self._circuit_state == CircuitState.HALF_OPEN and (
+                self._limits.daily is None or self._daily_spend <= self._limits.daily
+            ):
+                self._circuit_state = CircuitState.CLOSED
 
     @property
     def daily_spend(self) -> float:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import builtins
 import json
 import re
 from pathlib import Path
@@ -106,7 +107,7 @@ class PromptHub:
         data = json.loads(path.read_text())
         return PromptTemplate(data["template"])
 
-    def list(self, org: str | None = None) -> list[str]:
+    def list(self, org: str | None = None) -> builtins.list[str]:
         """List all prompts, optionally filtered by org.
 
         Returns:
@@ -128,7 +129,7 @@ class PromptHub:
                                 results.append(f"{org_dir.name}/{prompt_dir.name}")
         return results
 
-    def versions(self, name: str) -> list[str]:
+    def versions(self, name: str) -> builtins.list[str]:
         """List all versions of a prompt.
 
         Args:

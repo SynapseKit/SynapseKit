@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import threading
 import time
-from contextlib import contextmanager
 from dataclasses import dataclass, field
-from typing import Any, Generator
+from typing import Any
 
 from .tracer import COST_TABLE
 
