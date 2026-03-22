@@ -95,9 +95,7 @@ class PIIRedactor:
             result = result.replace(placeholder, original)
         return result
 
-    async def wrap_generate(
-        self, llm: BaseLLM, prompt: str
-    ) -> tuple[str, RedactionResult]:
+    async def wrap_generate(self, llm: BaseLLM, prompt: str) -> tuple[str, RedactionResult]:
         """Convenience: redact prompt, generate, restore response."""
         redaction = self.redact(prompt)
         response = await llm.generate(redaction.redacted_text)

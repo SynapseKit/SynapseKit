@@ -90,10 +90,18 @@ class VideoLoader:
         audio_path = self._make_audio_path()
         subprocess.run(
             [
-                "ffmpeg", "-i", str(self._path),
-                "-vn", "-acodec", "pcm_s16le",
-                "-ar", "16000", "-ac", "1",
-                "-y", str(audio_path),
+                "ffmpeg",
+                "-i",
+                str(self._path),
+                "-vn",
+                "-acodec",
+                "pcm_s16le",
+                "-ar",
+                "16000",
+                "-ac",
+                "1",
+                "-y",
+                str(audio_path),
             ],
             check=True,
             capture_output=True,
@@ -104,10 +112,18 @@ class VideoLoader:
         """Extract audio using ffmpeg (async subprocess)."""
         audio_path = self._make_audio_path()
         proc = await asyncio.create_subprocess_exec(
-            "ffmpeg", "-i", str(self._path),
-            "-vn", "-acodec", "pcm_s16le",
-            "-ar", "16000", "-ac", "1",
-            "-y", str(audio_path),
+            "ffmpeg",
+            "-i",
+            str(self._path),
+            "-vn",
+            "-acodec",
+            "pcm_s16le",
+            "-ar",
+            "16000",
+            "-ac",
+            "1",
+            "-y",
+            str(audio_path),
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )

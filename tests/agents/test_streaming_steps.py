@@ -139,9 +139,11 @@ class _FCEchoTool(BaseTool):
 
 class TestFunctionCallingStreamSteps:
     async def test_emits_final_answer_no_tools(self):
-        llm = _FunctionCallingMockLLM([
-            {"content": "The answer is 42", "tool_calls": None},
-        ])
+        llm = _FunctionCallingMockLLM(
+            [
+                {"content": "The answer is 42", "tool_calls": None},
+            ]
+        )
         agent = FunctionCallingAgent(llm=llm, tools=[_FCEchoTool()])
 
         events = []
@@ -153,15 +155,17 @@ class TestFunctionCallingStreamSteps:
         assert final_events[0].answer == "The answer is 42"
 
     async def test_emits_action_and_observation(self):
-        llm = _FunctionCallingMockLLM([
-            {
-                "content": None,
-                "tool_calls": [
-                    {"id": "tc1", "name": "echo", "arguments": {"text": "hello"}},
-                ],
-            },
-            {"content": "Done: Echo: hello", "tool_calls": None},
-        ])
+        llm = _FunctionCallingMockLLM(
+            [
+                {
+                    "content": None,
+                    "tool_calls": [
+                        {"id": "tc1", "name": "echo", "arguments": {"text": "hello"}},
+                    ],
+                },
+                {"content": "Done: Echo: hello", "tool_calls": None},
+            ]
+        )
         agent = FunctionCallingAgent(llm=llm, tools=[_FCEchoTool()])
 
         events = []
@@ -177,9 +181,11 @@ class TestFunctionCallingStreamSteps:
         assert "Echo: hello" in obs_events[0].observation
 
     async def test_token_events_for_final_answer(self):
-        llm = _FunctionCallingMockLLM([
-            {"content": "hello world", "tool_calls": None},
-        ])
+        llm = _FunctionCallingMockLLM(
+            [
+                {"content": "hello world", "tool_calls": None},
+            ]
+        )
         agent = FunctionCallingAgent(llm=llm, tools=[_FCEchoTool()])
 
         events = []

@@ -89,15 +89,9 @@ class AuditLog:
             )
             """
         )
-        self._conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_audit_user ON audit_log (user)"
-        )
-        self._conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_audit_model ON audit_log (model)"
-        )
-        self._conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_audit_ts ON audit_log (timestamp)"
-        )
+        self._conn.execute("CREATE INDEX IF NOT EXISTS idx_audit_user ON audit_log (user)")
+        self._conn.execute("CREATE INDEX IF NOT EXISTS idx_audit_model ON audit_log (model)")
+        self._conn.execute("CREATE INDEX IF NOT EXISTS idx_audit_ts ON audit_log (timestamp)")
         self._conn.commit()
 
     def _init_jsonl(self) -> None:

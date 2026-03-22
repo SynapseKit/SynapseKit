@@ -57,10 +57,5 @@ class ErrorEvent:
 
 
 StepEvent = (
-    ThoughtEvent
-    | ActionEvent
-    | ObservationEvent
-    | TokenEvent
-    | FinalAnswerEvent
-    | ErrorEvent
+    ThoughtEvent | ActionEvent | ObservationEvent | TokenEvent | FinalAnswerEvent | ErrorEvent
 )

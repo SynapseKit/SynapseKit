@@ -209,9 +209,7 @@ class TestFallbackChain:
         assert "streamed ok" in "".join(tokens)
 
     async def test_all_fail_raises(self):
-        chain = FallbackChain(
-            FallbackChainConfig(models=[_ErrorLLM("a"), _ErrorLLM("b")])
-        )
+        chain = FallbackChain(FallbackChainConfig(models=[_ErrorLLM("a"), _ErrorLLM("b")]))
         with pytest.raises(RuntimeError):
             await chain.generate("test")
 
