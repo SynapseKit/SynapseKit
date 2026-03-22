@@ -17,6 +17,7 @@ from __future__ import annotations
 from ._api import deprecated, experimental, public_api
 from .a2a import A2AClient, A2AMessage, A2AServer, A2ATask, AgentCard, TaskState
 from .agents import (
+    ActionEvent,
     AgentConfig,
     AgentExecutor,
     AgentMemory,
@@ -32,9 +33,11 @@ from .agents import (
     DateTimeTool,
     DuckDuckGoSearchTool,
     EmailTool,
+    ErrorEvent,
     FileListTool,
     FileReadTool,
     FileWriteTool,
+    FinalAnswerEvent,
     FunctionCallingAgent,
     GitHubAPITool,
     GraphQLTool,
@@ -47,21 +50,27 @@ from .agents import (
     HumanInputTool,
     JiraTool,
     JSONQueryTool,
+    ObservationEvent,
     PDFReaderTool,
     PIIDetector,
+    PIIRedactor,
     PubMedSearchTool,
     PythonREPLTool,
     ReActAgent,
+    RedactionResult,
     RegexTool,
     SentimentAnalysisTool,
     ShellTool,
     SlackTool,
     SQLQueryTool,
     SQLSchemaInspectionTool,
+    StepEvent,
     SummarizationTool,
     SupervisorAgent,
     Task,
     TavilySearchTool,
+    ThoughtEvent,
+    TokenEvent,
     ToolRegistry,
     ToolResult,
     TopicRestrictor,
@@ -77,11 +86,15 @@ from .agents import (
 from .embeddings.backend import SynapsekitEmbeddings
 from .evaluation import (
     EvalCaseMeta,
+    EvalRegression,
+    EvalSnapshot,
     EvaluationPipeline,
     EvaluationResult,
     FaithfulnessMetric,
     GroundednessMetric,
+    MetricDelta,
     MetricResult,
+    RegressionReport,
     RelevancyMetric,
     eval_case,
 )
@@ -122,6 +135,8 @@ from .graph import (
     ws_stream,
 )
 from .llm.base import BaseLLM, LLMConfig
+from .llm.cost_router import QUALITY_TABLE, CostRouter, CostRouterConfig, RouterModelSpec
+from .llm.fallback_chain import FallbackChain, FallbackChainConfig
 from .llm.multimodal import AudioContent, ImageContent, MultimodalMessage
 from .llm.structured import generate_structured
 from .loaders.base import Document
@@ -144,6 +159,8 @@ from .memory.sqlite import SQLiteConversationMemory
 from .memory.summary_buffer import SummaryBufferMemory
 from .memory.token_buffer import TokenBufferMemory
 from .observability import (
+    AuditEntry,
+    AuditLog,
     BudgetExceededError,
     BudgetGuard,
     BudgetLimit,
@@ -197,7 +214,7 @@ from .text_splitters import (
     TokenAwareSplitter,
 )
 
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __all__ = [
     # Facade
     "RAG",
@@ -207,6 +224,12 @@ __all__ = [
     # LLM
     "BaseLLM",
     "LLMConfig",
+    "CostRouter",
+    "CostRouterConfig",
+    "RouterModelSpec",
+    "QUALITY_TABLE",
+    "FallbackChain",
+    "FallbackChainConfig",
     "AzureOpenAILLM",
     "CerebrasLLM",
     "CloudflareLLM",
@@ -398,14 +421,20 @@ __all__ = [
     "generate_structured",
     # Evaluation
     "EvalCaseMeta",
+    "EvalRegression",
+    "EvalSnapshot",
     "EvaluationPipeline",
     "EvaluationResult",
     "FaithfulnessMetric",
     "GroundednessMetric",
+    "MetricDelta",
     "MetricResult",
+    "RegressionReport",
     "RelevancyMetric",
     "eval_case",
     # Observability
+    "AuditEntry",
+    "AuditLog",
     "DistributedTracer",
     "OTelExporter",
     "Span",
@@ -424,11 +453,23 @@ __all__ = [
     "Guardrails",
     "GuardrailResult",
     "PIIDetector",
+    "PIIRedactor",
+    "RedactionResult",
     "TopicRestrictor",
+    # Step events
+    "ActionEvent",
+    "ErrorEvent",
+    "FinalAnswerEvent",
+    "ObservationEvent",
+    "StepEvent",
+    "ThoughtEvent",
+    "TokenEvent",
     # Multimodal
     "AudioContent",
     "ImageContent",
     "MultimodalMessage",
+    "AudioLoader",
+    "VideoLoader",
     "ImageLoader",
     # Plugins
     "PluginRegistry",
@@ -462,6 +503,8 @@ _LAZY_IMPORTS = {
     "RedisCheckpointer": "graph.checkpointers.redis",
     "PostgresCheckpointer": "graph.checkpointers.postgres",
     # Loaders
+    "AudioLoader": "loaders.audio",
+    "VideoLoader": "loaders.video",
     "DocxLoader": "loaders.docx",
     "ExcelLoader": "loaders.excel",
     "PowerPointLoader": "loaders.pptx",

@@ -1,4 +1,6 @@
 from .base import BaseLLM, LLMConfig
+from .cost_router import QUALITY_TABLE, CostRouter, CostRouterConfig, RouterModelSpec
+from .fallback_chain import FallbackChain, FallbackChainConfig
 from .structured import generate_structured
 
 __all__ = [
@@ -9,7 +11,11 @@ __all__ = [
     "CerebrasLLM",
     "CloudflareLLM",
     "CohereLLM",
+    "CostRouter",
+    "CostRouterConfig",
     "DeepSeekLLM",
+    "FallbackChain",
+    "FallbackChainConfig",
     "FireworksLLM",
     "GeminiLLM",
     "GroqLLM",
@@ -20,6 +26,8 @@ __all__ = [
     "OpenAILLM",
     "OpenRouterLLM",
     "PerplexityLLM",
+    "QUALITY_TABLE",
+    "RouterModelSpec",
     "TogetherLLM",
     "VertexAILLM",
     "ZhipuLLM",

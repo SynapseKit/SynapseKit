@@ -20,8 +20,18 @@ from .multi import (
     Task,
     WorkerAgent,
 )
+from .pii_redactor import PIIRedactor, RedactionResult
 from .react import ReActAgent
 from .registry import ToolRegistry
+from .step_events import (
+    ActionEvent,
+    ErrorEvent,
+    FinalAnswerEvent,
+    ObservationEvent,
+    StepEvent,
+    ThoughtEvent,
+    TokenEvent,
+)
 from .tool_decorator import tool
 from .tools import (
     ArxivSearchTool,
@@ -111,6 +121,17 @@ __all__ = [
     "WebSearchTool",
     "WikipediaTool",
     "YouTubeSearchTool",
+    # PIIRedactor
+    "PIIRedactor",
+    "RedactionResult",
+    # Step events
+    "ActionEvent",
+    "ErrorEvent",
+    "FinalAnswerEvent",
+    "ObservationEvent",
+    "StepEvent",
+    "ThoughtEvent",
+    "TokenEvent",
     # Multi-agent
     "Crew",
     "CrewAgent",

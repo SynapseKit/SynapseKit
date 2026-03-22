@@ -125,6 +125,97 @@ class FunctionCallingAgent:
         for word in answer.split(" "):
             yield word + " "
 
+    async def stream_steps(self, query: str) -> AsyncGenerator:
+        """Stream step-by-step events for function-calling agent.
+
+        Yields ``StepEvent`` instances (``ActionEvent``, ``ObservationEvent``,
+        ``TokenEvent``, ``FinalAnswerEvent``, ``ErrorEvent``).
+        """
+        from .step_events import (
+            ActionEvent,
+            ErrorEvent,
+            FinalAnswerEvent,
+            ObservationEvent,
+            TokenEvent,
+        )
+
+        self._check_support()
+        self._memory.clear()
+
+        messages: list[dict] = [
+            {"role": "system", "content": self._system_prompt},
+            {"role": "user", "content": query},
+        ]
+
+        tool_schemas = self._registry.schemas()
+
+        for _ in range(self._max_iterations):
+            result: dict[str, Any] = await self._llm.call_with_tools(messages, tool_schemas)
+
+            tool_calls = result.get("tool_calls")
+            content = result.get("content")
+
+            # No tool calls → final answer
+            if not tool_calls:
+                answer = content or ""
+                for token in answer.split(" "):
+                    yield TokenEvent(token=token + " ")
+                yield FinalAnswerEvent(answer=answer)
+                return
+
+            # Append assistant message with tool_calls
+            messages.append(
+                {
+                    "role": "assistant",
+                    "content": None,
+                    "tool_calls": [
+                        {
+                            "id": tc["id"],
+                            "type": "function",
+                            "function": {
+                                "name": tc["name"],
+                                "arguments": json.dumps(tc["arguments"]),
+                            },
+                        }
+                        for tc in tool_calls
+                    ],
+                }
+            )
+
+            # Execute each tool
+            for tc in tool_calls:
+                yield ActionEvent(tool=tc["name"], tool_input=tc["arguments"])
+
+                try:
+                    tool = self._registry.get(tc["name"])
+                    tool_result = await tool.run(**tc["arguments"])
+                    observation = str(tool_result)
+                except Exception as e:
+                    observation = f"Error: {e}"
+                    yield ErrorEvent(error=str(e))
+
+                messages.append(
+                    {
+                        "role": "tool",
+                        "tool_call_id": tc["id"],
+                        "content": observation,
+                    }
+                )
+                yield ObservationEvent(observation=observation, tool=tc["name"])
+
+                self._memory.add_step(
+                    AgentStep(
+                        thought="",
+                        action=tc["name"],
+                        action_input=json.dumps(tc["arguments"]),
+                        observation=observation,
+                    )
+                )
+
+        yield FinalAnswerEvent(
+            answer="I was unable to complete the task within the allowed number of steps."
+        )
+
     @property
     def memory(self) -> AgentMemory:
         return self._memory

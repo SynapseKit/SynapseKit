@@ -27,6 +27,29 @@ def _add_test_parser(subparsers: argparse._SubParsersAction) -> None:  # type: i
         default="table",
         help="Output format (default: table)",
     )
+    p.add_argument(
+        "--save",
+        dest="save_snapshot",
+        metavar="NAME",
+        help="Save results as a named snapshot",
+    )
+    p.add_argument(
+        "--compare",
+        dest="compare_baseline",
+        metavar="BASELINE",
+        help="Compare results against a saved baseline snapshot",
+    )
+    p.add_argument(
+        "--fail-on-regression",
+        action="store_true",
+        default=False,
+        help="Exit with code 1 if regressions are detected",
+    )
+    p.add_argument(
+        "--snapshot-dir",
+        default=".synapsekit_evals",
+        help="Snapshot storage directory (default: .synapsekit_evals)",
+    )
 
 
 def main(argv: list[str] | None = None) -> None:

@@ -132,6 +132,42 @@ def run_test(args: Any) -> None:
     else:
         _print_table(results)
 
+    # Snapshot / regression handling
+    save_name = getattr(args, "save_snapshot", None)
+    compare_baseline = getattr(args, "compare_baseline", None)
+    fail_on_regression = getattr(args, "fail_on_regression", False)
+    snapshot_dir = getattr(args, "snapshot_dir", ".synapsekit_evals")
+
+    # Guard: only activate if the flags are actual strings (not Mock objects, etc.)
+    if not isinstance(save_name, str):
+        save_name = None
+    if not isinstance(compare_baseline, str):
+        compare_baseline = None
+    if not isinstance(snapshot_dir, str):
+        snapshot_dir = ".synapsekit_evals"
+
+    if save_name or compare_baseline:
+        from ..evaluation.regression import EvalRegression
+
+        reg = EvalRegression(store_dir=snapshot_dir)
+
+        if save_name:
+            reg.save_snapshot(save_name, results)
+            print(f"\nSnapshot saved: {save_name}")
+
+        if compare_baseline:
+            # Save current as a temp snapshot for comparison
+            current_name = "__current__"
+            reg.save_snapshot(current_name, results)
+            report = reg.compare(compare_baseline, current_name)
+            _print_regression_report(report)
+            # Clean up temp snapshot
+            temp_path = Path(snapshot_dir) / f"{current_name}.json"
+            if temp_path.exists():
+                temp_path.unlink()
+            if fail_on_regression and report.has_regressions:
+                sys.exit(1)
+
     if any_failed:
         sys.exit(1)
 
@@ -162,4 +198,32 @@ def _print_table(results: list[dict[str, Any]]) -> None:
     print("-" * 82)
     total = len(results)
     print(f"{passed_count}/{total} passed")
+    print()
+
+
+def _print_regression_report(report: Any) -> None:
+    """Print a regression comparison report."""
+    print()
+    print(f"Regression Report: {report.baseline_name} -> {report.current_name}")
+    print("=" * 82)
+
+    if not report.deltas:
+        print("No comparable metrics found.")
+        return
+
+    print(f"{'Case':<30} {'Metric':<12} {'Baseline':<12} {'Current':<12} {'Delta':<12} {'Status'}")
+    print("-" * 90)
+
+    for d in report.deltas:
+        status = "REGRESSED" if d.regressed else "OK"
+        baseline = f"{d.baseline:.4f}" if d.baseline is not None else "N/A"
+        current = f"{d.current:.4f}" if d.current is not None else "N/A"
+        delta = f"{d.delta:+.4f}" if d.delta is not None else "N/A"
+        print(f"{d.case_name:<30} {d.metric:<12} {baseline:<12} {current:<12} {delta:<12} {status}")
+
+    print("-" * 90)
+    if report.has_regressions:
+        print("REGRESSIONS DETECTED")
+    else:
+        print("No regressions detected")
     print()

@@ -149,6 +149,75 @@ class ReActAgent:
         for word in answer.split(" "):
             yield word + " "
 
+    async def stream_steps(self, query: str) -> AsyncGenerator:
+        """Stream step-by-step events including thoughts, actions, and tokens.
+
+        Yields ``StepEvent`` instances (``ThoughtEvent``, ``ActionEvent``,
+        ``ObservationEvent``, ``TokenEvent``, ``FinalAnswerEvent``, ``ErrorEvent``).
+        """
+        from .step_events import (
+            ActionEvent,
+            ErrorEvent,
+            FinalAnswerEvent,
+            ObservationEvent,
+            ThoughtEvent,
+            TokenEvent,
+        )
+
+        self._memory.clear()
+
+        for _ in range(self._max_iterations):
+            messages = self._build_messages(query)
+
+            # Stream tokens live
+            full_response = ""
+            async for token in self._llm.stream_with_messages(messages):
+                yield TokenEvent(token=token)
+                full_response += token
+
+            # Check for final answer
+            final = _parse_final_answer(full_response)
+            if final is not None:
+                yield FinalAnswerEvent(answer=final)
+                return
+
+            # Parse action
+            action_name, action_input = _parse_action(full_response)
+            thought = _parse_thought(full_response)
+
+            if thought:
+                yield ThoughtEvent(thought=thought)
+
+            if not action_name:
+                yield FinalAnswerEvent(answer=full_response.strip())
+                return
+
+            yield ActionEvent(tool=action_name, tool_input=action_input)
+
+            # Execute tool
+            try:
+                tool = self._registry.get(action_name)
+                result = await tool.run(input=action_input)
+                observation = str(result)
+            except Exception as e:
+                observation = f"Error: {e}"
+                yield ErrorEvent(error=str(e))
+
+            yield ObservationEvent(observation=observation, tool=action_name)
+
+            self._memory.add_step(
+                AgentStep(
+                    thought=thought,
+                    action=action_name,
+                    action_input=action_input,
+                    observation=observation,
+                )
+            )
+
+        yield FinalAnswerEvent(
+            answer="I was unable to find the answer within the allowed number of steps."
+        )
+
     @property
     def memory(self) -> AgentMemory:
         return self._memory

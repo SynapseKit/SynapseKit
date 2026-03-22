@@ -5131,7 +5131,7 @@ wheels = [
 
 [[package]]
 name = "synapsekit"
-version = "1.2.0"
+version = "1.3.0"
 source = { editable = "." }
 dependencies = [
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
@@ -5151,6 +5151,7 @@ all = [
     { name = "fastapi" },
     { name = "google-cloud-aiplatform" },
     { name = "google-generativeai" },
+    { name = "groq" },
     { name = "httpx" },
     { name = "lxml" },
     { name = "mcp" },
@@ -5169,6 +5170,9 @@ all = [
 ]
 anthropic = [
     { name = "anthropic" },
+]
+audio = [
+    { name = "openai" },
 ]
 bedrock = [
     { name = "boto3" },
@@ -5247,6 +5251,9 @@ tavily = [
 vertex = [
     { name = "google-cloud-aiplatform" },
 ]
+video = [
+    { name = "openai" },
+]
 web = [
     { name = "beautifulsoup4" },
     { name = "httpx" },
@@ -5292,6 +5299,7 @@ requires-dist = [
     { name = "google-cloud-aiplatform", marker = "extra == 'vertex'", specifier = ">=1.38" },
     { name = "google-generativeai", marker = "extra == 'all'", specifier = ">=0.7" },
     { name = "google-generativeai", marker = "extra == 'gemini'", specifier = ">=0.7" },
+    { name = "groq", marker = "extra == 'all'", specifier = ">=0.9" },
     { name = "groq", marker = "extra == 'groq'", specifier = ">=0.9" },
     { name = "httpx", marker = "extra == 'all'", specifier = ">=0.27" },
     { name = "httpx", marker = "extra == 'web'", specifier = ">=0.27" },
@@ -5305,7 +5313,9 @@ requires-dist = [
     { name = "ollama", marker = "extra == 'all'", specifier = ">=0.2" },
     { name = "ollama", marker = "extra == 'ollama'", specifier = ">=0.2" },
     { name = "openai", marker = "extra == 'all'", specifier = ">=1.0" },
+    { name = "openai", marker = "extra == 'audio'", specifier = ">=1.0" },
     { name = "openai", marker = "extra == 'openai'", specifier = ">=1.0" },
+    { name = "openai", marker = "extra == 'video'", specifier = ">=1.0" },
     { name = "openpyxl", marker = "extra == 'excel'", specifier = ">=3.1" },
     { name = "pinecone", marker = "extra == 'all'", specifier = ">=3.0" },
     { name = "pinecone", marker = "extra == 'pinecone'", specifier = ">=3.0" },
@@ -5329,7 +5339,7 @@ requires-dist = [
     { name = "youtube-search-python", marker = "extra == 'all'", specifier = ">=1.6" },
     { name = "youtube-search-python", marker = "extra == 'youtube'", specifier = ">=1.6" },
 ]
-provides-extras = ["openai", "anthropic", "semantic", "pdf", "html", "web", "chroma", "faiss", "qdrant", "pinecone", "ollama", "cohere", "mistral", "gemini", "bedrock", "groq", "excel", "pptx", "docx", "http", "search", "tavily", "youtube", "mcp", "redis", "vertex", "serve", "postgres", "all"]
+provides-extras = ["openai", "anthropic", "semantic", "pdf", "html", "web", "chroma", "faiss", "qdrant", "pinecone", "ollama", "cohere", "mistral", "gemini", "bedrock", "groq", "audio", "video", "excel", "pptx", "docx", "http", "search", "tavily", "youtube", "mcp", "redis", "vertex", "serve", "postgres", "all"]
 
 [package.metadata.requires-dev]
 dev = [

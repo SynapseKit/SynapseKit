@@ -70,3 +70,4 @@ docs/
 # Saved vectorstores
 *.npz
 typescript
+.synapsekit_evals/

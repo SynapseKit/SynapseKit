@@ -837,7 +837,7 @@ class TestCLIMain:
 
         main(["--version"])
         output = capsys.readouterr().out
-        assert "1.2.0" in output
+        assert "1.3.0" in output
 
     def test_no_command(self):
         from synapsekit.cli.main import main
@@ -895,4 +895,4 @@ class TestTopLevelImports:
     def test_version_bumped(self):
         import synapsekit
 
-        assert synapsekit.__version__ == "1.2.0"
+        assert synapsekit.__version__ == "1.3.0"

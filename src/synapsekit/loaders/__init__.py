@@ -3,6 +3,7 @@ from .markdown import MarkdownLoader
 from .text import StringLoader, TextLoader
 
 __all__ = [
+    "AudioLoader",
     "CSVLoader",
     "DirectoryLoader",
     "DocxLoader",
@@ -13,6 +14,7 @@ __all__ = [
     "PDFLoader",
     "StringLoader",
     "TextLoader",
+    "VideoLoader",
     "WebLoader",
 ]
 
@@ -24,6 +26,8 @@ _LOADERS = {
     "DirectoryLoader": ".directory",
     "WebLoader": ".web",
     "DocxLoader": ".docx",
+    "AudioLoader": ".audio",
+    "VideoLoader": ".video",
 }
 
 
