@@ -232,13 +232,16 @@ __all__ = [
     "FallbackChainConfig",
     "AzureOpenAILLM",
     "CerebrasLLM",
+    "CloudflareLLM",
     "DeepSeekLLM",
     "FireworksLLM",
     "GroqLLM",
+    "MoonshotLLM",
     "OpenRouterLLM",
     "PerplexityLLM",
     "TogetherLLM",
     "VertexAILLM",
+    "ZhipuLLM",
     # Embeddings
     "SynapsekitEmbeddings",
     # Vector stores
@@ -493,6 +496,9 @@ _LAZY_IMPORTS = {
     "OpenRouterLLM": "llm.openrouter",
     "PerplexityLLM": "llm.perplexity",
     "TogetherLLM": "llm.together",
+    "MoonshotLLM": "llm.moonshot",
+    "ZhipuLLM": "llm.zhipu",
+    "CloudflareLLM": "llm.cloudflare",
     # Checkpointers
     "RedisCheckpointer": "graph.checkpointers.redis",
     "PostgresCheckpointer": "graph.checkpointers.postgres",

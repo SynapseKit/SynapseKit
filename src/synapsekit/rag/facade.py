@@ -35,6 +35,12 @@ def _make_llm(
             provider = "mistral"
         elif model.startswith("deepseek"):
             provider = "deepseek"
+        elif model.startswith("moonshot"):
+            provider = "moonshot"
+        elif model.startswith("glm"):
+            provider = "zhipu"
+        elif model.startswith("@cf/") or model.startswith("@hf/"):
+            provider = "cloudflare"
         elif model.startswith("llama") or model.startswith("mixtral") or model.startswith("gemma"):
             provider = "groq"
         elif "/" in model:
@@ -100,11 +106,27 @@ def _make_llm(
         from ..llm.fireworks import FireworksLLM
 
         return FireworksLLM(config)
+    elif provider == "moonshot":
+        from ..llm.moonshot import MoonshotLLM
+
+        return MoonshotLLM(config)
+    elif provider == "zhipu":
+        from ..llm.zhipu import ZhipuLLM
+
+        return ZhipuLLM(config)
+    elif provider == "cloudflare":
+        from ..llm.cloudflare import CloudflareLLM
+
+        # We assume account_id might be passed in kw or via some global config
+        # For facade, we might need a way to pass it.
+        # But for now, let's just return it.
+        return CloudflareLLM(config)
     else:
         raise ValueError(
             f"Unknown provider: {provider!r}. "
             "Use 'openai', 'anthropic', 'ollama', 'cohere', 'mistral', 'gemini', "
-            "'bedrock', 'groq', 'deepseek', 'openrouter', 'together', or 'fireworks'."
+            "'bedrock', 'groq', 'deepseek', 'openrouter', 'together', 'fireworks', "
+            "'moonshot', 'zhipu', or 'cloudflare'."
         )
 
 

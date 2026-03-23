@@ -9,6 +9,7 @@ __all__ = [
     "BaseLLM",
     "BedrockLLM",
     "CerebrasLLM",
+    "CloudflareLLM",
     "CohereLLM",
     "CostRouter",
     "CostRouterConfig",
@@ -20,6 +21,7 @@ __all__ = [
     "GroqLLM",
     "LLMConfig",
     "MistralLLM",
+    "MoonshotLLM",
     "OllamaLLM",
     "OpenAILLM",
     "OpenRouterLLM",
@@ -28,6 +30,7 @@ __all__ = [
     "RouterModelSpec",
     "TogetherLLM",
     "VertexAILLM",
+    "ZhipuLLM",
     "generate_structured",
 ]
 
@@ -48,6 +51,9 @@ _PROVIDERS = {
     "PerplexityLLM": ".perplexity",
     "CerebrasLLM": ".cerebras",
     "VertexAILLM": ".vertex_ai",
+    "MoonshotLLM": ".moonshot",
+    "ZhipuLLM": ".zhipu",
+    "CloudflareLLM": ".cloudflare",
 }
 
 

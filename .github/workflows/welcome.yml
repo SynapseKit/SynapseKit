@@ -32,14 +32,26 @@ jobs:
             if (authorType === 'Bot') return;
 
             // Check if this is their first issue/PR
-            const endpoint = isIssue ? 'issues' : 'pulls';
-            const { data: items } = await github.rest[endpoint === 'issues' ? 'issues' : 'pulls'].listForRepo({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              creator: author,
-              state: 'all',
-              per_page: 2,
-            });
+            let items;
+            if (isIssue) {
+              const res = await github.rest.issues.listForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                creator: author,
+                state: 'all',
+                per_page: 2,
+              });
+              items = res.data;
+            } else {
+              const res = await github.rest.pulls.list({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                creator: author,
+                state: 'all',
+                per_page: 2,
+              });
+              items = res.data;
+            }
 
             if (items.length > 1) return;
 
