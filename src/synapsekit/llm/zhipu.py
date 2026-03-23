@@ -6,7 +6,7 @@ from typing import Any
 
 from .base import BaseLLM, LLMConfig
 
-_ZHIPU_BASE_URL = "https://open.bigmodel.cn/api/paas/v4/"
+_ZHIPU_BASE_URL = "https://open.bigmodel.cn/api/paas/v4"
 
 
 class ZhipuLLM(BaseLLM):
