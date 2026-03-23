@@ -7,6 +7,14 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- **CloudflareLLM** — Cloudflare Workers AI provider via httpx REST API (`/ai/run/` endpoint) with SSE streaming; install with `pip install synapsekit[cloudflare]`
+
+---
+
 ## [1.0.0] — 2026-03-18
 
 ### Added
