@@ -115,12 +115,11 @@ def _make_llm(
 
         return ZhipuLLM(config)
     elif provider == "cloudflare":
+        import os
+
         from ..llm.cloudflare import CloudflareLLM
 
-        # We assume account_id might be passed in kw or via some global config
-        # For facade, we might need a way to pass it.
-        # But for now, let's just return it.
-        return CloudflareLLM(config)
+        return CloudflareLLM(config, account_id=os.environ.get("CLOUDFLARE_ACCOUNT_ID"))
     else:
         raise ValueError(
             f"Unknown provider: {provider!r}. "
