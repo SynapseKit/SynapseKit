@@ -35,6 +35,7 @@ from .step_events import (
 from .tool_decorator import tool
 from .tools import (
     ArxivSearchTool,
+    AWSLambdaTool,
     BraveSearchTool,
     CalculatorTool,
     DateTimeTool,
@@ -90,6 +91,7 @@ __all__ = [
     "tool",
     # Built-in tools
     "ArxivSearchTool",
+    "AWSLambdaTool",
     "BraveSearchTool",
     "CalculatorTool",
     "DateTimeTool",

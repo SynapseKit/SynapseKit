@@ -1,4 +1,5 @@
 from .arxiv_search import ArxivSearchTool
+from .aws_lambda import AWSLambdaTool
 from .brave_search import BraveSearchTool
 from .calculator import CalculatorTool
 from .datetime_tool import DateTimeTool
@@ -33,6 +34,7 @@ from .youtube_search import YouTubeSearchTool
 
 __all__ = [
     "ArxivSearchTool",
+    "AWSLambdaTool",
     "BraveSearchTool",
     "CalculatorTool",
     "DateTimeTool",
