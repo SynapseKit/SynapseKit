@@ -52,6 +52,7 @@ cohere = ["cohere>=5.0"]
 mistral = ["mistralai>=1.0"]
 gemini = ["google-generativeai>=0.7"]
 bedrock = ["boto3>=1.34"]
+gcal-tool = ["google-api-python-client>=2.0"]
 groq = ["groq>=0.9"]
 audio = ["openai>=1.0"]
 video = ["openai>=1.0"]
@@ -192,6 +193,7 @@ pep621_dev_dependency_groups = ["dev"]
 
 [tool.deptry.package_module_name_map]
 google-generativeai = "google"
+google-api-python-client = "googleapiclient"
 beautifulsoup4 = "bs4"
 faiss-cpu = "faiss"
 python-pptx = "pptx"

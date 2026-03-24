@@ -45,6 +45,7 @@ from .tools import (
     FileReadTool,
     FileWriteTool,
     GitHubAPITool,
+    GoogleCalendarTool,
     GraphQLTool,
     HTTPRequestTool,
     HumanInputTool,
@@ -92,6 +93,7 @@ __all__ = [
     # Built-in tools
     "APIBuilderTool",
     "ArxivSearchTool",
+    "GoogleCalendarTool",
     "BraveSearchTool",
     "CalculatorTool",
     "DateTimeTool",
