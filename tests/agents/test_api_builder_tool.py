@@ -7,7 +7,6 @@ import pytest
 
 from synapsekit.agents.tools.api_builder import APIBuilderTool
 
-
 SAMPLE_SPEC = {
     "openapi": "3.0.0",
     "servers": [{"url": "https://api.example.com"}],
