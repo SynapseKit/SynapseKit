@@ -36,6 +36,7 @@ from .tool_decorator import tool
 from .tools import (
     APIBuilderTool,
     ArxivSearchTool,
+    AWSLambdaTool,
     BraveSearchTool,
     CalculatorTool,
     DateTimeTool,
@@ -93,6 +94,7 @@ __all__ = [
     # Built-in tools
     "APIBuilderTool",
     "ArxivSearchTool",
+    "AWSLambdaTool",
     "BraveSearchTool",
     "CalculatorTool",
     "DateTimeTool",
