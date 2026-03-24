@@ -5180,6 +5180,9 @@ bedrock = [
 chroma = [
     { name = "chromadb" },
 ]
+cloudflare = [
+    { name = "httpx" },
+]
 cohere = [
     { name = "cohere" },
 ]
@@ -5191,6 +5194,9 @@ excel = [
 ]
 faiss = [
     { name = "faiss-cpu" },
+]
+gcal-tool = [
+    { name = "google-api-python-client" },
 ]
 gemini = [
     { name = "google-generativeai" },
@@ -5295,6 +5301,7 @@ requires-dist = [
     { name = "faiss-cpu", marker = "extra == 'faiss'", specifier = ">=1.7" },
     { name = "fastapi", marker = "extra == 'all'", specifier = ">=0.110" },
     { name = "fastapi", marker = "extra == 'serve'", specifier = ">=0.110" },
+    { name = "google-api-python-client", marker = "extra == 'gcal-tool'", specifier = ">=2.0" },
     { name = "google-cloud-aiplatform", marker = "extra == 'all'", specifier = ">=1.38" },
     { name = "google-cloud-aiplatform", marker = "extra == 'vertex'", specifier = ">=1.38" },
     { name = "google-generativeai", marker = "extra == 'all'", specifier = ">=0.7" },
@@ -5302,6 +5309,7 @@ requires-dist = [
     { name = "groq", marker = "extra == 'all'", specifier = ">=0.9" },
     { name = "groq", marker = "extra == 'groq'", specifier = ">=0.9" },
     { name = "httpx", marker = "extra == 'all'", specifier = ">=0.27" },
+    { name = "httpx", marker = "extra == 'cloudflare'", specifier = ">=0.27" },
     { name = "httpx", marker = "extra == 'web'", specifier = ">=0.27" },
     { name = "lxml", marker = "extra == 'all'", specifier = ">=5.0" },
     { name = "lxml", marker = "extra == 'html'", specifier = ">=5.0" },
@@ -5339,7 +5347,7 @@ requires-dist = [
     { name = "youtube-search-python", marker = "extra == 'all'", specifier = ">=1.6" },
     { name = "youtube-search-python", marker = "extra == 'youtube'", specifier = ">=1.6" },
 ]
-provides-extras = ["openai", "anthropic", "semantic", "pdf", "html", "web", "chroma", "faiss", "qdrant", "pinecone", "ollama", "cohere", "mistral", "gemini", "bedrock", "groq", "audio", "video", "excel", "pptx", "docx", "http", "search", "tavily", "youtube", "mcp", "redis", "vertex", "serve", "postgres", "all"]
+provides-extras = ["openai", "anthropic", "semantic", "pdf", "html", "web", "chroma", "faiss", "qdrant", "pinecone", "ollama", "cohere", "mistral", "gemini", "bedrock", "gcal-tool", "groq", "audio", "video", "excel", "pptx", "docx", "http", "search", "tavily", "youtube", "mcp", "redis", "vertex", "cloudflare", "serve", "postgres", "all"]
 
 [package.metadata.requires-dev]
 dev = [

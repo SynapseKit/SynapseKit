@@ -9,6 +9,7 @@ from .file_list import FileListTool
 from .file_read import FileReadTool
 from .file_write import FileWriteTool
 from .github_api import GitHubAPITool
+from .google_calendar import GoogleCalendarTool
 from .graphql import GraphQLTool
 from .http_request import HTTPRequestTool
 from .human_input import HumanInputTool
@@ -35,6 +36,7 @@ from .youtube_search import YouTubeSearchTool
 __all__ = [
     "APIBuilderTool",
     "ArxivSearchTool",
+    "GoogleCalendarTool",
     "BraveSearchTool",
     "CalculatorTool",
     "DateTimeTool",
