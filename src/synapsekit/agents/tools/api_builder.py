@@ -133,7 +133,7 @@ class APIBuilderTool(BaseTool):
 
         import asyncio
 
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         return await loop.run_in_executor(None, _fetch)
 
     async def _select_operation(
@@ -317,5 +317,5 @@ class APIBuilderTool(BaseTool):
                     pass
             return f"HTTP {status}\n{text}"
 
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         return await loop.run_in_executor(None, _fetch)
