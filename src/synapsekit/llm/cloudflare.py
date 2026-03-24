@@ -35,18 +35,16 @@ class CloudflareLLM(BaseLLM):
 
     def _get_client(self) -> Any:
         if self._client is None:
-            try:
-                import httpx
-            except ImportError:
-                raise ImportError(
-                    "httpx required: pip install synapsekit[cloudflare]"
-                ) from None
-
             if not self._account_id:
                 raise ValueError(
                     "account_id is required for CloudflareLLM. "
                     "Pass account_id to the constructor: CloudflareLLM(config, account_id='...')"
                 )
+
+            try:
+                import httpx
+            except ImportError:
+                raise ImportError("httpx required: pip install synapsekit[cloudflare]") from None
 
             self._client = httpx.AsyncClient(
                 headers={
