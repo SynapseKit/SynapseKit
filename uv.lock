@@ -862,6 +862,15 @@ wheels = [
 ]
 
 [[package]]
+name = "diskcache"
+version = "5.6.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/3f/21/1c1ffc1a039ddcc459db43cc108658f32c57d271d7289a2794e401d0fdb6/diskcache-5.6.3.tar.gz", hash = "sha256:2c3a3fa2743d8535d832ec61c2054a1641f41775aa7c556758a109941e33e4fc", size = 67916, upload-time = "2023-08-31T06:12:00.316Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3f/27/4570e78fc0bf5ea0ca45eb1de3818a23787af9b390c0b0a0033a1b8236f9/diskcache-5.6.3-py3-none-any.whl", hash = "sha256:5e31b2d5fbad117cc363ebaf6b689474db18a1f6438bc82358b024abd4c2ca19", size = 45550, upload-time = "2023-08-31T06:11:58.822Z" },
+]
+
+[[package]]
 name = "distlib"
 version = "0.4.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2080,6 +2089,19 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/7c/72/34bf2eb7a15414a23e5e70ecb9440c1d3179f393d9349338a91e2781c0fb/librt-0.8.1-cp314-cp314t-win_amd64.whl", hash = "sha256:89815a22daf9c51884fb5dbe4f1ef65ee6a146e0b6a8df05f753e2e4a9359bf4", size = 58722, upload-time = "2026-02-17T16:12:46.85Z" },
     { url = "https://files.pythonhosted.org/packages/b2/c8/d148e041732d631fc76036f8b30fae4e77b027a1e95b7a84bb522481a940/librt-0.8.1-cp314-cp314t-win_arm64.whl", hash = "sha256:bf512a71a23504ed08103a13c941f763db13fb11177beb3d9244c98c29fb4a61", size = 48755, upload-time = "2026-02-17T16:12:47.943Z" },
 ]
+
+[[package]]
+name = "llama-cpp-python"
+version = "0.3.18"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "diskcache" },
+    { name = "jinja2" },
+    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "numpy", version = "2.4.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/8f/f7/ae8c53ec5b388b0f5c750ab6a20eb3a33546c91335a8067024f8e01e3524/llama_cpp_python-0.3.18.tar.gz", hash = "sha256:56e060193a4b54fb19ad80f7067a688c259c0224ca027efdfc97ab8a91b2b43d", size = 61684351, upload-time = "2026-03-24T10:01:07.433Z" }
 
 [[package]]
 name = "lxml"
@@ -5134,6 +5156,7 @@ name = "synapsekit"
 version = "1.3.0"
 source = { editable = "." }
 dependencies = [
+    { name = "huggingface-hub" },
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.4.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "rank-bm25" },
@@ -5174,17 +5197,11 @@ anthropic = [
 audio = [
     { name = "openai" },
 ]
-aws-lambda = [
-    { name = "boto3" },
-]
 bedrock = [
     { name = "boto3" },
 ]
 chroma = [
     { name = "chromadb" },
-]
-cloudflare = [
-    { name = "httpx" },
 ]
 cohere = [
     { name = "cohere" },
@@ -5198,9 +5215,6 @@ excel = [
 faiss = [
     { name = "faiss-cpu" },
 ]
-gcal-tool = [
-    { name = "google-api-python-client" },
-]
 gemini = [
     { name = "google-generativeai" },
 ]
@@ -5213,6 +5227,9 @@ html = [
 ]
 http = [
     { name = "aiohttp" },
+]
+llamacpp = [
+    { name = "llama-cpp-python" },
 ]
 mcp = [
     { name = "mcp" },
@@ -5293,7 +5310,6 @@ requires-dist = [
     { name = "beautifulsoup4", marker = "extra == 'html'", specifier = ">=4.12" },
     { name = "beautifulsoup4", marker = "extra == 'web'", specifier = ">=4.12" },
     { name = "boto3", marker = "extra == 'all'", specifier = ">=1.34" },
-    { name = "boto3", marker = "extra == 'aws-lambda'", specifier = ">=1.34" },
     { name = "boto3", marker = "extra == 'bedrock'", specifier = ">=1.34" },
     { name = "chromadb", marker = "extra == 'all'", specifier = ">=0.5" },
     { name = "chromadb", marker = "extra == 'chroma'", specifier = ">=0.5" },
@@ -5305,7 +5321,6 @@ requires-dist = [
     { name = "faiss-cpu", marker = "extra == 'faiss'", specifier = ">=1.7" },
     { name = "fastapi", marker = "extra == 'all'", specifier = ">=0.110" },
     { name = "fastapi", marker = "extra == 'serve'", specifier = ">=0.110" },
-    { name = "google-api-python-client", marker = "extra == 'gcal-tool'", specifier = ">=2.0" },
     { name = "google-cloud-aiplatform", marker = "extra == 'all'", specifier = ">=1.38" },
     { name = "google-cloud-aiplatform", marker = "extra == 'vertex'", specifier = ">=1.38" },
     { name = "google-generativeai", marker = "extra == 'all'", specifier = ">=0.7" },
@@ -5313,8 +5328,9 @@ requires-dist = [
     { name = "groq", marker = "extra == 'all'", specifier = ">=0.9" },
     { name = "groq", marker = "extra == 'groq'", specifier = ">=0.9" },
     { name = "httpx", marker = "extra == 'all'", specifier = ">=0.27" },
-    { name = "httpx", marker = "extra == 'cloudflare'", specifier = ">=0.27" },
     { name = "httpx", marker = "extra == 'web'", specifier = ">=0.27" },
+    { name = "huggingface-hub", specifier = ">=1.6.0" },
+    { name = "llama-cpp-python", marker = "extra == 'llamacpp'", specifier = ">=0.2" },
     { name = "lxml", marker = "extra == 'all'", specifier = ">=5.0" },
     { name = "lxml", marker = "extra == 'html'", specifier = ">=5.0" },
     { name = "mcp", marker = "extra == 'all'", specifier = ">=1.0" },
@@ -5351,7 +5367,11 @@ requires-dist = [
     { name = "youtube-search-python", marker = "extra == 'all'", specifier = ">=1.6" },
     { name = "youtube-search-python", marker = "extra == 'youtube'", specifier = ">=1.6" },
 ]
-provides-extras = ["openai", "anthropic", "semantic", "pdf", "html", "web", "chroma", "faiss", "qdrant", "pinecone", "ollama", "cohere", "mistral", "gemini", "bedrock", "gcal-tool", "aws-lambda", "groq", "audio", "video", "excel", "pptx", "docx", "http", "search", "tavily", "youtube", "mcp", "redis", "vertex", "cloudflare", "serve", "postgres", "all"]
+<<<<<<< HEAD
+provides-extras = ["openai", "anthropic", "semantic", "pdf", "html", "web", "chroma", "faiss", "qdrant", "pinecone", "ollama", "cohere", "mistral", "gemini", "bedrock", "groq", "audio", "video", "excel", "pptx", "docx", "http", "search", "tavily", "youtube", "mcp", "redis", "vertex", "serve", "postgres", "all"]
+=======
+provides-extras = ["openai", "anthropic", "semantic", "pdf", "html", "web", "chroma", "faiss", "qdrant", "pinecone", "ollama", "cohere", "mistral", "gemini", "bedrock", "groq", "audio", "video", "excel", "pptx", "docx", "http", "search", "tavily", "youtube", "mcp", "redis", "vertex", "cloudflare", "llamacpp", "serve", "postgres", "all"]
+>>>>>>> 46ee9c2 (feat: add LlamaCppLLM — local GGUF model provider via llama-cpp-python)
 
 [package.metadata.requires-dev]
 dev = [
