@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable
 from typing import Any
 
 from ..base import BaseTool, ToolResult
@@ -77,25 +77,19 @@ class GoogleCalendarTool(BaseTool):
         if not action:
             return ToolResult(output="", error="No action specified for Google Calendar.")
 
-        handlers: dict[str, Callable[..., Awaitable[ToolResult]]] = {
-            "list_events": self._list_events,
-            "create_event": self._create_event,
-            "delete_event": self._delete_event,
-        }
+        if action == "list_events":
+            return await self._list_events(**kwargs)
+        if action == "create_event":
+            return await self._create_event(**kwargs)
+        if action == "delete_event":
+            return await self._delete_event(**kwargs)
 
-        handler = handlers.get(action)
-        if handler is None:
-            return ToolResult(
-                output="",
-                error=f"Unknown action: {action}. Must be one of: {', '.join(handlers)}",
-            )
+        return ToolResult(
+            output="",
+            error=f"Unknown action: {action}. Must be one of: list_events, create_event, delete_event",
+        )
 
-        try:
-            return await handler(**kwargs)
-        except Exception as e:
-            return ToolResult(output="", error=f"Google Calendar error: {e}")
-
-    def _get_service(self):
+    def _get_service(self) -> Any:
         try:
             import google.auth
             from googleapiclient.discovery import build
@@ -108,10 +102,10 @@ class GoogleCalendarTool(BaseTool):
         credentials, _ = google.auth.default(scopes=scopes)
         return build("calendar", "v3", credentials=credentials, cache_discovery=False)
 
-    async def _run_blocking(self, fn, *args: Any, **kwargs: Any):
+    async def _run_blocking(self, fn: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
         import asyncio
 
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         return await loop.run_in_executor(None, lambda: fn(*args, **kwargs))
 
     async def _list_events(
@@ -135,7 +129,7 @@ class GoogleCalendarTool(BaseTool):
             list_kwargs["timeMax"] = time_max
 
         request = service.events().list(**list_kwargs)
-        data = await self._run_blocking(request.execute)
+        data: dict[str, Any] = await self._run_blocking(request.execute)
         events = data.get("items", [])
         if not events:
             return ToolResult(output="No events found.")
@@ -172,7 +166,7 @@ class GoogleCalendarTool(BaseTool):
             "start": {"dateTime": start, "timeZone": timezone},
             "end": {"dateTime": end, "timeZone": timezone},
         }
-        created = await self._run_blocking(
+        created: dict[str, Any] = await self._run_blocking(
             service.events().insert(calendarId=calendar_id, body=event).execute
         )
         return ToolResult(
