@@ -93,7 +93,6 @@ __all__ = [
     # Built-in tools
     "APIBuilderTool",
     "ArxivSearchTool",
-    "GoogleCalendarTool",
     "BraveSearchTool",
     "CalculatorTool",
     "DateTimeTool",
@@ -103,6 +102,7 @@ __all__ = [
     "FileReadTool",
     "FileWriteTool",
     "GitHubAPITool",
+    "GoogleCalendarTool",
     "GraphQLTool",
     "HTTPRequestTool",
     "HumanInputTool",

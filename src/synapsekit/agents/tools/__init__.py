@@ -36,7 +36,6 @@ from .youtube_search import YouTubeSearchTool
 __all__ = [
     "APIBuilderTool",
     "ArxivSearchTool",
-    "GoogleCalendarTool",
     "BraveSearchTool",
     "CalculatorTool",
     "DateTimeTool",
@@ -46,6 +45,7 @@ __all__ = [
     "FileReadTool",
     "FileWriteTool",
     "GitHubAPITool",
+    "GoogleCalendarTool",
     "GraphQLTool",
     "HTTPRequestTool",
     "HumanInputTool",
