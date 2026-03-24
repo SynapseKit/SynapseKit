@@ -276,63 +276,75 @@ class TestCloudflareLLM:
 
     @pytest.mark.asyncio
     async def test_stream_yields_tokens(self, llm):
-        llm._client = _mock_httpx_stream([
-            'data: {"response": "Hello"}',
-            'data: {"response": " world"}',
-            "data: [DONE]",
-        ])
+        llm._client = _mock_httpx_stream(
+            [
+                'data: {"response": "Hello"}',
+                'data: {"response": " world"}',
+                "data: [DONE]",
+            ]
+        )
         tokens = [t async for t in llm.stream("hi")]
         assert tokens == ["Hello", " world"]
 
     @pytest.mark.asyncio
     async def test_stream_skips_non_data_lines(self, llm):
-        llm._client = _mock_httpx_stream([
-            ": ping",
-            "",
-            'data: {"response": "Token"}',
-            "data: [DONE]",
-        ])
+        llm._client = _mock_httpx_stream(
+            [
+                ": ping",
+                "",
+                'data: {"response": "Token"}',
+                "data: [DONE]",
+            ]
+        )
         tokens = [t async for t in llm.stream("hi")]
         assert tokens == ["Token"]
 
     @pytest.mark.asyncio
     async def test_stream_skips_invalid_json(self, llm):
-        llm._client = _mock_httpx_stream([
-            "data: not-json",
-            'data: {"response": "Good"}',
-            "data: [DONE]",
-        ])
+        llm._client = _mock_httpx_stream(
+            [
+                "data: not-json",
+                'data: {"response": "Good"}',
+                "data: [DONE]",
+            ]
+        )
         tokens = [t async for t in llm.stream("hi")]
         assert tokens == ["Good"]
 
     @pytest.mark.asyncio
     async def test_stream_stops_at_done(self, llm):
-        llm._client = _mock_httpx_stream([
-            'data: {"response": "A"}',
-            "data: [DONE]",
-            'data: {"response": "B"}',
-        ])
+        llm._client = _mock_httpx_stream(
+            [
+                'data: {"response": "A"}',
+                "data: [DONE]",
+                'data: {"response": "B"}',
+            ]
+        )
         tokens = [t async for t in llm.stream("hi")]
         assert tokens == ["A"]
 
     @pytest.mark.asyncio
     async def test_generate_collects_tokens(self, llm):
-        llm._client = _mock_httpx_stream([
-            'data: {"response": "Hello"}',
-            'data: {"response": " world"}',
-            "data: [DONE]",
-        ])
+        llm._client = _mock_httpx_stream(
+            [
+                'data: {"response": "Hello"}',
+                'data: {"response": " world"}',
+                "data: [DONE]",
+            ]
+        )
         result = await llm.generate("hi")
         assert result == "Hello world"
 
     @pytest.mark.asyncio
     async def test_output_tokens_tracked(self, llm):
-        llm._client = _mock_httpx_stream([
-            'data: {"response": "A"}',
-            'data: {"response": "B"}',
-            'data: {"response": "C"}',
-            "data: [DONE]",
-        ])
+        llm._client = _mock_httpx_stream(
+            [
+                'data: {"response": "A"}',
+                'data: {"response": "B"}',
+                'data: {"response": "C"}',
+                "data: [DONE]",
+            ]
+        )
         _ = [t async for t in llm.stream("hi")]
         assert llm._output_tokens == 3
 
@@ -340,10 +352,7 @@ class TestCloudflareLLM:
     async def test_stream_with_messages_passes_kwargs(self, llm):
         llm._client = _mock_httpx_stream(['data: {"response": "x"}', "data: [DONE]"])
         messages = [{"role": "user", "content": "q"}]
-        _ = [
-            t
-            async for t in llm.stream_with_messages(messages, temperature=0.9, max_tokens=512)
-        ]
+        _ = [t async for t in llm.stream_with_messages(messages, temperature=0.9, max_tokens=512)]
         payload = llm._client.stream.call_args[1]["json"]
         assert payload["temperature"] == 0.9
         assert payload["max_tokens"] == 512

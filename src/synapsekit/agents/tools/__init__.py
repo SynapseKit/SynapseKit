@@ -1,3 +1,4 @@
+from .api_builder import APIBuilderTool
 from .arxiv_search import ArxivSearchTool
 from .brave_search import BraveSearchTool
 from .calculator import CalculatorTool
@@ -32,6 +33,7 @@ from .wikipedia import WikipediaTool
 from .youtube_search import YouTubeSearchTool
 
 __all__ = [
+    "APIBuilderTool",
     "ArxivSearchTool",
     "BraveSearchTool",
     "CalculatorTool",

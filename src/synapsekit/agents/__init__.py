@@ -34,6 +34,7 @@ from .step_events import (
 )
 from .tool_decorator import tool
 from .tools import (
+    APIBuilderTool,
     ArxivSearchTool,
     BraveSearchTool,
     CalculatorTool,
@@ -89,6 +90,7 @@ __all__ = [
     # Decorator
     "tool",
     # Built-in tools
+    "APIBuilderTool",
     "ArxivSearchTool",
     "BraveSearchTool",
     "CalculatorTool",
