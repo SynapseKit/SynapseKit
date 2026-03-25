@@ -4,6 +4,7 @@ from .fallback_chain import FallbackChain, FallbackChainConfig
 from .structured import generate_structured
 
 __all__ = [
+    "AI21LLM",
     "AnthropicLLM",
     "AzureOpenAILLM",
     "BaseLLM",
@@ -35,6 +36,7 @@ __all__ = [
 ]
 
 _PROVIDERS = {
+    "AI21LLM": ".ai21",
     "OpenAILLM": ".openai",
     "AzureOpenAILLM": ".azure_openai",
     "AnthropicLLM": ".anthropic",
