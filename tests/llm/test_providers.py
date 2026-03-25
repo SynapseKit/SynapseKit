@@ -316,8 +316,7 @@ class TestLlamaCppLLM:
         ]
 
         def mock_stream(**kw):
-            for c in chunks:
-                yield c
+            yield from chunks
 
         mock_client = MagicMock()
         mock_client.create_chat_completion = MagicMock(return_value=mock_stream())
@@ -339,8 +338,7 @@ class TestLlamaCppLLM:
         chunks = [{"choices": [{"delta": {"content": "ok"}}]}]
 
         def mock_stream(**kw):
-            for c in chunks:
-                yield c
+            yield from chunks
 
         mock_client = MagicMock()
         mock_client.create_chat_completion = MagicMock(return_value=mock_stream())
