@@ -359,4 +359,3 @@ class TestImageAnalysisTool:
         tool = ImageAnalysisTool(DummyLLM())
         r = await tool.run(image_url="https://example.com/image.png")
         assert not r.is_error
-
