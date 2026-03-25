@@ -27,6 +27,7 @@ from .sql_query import SQLQueryTool
 from .sql_schema import SQLSchemaInspectionTool
 from .summarization import SummarizationTool
 from .tavily_search import TavilySearchTool
+from .text_to_speech import TextToSpeechTool
 from .translation import TranslationTool
 from .vector_search import VectorSearchTool
 from .web_scraper import WebScraperTool
@@ -64,6 +65,7 @@ __all__ = [
     "SQLSchemaInspectionTool",
     "SummarizationTool",
     "TavilySearchTool",
+    "TextToSpeechTool",
     "TranslationTool",
     "VectorSearchTool",
     "WebScraperTool",
