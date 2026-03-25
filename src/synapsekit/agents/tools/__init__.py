@@ -14,6 +14,7 @@ from .google_calendar import GoogleCalendarTool
 from .graphql import GraphQLTool
 from .http_request import HTTPRequestTool
 from .human_input import HumanInputTool
+from .image_analysis import ImageAnalysisTool
 from .jira import JiraTool
 from .json_query import JSONQueryTool
 from .pdf_reader import PDFReaderTool
@@ -51,6 +52,7 @@ __all__ = [
     "GraphQLTool",
     "HTTPRequestTool",
     "HumanInputTool",
+    "ImageAnalysisTool",
     "JiraTool",
     "JSONQueryTool",
     "PDFReaderTool",
