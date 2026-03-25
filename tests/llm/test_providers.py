@@ -405,7 +405,9 @@ class TestDatabricksLLM:
         with patch.dict("sys.modules", {"openai": None}):
             from synapsekit.llm.databricks import DatabricksLLM
 
-            llm = DatabricksLLM(make_config("databricks", "dbrx-instruct"), workspace_url="https://db.example.com")
+            llm = DatabricksLLM(
+                make_config("databricks", "dbrx-instruct"), workspace_url="https://db.example.com"
+            )
             llm._client = None
             with pytest.raises(ImportError, match="openai"):
                 llm._get_client()
@@ -438,7 +440,9 @@ class TestDatabricksLLM:
 
         from synapsekit.llm.databricks import DatabricksLLM
 
-        llm = DatabricksLLM(make_config("databricks", "dbrx-instruct"), workspace_url="https://db.example.com")
+        llm = DatabricksLLM(
+            make_config("databricks", "dbrx-instruct"), workspace_url="https://db.example.com"
+        )
         llm._client = mock_client
         tokens = []
         async for t in llm.stream("hi"):
@@ -459,7 +463,9 @@ class TestDatabricksLLM:
 
         from synapsekit.llm.databricks import DatabricksLLM
 
-        llm = DatabricksLLM(make_config("databricks", "dbrx-instruct"), workspace_url="https://db.example.com")
+        llm = DatabricksLLM(
+            make_config("databricks", "dbrx-instruct"), workspace_url="https://db.example.com"
+        )
         llm._client = mock_client
         tokens = []
         async for t in llm.stream_with_messages(
@@ -491,7 +497,9 @@ class TestDatabricksLLM:
 
         from synapsekit.llm.databricks import DatabricksLLM
 
-        llm = DatabricksLLM(make_config("databricks", "dbrx-instruct"), workspace_url="https://db.example.com")
+        llm = DatabricksLLM(
+            make_config("databricks", "dbrx-instruct"), workspace_url="https://db.example.com"
+        )
         llm._client = mock_client
         result = await llm.call_with_tools(
             [{"role": "user", "content": "weather in SF"}],
