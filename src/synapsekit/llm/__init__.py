@@ -14,6 +14,7 @@ __all__ = [
     "CostRouter",
     "CostRouterConfig",
     "DeepSeekLLM",
+    "ErnieLLM",
     "FallbackChain",
     "FallbackChainConfig",
     "FireworksLLM",
@@ -54,6 +55,7 @@ _PROVIDERS = {
     "MoonshotLLM": ".moonshot",
     "ZhipuLLM": ".zhipu",
     "CloudflareLLM": ".cloudflare",
+    "ErnieLLM": ".ernie",
 }
 
 

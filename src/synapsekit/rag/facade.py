@@ -39,6 +39,8 @@ def _make_llm(
             provider = "moonshot"
         elif model.startswith("glm"):
             provider = "zhipu"
+        elif model.startswith("ernie"):
+            provider = "ernie"
         elif model.startswith("@cf/") or model.startswith("@hf/"):
             provider = "cloudflare"
         elif model.startswith("llama") or model.startswith("mixtral") or model.startswith("gemma"):
@@ -120,12 +122,16 @@ def _make_llm(
         from ..llm.cloudflare import CloudflareLLM
 
         return CloudflareLLM(config, account_id=os.environ.get("CLOUDFLARE_ACCOUNT_ID"))
+    elif provider == "ernie":
+        from ..llm.ernie import ErnieLLM
+
+        return ErnieLLM(config)
     else:
         raise ValueError(
             f"Unknown provider: {provider!r}. "
             "Use 'openai', 'anthropic', 'ollama', 'cohere', 'mistral', 'gemini', "
             "'bedrock', 'groq', 'deepseek', 'openrouter', 'together', 'fireworks', "
-            "'moonshot', 'zhipu', or 'cloudflare'."
+            "'moonshot', 'zhipu', 'cloudflare', or 'ernie'."
         )
 
 
