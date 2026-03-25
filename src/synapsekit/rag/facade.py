@@ -39,6 +39,8 @@ def _make_llm(
             provider = "moonshot"
         elif model.startswith("glm"):
             provider = "zhipu"
+        elif model.startswith("jamba"):
+            provider = "ai21"
         elif model.startswith("@cf/") or model.startswith("@hf/"):
             provider = "cloudflare"
         elif model.startswith("llama") or model.startswith("mixtral") or model.startswith("gemma"):
@@ -70,6 +72,10 @@ def _make_llm(
         from ..llm.ollama import OllamaLLM
 
         return OllamaLLM(config)
+    elif provider == "ai21":
+        from ..llm.ai21 import AI21LLM
+
+        return AI21LLM(config)
     elif provider == "cohere":
         from ..llm.cohere import CohereLLM
 
@@ -123,7 +129,7 @@ def _make_llm(
     else:
         raise ValueError(
             f"Unknown provider: {provider!r}. "
-            "Use 'openai', 'anthropic', 'ollama', 'cohere', 'mistral', 'gemini', "
+            "Use 'openai', 'anthropic', 'ollama', 'ai21', 'cohere', 'mistral', 'gemini', "
             "'bedrock', 'groq', 'deepseek', 'openrouter', 'together', 'fireworks', "
             "'moonshot', 'zhipu', or 'cloudflare'."
         )
