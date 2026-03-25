@@ -291,3 +291,105 @@ class TestBedrockLLM:
             async for t in llm.stream_with_messages([{"role": "user", "content": "hi"}]):
                 tokens.append(t)
             assert tokens == ["AWS!"]
+
+
+# ------------------------------------------------------------------ #
+# AI21LLM
+# ------------------------------------------------------------------ #
+
+
+class TestAI21LLM:
+    def test_import_error_without_ai21(self):
+        with patch.dict("sys.modules", {"ai21": None}):
+            from synapsekit.llm.ai21 import AI21LLM
+
+            llm = AI21LLM(make_config("ai21", "jamba-1.5-mini"))
+            llm._client = None
+            with pytest.raises(ImportError, match="ai21"):
+                llm._get_client()
+
+    @pytest.mark.asyncio
+    async def test_stream_yields_tokens(self):
+        chunk1 = MagicMock()
+        chunk1.choices = [MagicMock(delta=MagicMock(content="Hello"))]
+        chunk1.usage = None
+        chunk2 = MagicMock()
+        chunk2.choices = [MagicMock(delta=MagicMock(content=" world"))]
+        chunk2.usage = None
+
+        async def mock_stream():
+            yield chunk1
+            yield chunk2
+
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = AsyncMock(return_value=mock_stream())
+        mock_ai21 = MagicMock()
+        mock_ai21.AsyncAI21Client.return_value = mock_client
+
+        with patch.dict("sys.modules", {"ai21": mock_ai21}):
+            from synapsekit.llm.ai21 import AI21LLM
+
+            llm = AI21LLM(make_config("ai21", "jamba-1.5-mini"))
+            tokens = []
+            async for t in llm.stream("hi"):
+                tokens.append(t)
+            assert tokens == ["Hello", " world"]
+
+    @pytest.mark.asyncio
+    async def test_stream_with_messages_passes_kwargs(self):
+        chunk = MagicMock()
+        chunk.choices = [MagicMock(delta=MagicMock(content="ok"))]
+        chunk.usage = None
+
+        async def mock_stream():
+            yield chunk
+
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = AsyncMock(return_value=mock_stream())
+        mock_ai21 = MagicMock()
+        mock_ai21.AsyncAI21Client.return_value = mock_client
+
+        with patch.dict("sys.modules", {"ai21": mock_ai21}):
+            from synapsekit.llm.ai21 import AI21LLM
+
+            llm = AI21LLM(make_config("ai21", "jamba-1.5-mini"))
+            tokens = []
+            async for t in llm.stream_with_messages(
+                [{"role": "user", "content": "hi"}],
+                temperature=0.8,
+                max_tokens=100,
+            ):
+                tokens.append(t)
+            assert tokens == ["ok"]
+            kwargs = mock_client.chat.completions.create.call_args[1]
+            assert kwargs["temperature"] == 0.8
+            assert kwargs["max_tokens"] == 100
+
+    @pytest.mark.asyncio
+    async def test_call_with_tools(self):
+        tc = MagicMock()
+        tc.id = "call_123"
+        tc.function.name = "get_weather"
+        tc.function.arguments = '{"location": "NYC"}'
+        msg = MagicMock()
+        msg.tool_calls = [tc]
+        msg.content = None
+        resp = MagicMock()
+        resp.choices = [MagicMock(message=msg)]
+        resp.usage = MagicMock(prompt_tokens=10, completion_tokens=5)
+
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = AsyncMock(return_value=resp)
+        mock_ai21 = MagicMock()
+        mock_ai21.AsyncAI21Client.return_value = mock_client
+
+        with patch.dict("sys.modules", {"ai21": mock_ai21}):
+            from synapsekit.llm.ai21 import AI21LLM
+
+            llm = AI21LLM(make_config("ai21", "jamba-1.5-mini"))
+            result = await llm.call_with_tools(
+                [{"role": "user", "content": "weather in NYC"}],
+                [{"type": "function", "function": {"name": "get_weather", "parameters": {}}}],
+            )
+            assert result["tool_calls"][0]["name"] == "get_weather"
+            assert result["tool_calls"][0]["arguments"] == {"location": "NYC"}
