@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from ..base import BaseTool, ToolResult
 from ...llm.multimodal import ImageContent, MultimodalMessage
+from ..base import BaseTool, ToolResult
 
 
 class ImageAnalysisTool(BaseTool):
@@ -73,6 +73,7 @@ class ImageAnalysisTool(BaseTool):
             if img_path:
                 image = ImageContent.from_file(img_path)
             else:
+                assert img_url is not None
                 image = ImageContent.from_url(img_url, media_type=media_type)
 
             message = MultimodalMessage(text=analysis_prompt, images=[image])
