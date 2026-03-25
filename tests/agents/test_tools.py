@@ -9,6 +9,7 @@ import pytest
 from synapsekit.agents.base import ToolResult
 from synapsekit.agents.tools.calculator import CalculatorTool
 from synapsekit.agents.tools.file_read import FileReadTool
+from synapsekit.agents.tools.image_analysis import ImageAnalysisTool
 from synapsekit.agents.tools.python_repl import PythonREPLTool
 from synapsekit.agents.tools.sql_query import SQLQueryTool
 from synapsekit.agents.tools.web_search import WebSearchTool
@@ -318,3 +319,43 @@ class TestSQLQueryTool:
         tool = SQLQueryTool(db)
         r = await tool.run(query="SELECT * FROM users WHERE age > 100")
         assert "no rows" in r.output.lower()
+
+
+# ------------------------------------------------------------------ #
+# ImageAnalysisTool
+# ------------------------------------------------------------------ #
+
+
+class DummyLLM:
+    def __init__(self, provider: str = "openai"):
+        class _Config:
+            def __init__(self, provider: str):
+                self.provider = provider
+
+        self.config = _Config(provider)
+
+    async def generate_with_messages(self, messages, **kwargs):
+        return "A cat sitting on a chair."
+
+
+class TestImageAnalysisTool:
+    @pytest.mark.asyncio
+    async def test_requires_input(self):
+        tool = ImageAnalysisTool(DummyLLM())
+        r = await tool.run()
+        assert r.is_error
+
+    @pytest.mark.asyncio
+    async def test_analyze_from_path(self, tmp_path):
+        img = tmp_path / "img.png"
+        img.write_bytes(b"fake-image")
+        tool = ImageAnalysisTool(DummyLLM())
+        r = await tool.run(path=str(img))
+        assert not r.is_error
+        assert "cat" in r.output.lower()
+
+    @pytest.mark.asyncio
+    async def test_analyze_from_url(self):
+        tool = ImageAnalysisTool(DummyLLM())
+        r = await tool.run(image_url="https://example.com/image.png")
+        assert not r.is_error
