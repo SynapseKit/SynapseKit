@@ -291,3 +291,76 @@ class TestBedrockLLM:
             async for t in llm.stream_with_messages([{"role": "user", "content": "hi"}]):
                 tokens.append(t)
             assert tokens == ["AWS!"]
+
+
+# ------------------------------------------------------------------ #
+# LlamaCppLLM
+# ------------------------------------------------------------------ #
+
+
+class TestLlamaCppLLM:
+    def test_import_error_without_llama_cpp(self):
+        with patch.dict("sys.modules", {"llama_cpp": None}):
+            from synapsekit.llm.llamacpp import LlamaCppLLM
+
+            llm = LlamaCppLLM(make_config("llamacpp", "model.gguf"))
+            llm._client = None
+            with pytest.raises(ImportError, match="llama-cpp-python"):
+                llm._get_client()
+
+    @pytest.mark.asyncio
+    async def test_stream_yields_tokens(self):
+        chunks = [
+            {"choices": [{"delta": {"content": "Hello"}}]},
+            {"choices": [{"delta": {"content": " world"}}]},
+        ]
+
+        def mock_stream(**kw):
+            for c in chunks:
+                yield c
+
+        mock_client = MagicMock()
+        mock_client.create_chat_completion = MagicMock(return_value=mock_stream())
+        mock_llama = MagicMock()
+        mock_llama.Llama.return_value = mock_client
+
+        with patch.dict("sys.modules", {"llama_cpp": mock_llama}):
+            from synapsekit.llm.llamacpp import LlamaCppLLM
+
+            llm = LlamaCppLLM(make_config("llamacpp", "ignored"), model_path="model.gguf")
+            tokens = []
+            async for t in llm.stream("hi"):
+                tokens.append(t)
+            assert tokens == ["Hello", " world"]
+            mock_llama.Llama.assert_called_with(model_path="model.gguf")
+
+    @pytest.mark.asyncio
+    async def test_stream_with_messages_passes_kwargs(self):
+        chunks = [{"choices": [{"delta": {"content": "ok"}}]}]
+
+        def mock_stream(**kw):
+            for c in chunks:
+                yield c
+
+        mock_client = MagicMock()
+        mock_client.create_chat_completion = MagicMock(return_value=mock_stream())
+        mock_llama = MagicMock()
+        mock_llama.Llama.return_value = mock_client
+
+        with patch.dict("sys.modules", {"llama_cpp": mock_llama}):
+            from synapsekit.llm.llamacpp import LlamaCppLLM
+
+            llm = LlamaCppLLM(make_config("llamacpp", "model.gguf"))
+            tokens = []
+            async for t in llm.stream_with_messages(
+                [{"role": "user", "content": "hi"}],
+                temperature=0.9,
+                top_p=0.4,
+                max_tokens=55,
+            ):
+                tokens.append(t)
+            assert tokens == ["ok"]
+            kwargs = mock_client.create_chat_completion.call_args[1]
+            assert kwargs["temperature"] == 0.9
+            assert kwargs["top_p"] == 0.4
+            assert kwargs["max_tokens"] == 55
