@@ -12,6 +12,7 @@ from synapsekit.agents.tools.file_read import FileReadTool
 from synapsekit.agents.tools.image_analysis import ImageAnalysisTool
 from synapsekit.agents.tools.python_repl import PythonREPLTool
 from synapsekit.agents.tools.sql_query import SQLQueryTool
+from synapsekit.agents.tools.text_to_speech import TextToSpeechTool
 from synapsekit.agents.tools.web_search import WebSearchTool
 
 # ------------------------------------------------------------------ #
@@ -359,3 +360,51 @@ class TestImageAnalysisTool:
         tool = ImageAnalysisTool(DummyLLM())
         r = await tool.run(image_url="https://example.com/image.png")
         assert not r.is_error
+
+
+# ------------------------------------------------------------------ #
+# TextToSpeechTool
+# ------------------------------------------------------------------ #
+
+
+class DummyTTSResponse:
+    def stream_to_file(self, path):
+        from pathlib import Path
+
+        Path(path).write_bytes(b"audio-data")
+
+
+class DummySpeech:
+    def create(self, **kwargs):
+        return DummyTTSResponse()
+
+
+class DummyAudio:
+    def __init__(self):
+        self.speech = DummySpeech()
+
+
+class DummyOpenAI:
+    def __init__(self, api_key=None):
+        self.audio = DummyAudio()
+
+
+class TestTextToSpeechTool:
+    @pytest.mark.asyncio
+    async def test_requires_api_key(self, tmp_path):
+        with patch.dict("os.environ", {}, clear=True):
+            tool = TextToSpeechTool(api_key=None)
+            r = await tool.run(text="hello", output_path=str(tmp_path / "out.mp3"))
+            assert r.is_error
+
+    @pytest.mark.asyncio
+    async def test_synthesis(self, tmp_path):
+        mock_module = MagicMock()
+        mock_module.OpenAI = DummyOpenAI
+        with patch.dict("sys.modules", {"openai": mock_module}):
+            with patch.dict("os.environ", {"OPENAI_API_KEY": "sk-test"}):
+                tool = TextToSpeechTool()
+                out = tmp_path / "out.mp3"
+                r = await tool.run(text="hello", output_path=str(out))
+                assert not r.is_error
+                assert out.exists()
