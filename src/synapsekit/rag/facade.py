@@ -70,6 +70,10 @@ def _make_llm(
         from ..llm.ollama import OllamaLLM
 
         return OllamaLLM(config)
+    elif provider == "llamacpp":
+        from ..llm.llamacpp import LlamaCppLLM
+
+        return LlamaCppLLM(config)
     elif provider == "cohere":
         from ..llm.cohere import CohereLLM
 
@@ -123,7 +127,7 @@ def _make_llm(
     else:
         raise ValueError(
             f"Unknown provider: {provider!r}. "
-            "Use 'openai', 'anthropic', 'ollama', 'cohere', 'mistral', 'gemini', "
+            "Use 'openai', 'anthropic', 'ollama', 'llamacpp', 'cohere', 'mistral', "
             "'bedrock', 'groq', 'deepseek', 'openrouter', 'together', 'fireworks', "
             "'moonshot', 'zhipu', or 'cloudflare'."
         )

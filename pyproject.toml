@@ -48,6 +48,7 @@ faiss = ["faiss-cpu>=1.7"]
 qdrant = ["qdrant-client>=1.9"]
 pinecone = ["pinecone>=3.0"]
 ollama = ["ollama>=0.2"]
+llamacpp = ["llama-cpp-python>=0.2"]
 cohere = ["cohere>=5.0"]
 mistral = ["mistralai>=1.0"]
 gemini = ["google-generativeai>=0.7"]
@@ -83,6 +84,7 @@ all = [
     "qdrant-client>=1.9",
     "pinecone>=3.0",
     "ollama>=0.2",
+    "llama-cpp-python>=0.2",
     "cohere>=5.0",
     "mistralai>=1.0",
     "google-generativeai>=0.7",
