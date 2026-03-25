@@ -75,7 +75,7 @@ class LlamaCppLLM(BaseLLM):
         max_tokens = kw.get("max_tokens", self.config.max_tokens)
         top_p = kw.get("top_p", self._top_p)
 
-        q: queue.Queue[str | None] = queue.Queue()
+        q: queue.Queue[dict[str, Any] | None] = queue.Queue()
         error: list[BaseException] = []
 
         def _produce() -> None:
