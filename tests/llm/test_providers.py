@@ -393,3 +393,190 @@ class TestAI21LLM:
             )
             assert result["tool_calls"][0]["name"] == "get_weather"
             assert result["tool_calls"][0]["arguments"] == {"location": "NYC"}
+
+
+# ------------------------------------------------------------------ #
+# DatabricksLLM
+# ------------------------------------------------------------------ #
+
+
+class TestDatabricksLLM:
+    def test_import_error_without_openai(self):
+        with patch.dict("sys.modules", {"openai": None}):
+            from synapsekit.llm.databricks import DatabricksLLM
+
+            llm = DatabricksLLM(make_config("databricks", "dbrx-instruct"), workspace_url="https://db.example.com")
+            llm._client = None
+            with pytest.raises(ImportError, match="openai"):
+                llm._get_client()
+
+    def test_missing_workspace_url_raises(self):
+        mock_openai = MagicMock()
+        with patch.dict("sys.modules", {"openai": mock_openai}):
+            from synapsekit.llm.databricks import DatabricksLLM
+
+            llm = DatabricksLLM(make_config("databricks", "dbrx-instruct"))
+            with patch.dict("os.environ", {"DATABRICKS_HOST": ""}, clear=False):
+                with pytest.raises(ValueError, match="workspace"):
+                    llm._get_client()
+
+    @pytest.mark.asyncio
+    async def test_stream_yields_tokens(self):
+        chunk1 = MagicMock()
+        chunk1.choices = [MagicMock(delta=MagicMock(content="Hello"))]
+        chunk1.usage = None
+        chunk2 = MagicMock()
+        chunk2.choices = [MagicMock(delta=MagicMock(content=" world"))]
+        chunk2.usage = None
+
+        async def mock_stream():
+            yield chunk1
+            yield chunk2
+
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = AsyncMock(return_value=mock_stream())
+
+        from synapsekit.llm.databricks import DatabricksLLM
+
+        llm = DatabricksLLM(make_config("databricks", "dbrx-instruct"), workspace_url="https://db.example.com")
+        llm._client = mock_client
+        tokens = []
+        async for t in llm.stream("hi"):
+            tokens.append(t)
+        assert tokens == ["Hello", " world"]
+
+    @pytest.mark.asyncio
+    async def test_stream_with_messages_passes_kwargs(self):
+        chunk = MagicMock()
+        chunk.choices = [MagicMock(delta=MagicMock(content="ok"))]
+        chunk.usage = None
+
+        async def mock_stream():
+            yield chunk
+
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = AsyncMock(return_value=mock_stream())
+
+        from synapsekit.llm.databricks import DatabricksLLM
+
+        llm = DatabricksLLM(make_config("databricks", "dbrx-instruct"), workspace_url="https://db.example.com")
+        llm._client = mock_client
+        tokens = []
+        async for t in llm.stream_with_messages(
+            [{"role": "user", "content": "hi"}],
+            temperature=0.8,
+            max_tokens=100,
+        ):
+            tokens.append(t)
+        assert tokens == ["ok"]
+        kwargs = mock_client.chat.completions.create.call_args[1]
+        assert kwargs["temperature"] == 0.8
+        assert kwargs["max_tokens"] == 100
+
+    @pytest.mark.asyncio
+    async def test_call_with_tools(self):
+        tc = MagicMock()
+        tc.id = "call_456"
+        tc.function.name = "get_weather"
+        tc.function.arguments = '{"location": "SF"}'
+        msg = MagicMock()
+        msg.tool_calls = [tc]
+        msg.content = None
+        resp = MagicMock()
+        resp.choices = [MagicMock(message=msg)]
+        resp.usage = MagicMock(prompt_tokens=10, completion_tokens=5)
+
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = AsyncMock(return_value=resp)
+
+        from synapsekit.llm.databricks import DatabricksLLM
+
+        llm = DatabricksLLM(make_config("databricks", "dbrx-instruct"), workspace_url="https://db.example.com")
+        llm._client = mock_client
+        result = await llm.call_with_tools(
+            [{"role": "user", "content": "weather in SF"}],
+            [{"type": "function", "function": {"name": "get_weather", "parameters": {}}}],
+        )
+        assert result["tool_calls"][0]["name"] == "get_weather"
+
+
+# ------------------------------------------------------------------ #
+# ErnieLLM
+# ------------------------------------------------------------------ #
+
+
+class TestErnieLLM:
+    def test_import_error_without_erniebot(self):
+        with patch.dict("sys.modules", {"erniebot": None}):
+            from synapsekit.llm.ernie import ErnieLLM
+
+            llm = ErnieLLM(make_config("ernie", "ernie-3.5"))
+            llm._configured = False
+            with pytest.raises(ImportError, match="erniebot"):
+                llm._configure()
+
+    @pytest.mark.asyncio
+    async def test_stream_yields_tokens(self):
+        chunk1 = MagicMock()
+        chunk1.get_result.return_value = "Hello"
+        chunk2 = MagicMock()
+        chunk2.get_result.return_value = " world"
+
+        async def mock_stream():
+            yield chunk1
+            yield chunk2
+
+        mock_erniebot = MagicMock()
+        mock_erniebot.ChatCompletion.acreate.return_value = mock_stream()
+
+        with patch.dict("sys.modules", {"erniebot": mock_erniebot}):
+            from synapsekit.llm.ernie import ErnieLLM
+
+            llm = ErnieLLM(make_config("ernie", "ernie-3.5"))
+            llm._configured = True
+            tokens = []
+            async for t in llm.stream("hi"):
+                tokens.append(t)
+            assert tokens == ["Hello", " world"]
+
+    @pytest.mark.asyncio
+    async def test_call_with_tools_returns_function_call(self):
+        resp = MagicMock()
+        resp.function_call = {"name": "get_weather", "arguments": '{"city": "Beijing"}'}
+        resp.get_result.return_value = None
+
+        mock_erniebot = MagicMock()
+        mock_erniebot.ChatCompletion.acreate = AsyncMock(return_value=resp)
+
+        with patch.dict("sys.modules", {"erniebot": mock_erniebot}):
+            from synapsekit.llm.ernie import ErnieLLM
+
+            llm = ErnieLLM(make_config("ernie", "ernie-3.5"))
+            llm._configured = True
+            result = await llm.call_with_tools(
+                [{"role": "user", "content": "weather in Beijing"}],
+                [{"type": "function", "function": {"name": "get_weather", "parameters": {}}}],
+            )
+            assert result["tool_calls"][0]["name"] == "get_weather"
+            assert result["tool_calls"][0]["arguments"] == {"city": "Beijing"}
+
+    @pytest.mark.asyncio
+    async def test_call_with_tools_returns_content(self):
+        resp = MagicMock()
+        resp.function_call = None
+        resp.get_result.return_value = "The weather is sunny."
+
+        mock_erniebot = MagicMock()
+        mock_erniebot.ChatCompletion.acreate = AsyncMock(return_value=resp)
+
+        with patch.dict("sys.modules", {"erniebot": mock_erniebot}):
+            from synapsekit.llm.ernie import ErnieLLM
+
+            llm = ErnieLLM(make_config("ernie", "ernie-3.5"))
+            llm._configured = True
+            result = await llm.call_with_tools(
+                [{"role": "user", "content": "weather in Beijing"}],
+                [{"type": "function", "function": {"name": "get_weather", "parameters": {}}}],
+            )
+            assert result["content"] == "The weather is sunny."
+            assert result["tool_calls"] is None

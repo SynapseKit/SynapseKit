@@ -72,9 +72,10 @@ class ImageAnalysisTool(BaseTool):
         try:
             if img_path:
                 image = ImageContent.from_file(img_path)
-            else:
-                assert img_url is not None
+            elif img_url:
                 image = ImageContent.from_url(img_url, media_type=media_type)
+            else:
+                return ToolResult(output="", error="Provide an image path or image URL.")
 
             message = MultimodalMessage(text=analysis_prompt, images=[image])
             provider = getattr(getattr(self._llm, "config", None), "provider", "openai")

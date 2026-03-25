@@ -79,8 +79,6 @@ class TextToSpeechTool(BaseTool):
             return ToolResult(output="", error="No OPENAI_API_KEY configured.")
 
         try:
-            import asyncio
-
             import openai
         except ImportError:
             return ToolResult(
@@ -102,7 +100,10 @@ class TextToSpeechTool(BaseTool):
             response.stream_to_file(str(target))
 
         try:
-            await asyncio.to_thread(_synthesize)
+            import asyncio
+
+            loop = asyncio.get_running_loop()
+            await loop.run_in_executor(None, _synthesize)
         except Exception as e:
             return ToolResult(output="", error=f"Text-to-speech failed: {e}")
 

@@ -7,20 +7,35 @@ from typing import Any
 from .base import BaseLLM, LLMConfig
 
 
-class AI21LLM(BaseLLM):
-    """AI21 Labs Jamba models with async streaming and function calling."""
+class DatabricksLLM(BaseLLM):
+    """Databricks Foundation Model APIs with OpenAI-compatible endpoint."""
 
-    def __init__(self, config: LLMConfig) -> None:
+    def __init__(
+        self,
+        config: LLMConfig,
+        workspace_url: str | None = None,
+    ) -> None:
         super().__init__(config)
         self._client = None
+        self._workspace_url = workspace_url
 
     def _get_client(self):
         if self._client is None:
             try:
-                from ai21 import AsyncAI21Client
+                from openai import AsyncOpenAI
             except ImportError:
-                raise ImportError("ai21 package required: pip install synapsekit[ai21]") from None
-            self._client = AsyncAI21Client(api_key=self.config.api_key)
+                raise ImportError(
+                    "openai package required: pip install synapsekit[openai]"
+                ) from None
+            import os
+
+            workspace = self._workspace_url or os.environ.get("DATABRICKS_HOST", "")
+            if not workspace:
+                raise ValueError(
+                    "Databricks workspace URL required. Set DATABRICKS_HOST or pass workspace_url."
+                )
+            base_url = f"{workspace.rstrip('/')}/serving-endpoints"
+            self._client = AsyncOpenAI(api_key=self.config.api_key, base_url=base_url)
         return self._client
 
     async def stream(self, prompt: str, **kw) -> AsyncGenerator[str]:
@@ -33,14 +48,14 @@ class AI21LLM(BaseLLM):
 
     async def stream_with_messages(self, messages: list[dict], **kw) -> AsyncGenerator[str]:
         client = self._get_client()
-        response = await client.chat.completions.create(
+        stream = await client.chat.completions.create(
             model=self.config.model,
             messages=messages,
             temperature=kw.get("temperature", self.config.temperature),
             max_tokens=kw.get("max_tokens", self.config.max_tokens),
             stream=True,
         )
-        async for chunk in response:
+        async for chunk in stream:
             if chunk.choices and chunk.choices[0].delta.content:
                 yield chunk.choices[0].delta.content
             if hasattr(chunk, "usage") and chunk.usage:
