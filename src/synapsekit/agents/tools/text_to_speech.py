@@ -80,6 +80,7 @@ class TextToSpeechTool(BaseTool):
 
         try:
             import asyncio
+
             import openai
         except ImportError:
             return ToolResult(
