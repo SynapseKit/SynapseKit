@@ -23,6 +23,7 @@ from .regex_tool import RegexTool
 from .sentiment import SentimentAnalysisTool
 from .shell import ShellTool
 from .slack import SlackTool
+from .speech_to_text import SpeechToTextTool
 from .sql_query import SQLQueryTool
 from .sql_schema import SQLSchemaInspectionTool
 from .summarization import SummarizationTool
@@ -60,6 +61,7 @@ __all__ = [
     "SentimentAnalysisTool",
     "ShellTool",
     "SlackTool",
+    "SpeechToTextTool",
     "SQLQueryTool",
     "SQLSchemaInspectionTool",
     "SummarizationTool",
