@@ -19,9 +19,7 @@ class AI21LLM(BaseLLM):
             try:
                 from ai21 import AsyncAI21Client
             except ImportError:
-                raise ImportError(
-                    "ai21 package required: pip install synapsekit[ai21]"
-                ) from None
+                raise ImportError("ai21 package required: pip install synapsekit[ai21]") from None
             self._client = AsyncAI21Client(api_key=self.config.api_key)
         return self._client
 
