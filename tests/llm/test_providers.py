@@ -312,13 +312,15 @@ class TestDatabricksLLM:
                 llm._get_client()
 
     def test_missing_workspace_url_raises(self):
-        from synapsekit.llm.databricks import DatabricksLLM
+        mock_openai = MagicMock()
+        with patch.dict("sys.modules", {"openai": mock_openai}):
+            from synapsekit.llm.databricks import DatabricksLLM
 
-        llm = DatabricksLLM(make_config("databricks", "dbrx-instruct"))
-        llm._client = None
-        with patch("os.environ.get", return_value=""):
-            with pytest.raises(ValueError, match="workspace URL"):
-                llm._get_client()
+            llm = DatabricksLLM(make_config("databricks", "dbrx-instruct"))
+            llm._client = None
+            with patch("os.environ.get", return_value=""):
+                with pytest.raises(ValueError, match="workspace URL"):
+                    llm._get_client()
 
     @pytest.mark.asyncio
     async def test_stream_yields_tokens(self):
