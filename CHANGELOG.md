@@ -7,6 +7,28 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.4.0] — 2026-03-25
+
+### Added
+
+- **AI21 Labs provider** — `AI21LLM` for Jamba models (`jamba-1.5-mini`, `jamba-1.5-large`) with 256K context; streaming and native function calling; auto-detected from `jamba-*` model prefix
+- **Databricks provider** — `DatabricksLLM` for Databricks Foundation Model APIs (DBRX, Llama 3.1, Mixtral); OpenAI-compatible endpoint; resolves workspace URL from `DATABRICKS_HOST`; auto-detected from `dbrx-*`/`databricks-*`
+- **Baidu ERNIE provider** — `ErnieLLM` for ERNIE Bot (`ernie-4.0`, `ernie-3.5`, `ernie-speed`, `ernie-lite`, `ernie-tiny-8k`); native function calling; auto-detected from `ernie-*`
+- **llama.cpp provider** — `LlamaCppLLM` for local GGUF models with no API key; queue+thread true streaming; GPU offload via `n_gpu_layers`; auto-detected from `llamacpp` provider string
+- **ImageAnalysisTool** — analyze images with any multimodal LLM; accepts local file paths or public URLs; supports OpenAI and Anthropic message formats
+- **TextToSpeechTool** — convert text to speech audio via OpenAI TTS; supports `alloy`, `echo`, `fable`, `onyx`, `nova`, `shimmer` voices and mp3/wav/flac/aac formats
+- **SpeechToTextTool** — transcribe audio files via OpenAI Whisper API or local Whisper model; delegates to `AudioLoader`
+- **APIBuilderTool** — build and execute API calls from OpenAPI specs or natural-language intent; LLM-assisted operation selection; supports inline specs, spec URLs, and explicit path/method
+- **GoogleCalendarTool** — create, list, and delete Google Calendar events via Google Calendar API v3 with Application Default Credentials
+- **AWSLambdaTool** — invoke AWS Lambda functions with RequestResponse/Event/DryRun invocation types; standard boto3 credential resolution
+- 222 new tests (1327 total)
+
+### Changed
+
+- `RAG` facade auto-detection extended with `moonshot-*`, `glm-*`, `jamba-*`, `@cf/*`, `@hf/*`, `dbrx-*`/`databricks-*`, `ernie-*` model prefixes
+
+---
+
 ## [1.0.0] — 2026-03-18
 
 ### Added
