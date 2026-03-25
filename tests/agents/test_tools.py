@@ -11,6 +11,7 @@ from synapsekit.agents.tools.calculator import CalculatorTool
 from synapsekit.agents.tools.file_read import FileReadTool
 from synapsekit.agents.tools.image_analysis import ImageAnalysisTool
 from synapsekit.agents.tools.python_repl import PythonREPLTool
+from synapsekit.agents.tools.speech_to_text import SpeechToTextTool
 from synapsekit.agents.tools.sql_query import SQLQueryTool
 from synapsekit.agents.tools.text_to_speech import TextToSpeechTool
 from synapsekit.agents.tools.web_search import WebSearchTool
@@ -408,3 +409,36 @@ class TestTextToSpeechTool:
                 r = await tool.run(text="hello", output_path=str(out))
                 assert not r.is_error
                 assert out.exists()
+
+
+# ------------------------------------------------------------------ #
+# SpeechToTextTool
+# ------------------------------------------------------------------ #
+
+
+class DummyAudioLoader:
+    def __init__(self, *args, **kwargs):
+        pass
+
+    async def aload(self):
+        from synapsekit.loaders.base import Document
+
+        return [Document(text="hello world")]
+
+
+class TestSpeechToTextTool:
+    @pytest.mark.asyncio
+    async def test_requires_path(self):
+        tool = SpeechToTextTool()
+        r = await tool.run(path="")
+        assert r.is_error
+
+    @pytest.mark.asyncio
+    async def test_transcription(self, tmp_path):
+        audio = tmp_path / "audio.mp3"
+        audio.write_bytes(b"fake-audio")
+        with patch("synapsekit.agents.tools.speech_to_text.AudioLoader", DummyAudioLoader):
+            tool = SpeechToTextTool()
+            r = await tool.run(path=str(audio))
+            assert not r.is_error
+            assert "hello world" in r.output
