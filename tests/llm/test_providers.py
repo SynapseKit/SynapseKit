@@ -291,3 +291,92 @@ class TestBedrockLLM:
             async for t in llm.stream_with_messages([{"role": "user", "content": "hi"}]):
                 tokens.append(t)
             assert tokens == ["AWS!"]
+
+
+# ------------------------------------------------------------------ #
+# ErnieLLM
+# ------------------------------------------------------------------ #
+
+
+class TestErnieLLM:
+    def test_import_error_without_erniebot(self):
+        with patch.dict("sys.modules", {"erniebot": None}):
+            from synapsekit.llm.ernie import ErnieLLM
+
+            llm = ErnieLLM(make_config("ernie", "ernie-3.5"))
+            llm._configured = False
+            with pytest.raises(ImportError, match="erniebot"):
+                llm._configure()
+
+    @pytest.mark.asyncio
+    async def test_stream_yields_tokens(self):
+        mock_chunk1 = MagicMock()
+        mock_chunk1.get_result.return_value = "Hello"
+        mock_chunk2 = MagicMock()
+        mock_chunk2.get_result.return_value = " world"
+
+        async def mock_acreate(**kw):
+            for chunk in [mock_chunk1, mock_chunk2]:
+                yield chunk
+
+        mock_erniebot = MagicMock()
+        mock_erniebot.ChatCompletion.acreate = mock_acreate
+
+        with patch.dict("sys.modules", {"erniebot": mock_erniebot}):
+            from synapsekit.llm.ernie import ErnieLLM
+
+            llm = ErnieLLM(make_config("ernie", "ernie-3.5"))
+            tokens = []
+            async for t in llm.stream("Hello"):
+                tokens.append(t)
+            assert tokens == ["Hello", " world"]
+
+    @pytest.mark.asyncio
+    async def test_call_with_tools_returns_function_call(self):
+        mock_response = MagicMock()
+        mock_response.function_call = {
+            "name": "get_weather",
+            "arguments": '{"city": "Beijing"}',
+        }
+        mock_response.get_result.return_value = None
+
+        async def mock_acreate(**kw):
+            return mock_response
+
+        mock_erniebot = MagicMock()
+        mock_erniebot.ChatCompletion.acreate = mock_acreate
+
+        with patch.dict("sys.modules", {"erniebot": mock_erniebot}):
+            from synapsekit.llm.ernie import ErnieLLM
+
+            llm = ErnieLLM(make_config("ernie", "ernie-3.5"))
+            result = await llm._call_with_tools_impl(
+                [{"role": "user", "content": "What's the weather?"}],
+                [{"type": "function", "function": {"name": "get_weather", "parameters": {}}}],
+            )
+            assert result["tool_calls"] is not None
+            assert result["tool_calls"][0]["name"] == "get_weather"
+            assert result["tool_calls"][0]["arguments"] == {"city": "Beijing"}
+
+    @pytest.mark.asyncio
+    async def test_call_with_tools_returns_content(self):
+        mock_response = MagicMock()
+        mock_response.function_call = None
+        mock_response.get_result.return_value = "The weather is sunny."
+
+        async def mock_acreate(**kw):
+            return mock_response
+
+        mock_erniebot = MagicMock()
+        mock_erniebot.ChatCompletion.acreate = mock_acreate
+
+        with patch.dict("sys.modules", {"erniebot": mock_erniebot}):
+            from synapsekit.llm.ernie import ErnieLLM
+
+            llm = ErnieLLM(make_config("ernie", "ernie-3.5"))
+            result = await llm._call_with_tools_impl(
+                [{"role": "user", "content": "What's the weather?"}],
+                [{"type": "function", "function": {"name": "get_weather", "parameters": {}}}],
+            )
+            assert result["content"] == "The weather is sunny."
+            assert result["tool_calls"] is None
