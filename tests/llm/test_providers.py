@@ -312,11 +312,11 @@ class TestDatabricksLLM:
                 llm._get_client()
 
     def test_missing_workspace_url_raises(self):
-        with patch.dict("os.environ", {"DATABRICKS_HOST": ""}, clear=False):
-            from synapsekit.llm.databricks import DatabricksLLM
+        from synapsekit.llm.databricks import DatabricksLLM
 
-            llm = DatabricksLLM(make_config("databricks", "dbrx-instruct"))
-            llm._client = None
+        llm = DatabricksLLM(make_config("databricks", "dbrx-instruct"))
+        llm._client = None
+        with patch("os.environ.get", return_value=""):
             with pytest.raises(ValueError, match="workspace URL"):
                 llm._get_client()
 
