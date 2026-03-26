@@ -5,6 +5,7 @@ from .structured import generate_structured
 
 __all__ = [
     "AI21LLM",
+    "AlephAlphaLLM",
     "AnthropicLLM",
     "AzureOpenAILLM",
     "BaseLLM",
@@ -40,6 +41,7 @@ __all__ = [
 
 _PROVIDERS = {
     "AI21LLM": ".ai21",
+    "AlephAlphaLLM": ".aleph_alpha",
     "OpenAILLM": ".openai",
     "AzureOpenAILLM": ".azure_openai",
     "AnthropicLLM": ".anthropic",
