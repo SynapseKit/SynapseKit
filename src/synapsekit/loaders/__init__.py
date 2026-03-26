@@ -16,6 +16,7 @@ __all__ = [
     "TextLoader",
     "VideoLoader",
     "WebLoader",
+    "YAMLLoader",
 ]
 
 _LOADERS = {
@@ -28,6 +29,7 @@ _LOADERS = {
     "DocxLoader": ".docx",
     "AudioLoader": ".audio",
     "VideoLoader": ".video",
+    "YAMLLoader": ".yaml_loader",
 }
 
 
