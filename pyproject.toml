@@ -61,6 +61,7 @@ video = ["openai>=1.0"]
 excel = ["openpyxl>=3.1"]
 pptx = ["python-pptx>=0.6"]
 docx = ["python-docx>=1.0"]
+yaml = ["PyYAML>=6.0"]
 http = ["aiohttp>=3.9"]
 search = ["duckduckgo-search>=6.0"]
 tavily = ["tavily-python>=0.3"]
@@ -94,6 +95,7 @@ all = [
     "duckduckgo-search>=6.0",
     "tavily-python>=0.3",
     "youtube-search-python>=1.6",
+    "PyYAML>=6.0",
     "mcp>=1.0",
     "redis>=5.0",
     "google-cloud-aiplatform>=1.38",
