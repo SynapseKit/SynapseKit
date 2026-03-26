@@ -588,3 +588,51 @@ class TestErnieLLM:
             )
             assert result["content"] == "The weather is sunny."
             assert result["tool_calls"] is None
+
+
+# ------------------------------------------------------------------ #
+# AlephAlphaLLM
+# ------------------------------------------------------------------ #
+
+
+class TestAlephAlphaLLM:
+    def test_import_error_without_client(self):
+        with patch.dict("sys.modules", {"aleph_alpha_client": None}):
+            from synapsekit.llm.aleph_alpha import AlephAlphaLLM
+
+            llm = AlephAlphaLLM(make_config("aleph-alpha", "luminous-supreme"))
+            llm._client = None
+            with pytest.raises(ImportError, match="aleph-alpha-client"):
+                llm._get_client()
+
+    @pytest.mark.asyncio
+    async def test_stream_yields_tokens(self):
+        mock_stream_item_1 = MagicMock()
+        mock_stream_item_1.completion = "Hello"
+        mock_stream_item_2 = MagicMock()
+        mock_stream_item_2.completion = " world"
+
+        async def mock_complete_with_streaming(request, model):
+            yield mock_stream_item_1
+            yield mock_stream_item_2
+
+        mock_client = MagicMock()
+        mock_client.complete_with_streaming = mock_complete_with_streaming
+
+        mock_async_client_class = MagicMock()
+        mock_async_client_class.return_value = mock_client
+
+        mock_aa = MagicMock()
+        mock_aa.AsyncClient = mock_async_client_class
+        mock_aa.CompletionRequest = MagicMock()
+        mock_aa.Prompt = MagicMock()
+        mock_aa.Prompt.from_text = MagicMock(return_value="text_prompt")
+
+        with patch.dict("sys.modules", {"aleph_alpha_client": mock_aa}):
+            from synapsekit.llm.aleph_alpha import AlephAlphaLLM
+
+            llm = AlephAlphaLLM(make_config("aleph-alpha", "luminous-supreme"))
+            tokens = []
+            async for t in llm.stream("Hello"):
+                tokens.append(t)
+            assert tokens == ["Hello", " world"]
