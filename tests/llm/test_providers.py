@@ -588,3 +588,60 @@ class TestErnieLLM:
             )
             assert result["content"] == "The weather is sunny."
             assert result["tool_calls"] is None
+
+
+# ------------------------------------------------------------------ #
+# MinimaxLLM
+# ------------------------------------------------------------------ #
+
+
+class TestMinimaxLLM:
+    def test_import_error_without_httpx(self):
+        with patch.dict("sys.modules", {"httpx": None}):
+            from synapsekit.llm.minimax import MinimaxLLM
+
+            llm = MinimaxLLM(make_config("minimax", "abab5.5-chat"), group_id="group")
+            llm._client = None
+            with pytest.raises(ImportError, match="httpx"):
+                llm._get_client()
+
+    def test_missing_group_id_raises(self):
+        mock_httpx = MagicMock()
+        with patch.dict("sys.modules", {"httpx": mock_httpx}):
+            from synapsekit.llm.minimax import MinimaxLLM
+
+            llm = MinimaxLLM(make_config("minimax", "abab5.5-chat"))
+            llm._client = None
+            with patch("os.environ.get", return_value=None):
+                with pytest.raises(ValueError, match="group_id"):
+                    llm._get_client()
+
+    @pytest.mark.asyncio
+    async def test_stream_yields_tokens(self):
+        async def mock_aiter_lines():
+            yield 'data: {"choices": [{"delta": {"content": "Hello"}}]}'
+            yield 'data: {"choices": [{"delta": {"content": " world"}}]}'
+            yield "data: [DONE]"
+
+        mock_response = MagicMock()
+        mock_response.raise_for_status = MagicMock()
+        mock_response.aiter_lines = mock_aiter_lines
+
+        mock_stream_cm = AsyncMock()
+        mock_stream_cm.__aenter__.return_value = mock_response
+        mock_stream_cm.__aexit__.return_value = None
+
+        mock_client = MagicMock()
+        mock_client.stream.return_value = mock_stream_cm
+
+        mock_httpx = MagicMock()
+        mock_httpx.AsyncClient.return_value = mock_client
+
+        with patch.dict("sys.modules", {"httpx": mock_httpx}):
+            from synapsekit.llm.minimax import MinimaxLLM
+
+            llm = MinimaxLLM(make_config("minimax", "abab5.5-chat"), group_id="group")
+            tokens = []
+            async for t in llm.stream("Hello"):
+                tokens.append(t)
+            assert tokens == ["Hello", " world"]

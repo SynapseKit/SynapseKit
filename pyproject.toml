@@ -71,6 +71,7 @@ vertex = ["google-cloud-aiplatform>=1.38"]
 cloudflare = ["httpx>=0.27"]
 llamacpp = ["llama-cpp-python>=0.2"]
 ernie = ["erniebot>=0.5"]
+minimax = ["httpx>=0.27"]
 serve = ["fastapi>=0.110", "uvicorn[standard]>=0.29"]
 postgres = ["psycopg[binary]>=3.1"]
 all = [

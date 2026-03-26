@@ -37,6 +37,8 @@ def _make_llm(
             provider = "deepseek"
         elif model.startswith("moonshot"):
             provider = "moonshot"
+        elif model.startswith("abab") or model.startswith("minimax"):
+            provider = "minimax"
         elif model.startswith("glm"):
             provider = "zhipu"
         elif model.startswith("jamba"):
@@ -120,6 +122,10 @@ def _make_llm(
         from ..llm.moonshot import MoonshotLLM
 
         return MoonshotLLM(config)
+    elif provider == "minimax":
+        from ..llm.minimax import MinimaxLLM
+
+        return MinimaxLLM(config)
     elif provider == "zhipu":
         from ..llm.zhipu import ZhipuLLM
 
@@ -149,7 +155,7 @@ def _make_llm(
             f"Unknown provider: {provider!r}. "
             "Use 'openai', 'anthropic', 'ollama', 'ai21', 'cohere', 'mistral', 'gemini', "
             "'bedrock', 'groq', 'deepseek', 'openrouter', 'together', 'fireworks', "
-            "'moonshot', 'zhipu', 'cloudflare', 'databricks', 'ernie', or 'llamacpp'."
+            "'moonshot', 'minimax', 'zhipu', 'cloudflare', 'databricks', 'ernie', or 'llamacpp'."
         )
 
 
