@@ -7,6 +7,24 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.4.1] — 2026-03-27
+
+### Added
+
+- **MinimaxLLM provider** — `MinimaxLLM` for Minimax API with SSE streaming; requires `group_id`; auto-detected from `minimax-*` model prefix
+- **AlephAlphaLLM provider** — `AlephAlphaLLM` for Aleph Alpha Luminous and Pharia models; httpx-based streaming; auto-detected from `luminous-*`/`pharia-*` prefixes
+- **YAMLLoader** — load YAML files (list-of-objects or single-object) into `Document` list; configurable `text_key` and `metadata_keys`; uses `yaml.safe_load()`
+- **BingSearchTool** — web search via Bing Web Search API v7; auth via `Ocp-Apim-Subscription-Key`; supports `query`, `count` (capped at 50), `market`
+- **WolframAlphaTool** — computational queries via Wolfram Alpha API; short-answer endpoint; thread-executor async wrapper
+- **Usage examples** — `examples/` directory with 5 runnable scripts: RAG quickstart, agent with tools, graph workflow, multi-provider, caching & retries
+- 30 new tests (1357 total)
+
+### Fixed
+
+- Added missing return type annotations to `_loader_for()` in `loaders/directory.py` and `__getattr__()` in `loaders/__init__.py`
+
+---
+
 ## [1.4.0] — 2026-03-25
 
 ### Added

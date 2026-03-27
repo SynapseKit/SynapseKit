@@ -1,6 +1,6 @@
 # SynapseKit vs LangChain — Feature Parity Report
 
-> Updated for v1.4.0 (2026-03-25)
+> Updated for v1.4.1 (2026-03-27)
 
 ## Phase 1: RAG Pipelines
 
@@ -22,7 +22,7 @@
 
 | Capability | LangChain | SynapseKit | Gap |
 |---|---|---|---|
-| Providers | 38+ | 23 (OpenAI, Anthropic, Ollama, Cohere, Mistral, Gemini, Vertex AI, Bedrock, Azure OpenAI, Groq, DeepSeek, OpenRouter, Together, Fireworks, Perplexity, Cerebras, Moonshot, Zhipu, Cloudflare, AI21, Databricks, ERNIE, llama.cpp) | Covers all major ones |
+| Providers | 38+ | 25 (OpenAI, Anthropic, Ollama, Cohere, Mistral, Gemini, Vertex AI, Bedrock, Azure OpenAI, Groq, DeepSeek, OpenRouter, Together, Fireworks, Perplexity, Cerebras, Moonshot, Zhipu, Cloudflare, AI21, Databricks, ERNIE, llama.cpp, Minimax, Aleph Alpha) | Covers all major ones |
 | Unified interface | Yes (invoke/stream/batch) | Yes (generate/stream) | At parity |
 | Auto-detect from model name | No (explicit class) | Yes | SynapseKit advantage |
 | Caching | Built-in (memory, SQLite, Redis) | In-memory LRU + SQLite + Filesystem + Redis | At parity |

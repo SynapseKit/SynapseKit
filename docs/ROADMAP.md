@@ -243,9 +243,21 @@
 - [x] RAG facade auto-detection extended: `moonshot-*`, `glm-*`, `jamba-*`, `@cf/*`, `@hf/*`, `dbrx-*`/`databricks-*`, `ernie-*`
 - [x] 23 providers, 38 tools, 14 loaders, 20 retrieval strategies, 9 memory backends, 1327 tests passing
 
-## v1.5.0 (planned)
+## v1.4.1 — Community Providers, Tools & Examples (2026-03-27)
 
-- [ ] EU compliance extensions — `DataResidency`, `ConsentManager`, `RetentionPolicy`, `RightToErasure`, EU AI Act risk classifier
-- [ ] `EvalCI` GitHub Action — block deploys on eval metric regressions
-- [ ] Streaming agent steps — token-level streaming for individual agent reasoning steps
+- [x] `MinimaxLLM` — Minimax API with SSE streaming; requires `group_id`; auto-detected from `minimax-*` prefix
+- [x] `AlephAlphaLLM` — Aleph Alpha Luminous and Pharia models; auto-detected from `luminous-*`/`pharia-*` prefixes
+- [x] `YAMLLoader` — load YAML files (list-of-objects or single-object) into Documents; `yaml.safe_load()` based
+- [x] `BingSearchTool` — Bing Web Search API v7; auth via `Ocp-Apim-Subscription-Key`
+- [x] `WolframAlphaTool` — computational queries via Wolfram Alpha short-answer API
+- [x] `examples/` directory — 5 runnable scripts: RAG quickstart, agent tools, graph workflow, multi-provider, caching & retries
+- [x] Fixed missing return type annotations in loader helper functions
+- [x] 25 providers, 40 tools, 15 loaders, 20 retrieval strategies, 9 memory backends, 1357 tests passing
+
+## v1.5.0 (planned — Q2 2026)
+
+- [ ] **EU Compliance Platform** — `DataResidency` (enforce data never leaves a region), `ConsentManager`, `RetentionPolicy`, `RightToErasure` (GDPR primitives)
+- [ ] **EU AI Act risk classifier** — `@risk_level("high")` decorator, risk classification API, automated compliance reports
+- [ ] **`EvalCI` GitHub Action** — block deploys on eval metric regressions; cross-version faithfulness/relevancy tracking
+- [ ] **Cost analytics dashboard** — optimization recommendations, usage forecasting, per-pipeline cost attribution UI
 - [ ] Advanced graph features — time-travel debugging, graph diffing, branch/merge workflows
