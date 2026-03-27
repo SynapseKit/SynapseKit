@@ -82,6 +82,7 @@ from .agents import (
     WebScraperTool,
     WebSearchTool,
     WikipediaTool,
+    WolframAlphaTool,
     WorkerAgent,
     YouTubeSearchTool,
     tool,
@@ -376,6 +377,7 @@ __all__ = [
     "WebScraperTool",
     "WebSearchTool",
     "VectorSearchTool",
+    "WolframAlphaTool",
     "WikipediaTool",
     "YouTubeSearchTool",
     # Text splitters

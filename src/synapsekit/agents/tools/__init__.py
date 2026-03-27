@@ -35,6 +35,7 @@ from .vector_search import VectorSearchTool
 from .web_scraper import WebScraperTool
 from .web_search import WebSearchTool
 from .wikipedia import WikipediaTool
+from .wolfram import WolframAlphaTool
 from .youtube_search import YouTubeSearchTool
 
 __all__ = [
@@ -74,6 +75,7 @@ __all__ = [
     "VectorSearchTool",
     "WebScraperTool",
     "WebSearchTool",
+    "WolframAlphaTool",
     "WikipediaTool",
     "YouTubeSearchTool",
 ]
