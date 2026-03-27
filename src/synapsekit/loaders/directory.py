@@ -6,7 +6,7 @@ from glob import glob
 from .base import Document
 
 
-def _loader_for(path: str):
+def _loader_for(path: str) -> object:
     ext = os.path.splitext(path)[1].lower()
     if ext == ".pdf":
         from .pdf import PDFLoader

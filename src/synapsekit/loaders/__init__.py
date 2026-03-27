@@ -31,7 +31,7 @@ _LOADERS = {
 }
 
 
-def __getattr__(name: str):
+def __getattr__(name: str) -> object:
     if name in _LOADERS:
         import importlib
 
