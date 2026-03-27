@@ -233,6 +233,7 @@ __all__ = [
     "QUALITY_TABLE",
     "FallbackChain",
     "FallbackChainConfig",
+    "AlephAlphaLLM",
     "AzureOpenAILLM",
     "CerebrasLLM",
     "CloudflareLLM",
@@ -505,6 +506,7 @@ _LAZY_IMPORTS = {
     "TogetherLLM": "llm.together",
     "MinimaxLLM": "llm.minimax",
     "MoonshotLLM": "llm.moonshot",
+    "AlephAlphaLLM": "llm.aleph_alpha",
     "ZhipuLLM": "llm.zhipu",
     "CloudflareLLM": "llm.cloudflare",
     # Checkpointers
