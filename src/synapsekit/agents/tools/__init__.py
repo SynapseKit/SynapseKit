@@ -1,6 +1,7 @@
 from .api_builder import APIBuilderTool
 from .arxiv_search import ArxivSearchTool
 from .aws_lambda import AWSLambdaTool
+from .bing_search import BingSearchTool
 from .brave_search import BraveSearchTool
 from .calculator import CalculatorTool
 from .datetime_tool import DateTimeTool
@@ -41,6 +42,7 @@ __all__ = [
     "APIBuilderTool",
     "ArxivSearchTool",
     "AWSLambdaTool",
+    "BingSearchTool",
     "BraveSearchTool",
     "CalculatorTool",
     "DateTimeTool",
