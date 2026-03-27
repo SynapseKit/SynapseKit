@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import os
 from glob import glob
+from typing import Any
 
 from .base import Document
 
 
-def _loader_for(path: str):
+def _loader_for(path: str) -> Any:
     ext = os.path.splitext(path)[1].lower()
     if ext == ".pdf":
         from .pdf import PDFLoader
