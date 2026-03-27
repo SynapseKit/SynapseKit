@@ -100,8 +100,6 @@ class BingSearchTool(BaseTool):
 
             return ToolResult(output="\n\n".join(results))
         except httpx.HTTPStatusError as e:
-            return ToolResult(
-                output="", error=f"Bing Search API error: {e.response.status_code}"
-            )
+            return ToolResult(output="", error=f"Bing Search API error: {e.response.status_code}")
         except Exception as e:
             return ToolResult(output="", error=f"Bing Search error: {e}")
