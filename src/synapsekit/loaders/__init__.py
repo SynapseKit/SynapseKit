@@ -1,3 +1,5 @@
+from typing import Any
+
 from .base import Document
 from .markdown import MarkdownLoader
 from .text import StringLoader, TextLoader
@@ -16,6 +18,7 @@ __all__ = [
     "TextLoader",
     "VideoLoader",
     "WebLoader",
+    "YAMLLoader",
 ]
 
 _LOADERS = {
@@ -28,10 +31,11 @@ _LOADERS = {
     "DocxLoader": ".docx",
     "AudioLoader": ".audio",
     "VideoLoader": ".video",
+    "YAMLLoader": ".yaml_loader",
 }
 
 
-def __getattr__(name: str):
+def __getattr__(name: str) -> Any:
     if name in _LOADERS:
         import importlib
 

@@ -24,6 +24,7 @@ from .agents import (
     AgentStep,
     ArxivSearchTool,
     BaseTool,
+    BingSearchTool,
     BraveSearchTool,
     CalculatorTool,
     ContentFilter,
@@ -234,12 +235,14 @@ __all__ = [
     "QUALITY_TABLE",
     "FallbackChain",
     "FallbackChainConfig",
+    "AlephAlphaLLM",
     "AzureOpenAILLM",
     "CerebrasLLM",
     "CloudflareLLM",
     "DeepSeekLLM",
     "FireworksLLM",
     "GroqLLM",
+    "MinimaxLLM",
     "MoonshotLLM",
     "OpenRouterLLM",
     "PerplexityLLM",
@@ -345,6 +348,7 @@ __all__ = [
     "MCPToolAdapter",
     # Built-in tools
     "ArxivSearchTool",
+    "BingSearchTool",
     "BraveSearchTool",
     "CalculatorTool",
     "DateTimeTool",
@@ -479,6 +483,7 @@ __all__ = [
     "AudioLoader",
     "VideoLoader",
     "ImageLoader",
+    "YAMLLoader",
     # Plugins
     "PluginRegistry",
     # API stability markers
@@ -504,7 +509,9 @@ _LAZY_IMPORTS = {
     "OpenRouterLLM": "llm.openrouter",
     "PerplexityLLM": "llm.perplexity",
     "TogetherLLM": "llm.together",
+    "MinimaxLLM": "llm.minimax",
     "MoonshotLLM": "llm.moonshot",
+    "AlephAlphaLLM": "llm.aleph_alpha",
     "ZhipuLLM": "llm.zhipu",
     "CloudflareLLM": "llm.cloudflare",
     # Checkpointers
@@ -516,6 +523,7 @@ _LAZY_IMPORTS = {
     "DocxLoader": "loaders.docx",
     "ExcelLoader": "loaders.excel",
     "PowerPointLoader": "loaders.pptx",
+    "YAMLLoader": "loaders.yaml_loader",
 }
 
 
