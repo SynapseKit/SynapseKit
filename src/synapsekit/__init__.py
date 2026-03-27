@@ -477,6 +477,7 @@ __all__ = [
     "AudioLoader",
     "VideoLoader",
     "ImageLoader",
+    "YAMLLoader",
     # Plugins
     "PluginRegistry",
     # API stability markers
@@ -514,6 +515,7 @@ _LAZY_IMPORTS = {
     "DocxLoader": "loaders.docx",
     "ExcelLoader": "loaders.excel",
     "PowerPointLoader": "loaders.pptx",
+    "YAMLLoader": "loaders.yaml_loader",
 }
 
 
