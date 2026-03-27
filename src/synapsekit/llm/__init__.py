@@ -5,6 +5,7 @@ from .structured import generate_structured
 
 __all__ = [
     "AI21LLM",
+    "AlephAlphaLLM",
     "AnthropicLLM",
     "AzureOpenAILLM",
     "BaseLLM",
@@ -25,6 +26,7 @@ __all__ = [
     "LLMConfig",
     "LlamaCppLLM",
     "MistralLLM",
+    "MinimaxLLM",
     "MoonshotLLM",
     "OllamaLLM",
     "OpenAILLM",
@@ -40,6 +42,7 @@ __all__ = [
 
 _PROVIDERS = {
     "AI21LLM": ".ai21",
+    "AlephAlphaLLM": ".aleph_alpha",
     "OpenAILLM": ".openai",
     "AzureOpenAILLM": ".azure_openai",
     "AnthropicLLM": ".anthropic",
@@ -58,6 +61,7 @@ _PROVIDERS = {
     "LlamaCppLLM": ".llamacpp",
     "VertexAILLM": ".vertex_ai",
     "MoonshotLLM": ".moonshot",
+    "MinimaxLLM": ".minimax",
     "ZhipuLLM": ".zhipu",
     "CloudflareLLM": ".cloudflare",
     "DatabricksLLM": ".databricks",
