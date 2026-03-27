@@ -1,3 +1,5 @@
+from typing import Any
+
 from .base import Document
 from .markdown import MarkdownLoader
 from .text import StringLoader, TextLoader
@@ -33,7 +35,7 @@ _LOADERS = {
 }
 
 
-def __getattr__(name: str):
+def __getattr__(name: str) -> Any:
     if name in _LOADERS:
         import importlib
 
