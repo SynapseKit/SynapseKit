@@ -116,6 +116,7 @@ dev = [
     "deptry>=0.16",
     "pre-commit>=3.7",
     "pydantic>=2.12.5",
+    "httpx>=0.27",
 ]
 
 [tool.hatch.build.targets.wheel]
