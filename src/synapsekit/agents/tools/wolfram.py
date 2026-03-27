@@ -79,7 +79,7 @@ def _extract_short_answer(response: Any) -> str | None:
     if results is not None:
         for result in results:
             text = getattr(result, "text", None)
-            if text:
+            if isinstance(text, str) and text:
                 return text
 
     pods = getattr(response, "pods", None)
@@ -90,7 +90,7 @@ def _extract_short_answer(response: Any) -> str | None:
                 continue
             for subpod in subpods:
                 text = getattr(subpod, "text", None)
-                if text:
+                if isinstance(text, str) and text:
                     return text
 
     return None
