@@ -37,10 +37,14 @@ def _make_llm(
             provider = "deepseek"
         elif model.startswith("moonshot"):
             provider = "moonshot"
+        elif model.startswith("abab") or model.startswith("minimax"):
+            provider = "minimax"
         elif model.startswith("glm"):
             provider = "zhipu"
         elif model.startswith("jamba"):
             provider = "ai21"
+        elif model.startswith("luminous") or model.startswith("pharia"):
+            provider = "aleph-alpha"
         elif model.startswith("@cf/") or model.startswith("@hf/"):
             provider = "cloudflare"
         elif model.startswith("dbrx") or model.startswith("databricks"):
@@ -120,6 +124,10 @@ def _make_llm(
         from ..llm.moonshot import MoonshotLLM
 
         return MoonshotLLM(config)
+    elif provider == "minimax":
+        from ..llm.minimax import MinimaxLLM
+
+        return MinimaxLLM(config)
     elif provider == "zhipu":
         from ..llm.zhipu import ZhipuLLM
 
@@ -140,6 +148,10 @@ def _make_llm(
         from ..llm.ernie import ErnieLLM
 
         return ErnieLLM(config)
+    elif provider == "aleph-alpha":
+        from ..llm.aleph_alpha import AlephAlphaLLM
+
+        return AlephAlphaLLM(config)
     elif provider == "llamacpp":
         from ..llm.llamacpp import LlamaCppLLM
 
@@ -149,7 +161,7 @@ def _make_llm(
             f"Unknown provider: {provider!r}. "
             "Use 'openai', 'anthropic', 'ollama', 'ai21', 'cohere', 'mistral', 'gemini', "
             "'bedrock', 'groq', 'deepseek', 'openrouter', 'together', 'fireworks', "
-            "'moonshot', 'zhipu', 'cloudflare', 'databricks', 'ernie', or 'llamacpp'."
+            "'moonshot', 'minimax', 'zhipu', 'cloudflare', 'databricks', 'ernie', 'aleph-alpha', or 'llamacpp'."
         )
 
 
