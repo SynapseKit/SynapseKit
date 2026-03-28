@@ -48,7 +48,6 @@ async def test_google_search_success(mock_serpapi):
 
 @pytest.mark.asyncio
 async def test_google_search_no_api_key():
-    import os
 
     tool = GoogleSearchTool(api_key=None)
     with patch.dict("os.environ", clear=True):
