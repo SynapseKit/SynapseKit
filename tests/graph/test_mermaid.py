@@ -55,8 +55,22 @@ def test_mermaid_conditional_edge_labels():
     )
     g.set_entry_point("router")
     mermaid = _compile(g).get_mermaid()
-    assert "router -->|yes| yes_node" in mermaid
-    assert "router -->|no| no_node" in mermaid
+    assert "router -.->|yes| yes_node" in mermaid
+    assert "router -.->|no| no_node" in mermaid
+
+
+def test_mermaid_conditional_edge_includes_condition_fn_name_when_available():
+    def route(state):
+        return "yes"
+
+    g = StateGraph()
+    g.add_node("router", _noop)
+    g.add_node("yes_node", _noop)
+    g.add_conditional_edge("router", route, {"yes": "yes_node"})
+    g.set_entry_point("router")
+
+    mermaid = _compile(g).get_mermaid()
+    assert "router -.->|route:yes| yes_node" in mermaid
 
 
 def test_mermaid_conditional_edge_end_label():
@@ -65,7 +79,7 @@ def test_mermaid_conditional_edge_end_label():
     g.add_conditional_edge("a", lambda s: "stop", {"stop": END})
     g.set_entry_point("a")
     mermaid = _compile(g).get_mermaid()
-    assert "a -->|stop| __end__" in mermaid
+    assert "a -.->|stop| __end__" in mermaid
 
 
 def test_mermaid_multinode_graph():
