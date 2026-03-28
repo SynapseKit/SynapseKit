@@ -121,7 +121,8 @@ Drag-and-drop graph editor exporting SynapseKit configs. Non-engineers build and
 
 | Action | Issues | Status |
 |---|---|---|
-| Do — high-impact core gaps | ~10 (#2, #8, #24, #25, #65, #99, #114, #150, #174, #216) | Planned for v1.5.0 |
+| Do — high-impact core gaps | ~8 (#2, #24, #25, #65, #99, #114, #150, #216) | Planned for v1.5.0 |
+| Already done (community PRs) | #8 (YAMLLoader), #13 (examples), #15 (type hints), #174 (HuggingFace), #188 (Minimax), #189 (Aleph Alpha), #193 (DynamoDB), #195 (Memcached), #198 (GoogleSearch), #201 (Bing), #203 (Wolfram), #207 (SQLQuery), #255 (graph versioning) | Closed v1.4.1–v1.4.2 |
 | Open to community — "good first issue" + "help wanted" | ~110 (loaders, vector stores, providers) | Labeled |
 | Close as won't-fix — niche/dead platforms | ~20 (Basecamp, Roam, Logseq, Vald, Tigris, ORC, etc.) | Closed |
 | Defer to v2.0.0 — complex graph features | ~10 (#251, #255, #254, etc.) | Open, deferred |
