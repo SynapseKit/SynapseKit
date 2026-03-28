@@ -199,6 +199,62 @@ async def test_stream_with_checkpointer():
     assert cp.load("s1") is not None
 
 
+async def test_resume_applies_direct_migration():
+    async def finish(state):
+        return {"done": True}
+
+    cp = InMemoryCheckpointer()
+    cp.save("m1", 1, {"old_name": "Dhruv", "__synapsekit_graph_version": "1"})
+
+    def v1_to_v2(state):
+        return {"name": state["old_name"]}
+
+    g = StateGraph(version="2", migrations={"1": v1_to_v2})
+    g.add_node("finish", finish)
+    g.set_entry_point("finish").set_finish_point("finish")
+
+    result = await g.compile().resume("m1", cp)
+    assert result["name"] == "Dhruv"
+    assert result["done"] is True
+
+
+async def test_resume_applies_migration_chain():
+    async def finish(state):
+        return {"done": True}
+
+    cp = InMemoryCheckpointer()
+    cp.save("m2", 1, {"name": "Dhruv", "__synapsekit_graph_version": "1"})
+
+    def v1_to_v2(state):
+        return "2", {"full_name": state["name"]}
+
+    def v2_to_v3(state):
+        return "3", {"display_name": state["full_name"]}
+
+    g = StateGraph(version="3", migrations={"1": v1_to_v2, "2": v2_to_v3})
+    g.add_node("finish", finish)
+    g.set_entry_point("finish").set_finish_point("finish")
+
+    result = await g.compile().resume("m2", cp)
+    assert result["display_name"] == "Dhruv"
+    assert result["done"] is True
+
+
+async def test_resume_missing_migration_raises():
+    async def finish(state):
+        return {"done": True}
+
+    cp = InMemoryCheckpointer()
+    cp.save("m3", 1, {"name": "Dhruv", "__synapsekit_graph_version": "1"})
+
+    g = StateGraph(version="2", migrations={})
+    g.add_node("finish", finish)
+    g.set_entry_point("finish").set_finish_point("finish")
+
+    with pytest.raises(GraphRuntimeError, match="No migration path"):
+        await g.compile().resume("m3", cp)
+
+
 # ------------------------------------------------------------------ #
 # Top-level exports
 # ------------------------------------------------------------------ #
