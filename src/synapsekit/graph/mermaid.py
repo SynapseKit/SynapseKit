@@ -9,6 +9,13 @@ if TYPE_CHECKING:
 from .state import END
 
 
+def _conditional_edge_label(condition_fn: object, branch_label: str) -> str:
+    fn_name = getattr(condition_fn, "__name__", "")
+    if fn_name and fn_name != "<lambda>":
+        return f"{fn_name}:{branch_label}"
+    return branch_label
+
+
 def get_mermaid(graph: StateGraph) -> str:
     """Return a Mermaid flowchart string for the compiled graph."""
     lines = ["flowchart TD"]
@@ -27,7 +34,8 @@ def get_mermaid(graph: StateGraph) -> str:
         elif isinstance(edge, ConditionalEdge):
             for label, dst in edge.mapping.items():
                 dst_rendered = "__end__" if dst == END else dst
-                lines.append(f"    {edge.src} -->|{label}| {dst_rendered}")
+                rendered_label = _conditional_edge_label(edge.condition_fn, label)
+                lines.append(f"    {edge.src} -.->|{rendered_label}| {dst_rendered}")
 
     return "\n".join(lines)
 
