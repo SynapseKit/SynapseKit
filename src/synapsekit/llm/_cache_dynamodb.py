@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import json
 import logging
@@ -17,9 +17,8 @@ except ImportError:
 
 
 class DynamoDBCacheBackend(AsyncLRUCache):
-    """
-    LLM Cache backend using AWS DynamoDB.
-    
+    """LLM Cache backend using AWS DynamoDB.
+
     Expects a DynamoDB table with a primary partition key (default: `cache_key`)
     and columns `value` and optionally `ttl` for DynamoDB time-to-live functionality.
     """
@@ -30,7 +29,7 @@ class DynamoDBCacheBackend(AsyncLRUCache):
         region_name: str | None = None,
         ttl_seconds: int | None = None,
         partition_key: str = "cache_key",
-        **kwargs: Any
+        **kwargs: Any,
     ) -> None:
         if not BOTO3_AVAILABLE:
             raise ImportError(
@@ -38,7 +37,7 @@ class DynamoDBCacheBackend(AsyncLRUCache):
                 "Install it with `pip install boto3` or `pip install synapsekit[aws]`."
             )
 
-        # Skip AsyncLRUCache init as we don't need in-memory storage, 
+        # Skip AsyncLRUCache init as we don't need in-memory storage,
         # but we maintain hit/miss counters.
         self.hits: int = 0
         self.misses: int = 0
@@ -65,19 +64,20 @@ class DynamoDBCacheBackend(AsyncLRUCache):
             logger.error(f"DynamoDB cache get error for key {key}: {e}")
         except json.JSONDecodeError as e:
             logger.error(f"Failed to decode cached value for key {key}: {e}")
-            
+
         self.misses += 1
         return None
 
     def put(self, key: str, value: Any) -> None:
         try:
-            item = {
+            item: dict[str, Any] = {
                 self.partition_key: key,
                 "value": json.dumps(value),
             }
             if self.ttl_seconds is not None:
                 import time
-                item["ttl"] = int(time.time()) + self.ttl_seconds
+
+                item["ttl"] = int(time.time()) + int(self.ttl_seconds)
 
             self._table.put_item(Item=item)
         except ClientError as e:
@@ -86,8 +86,7 @@ class DynamoDBCacheBackend(AsyncLRUCache):
             logger.error(f"Failed to serialize value for caching: {e}")
 
     def clear(self) -> None:
-        """
-        Warning: clear() is generally not recommended for DynamoDB as it requires 
+        """Warning: clear() is generally not recommended for DynamoDB as it requires
         scanning and deleting items one by one, or deleting and recreating the table.
         This implementation relies on TTL for eviction.
         """
@@ -100,6 +99,6 @@ class DynamoDBCacheBackend(AsyncLRUCache):
         """Approximate item count via table metadata."""
         try:
             self._table.reload()
-            return self._table.item_count
+            return int(self._table.item_count)
         except ClientError:
             return 0
