@@ -19,11 +19,7 @@ def mock_boto3_resource():
 
 @pytest.mark.skipif(not BOTO3_AVAILABLE, reason="boto3 not installed")
 def test_dynamodb_cache_init(mock_boto3_resource):
-    cache = DynamoDBCacheBackend(
-        table_name="test-table",
-        region_name="us-east-1",
-        ttl_seconds=3600
-    )
+    cache = DynamoDBCacheBackend(table_name="test-table", region_name="us-east-1", ttl_seconds=3600)
     assert cache.table_name == "test-table"
     assert cache.partition_key == "cache_key"
     assert cache.ttl_seconds == 3600
@@ -33,10 +29,7 @@ def test_dynamodb_cache_init(mock_boto3_resource):
 def test_dynamodb_cache_get_hit(mock_boto3_resource):
     cache = DynamoDBCacheBackend(table_name="test-table")
     mock_boto3_resource.get_item.return_value = {
-        "Item": {
-            "cache_key": "test_key",
-            "value": json.dumps({"result": "cached_data"})
-        }
+        "Item": {"cache_key": "test_key", "value": json.dumps({"result": "cached_data"})}
     }
 
     result = cache.get("test_key")
