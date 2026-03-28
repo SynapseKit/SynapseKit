@@ -78,6 +78,7 @@ minimax = ["httpx>=0.27"]
 serve = ["fastapi>=0.110", "uvicorn[standard]>=0.29"]
 postgres = ["psycopg[binary]>=3.1"]
 wolfram = ["wolframalpha>=5.0"]
+dynamodb = ["boto3>=1.34"]
 all = [
     "openai>=1.0",
     "anthropic>=0.25",
