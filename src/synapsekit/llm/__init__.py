@@ -7,6 +7,7 @@ from .structured import generate_structured
 __all__ = [
     "AI21LLM",
     "AlephAlphaLLM",
+    "MemcachedCacheBackend",
     "AnthropicLLM",
     "AsyncLRUCache",
     "AzureOpenAILLM",
@@ -46,6 +47,7 @@ __all__ = [
 _PROVIDERS = {
     "AI21LLM": ".ai21",
     "AlephAlphaLLM": ".aleph_alpha",
+    "MemcachedCacheBackend": "._cache_memcached",
     "OpenAILLM": ".openai",
     "AzureOpenAILLM": ".azure_openai",
     "AnthropicLLM": ".anthropic",
