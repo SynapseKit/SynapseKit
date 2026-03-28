@@ -1,4 +1,4 @@
-from .api_builder import APIBuilderTool
+﻿from .api_builder import APIBuilderTool
 from .arxiv_search import ArxivSearchTool
 from .aws_lambda import AWSLambdaTool
 from .bing_search import BingSearchTool
@@ -12,6 +12,7 @@ from .file_read import FileReadTool
 from .file_write import FileWriteTool
 from .github_api import GitHubAPITool
 from .google_calendar import GoogleCalendarTool
+from .google_search import GoogleSearchTool
 from .graphql import GraphQLTool
 from .http_request import HTTPRequestTool
 from .human_input import HumanInputTool
@@ -54,6 +55,7 @@ __all__ = [
     "FileWriteTool",
     "GitHubAPITool",
     "GoogleCalendarTool",
+    "GoogleSearchTool",
     "GraphQLTool",
     "HTTPRequestTool",
     "HumanInputTool",

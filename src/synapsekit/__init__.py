@@ -1,4 +1,4 @@
-"""
+﻿"""
 SynapseKit — lightweight, async-first RAG framework.
 
 3-line happy path:
