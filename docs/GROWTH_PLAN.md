@@ -1,6 +1,6 @@
 # SynapseKit — Competitive Growth Plan
 
-> Created 2026-03-19 | Updated: 2026-03-27 | Current: v1.4.1
+> Created 2026-03-19 | Updated: 2026-03-28 | Current: v1.4.2
 
 ## The Core Problem
 
@@ -10,21 +10,21 @@ SynapseKit needs **blue-ocean moves** — features that redefine what an LLM fra
 
 ---
 
-## Where We Stand Today (v1.4.1)
+## Where We Stand Today (v1.4.2)
 
 | Metric | Count |
 |---|---|
-| LLM providers | 25 |
+| LLM providers | 26 |
 | Retrieval strategies | 20 (exceeds LangChain) |
-| Built-in tools | 40 |
+| Built-in tools | 41 |
 | Document loaders | 15 |
 | Text splitters | 6 |
 | Memory backends | 9 (exceeds LangChain) |
-| Cache backends | 4 |
+| Cache backends | 6 |
 | Graph checkpointers | 5 |
 | Multi-agent patterns | 3 |
 | Evaluation metrics | 3 |
-| Tests passing | 1357 |
+| Tests passing | 1368 |
 | Hard runtime deps | 2 |
 
 **Parity status:** At or exceeding LangChain on retrieval, memory, graph workflows, evaluation, observability, and cost intelligence. Fewer loaders but covers 80/20 of real usage. Now includes local inference (llama.cpp) with zero API cost.

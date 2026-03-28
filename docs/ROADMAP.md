@@ -254,6 +254,16 @@
 - [x] Fixed missing return type annotations in loader helper functions
 - [x] 25 providers, 40 tools, 15 loaders, 20 retrieval strategies, 9 memory backends, 1357 tests passing
 
+## v1.4.2 — HuggingFace, Cache Backends, Graph Versioning (2026-03-28)
+
+- [x] `HuggingFaceLLM` — Hugging Face Inference API via `AsyncInferenceClient`; serverless and Dedicated Endpoint support
+- [x] `DynamoDBCacheBackend` — serverless LLM response caching on AWS DynamoDB with TTL support
+- [x] `MemcachedCacheBackend` — distributed LLM caching via aiomcache with TTL
+- [x] `GoogleSearchTool` — Google web search via SerpAPI
+- [x] Graph versioning — `StateGraph(version=, migrations={})` + `CompiledGraph.resume()` migration chains
+- [x] `SQLQueryTool` improved — parameterized queries via `params` dict, `max_rows` cap
+- [x] 26 providers, 41 tools, 15 loaders, 20 retrieval strategies, 9 memory backends, 6 cache backends, 1368 tests passing
+
 ## v1.5.0 (planned — Q2 2026)
 
 - [ ] **EU Compliance Platform** — `DataResidency` (enforce data never leaves a region), `ConsentManager`, `RetentionPolicy`, `RightToErasure` (GDPR primitives)

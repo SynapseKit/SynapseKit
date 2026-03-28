@@ -1,11 +1,11 @@
 # SynapseKit — Commercialization Strategy
 
-> Updated for v1.4.1 (2026-03-27)
+> Updated for v1.4.2 (2026-03-28)
 
-## Current State (v1.4.1)
+## Current State (v1.4.2)
 
-- 1,357 tests passing, CI pipeline, linting, type checking
-- 25 LLM providers, 15 loaders, 5 vector stores, 40 tools
+- 1,368 tests passing, CI pipeline, linting, type checking
+- 26 LLM providers, 15 loaders, 5 vector stores, 41 tools, 6 cache backends
 - 20 retrieval strategies (exceeds LangChain), 9 memory backends
 - Agents (ReAct + function calling), graph workflows (cycles, HITL, subgraphs, typed state)
 - Multi-agent (Supervisor, Handoff, Crew) + MCP + A2A protocol
@@ -93,7 +93,7 @@ Drag-and-drop graph editor exporting SynapseKit configs. Non-engineers build and
 
 ## Open-Core Boundary
 
-**Pivot point: v1.4.1** — v1.4.1 and below is fully open source. v1.5.0+ introduces commercial products built on top of the open core.
+**Pivot point: v1.4.2** — v1.4.2 and below is fully open source. v1.5.0+ introduces commercial products built on top of the open core.
 
 | Layer | Open source (free) | Commercial (paid) |
 |---|---|---|
@@ -110,7 +110,7 @@ Drag-and-drop graph editor exporting SynapseKit configs. Non-engineers build and
 
 | Priority | Move | Timeline | Revenue type |
 |---|---|---|---|
-| **Done** | `synapsekit serve` + cost tracking + eval CLI + compliance primitives | v1.2.0–v1.4.1 | Open source (adoption) |
+| **Done** | `synapsekit serve` + cost tracking + eval CLI + compliance primitives | v1.2.0–v1.4.2 | Open source (adoption) |
 | **Now** | EU compliance platform (GDPR toolkit, DataResidency) + EvalCI Action | v1.5.0 (Q2 2026) | Freemium SaaS |
 | **Next** | Fintech vertical + edge runtime | v1.6.0 (Q3 2026) | Enterprise licensing |
 | **Future** | Visual builder + managed cloud | v2.0.0 (2027) | Platform SaaS |

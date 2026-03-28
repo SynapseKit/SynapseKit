@@ -7,6 +7,23 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.4.2] — 2026-03-28
+
+### Added
+
+- **HuggingFaceLLM** — Hugging Face Inference API via `AsyncInferenceClient`; supports serverless API (model ID) and Dedicated Inference Endpoints (URL); streaming and generate
+- **DynamoDBCacheBackend** — serverless LLM response caching on AWS DynamoDB; configurable partition key, TTL via `ttl_seconds`, custom region and endpoint
+- **MemcachedCacheBackend** — high-throughput distributed LLM caching via `aiomcache`; TTL via `exptime`; async-native
+- **GoogleSearchTool** — Google web search via SerpAPI (`google-search-results`); graceful handling of missing keys, empty results, and API errors
+- **Graph versioning and checkpoint migration** — `StateGraph(version="1", migrations={...})`; `CompiledGraph.resume()` now applies migration chains when loading older checkpoint versions; supports direct and chained `(next_version, state_dict)` migrations; missing paths raise `GraphRuntimeError`
+- 11 new tests (1368 total)
+
+### Improved
+
+- **SQLQueryTool** — added `params` dict for parameterized queries (eliminates string interpolation); `max_rows` cap; fixed variable name shadowing
+
+---
+
 ## [1.4.1] — 2026-03-27
 
 ### Added
