@@ -35,7 +35,7 @@ class DynamoDBCacheBackend(AsyncLRUCache):
         if not BOTO3_AVAILABLE:
             raise ImportError(
                 "boto3 is required to use DynamoDBCacheBackend. "
-                "Install it with `pip install boto3` or `pip install synapsekit[aws]`."
+                "Install it with `pip install boto3` or `pip install synapsekit[dynamodb]`."
             )
 
         # Skip AsyncLRUCache init as we don't need in-memory storage,
