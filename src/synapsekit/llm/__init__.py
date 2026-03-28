@@ -1,3 +1,4 @@
+from ._cache import AsyncLRUCache
 from .base import BaseLLM, LLMConfig
 from .cost_router import QUALITY_TABLE, CostRouter, CostRouterConfig, RouterModelSpec
 from .fallback_chain import FallbackChain, FallbackChainConfig
@@ -6,7 +7,9 @@ from .structured import generate_structured
 __all__ = [
     "AI21LLM",
     "AlephAlphaLLM",
+    "MemcachedCacheBackend",
     "AnthropicLLM",
+    "AsyncLRUCache",
     "AzureOpenAILLM",
     "BaseLLM",
     "BedrockLLM",
@@ -17,6 +20,7 @@ __all__ = [
     "CostRouterConfig",
     "DatabricksLLM",
     "DeepSeekLLM",
+    "DynamoDBCacheBackend",
     "ErnieLLM",
     "FallbackChain",
     "FallbackChainConfig",
@@ -43,6 +47,7 @@ __all__ = [
 _PROVIDERS = {
     "AI21LLM": ".ai21",
     "AlephAlphaLLM": ".aleph_alpha",
+    "MemcachedCacheBackend": "._cache_memcached",
     "OpenAILLM": ".openai",
     "AzureOpenAILLM": ".azure_openai",
     "AnthropicLLM": ".anthropic",
@@ -66,6 +71,7 @@ _PROVIDERS = {
     "CloudflareLLM": ".cloudflare",
     "DatabricksLLM": ".databricks",
     "ErnieLLM": ".ernie",
+    "DynamoDBCacheBackend": "._cache_dynamodb",
 }
 
 
