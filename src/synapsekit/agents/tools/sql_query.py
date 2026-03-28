@@ -18,8 +18,13 @@ class SQLQueryTool(BaseTool):
         "properties": {
             "query": {
                 "type": "string",
-                "description": "A SQL SELECT query to execute",
-            }
+                "description": "A parameterized SQL SELECT query to execute",
+            },
+            "params": {
+                "type": "object",
+                "description": "Dictionary of parameters to bind to the query to prevent SQL injection",
+                "additionalProperties": True,
+            },
         },
         "required": ["query"],
     }
@@ -41,7 +46,7 @@ class SQLQueryTool(BaseTool):
             ("postgresql", "mysql", "oracle", "mssql", "sqlite+")
         )
 
-    def _get_connection(self):
+    def _get_connection(self) -> Any:
         if self._is_sqlite:
             import sqlite3
 
@@ -57,10 +62,15 @@ class SQLQueryTool(BaseTool):
                 "sqlalchemy required for non-SQLite databases: pip install sqlalchemy"
             ) from None
 
-    async def run(self, query: str = "", **kwargs: Any) -> ToolResult:
+    async def run(
+        self, query: str = "", params: dict[str, Any] | None = None, **kwargs: Any
+    ) -> ToolResult:
         sql = query or kwargs.get("input", "")
         if not sql:
             return ToolResult(output="", error="No SQL query provided.")
+
+        if params is None:
+            params = {}
 
         # Safety: only allow SELECT
         stripped = sql.strip().upper()
@@ -74,29 +84,31 @@ class SQLQueryTool(BaseTool):
             if self._is_sqlite:
                 import sqlite3
 
-                conn = sqlite3.connect(self._connection_string)
+                sqlite_conn = sqlite3.connect(self._connection_string)
                 try:
-                    cursor = conn.cursor()
-                    cursor.execute(sql)
+                    cursor = sqlite_conn.cursor()
+                    # Security: Use parameterized query execution
+                    cursor.execute(sql, params)
                     cols = [d[0] for d in cursor.description] if cursor.description else []
                     rows = cursor.fetchmany(self._max_rows)
                 finally:
-                    conn.close()
+                    sqlite_conn.close()
             else:
                 from sqlalchemy import create_engine
                 from sqlalchemy import text as sa_text
 
                 engine = create_engine(self._connection_string)
-                with engine.connect() as conn:
-                    result = conn.execute(sa_text(sql))
+                with engine.connect() as sa_conn:
+                    # Security: Use SA text parameters mapping
+                    result = sa_conn.execute(sa_text(sql), params)
                     cols = list(result.keys())
-                    rows = result.fetchmany(self._max_rows)
+                    rows = list(result.fetchmany(self._max_rows))
 
             if not rows:
                 return ToolResult(output="Query returned no rows.")
 
             # Format as markdown table
-            header = " | ".join(cols)
+            header = " | ".join(str(c) for c in cols)
             separator = " | ".join(["---"] * len(cols))
             data_rows = [" | ".join(str(v) for v in row) for row in rows]
             table = "\n".join([header, separator, *data_rows])

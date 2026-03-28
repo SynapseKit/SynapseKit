@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from .graph import StateGraph
 
 _MAX_STEPS = 100
+_CHECKPOINT_VERSION_KEY = "__synapsekit_graph_version"
 
 
 class CompiledGraph:
@@ -101,9 +102,66 @@ class CompiledGraph:
         if saved is None:
             raise GraphRuntimeError(f"No checkpoint found for graph_id={graph_id!r}.")
         _step, state = saved
+
+        checkpoint_version = str(state.pop(_CHECKPOINT_VERSION_KEY, "1"))
+        if checkpoint_version != self._graph.version:
+            state = await self._apply_migration_chain(
+                state=state,
+                from_version=checkpoint_version,
+                to_version=self._graph.version,
+            )
+
         if updates:
             state.update(updates)
         return await self.run(state, checkpointer=checkpointer, graph_id=graph_id)
+
+    async def _apply_migration_chain(
+        self,
+        *,
+        state: dict[str, Any],
+        from_version: str,
+        to_version: str,
+    ) -> dict[str, Any]:
+        current_version = from_version
+        current_state = dict(state)
+        seen: set[str] = set()
+
+        while current_version != to_version:
+            if current_version in seen:
+                raise GraphRuntimeError(
+                    f"Detected migration cycle while upgrading graph state from "
+                    f"{from_version!r} to {to_version!r}."
+                )
+            seen.add(current_version)
+
+            migration = self._graph.migrations.get(current_version)
+            if migration is None:
+                raise GraphRuntimeError(
+                    f"No migration path from graph version {current_version!r} to {to_version!r}."
+                )
+
+            migrated = migration(dict(current_state))
+            if inspect.isawaitable(migrated):
+                migrated = await migrated
+
+            if isinstance(migrated, tuple) and len(migrated) == 2:
+                next_version, next_state = migrated
+                current_version = str(next_version)
+                current_state = dict(next_state)
+                continue
+
+            if isinstance(migrated, dict):
+                # Single-step migration from current -> target.
+                current_state = dict(migrated)
+                current_version = to_version
+                continue
+
+            raise GraphRuntimeError(
+                "Migration functions must return either a state dict "
+                "or a (next_version, state_dict) tuple."
+            )
+
+        return current_state
 
     def run_sync(
         self,
@@ -221,7 +279,7 @@ class CompiledGraph:
             except GraphInterrupt as exc:
                 # Save state and raise InterruptState for the caller
                 if checkpointer is not None and graph_id is not None:
-                    checkpointer.save(graph_id, steps, dict(state))
+                    checkpointer.save(graph_id, steps, self._checkpoint_state(state))
                 raise GraphInterrupt(exc.message, exc.data) from None
 
             # Merge partial results into state and yield events
@@ -251,10 +309,15 @@ class CompiledGraph:
 
             # Save checkpoint after wave completion
             if checkpointer is not None and graph_id is not None:
-                checkpointer.save(graph_id, steps, dict(state))
+                checkpointer.save(graph_id, steps, self._checkpoint_state(state))
 
             # Resolve next wave
             current_wave = await self._next_wave(current_wave, state)
+
+    def _checkpoint_state(self, state: dict[str, Any]) -> dict[str, Any]:
+        payload = dict(state)
+        payload[_CHECKPOINT_VERSION_KEY] = self._graph.version
+        return payload
 
     async def _call_node(self, name: str, state: dict[str, Any]) -> dict[str, Any]:
         node = self._graph._nodes.get(name)
