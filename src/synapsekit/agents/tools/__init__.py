@@ -1,4 +1,4 @@
-﻿from .api_builder import APIBuilderTool
+from .api_builder import APIBuilderTool
 from .arxiv_search import ArxivSearchTool
 from .aws_lambda import AWSLambdaTool
 from .bing_search import BingSearchTool
