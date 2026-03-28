@@ -1,9 +1,15 @@
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
+from typing import Any
+
 from .edge import ConditionalEdge, ConditionFn, Edge
 from .errors import GraphConfigError
 from .node import Node, NodeFn
 from .state import END, TypedState
+
+MigrationResult = dict[str, Any] | tuple[str, dict[str, Any]]
+MigrationFn = Callable[[dict[str, Any]], MigrationResult | Awaitable[MigrationResult]]
 
 
 class StateGraph:
@@ -29,11 +35,19 @@ class StateGraph:
         graph = StateGraph(state_schema=schema)
     """
 
-    def __init__(self, state_schema: TypedState | None = None) -> None:
+    def __init__(
+        self,
+        state_schema: TypedState | None = None,
+        *,
+        version: str = "1",
+        migrations: dict[str, MigrationFn] | None = None,
+    ) -> None:
         self._nodes: dict[str, Node] = {}
         self._edges: list[Edge | ConditionalEdge] = []
         self._entry_point: str | None = None
         self._state_schema = state_schema
+        self.version = version
+        self.migrations = migrations or {}
 
     def __repr__(self) -> str:
         return f"StateGraph(nodes={len(self._nodes)}, edges={len(self._edges)})"
