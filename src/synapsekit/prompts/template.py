@@ -4,7 +4,13 @@ from typing import Any
 
 
 class PromptTemplate:
-    """f-string style prompt template."""
+    """f-string style prompt template.
+
+    Example:
+        >>> tpl = PromptTemplate("Hello {name}")
+        >>> tpl.format(name="World")
+        'Hello World'
+    """
 
     def __init__(self, template: str) -> None:
         self._template = template
@@ -14,7 +20,16 @@ class PromptTemplate:
 
 
 class ChatPromptTemplate:
-    """Build a List[dict] messages structure for chat LLMs."""
+    """Build a List[dict] messages structure for chat LLMs.
+
+    Example:
+        >>> tpl = ChatPromptTemplate([
+        ...     {"role": "system", "content": "You are helpful."},
+        ...     {"role": "user", "content": "Hello {name}"},
+        ... ])
+        >>> tpl.format_messages(name="Dhruv")
+        [{'role': 'system', 'content': 'You are helpful.'}, {'role': 'user', 'content': 'Hello Dhruv'}]
+    """
 
     def __init__(self, messages: list[dict[str, str]]) -> None:
         self._messages = messages
@@ -26,7 +41,20 @@ class ChatPromptTemplate:
 
 
 class FewShotPromptTemplate:
-    """Render few-shot examples followed by a suffix prompt."""
+    """Render few-shot examples followed by a suffix prompt.
+
+    Example:
+        >>> tpl = FewShotPromptTemplate(
+        ...     examples=[
+        ...         {"q": "2+2", "a": "4"},
+        ...         {"q": "3+3", "a": "6"},
+        ...     ],
+        ...     example_template="Q: {q}\nA: {a}",
+        ...     suffix="Q: {question}\nA:",
+        ... )
+        >>> tpl.format(question="5+5")
+        'Q: 2+2\nA: 4\n\nQ: 3+3\nA: 6\n\nQ: 5+5\nA:'
+    """
 
     def __init__(
         self,
