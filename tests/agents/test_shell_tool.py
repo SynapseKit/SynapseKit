@@ -23,7 +23,7 @@ class TestShellTool:
     @pytest.mark.asyncio
     async def test_timeout(self):
         tool = ShellTool(timeout=1)
-        result = await tool.run(command="sleep 10")
+        result = await tool.run(command='python -c "import time; time.sleep(10)"')
         assert result.is_error
         assert "timed out" in result.error
 

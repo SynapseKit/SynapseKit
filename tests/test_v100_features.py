@@ -150,7 +150,7 @@ class TestAudioContentFromFile:
         p = tmp_path / "clip.wav"
         p.write_bytes(b"RIFF" + b"\x00" * 40)
         ac = AudioContent.from_file(p)
-        assert ac.media_type == "audio/x-wav"
+        assert ac.media_type == "audio/wav"
         assert len(ac.data) > 0
 
     def test_missing_file_raises(self, tmp_path: Path):
