@@ -39,11 +39,16 @@ class ExecutionTrace:
         self._node_starts: dict[str, float] = {}
         self._trace_start: float | None = None
 
+    @staticmethod
+    def _now() -> float:
+        # perf_counter is high-resolution on Windows; monotonic may be ~15.6ms.
+        return time.perf_counter()
+
     def hook(self, event_hooks: EventHooks) -> EventHooks:
         """Register trace callbacks on all event types. Returns the same EventHooks."""
 
         def _on_node_start(event: GraphEvent) -> None:
-            now = time.monotonic()
+            now = self._now()
             if self._trace_start is None:
                 self._trace_start = now
             if event.node:
@@ -58,7 +63,7 @@ class ExecutionTrace:
             )
 
         def _on_node_complete(event: GraphEvent) -> None:
-            now = time.monotonic()
+            now = self._now()
             if self._trace_start is None:
                 self._trace_start = now
             duration = None
@@ -75,7 +80,7 @@ class ExecutionTrace:
             )
 
         def _on_wave_start(event: GraphEvent) -> None:
-            now = time.monotonic()
+            now = self._now()
             if self._trace_start is None:
                 self._trace_start = now
             self._entries.append(
@@ -88,7 +93,7 @@ class ExecutionTrace:
             )
 
         def _on_wave_complete(event: GraphEvent) -> None:
-            now = time.monotonic()
+            now = self._now()
             if self._trace_start is None:
                 self._trace_start = now
             self._entries.append(
@@ -101,7 +106,7 @@ class ExecutionTrace:
             )
 
         def _on_error(event: GraphEvent) -> None:
-            now = time.monotonic()
+            now = self._now()
             if self._trace_start is None:
                 self._trace_start = now
             self._entries.append(
