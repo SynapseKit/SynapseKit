@@ -3,6 +3,7 @@ from __future__ import annotations
 import contextlib
 import io
 import logging
+import math
 import multiprocessing
 import platform
 import signal
@@ -14,7 +15,7 @@ from ..base import BaseTool, ToolResult
 logger = logging.getLogger(__name__)
 
 
-class TimeoutError(Exception):
+class _CodeTimeoutError(Exception):
     """Raised when code execution times out."""
 
 
@@ -93,11 +94,11 @@ class PythonREPLTool(BaseTool):
         sys.stdout = buf = io.StringIO()
 
         def timeout_handler(signum, frame):
-            raise TimeoutError(f"Code execution timed out after {self.timeout} seconds")
+            raise _CodeTimeoutError(f"Code execution timed out after {self.timeout} seconds")
 
         try:
             signal.signal(signal.SIGALRM, timeout_handler)
-            signal.alarm(int(self.timeout))
+            signal.alarm(max(1, math.ceil(self.timeout)))
             try:
                 exec(code, self._namespace)
             finally:
@@ -105,7 +106,7 @@ class PythonREPLTool(BaseTool):
 
             output = buf.getvalue()
             return ToolResult(output=output or "(no output)")
-        except TimeoutError as e:
+        except _CodeTimeoutError as e:
             return ToolResult(output="", error=str(e))
         except Exception as e:
             return ToolResult(output="", error=f"{type(e).__name__}: {e}")
