@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import io
 import logging
 import multiprocessing
@@ -142,11 +143,8 @@ class PythonREPLTool(BaseTool):
 
             # Update namespace with picklable objects from subprocess
             # This allows persistence of basic types but not complex objects
-            try:
+            with contextlib.suppress(Exception):
                 self._namespace.update(updated_namespace)
-            except Exception:
-                # If namespace can't be updated (unpicklable objects), continue
-                pass
 
             if success:
                 return ToolResult(output=output or "(no output)")
