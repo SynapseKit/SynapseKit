@@ -19,12 +19,12 @@ class TimeoutError(Exception):
 
 def _exec_with_capture(code: str, namespace: dict, output_queue: multiprocessing.Queue) -> None:
     """Execute code in a subprocess and send results back via queue.
-    
+
     Used for Windows timeout implementation with multiprocessing.
     """
     old_stdout = sys.stdout
     sys.stdout = buf = io.StringIO()
-    
+
     try:
         exec(code, namespace)
         output = buf.getvalue()
@@ -114,20 +114,20 @@ class PythonREPLTool(BaseTool):
 
     async def _run_windows(self, code: str) -> ToolResult:
         """Execute code with multiprocessing timeout (Windows).
-        
+
         Note: Namespace persistence limited to picklable objects.
         """
         output_queue: multiprocessing.Queue = multiprocessing.Queue()
-        
+
         # Create process to execute code
         process = multiprocessing.Process(
             target=_exec_with_capture,
             args=(code, self._namespace.copy(), output_queue)
         )
-        
+
         process.start()
         process.join(timeout=self.timeout)
-        
+
         if process.is_alive():
             # Timeout occurred
             process.terminate()
@@ -135,11 +135,11 @@ class PythonREPLTool(BaseTool):
             if process.is_alive():
                 process.kill()  # Force kill if still running
             return ToolResult(output="", error=f"Code execution timed out after {self.timeout} seconds")
-        
+
         # Process completed, get results
         if not output_queue.empty():
             success, output, error, updated_namespace = output_queue.get()
-            
+
             # Update namespace with picklable objects from subprocess
             # This allows persistence of basic types but not complex objects
             try:
@@ -147,7 +147,7 @@ class PythonREPLTool(BaseTool):
             except Exception:
                 # If namespace can't be updated (unpicklable objects), continue
                 pass
-            
+
             if success:
                 return ToolResult(output=output or "(no output)")
             else:
