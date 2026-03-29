@@ -1,5 +1,7 @@
 """Tests for graph checkpointing (InMemory and SQLite backends)."""
 
+import sqlite3
+
 import pytest
 
 from synapsekit.graph.checkpointers import (
@@ -96,6 +98,14 @@ class TestSQLiteCheckpointer:
         step, state = cp.load("g1")
         assert step == 2
         assert state == {"v": 2}
+
+    async def test_async_context_manager_closes_connection(self):
+        async with SQLiteCheckpointer(":memory:") as cp:
+            cp.save("g1", 1, {"v": 1})
+            assert cp.load("g1") == (1, {"v": 1})
+
+        with pytest.raises(sqlite3.ProgrammingError, match="closed"):
+            cp.save("g1", 2, {"v": 2})
 
 
 # ------------------------------------------------------------------ #
