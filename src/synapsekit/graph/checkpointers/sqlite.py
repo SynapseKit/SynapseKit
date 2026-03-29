@@ -18,6 +18,12 @@ class SQLiteCheckpointer(BaseCheckpointer):
         )
         self._conn.commit()
 
+    async def __aenter__(self) -> SQLiteCheckpointer:
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb) -> None:
+        self.close()
+
     def save(self, graph_id: str, step: int, state: dict[str, Any]) -> None:
         self._conn.execute(
             "INSERT OR REPLACE INTO checkpoints (graph_id, step, state) VALUES (?, ?, ?)",
