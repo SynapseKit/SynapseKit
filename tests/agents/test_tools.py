@@ -178,28 +178,46 @@ class TestPythonREPLTool:
         assert "quick" in r.output
 
     @pytest.mark.asyncio
-    @pytest.mark.skipif(
-        platform.system() == "Windows",
-        reason="Timeout not enforced on Windows"
-    )
     async def test_timeout_on_infinite_loop(self):
-        """Test that infinite loops are terminated by timeout (Unix only)."""
+        """Test that infinite loops are terminated by timeout."""
         repl = PythonREPLTool(timeout=1.0)
         r = await repl.run(code="while True: pass")
         assert r.is_error
         assert "timed out" in r.error.lower()
 
     @pytest.mark.asyncio
-    @pytest.mark.skipif(
-        platform.system() == "Windows",
-        reason="Timeout not enforced on Windows"
-    )
     async def test_timeout_on_slow_operation(self):
-        """Test that slow operations are terminated by timeout (Unix only)."""
+        """Test that slow operations are terminated by timeout."""
         repl = PythonREPLTool(timeout=1.0)
         r = await repl.run(code="import time; time.sleep(5)")
         assert r.is_error
         assert "timed out" in r.error.lower()
+
+    @pytest.mark.asyncio
+    @pytest.mark.skipif(
+        platform.system() != "Windows",
+        reason="Windows-specific namespace test"
+    )
+    async def test_windows_namespace_basic_persistence(self):
+        """Test that basic types persist in namespace on Windows."""
+        repl = PythonREPLTool()
+        await repl.run(code="x = 42")
+        r = await repl.run(code="print(x)")
+        assert not r.is_error
+        assert "42" in r.output
+
+    @pytest.mark.asyncio
+    @pytest.mark.skipif(
+        platform.system() != "Windows",
+        reason="Windows-specific namespace test"
+    )
+    async def test_windows_namespace_dict_persistence(self):
+        """Test that dicts/lists persist in namespace on Windows."""
+        repl = PythonREPLTool()
+        await repl.run(code="data = {'key': 'value', 'num': 123}")
+        r = await repl.run(code="print(data['key'])")
+        assert not r.is_error
+        assert "value" in r.output
 
     def test_warning_logged_on_init(self, caplog):
         """Test that security warning is logged when tool is created."""

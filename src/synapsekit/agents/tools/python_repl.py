@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 import logging
+import multiprocessing
 import platform
 import signal
 import sys
@@ -16,9 +17,33 @@ class TimeoutError(Exception):
     """Raised when code execution times out."""
 
 
+def _exec_with_capture(code: str, namespace: dict, output_queue: multiprocessing.Queue) -> None:
+    """Execute code in a subprocess and send results back via queue.
+    
+    Used for Windows timeout implementation with multiprocessing.
+    """
+    old_stdout = sys.stdout
+    sys.stdout = buf = io.StringIO()
+    
+    try:
+        exec(code, namespace)
+        output = buf.getvalue()
+        # Send back (success, output, error, namespace)
+        output_queue.put((True, output, None, namespace))
+    except Exception as e:
+        error_msg = f"{type(e).__name__}: {e}"
+        output_queue.put((False, "", error_msg, namespace))
+    finally:
+        sys.stdout = old_stdout
+
+
 class PythonREPLTool(BaseTool):
     """
     Execute arbitrary Python code and capture stdout.
+
+    Timeout behavior:
+    - Unix/Linux: Uses signal.SIGALRM (fast, full namespace persistence)
+    - Windows: Uses multiprocessing.Process (reliable timeout, namespace limited to picklable objects)
 
     Warning: This executes real Python code. Only use in trusted environments.
     """
@@ -54,29 +79,28 @@ class PythonREPLTool(BaseTool):
         if not src:
             return ToolResult(output="", error="No code provided.")
 
+        is_windows = platform.system() == "Windows"
+
+        if is_windows:
+            return await self._run_windows(src)
+        else:
+            return await self._run_unix(src)
+
+    async def _run_unix(self, code: str) -> ToolResult:
+        """Execute code with signal.SIGALRM timeout (Unix/Linux)."""
         old_stdout = sys.stdout
         sys.stdout = buf = io.StringIO()
-
-        # Use signal-based timeout on Unix
-        # Note: Windows doesn't support signal.SIGALRM, so timeout is best-effort there
-        is_unix = platform.system() != "Windows"
 
         def timeout_handler(signum, frame):
             raise TimeoutError(f"Code execution timed out after {self.timeout} seconds")
 
         try:
-            if is_unix:
-                # Unix: use signal.alarm for reliable timeout
-                signal.signal(signal.SIGALRM, timeout_handler)
-                signal.alarm(int(self.timeout))
-                try:
-                    exec(src, self._namespace)
-                finally:
-                    signal.alarm(0)  # Cancel alarm
-            else:
-                # Windows: no reliable way to interrupt exec(), run without timeout
-                # The timeout parameter is documented but not enforced on Windows
-                exec(src, self._namespace)
+            signal.signal(signal.SIGALRM, timeout_handler)
+            signal.alarm(int(self.timeout))
+            try:
+                exec(code, self._namespace)
+            finally:
+                signal.alarm(0)  # Cancel alarm
 
             output = buf.getvalue()
             return ToolResult(output=output or "(no output)")
@@ -86,8 +110,51 @@ class PythonREPLTool(BaseTool):
             return ToolResult(output="", error=f"{type(e).__name__}: {e}")
         finally:
             sys.stdout = old_stdout
-            if is_unix:
-                signal.alarm(0)  # Ensure alarm is cancelled
+            signal.alarm(0)  # Ensure alarm is cancelled
+
+    async def _run_windows(self, code: str) -> ToolResult:
+        """Execute code with multiprocessing timeout (Windows).
+        
+        Note: Namespace persistence limited to picklable objects.
+        """
+        output_queue: multiprocessing.Queue = multiprocessing.Queue()
+        
+        # Create process to execute code
+        process = multiprocessing.Process(
+            target=_exec_with_capture,
+            args=(code, self._namespace.copy(), output_queue)
+        )
+        
+        process.start()
+        process.join(timeout=self.timeout)
+        
+        if process.is_alive():
+            # Timeout occurred
+            process.terminate()
+            process.join(timeout=1.0)  # Wait for graceful termination
+            if process.is_alive():
+                process.kill()  # Force kill if still running
+            return ToolResult(output="", error=f"Code execution timed out after {self.timeout} seconds")
+        
+        # Process completed, get results
+        if not output_queue.empty():
+            success, output, error, updated_namespace = output_queue.get()
+            
+            # Update namespace with picklable objects from subprocess
+            # This allows persistence of basic types but not complex objects
+            try:
+                self._namespace.update(updated_namespace)
+            except Exception:
+                # If namespace can't be updated (unpicklable objects), continue
+                pass
+            
+            if success:
+                return ToolResult(output=output or "(no output)")
+            else:
+                return ToolResult(output="", error=error)
+        else:
+            # Process died without sending results
+            return ToolResult(output="", error="Code execution failed unexpectedly")
 
     def reset(self) -> None:
         """Clear the persistent namespace between runs."""
