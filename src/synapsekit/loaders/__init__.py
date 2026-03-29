@@ -8,6 +8,7 @@ __all__ = [
     "AudioLoader",
     "CSVLoader",
     "DirectoryLoader",
+    "DiscordLoader",
     "DocxLoader",
     "Document",
     "HTMLLoader",
@@ -34,6 +35,7 @@ _LOADERS = {
     "VideoLoader": ".video",
     "XMLLoader": ".xml_loader",
     "YAMLLoader": ".yaml_loader",
+    "DiscordLoader": ".discord",
 }
 
 
