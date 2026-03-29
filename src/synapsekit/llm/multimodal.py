@@ -87,6 +87,9 @@ class AudioContent:
         mime, _ = mimetypes.guess_type(str(p))
         if mime is None:
             mime = "audio/wav"
+        elif mime == "audio/x-wav":
+            # Normalize platform-specific alias to keep behavior consistent.
+            mime = "audio/wav"
         raw = p.read_bytes()
         encoded = base64.b64encode(raw).decode("ascii")
         return cls(data=encoded, media_type=mime)
