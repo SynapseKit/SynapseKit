@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import platform
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -161,6 +162,52 @@ class TestPythonREPLTool:
     async def test_empty_code(self):
         r = await PythonREPLTool().run(code="")
         assert r.is_error
+
+    @pytest.mark.asyncio
+    async def test_custom_timeout(self):
+        """Test that timeout parameter can be customized."""
+        repl = PythonREPLTool(timeout=10.0)
+        assert repl.timeout == 10.0
+
+    @pytest.mark.asyncio
+    async def test_fast_execution_within_timeout(self):
+        """Test that fast code executes successfully within timeout."""
+        repl = PythonREPLTool(timeout=2.0)
+        r = await repl.run(code="print('quick')")
+        assert not r.is_error
+        assert "quick" in r.output
+
+    @pytest.mark.asyncio
+    @pytest.mark.skipif(
+        platform.system() == "Windows",
+        reason="Timeout not enforced on Windows"
+    )
+    async def test_timeout_on_infinite_loop(self):
+        """Test that infinite loops are terminated by timeout (Unix only)."""
+        repl = PythonREPLTool(timeout=1.0)
+        r = await repl.run(code="while True: pass")
+        assert r.is_error
+        assert "timed out" in r.error.lower()
+
+    @pytest.mark.asyncio
+    @pytest.mark.skipif(
+        platform.system() == "Windows",
+        reason="Timeout not enforced on Windows"
+    )
+    async def test_timeout_on_slow_operation(self):
+        """Test that slow operations are terminated by timeout (Unix only)."""
+        repl = PythonREPLTool(timeout=1.0)
+        r = await repl.run(code="import time; time.sleep(5)")
+        assert r.is_error
+        assert "timed out" in r.error.lower()
+
+    def test_warning_logged_on_init(self, caplog):
+        """Test that security warning is logged when tool is created."""
+        import logging
+        with caplog.at_level(logging.WARNING):
+            PythonREPLTool()
+        assert any("arbitrary Python code" in record.message for record in caplog.records)
+        assert any("trusted environments" in record.message for record in caplog.records)
 
 
 # ------------------------------------------------------------------ #
