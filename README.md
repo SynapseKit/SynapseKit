@@ -7,7 +7,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/synapsekit?color=0a7bbd&label=pypi&logo=pypi&logoColor=white)](https://pypi.org/project/synapsekit/)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-22c55e)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-1305%20passing-22c55e?logo=pytest&logoColor=white)]()
+[![Tests](https://img.shields.io/badge/tests-1452%20passing-22c55e?logo=pytest&logoColor=white)]()
 [![Downloads](https://img.shields.io/pypi/dm/synapsekit?color=0a7bbd&logo=pypi&logoColor=white)](https://pypistats.org/packages/synapsekit)
 [![PyPI Downloads](https://static.pepy.tech/personalized-badge/synapsekit?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/synapsekit)
 [![Docs](https://img.shields.io/badge/docs-online-0a7bbd?logo=readthedocs&logoColor=white)](https://synapsekit.github.io/synapsekit-docs/)
@@ -42,7 +42,7 @@ Token-level streaming is the default,<br/>not an afterthought.<br/>Works across 
 <tr>
 <td align="center" width="33%">
 <h3>🔌 One interface</h3>
-19 LLM providers and 5 vector stores<br/>behind the same API.<br/>Swap without rewriting.
+27 LLM providers and 5 vector stores<br/>behind the same API.<br/>Swap without rewriting.
 </td>
 <td align="center" width="33%">
 <h3>🧩 Composable</h3>
@@ -85,7 +85,7 @@ Retrieval-augmented generation with streaming, BM25 reranking, conversation memo
 <td width="50%">
 
 **🤖 Agents**<br/>
-ReAct loop (any LLM) and native function calling (OpenAI / Anthropic / Gemini / Mistral). 35 built-in tools including calculator, Python REPL, web search, SQL, HTTP, shell, summarization, sentiment analysis, and translation. Fully extensible.
+ReAct loop (any LLM) and native function calling (OpenAI / Anthropic / Gemini / Mistral). 41 built-in tools including calculator, Python REPL, web search, SQL, HTTP, shell, arxiv, pubmed, wolfram, wikipedia, and more. Fully extensible.
 
 </td>
 </tr>
@@ -99,7 +99,7 @@ DAG-based async pipelines. Nodes run in waves — parallel nodes execute concurr
 <td width="50%">
 
 **🧠 LLM Providers**<br/>
-OpenAI, Anthropic, Ollama, Gemini, Cohere, Mistral, Bedrock, Azure OpenAI, Groq, DeepSeek, OpenRouter, Together, Fireworks, Cerebras, Cloudflare, Moonshot, Perplexity, Vertex AI, Zhipu — all behind one interface. Auto-detected from the model name. Swap without rewriting.
+OpenAI, Anthropic, Ollama, Gemini, Cohere, Mistral, Bedrock, Azure OpenAI, Groq, DeepSeek, OpenRouter, Together, Fireworks, Cerebras, Cloudflare, Moonshot, Perplexity, Vertex AI, Zhipu, AI21 Labs, Databricks, Baidu ERNIE, llama.cpp, Minimax, Aleph Alpha, Hugging Face, SambaNova — all behind one interface. Auto-detected from the model name. Swap without rewriting.
 
 </td>
 </tr>
@@ -159,7 +159,7 @@ Everything you need to get started and go deep is in the docs.
 | 🗂 [RAG](https://synapsekit.github.io/synapsekit-docs/docs/rag/pipeline) | Pipelines, loaders, retrieval, vector stores |
 | 🤖 [Agents](https://synapsekit.github.io/synapsekit-docs/docs/agents/overview) | ReAct, function calling, tools, executor |
 | 🔀 [Graph Workflows](https://synapsekit.github.io/synapsekit-docs/docs/graph/overview) | DAG pipelines, conditional routing, parallel execution |
-| 🧠 [LLM Providers](https://synapsekit.github.io/synapsekit-docs/docs/llms/overview) | All 13 providers with examples |
+| 🧠 [LLM Providers](https://synapsekit.github.io/synapsekit-docs/docs/llms/overview) | All 27 providers with examples |
 | 📖 [API Reference](https://synapsekit.github.io/synapsekit-docs/docs/api/llm) | Full class and method reference |
 
 ---
