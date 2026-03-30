@@ -224,8 +224,10 @@ tavily-python = "tavily"
 youtube-search-python = "youtubesearchpython"
 google-cloud-aiplatform = "vertexai"
 llama-cpp-python = "llama_cpp"
+"discord.py" = "discord"
 
 [tool.deptry.per_rule_ignores]
 DEP001 = ["sqlalchemy", "pydantic", "aiohttp", "opentelemetry", "whisper", "botocore", "aiomcache", "nest_asyncio", "huggingface_hub", "serpapi"]
 DEP002 = ["numpy", "rank-bm25", "beautifulsoup4", "lxml", "faiss-cpu", "google-generativeai", "tavily-python", "youtube-search-python", "psycopg", "google-search-results"]
+DEP003 = ["sqlalchemy", "botocore", "nest_asyncio"]
 DEP004 = ["pydantic"]

@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from .base import Document
 
@@ -38,8 +37,8 @@ class DiscordLoader:
         token: str,
         channel_id: int,
         limit: int = 100,
-        before_message_id: Optional[int] = None,
-        after_message_id: Optional[int] = None,
+        before_message_id: int | None = None,
+        after_message_id: int | None = None,
         include_metadata: bool = True,
     ) -> None:
         self.token = token
@@ -58,6 +57,8 @@ class DiscordLoader:
         """Synchronously fetch messages and return them as Documents."""
         try:
             import discord
+
+            _ = discord
         except ImportError:
             raise ImportError(
                 "discord.py is required for DiscordLoader. "
