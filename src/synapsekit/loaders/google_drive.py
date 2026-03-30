@@ -58,14 +58,6 @@ class GoogleDriveLoader:
 
     def load(self) -> list[Document]:
         """Synchronously fetch files from Google Drive and return them as Documents."""
-        try:
-            from google.oauth2 import service_account
-            from googleapiclient.discovery import build
-        except ImportError:
-            raise ImportError(
-                "Google Drive dependencies required: pip install synapsekit[gdrive]"
-            ) from None
-
         loop = asyncio.new_event_loop()
         try:
             asyncio.set_event_loop(loop)
@@ -103,7 +95,7 @@ class GoogleDriveLoader:
         if self.file_id:
             return await self._load_file(service, self.file_id)
         else:
-            return await self._load_folder(service, self.folder_id)
+            return await self._load_folder(service, self.folder_id)  # type: ignore[arg-type]
 
     async def _load_file(self, service: Any, file_id: str) -> list[Document]:
         """Load a single file by ID."""
@@ -181,7 +173,7 @@ class GoogleDriveLoader:
 
         # Google Docs - export as plain text
         if mime_type == "application/vnd.google-apps.document":
-            content = await loop.run_in_executor(
+            content: bytes = await loop.run_in_executor(
                 None,
                 lambda: service.files()
                 .export_media(fileId=file_id, mimeType="text/plain")
@@ -191,7 +183,7 @@ class GoogleDriveLoader:
 
         # Google Sheets - export as CSV
         elif mime_type == "application/vnd.google-apps.spreadsheet":
-            content = await loop.run_in_executor(
+            content: bytes = await loop.run_in_executor(
                 None,
                 lambda: service.files()
                 .export_media(fileId=file_id, mimeType="text/csv")
@@ -204,14 +196,14 @@ class GoogleDriveLoader:
             request = service.files().get_media(fileId=file_id)
             fh = io.BytesIO()
 
-            def download():
+            def download() -> bytes:
                 downloader = MediaIoBaseDownload(fh, request)
                 done = False
                 while not done:
                     _, done = downloader.next_chunk()
                 return fh.getvalue()
 
-            content = await loop.run_in_executor(None, download)
+            content: bytes = await loop.run_in_executor(None, download)
 
             # Try to decode as text
             try:
