@@ -70,7 +70,6 @@ class GoogleDriveLoader:
         try:
             from google.oauth2 import service_account
             from googleapiclient.discovery import build
-            from googleapiclient.http import MediaIoBaseDownload
         except ImportError:
             raise ImportError(
                 "Google Drive dependencies required: pip install synapsekit[gdrive]"
@@ -183,7 +182,7 @@ class GoogleDriveLoader:
 
         # Google Sheets - export as CSV
         elif mime_type == "application/vnd.google-apps.spreadsheet":
-            content: bytes = await loop.run_in_executor(
+            content = await loop.run_in_executor(
                 None,
                 lambda: service.files()
                 .export_media(fileId=file_id, mimeType="text/csv")
@@ -203,7 +202,7 @@ class GoogleDriveLoader:
                     _, done = downloader.next_chunk()
                 return fh.getvalue()
 
-            content: bytes = await loop.run_in_executor(None, download)
+            content = await loop.run_in_executor(None, download)
 
             # Try to decode as text
             try:
