@@ -4,9 +4,12 @@ from __future__ import annotations
 
 import asyncio
 import io
+import logging
 from typing import Any
 
 from .base import Document
+
+logger = logging.getLogger(__name__)
 
 
 class GoogleDriveLoader:
@@ -87,10 +90,11 @@ class GoogleDriveLoader:
                 scopes=["https://www.googleapis.com/auth/drive.readonly"],
             )
 
-        # Build service
-        service = build("drive", "v3", credentials=creds)
+        loop = asyncio.get_running_loop()
+        service = await loop.run_in_executor(
+            None, lambda: build("drive", "v3", credentials=creds)
+        )
 
-        # Load file or folder
         if self.file_id:
             return await self._load_file(service, self.file_id)
         else:
@@ -98,15 +102,13 @@ class GoogleDriveLoader:
 
     async def _load_file(self, service: Any, file_id: str) -> list[Document]:
         """Load a single file by ID."""
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
 
-        # Get file metadata
         file_metadata = await loop.run_in_executor(
             None,
             lambda: service.files().get(fileId=file_id, fields="id,name,mimeType,modifiedTime").execute(),
         )
 
-        # Download or export file
         text = await self._download_file(service, file_id, file_metadata["mimeType"])
 
         return [
@@ -124,9 +126,8 @@ class GoogleDriveLoader:
 
     async def _load_folder(self, service: Any, folder_id: str) -> list[Document]:
         """Load all files from a folder."""
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
 
-        # List files in folder
         query = f"'{folder_id}' in parents and trashed=false"
         results = await loop.run_in_executor(
             None,
@@ -136,11 +137,9 @@ class GoogleDriveLoader:
         )
 
         files = results.get("files", [])
-
-        # Load each file
         documents = []
+
         for file_data in files:
-            # Skip folders
             if file_data["mimeType"] == "application/vnd.google-apps.folder":
                 continue
 
@@ -158,9 +157,13 @@ class GoogleDriveLoader:
                         },
                     )
                 )
-            except Exception:
-                # Skip files that fail to download
-                continue
+            except Exception as exc:
+                logger.warning(
+                    "GoogleDriveLoader: skipping file %r (%s) — %s",
+                    file_data["name"],
+                    file_data["id"],
+                    exc,
+                )
 
         return documents
 
@@ -168,9 +171,8 @@ class GoogleDriveLoader:
         """Download or export a file based on its MIME type."""
         from googleapiclient.http import MediaIoBaseDownload
 
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
 
-        # Google Docs - export as plain text
         if mime_type == "application/vnd.google-apps.document":
             content: bytes = await loop.run_in_executor(
                 None,
@@ -180,7 +182,6 @@ class GoogleDriveLoader:
             )
             return content.decode("utf-8")
 
-        # Google Sheets - export as CSV
         elif mime_type == "application/vnd.google-apps.spreadsheet":
             content = await loop.run_in_executor(
                 None,
@@ -190,7 +191,6 @@ class GoogleDriveLoader:
             )
             return content.decode("utf-8")
 
-        # Other files - download as-is
         else:
             request = service.files().get_media(fileId=file_id)
             fh = io.BytesIO()
@@ -204,9 +204,7 @@ class GoogleDriveLoader:
 
             content = await loop.run_in_executor(None, download)
 
-            # Try to decode as text
             try:
                 return content.decode("utf-8")
             except UnicodeDecodeError:
-                # For binary files like PDFs, return base64 or description
                 return f"[Binary file: {mime_type}]"
