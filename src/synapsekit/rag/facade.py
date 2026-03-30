@@ -51,6 +51,8 @@ def _make_llm(
             provider = "databricks"
         elif model.startswith("ernie"):
             provider = "ernie"
+        elif model.startswith("sambanova"):
+            provider = "sambanova"
         elif model.startswith("llama") or model.startswith("mixtral") or model.startswith("gemma"):
             provider = "groq"
         elif "/" in model:
@@ -148,6 +150,10 @@ def _make_llm(
         from ..llm.ernie import ErnieLLM
 
         return ErnieLLM(config)
+    elif provider == "sambanova":
+        from ..llm.sambanova import SambaNovaLLM
+
+        return SambaNovaLLM(config)
     elif provider == "aleph-alpha":
         from ..llm.aleph_alpha import AlephAlphaLLM
 
@@ -161,7 +167,8 @@ def _make_llm(
             f"Unknown provider: {provider!r}. "
             "Use 'openai', 'anthropic', 'ollama', 'ai21', 'cohere', 'mistral', 'gemini', "
             "'bedrock', 'groq', 'deepseek', 'openrouter', 'together', 'fireworks', "
-            "'moonshot', 'minimax', 'zhipu', 'cloudflare', 'databricks', 'ernie', 'aleph-alpha', or 'llamacpp'."
+            "'moonshot', 'minimax', 'zhipu', 'cloudflare', 'databricks', 'ernie', 'sambanova', "
+            "'aleph-alpha', or 'llamacpp'."
         )
 
 

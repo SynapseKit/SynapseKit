@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -50,12 +49,14 @@ class TestDiscordLoaderImport:
 
         loader = DiscordLoader(token="tok", channel_id=123)
         with patch.dict(sys.modules, {"discord": None}):
-            with pytest.raises(ImportError, match="discord.py is required"):
+            with pytest.raises(ImportError, match=r"discord\.py is required"):
                 loader.load()
 
 
 class TestDiscordLoaderDocuments:
-    def _make_mock_message(self, text: str, author: str = "user#1234", msg_id: int = 1) -> MagicMock:
+    def _make_mock_message(
+        self, text: str, author: str = "user#1234", msg_id: int = 1
+    ) -> MagicMock:
         msg = MagicMock()
         msg.clean_content = text
         msg.id = msg_id

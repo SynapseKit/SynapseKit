@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from .base import Document
 
@@ -38,8 +37,8 @@ class DiscordLoader:
         token: str,
         channel_id: int,
         limit: int = 100,
-        before_message_id: Optional[int] = None,
-        after_message_id: Optional[int] = None,
+        before_message_id: int | None = None,
+        after_message_id: int | None = None,
         include_metadata: bool = True,
     ) -> None:
         self.token = token
@@ -58,6 +57,8 @@ class DiscordLoader:
         """Synchronously fetch messages and return them as Documents."""
         try:
             import discord
+
+            _ = discord
         except ImportError:
             raise ImportError(
                 "discord.py is required for DiscordLoader. "
@@ -103,31 +104,35 @@ class DiscordLoader:
                 messages = [msg async for msg in channel.history(**kwargs)]
 
                 for msg in messages:
-                    metadata = {
-                        "source": f"discord:{self.channel_id}",
-                        "loader": "DiscordLoader",
-                        "author": str(msg.author),
-                        "author_id": msg.author.id,
-                        "message_id": msg.id,
-                        "channel_id": msg.channel.id,
-                        "created_at": msg.created_at.isoformat(),
-                        "edited_at": msg.edited_at.isoformat() if msg.edited_at else None,
-                        "attachments": [
-                            {
-                                "filename": a.filename,
-                                "url": a.url,
-                                "size": a.size,
-                            }
-                            for a in msg.attachments
-                        ],
-                        "reactions": [
-                            {
-                                "emoji": str(r.emoji),
-                                "count": r.count,
-                            }
-                            for r in msg.reactions
-                        ],
-                    } if self.include_metadata else {}
+                    metadata = (
+                        {
+                            "source": f"discord:{self.channel_id}",
+                            "loader": "DiscordLoader",
+                            "author": str(msg.author),
+                            "author_id": msg.author.id,
+                            "message_id": msg.id,
+                            "channel_id": msg.channel.id,
+                            "created_at": msg.created_at.isoformat(),
+                            "edited_at": msg.edited_at.isoformat() if msg.edited_at else None,
+                            "attachments": [
+                                {
+                                    "filename": a.filename,
+                                    "url": a.url,
+                                    "size": a.size,
+                                }
+                                for a in msg.attachments
+                            ],
+                            "reactions": [
+                                {
+                                    "emoji": str(r.emoji),
+                                    "count": r.count,
+                                }
+                                for r in msg.reactions
+                            ],
+                        }
+                        if self.include_metadata
+                        else {}
+                    )
 
                     documents.append(
                         Document(
