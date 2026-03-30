@@ -11,6 +11,7 @@ __all__ = [
     "DiscordLoader",
     "DocxLoader",
     "Document",
+    "GoogleDriveLoader",
     "HTMLLoader",
     "JSONLoader",
     "MarkdownLoader",
@@ -36,6 +37,7 @@ _LOADERS = {
     "XMLLoader": ".xml_loader",
     "YAMLLoader": ".yaml_loader",
     "DiscordLoader": ".discord",
+    "GoogleDriveLoader": ".google_drive",
 }
 
 

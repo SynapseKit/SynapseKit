@@ -153,7 +153,6 @@ class TestXMLLoader:
 <root>
     <item>   </item>
     <item>
-
     </item>
 </root>"""
         )
