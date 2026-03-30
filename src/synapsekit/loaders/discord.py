@@ -104,31 +104,35 @@ class DiscordLoader:
                 messages = [msg async for msg in channel.history(**kwargs)]
 
                 for msg in messages:
-                    metadata = {
-                        "source": f"discord:{self.channel_id}",
-                        "loader": "DiscordLoader",
-                        "author": str(msg.author),
-                        "author_id": msg.author.id,
-                        "message_id": msg.id,
-                        "channel_id": msg.channel.id,
-                        "created_at": msg.created_at.isoformat(),
-                        "edited_at": msg.edited_at.isoformat() if msg.edited_at else None,
-                        "attachments": [
-                            {
-                                "filename": a.filename,
-                                "url": a.url,
-                                "size": a.size,
-                            }
-                            for a in msg.attachments
-                        ],
-                        "reactions": [
-                            {
-                                "emoji": str(r.emoji),
-                                "count": r.count,
-                            }
-                            for r in msg.reactions
-                        ],
-                    } if self.include_metadata else {}
+                    metadata = (
+                        {
+                            "source": f"discord:{self.channel_id}",
+                            "loader": "DiscordLoader",
+                            "author": str(msg.author),
+                            "author_id": msg.author.id,
+                            "message_id": msg.id,
+                            "channel_id": msg.channel.id,
+                            "created_at": msg.created_at.isoformat(),
+                            "edited_at": msg.edited_at.isoformat() if msg.edited_at else None,
+                            "attachments": [
+                                {
+                                    "filename": a.filename,
+                                    "url": a.url,
+                                    "size": a.size,
+                                }
+                                for a in msg.attachments
+                            ],
+                            "reactions": [
+                                {
+                                    "emoji": str(r.emoji),
+                                    "count": r.count,
+                                }
+                                for r in msg.reactions
+                            ],
+                        }
+                        if self.include_metadata
+                        else {}
+                    )
 
                     documents.append(
                         Document(

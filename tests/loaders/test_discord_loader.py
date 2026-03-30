@@ -54,7 +54,9 @@ class TestDiscordLoaderImport:
 
 
 class TestDiscordLoaderDocuments:
-    def _make_mock_message(self, text: str, author: str = "user#1234", msg_id: int = 1) -> MagicMock:
+    def _make_mock_message(
+        self, text: str, author: str = "user#1234", msg_id: int = 1
+    ) -> MagicMock:
         msg = MagicMock()
         msg.clean_content = text
         msg.id = msg_id

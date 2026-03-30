@@ -123,8 +123,7 @@ class PythonREPLTool(BaseTool):
 
         # Create process to execute code
         process = multiprocessing.Process(
-            target=_exec_with_capture,
-            args=(code, self._namespace.copy(), output_queue)
+            target=_exec_with_capture, args=(code, self._namespace.copy(), output_queue)
         )
 
         process.start()
@@ -136,7 +135,9 @@ class PythonREPLTool(BaseTool):
             process.join(timeout=1.0)  # Wait for graceful termination
             if process.is_alive():
                 process.kill()  # Force kill if still running
-            return ToolResult(output="", error=f"Code execution timed out after {self.timeout} seconds")
+            return ToolResult(
+                output="", error=f"Code execution timed out after {self.timeout} seconds"
+            )
 
         # Process completed, get results
         if not output_queue.empty():

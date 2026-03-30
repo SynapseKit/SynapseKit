@@ -194,10 +194,7 @@ class TestPythonREPLTool:
         assert "timed out" in r.error.lower()
 
     @pytest.mark.asyncio
-    @pytest.mark.skipif(
-        platform.system() != "Windows",
-        reason="Windows-specific namespace test"
-    )
+    @pytest.mark.skipif(platform.system() != "Windows", reason="Windows-specific namespace test")
     async def test_windows_namespace_basic_persistence(self):
         """Test that basic types persist in namespace on Windows."""
         repl = PythonREPLTool()
@@ -207,10 +204,7 @@ class TestPythonREPLTool:
         assert "42" in r.output
 
     @pytest.mark.asyncio
-    @pytest.mark.skipif(
-        platform.system() != "Windows",
-        reason="Windows-specific namespace test"
-    )
+    @pytest.mark.skipif(platform.system() != "Windows", reason="Windows-specific namespace test")
     async def test_windows_namespace_dict_persistence(self):
         """Test that dicts/lists persist in namespace on Windows."""
         repl = PythonREPLTool()
@@ -222,6 +216,7 @@ class TestPythonREPLTool:
     def test_warning_logged_on_init(self, caplog):
         """Test that security warning is logged when tool is created."""
         import logging
+
         with caplog.at_level(logging.WARNING):
             PythonREPLTool()
         assert any("arbitrary Python code" in record.message for record in caplog.records)
