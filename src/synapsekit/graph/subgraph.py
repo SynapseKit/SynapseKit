@@ -93,12 +93,8 @@ def subgraph_node(
                 except Exception as exc:
                     last_exc = exc
             # All attempts exhausted — surface error info and re-raise
-            error_info: dict[str, Any] = {
-                "type": type(last_exc).__name__,
-                "message": str(last_exc),
-                "attempts": max_retries,
-            }
-            raise type(last_exc)(  # type: ignore[call-arg]
+            assert last_exc is not None  # always set by the loop above
+            raise last_exc.__class__(
                 f"Subgraph failed after {max_retries} attempt(s): {last_exc}"
             ) from last_exc
 
@@ -109,6 +105,7 @@ def subgraph_node(
                 return _map_output(result)
             except Exception as exc:
                 last_exc = exc
+                assert fallback is not None  # guaranteed by __init__ guard
                 fallback_result = await fallback.run(sub_state)
                 mapped = _map_output(fallback_result)
                 mapped["__subgraph_error__"] = {
