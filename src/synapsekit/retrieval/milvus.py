@@ -40,7 +40,6 @@ class MilvusVectorStore(VectorStore):
 
         self._embeddings = embedding_backend
         self._collection_name = collection_name
-        self._dimension = embedding_backend.dimension
         self._index_type = (
             index_type if isinstance(index_type, MilvusIndexType) else MilvusIndexType(index_type)
         )
@@ -58,7 +57,6 @@ class MilvusVectorStore(VectorStore):
             password=password,
             db_name=db_name,
         )
-        self._ensure_collection()
 
     def _build_index_params(self) -> dict[str, Any]:
         if self._index_type == MilvusIndexType.IVF_FLAT:
@@ -78,7 +76,7 @@ class MilvusVectorStore(VectorStore):
             return {"metric_type": self._metric_type, "params": {"nprobe": self._nprobe}}
         return {"metric_type": self._metric_type, "params": {"ef": self._ef}}
 
-    def _ensure_collection(self) -> None:
+    def _ensure_collection(self, dimension: int) -> None:
         if self._client.has_collection(collection_name=self._collection_name):
             self._client.load_collection(collection_name=self._collection_name)
             return
@@ -97,7 +95,7 @@ class MilvusVectorStore(VectorStore):
         schema.add_field(
             field_name="embedding",
             datatype=self._data_type.FLOAT_VECTOR,
-            dim=self._dimension,
+            dim=dimension,
         )
 
         self._client.create_collection(collection_name=self._collection_name, schema=schema)
@@ -124,10 +122,15 @@ class MilvusVectorStore(VectorStore):
         if isinstance(entity, dict):
             return entity
         if hasattr(entity, "to_dict"):
-            return entity.to_dict()
+            raw = entity.to_dict()
+            return raw if isinstance(raw, dict) else dict(raw)
         if hasattr(entity, "items"):
             return dict(entity.items())
-        return {k: getattr(entity, k) for k in dir(entity) if not k.startswith("_")}
+        return {
+            k: getattr(entity, k)
+            for k in dir(entity)
+            if not k.startswith("_") and not callable(getattr(entity, k))
+        }
 
     @classmethod
     def _extract_metadata(cls, entity: dict[str, Any]) -> dict[str, Any]:
@@ -146,6 +149,7 @@ class MilvusVectorStore(VectorStore):
             raise ValueError("metadata must match texts length")
 
         vecs = await self._embeddings.embed(texts)
+        self._ensure_collection(vecs.shape[1])
         rows = []
         for text, vector, extra in zip(texts, vecs, meta, strict=True):
             row = {"text": text, "embedding": vector.tolist(), **extra}
@@ -158,6 +162,9 @@ class MilvusVectorStore(VectorStore):
         top_k: int = 5,
         metadata_filter: dict | None = None,
     ) -> list[dict]:
+        if not self._client.has_collection(collection_name=self._collection_name):
+            return []
+
         q_vec = await self._embeddings.embed_one(query)
         results = self._client.search(
             collection_name=self._collection_name,

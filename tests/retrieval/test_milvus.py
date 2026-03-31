@@ -38,7 +38,7 @@ async def test_milvus_store_creates_collection_inserts_rows_and_searches_with_me
     monkeypatch,
 ):
     client = MagicMock()
-    client.has_collection.return_value = False
+    client.has_collection.side_effect = [False, True]
     schema = _Schema()
     client.create_schema.return_value = schema
     client.search.return_value = [
@@ -66,6 +66,15 @@ async def test_milvus_store_creates_collection_inserts_rows_and_searches_with_me
         index_type=MilvusIndexType.HNSW,
     )
 
+    client.create_collection.assert_not_called()
+    client.create_index.assert_not_called()
+    client.load_collection.assert_not_called()
+
+    await store.add(
+        ["alpha", "beta"],
+        metadata=[{"source": "notes", "lang": "en"}, {"source": "blog", "lang": "fr"}],
+    )
+
     client.create_collection.assert_called_once()
     client.create_index.assert_called_once_with(
         collection_name="docs",
@@ -79,11 +88,6 @@ async def test_milvus_store_creates_collection_inserts_rows_and_searches_with_me
     client.load_collection.assert_called_once_with(collection_name="docs")
     assert len(schema.fields) == 3
 
-    await store.add(
-        ["alpha", "beta"],
-        metadata=[{"source": "notes", "lang": "en"}, {"source": "blog", "lang": "fr"}],
-    )
-
     client.insert.assert_called_once_with(
         collection_name="docs",
         data=[
@@ -92,7 +96,9 @@ async def test_milvus_store_creates_collection_inserts_rows_and_searches_with_me
         ],
     )
 
-    results = await store.search("alpha", top_k=3, metadata_filter={"source": "notes", "lang": "en"})
+    results = await store.search(
+        "alpha", top_k=3, metadata_filter={"source": "notes", "lang": "en"}
+    )
 
     client.search.assert_called_once_with(
         collection_name="docs",
