@@ -262,8 +262,12 @@ __all__ = [
     "InMemoryVectorStore",
     "ChromaVectorStore",
     "FAISSVectorStore",
+    "LanceDBVectorStore",
+    "MilvusVectorStore",
+    "PGVectorStore",
     "QdrantVectorStore",
     "PineconeVectorStore",
+    "WeaviateVectorStore",
     # Retrieval
     "Retriever",
     "AdaptiveRAGRetriever",
@@ -507,8 +511,12 @@ _LAZY_IMPORTS = {
     # Vector stores
     "ChromaVectorStore": "retrieval.chroma",
     "FAISSVectorStore": "retrieval.faiss",
+    "LanceDBVectorStore": "retrieval.lancedb",
+    "MilvusVectorStore": "retrieval.milvus",
+    "PGVectorStore": "retrieval.pgvector",
     "QdrantVectorStore": "retrieval.qdrant",
     "PineconeVectorStore": "retrieval.pinecone",
+    "WeaviateVectorStore": "retrieval.weaviate",
     # LLM providers
     "AsyncLRUCache": "llm._cache",
     "DynamoDBCacheBackend": "llm._cache_dynamodb",

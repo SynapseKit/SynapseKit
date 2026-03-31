@@ -35,9 +35,13 @@ __all__ = [
     "InMemoryVectorStore",
     "MultiStepRetriever",
     "ParentDocumentRetriever",
+    "LanceDBVectorStore",
+    "MilvusVectorStore",
+    "PGVectorStore",
     "PineconeVectorStore",
     "QdrantVectorStore",
     "QueryDecompositionRetriever",
+    "WeaviateVectorStore",
     "Retriever",
     "SelfQueryRetriever",
     "SelfRAGRetriever",
@@ -48,8 +52,12 @@ __all__ = [
 _BACKENDS = {
     "ChromaVectorStore": ".chroma",
     "FAISSVectorStore": ".faiss",
+    "LanceDBVectorStore": ".lancedb",
+    "MilvusVectorStore": ".milvus",
+    "PGVectorStore": ".pgvector",
     "QdrantVectorStore": ".qdrant",
     "PineconeVectorStore": ".pinecone",
+    "WeaviateVectorStore": ".weaviate",
 }
 
 
