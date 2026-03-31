@@ -335,3 +335,94 @@ class TestPineconeVectorStore:
                 pine_mod.PineconeVectorStore(
                     make_mock_embeddings(), index_name="idx", api_key="key"
                 )
+
+
+# ------------------------------------------------------------------ #
+# WeaviateVectorStore (mocked weaviate-client)
+# ------------------------------------------------------------------ #
+
+
+class TestWeaviateVectorStore:
+    def _make_weaviate_mocks(self):
+        mock_metadata = MagicMock()
+        mock_metadata.score = 0.92
+        mock_metadata.distance = 0.08
+
+        mock_obj = MagicMock()
+        mock_obj.properties = {"content": "weaviate doc", "source": "test"}
+        mock_obj.metadata = mock_metadata
+
+        mock_collection = MagicMock()
+        mock_collection.query.fetch.total = 2
+        mock_collection.search.return_value = MagicMock(objects=[mock_obj])
+        mock_collection.data.insert_many = MagicMock()
+
+        mock_client = MagicMock()
+        mock_client.collections.get.return_value = mock_collection
+
+        mock_weaviate = MagicMock()
+        mock_weaviate.connect_to_local.return_value = mock_client
+        mock_weaviate.connect_to_custom.return_value = mock_client
+        mock_weaviate.AuthApiKey = MagicMock()
+
+        return mock_weaviate, mock_collection, mock_client
+
+    def test_import_error_without_weaviate(self):
+        with patch.dict("sys.modules", {"weaviate": None}):
+            import importlib
+
+            import synapsekit.retrieval.weaviate as weaviate_mod
+
+            importlib.reload(weaviate_mod)
+            with pytest.raises(ImportError, match="weaviate-client"):
+                weaviate_mod.WeaviateVectorStore(make_mock_embeddings())
+
+    @pytest.mark.asyncio
+    async def test_add_and_search(self):
+        mock_weaviate, mock_collection, _mock_client = self._make_weaviate_mocks()
+        with patch.dict("sys.modules", {"weaviate": mock_weaviate}):
+            from synapsekit.retrieval.weaviate import WeaviateVectorStore
+
+            store = WeaviateVectorStore(make_mock_embeddings())
+            await store.add(["weaviate text"])
+            mock_collection.data.insert_many.assert_called_once()
+
+            results = await store.search("query")
+            assert len(results) == 1
+            assert results[0]["text"] == "weaviate doc"
+            assert results[0]["score"] == pytest.approx(0.92)
+
+    @pytest.mark.asyncio
+    async def test_add_empty_does_nothing(self):
+        mock_weaviate, mock_collection, _mock_client = self._make_weaviate_mocks()
+        with patch.dict("sys.modules", {"weaviate": mock_weaviate}):
+            from synapsekit.retrieval.weaviate import WeaviateVectorStore
+
+            store = WeaviateVectorStore(make_mock_embeddings())
+            await store.add([])
+            mock_collection.data.insert_many.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_search_empty_returns_empty(self):
+        mock_weaviate, mock_collection, _mock_client = self._make_weaviate_mocks()
+        mock_collection.query.fetch.total = 0
+        with patch.dict("sys.modules", {"weaviate": mock_weaviate}):
+            from synapsekit.retrieval.weaviate import WeaviateVectorStore
+
+            store = WeaviateVectorStore(make_mock_embeddings())
+            results = await store.search("query")
+            assert results == []
+
+    @pytest.mark.asyncio
+    async def test_search_with_metadata_filter(self):
+        mock_weaviate, mock_collection, _mock_client = self._make_weaviate_mocks()
+        with patch.dict("sys.modules", {"weaviate": mock_weaviate}):
+            from synapsekit.retrieval.weaviate import WeaviateVectorStore
+
+            store = WeaviateVectorStore(make_mock_embeddings())
+            results = await store.search("query", metadata_filter={"source": "test"})
+            assert len(results) == 1
+
+            filtered_out = await store.search("query", metadata_filter={"source": "other"})
+            assert filtered_out == []
+            mock_collection.search.assert_called()
