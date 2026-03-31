@@ -75,6 +75,8 @@ class PGVectorStore(VectorStore):
     async def _init_table(self) -> None:
         op_string = self._get_operator_string()
         conn = self._conn
+        if conn is None:
+            raise RuntimeError("PGVector connection not initialized")
         await conn.execute(
             f"""
             CREATE TABLE IF NOT EXISTS {self._table_name} (
