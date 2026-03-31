@@ -1,7 +1,7 @@
 <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-  <!-- Dark background -->
-  <rect width="32" height="32" rx="6" fill="#0a0e14"/>
-  <!-- >> chevrons: streaming / async -->
-  <polyline points="5,10 13,16 5,22" stroke="#22c55e" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-  <polyline points="14,10 22,16 14,22" stroke="#22c55e" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Light off-white background -->
+  <rect width="32" height="32" rx="6" fill="#f0fdf4"/>
+  <!-- >> chevrons in deep green -->
+  <polyline points="5,10 13,16 5,22" stroke="#15803d" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <polyline points="14,10 22,16 14,22" stroke="#15803d" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
