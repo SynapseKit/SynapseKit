@@ -7,6 +7,66 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.4.6] — 2026-04-01
+
+### Added
+
+- **Subgraph error handling** — `subgraph_node()` gains four keyword-only parameters: `on_error` (`"raise"` / `"retry"` / `"fallback"` / `"skip"`), `max_retries` (default 3), and `fallback` (a secondary `CompiledGraph`). On any handled failure the parent state receives `"__subgraph_error__"` with `"type"`, `"message"`, and `"attempts"` keys. Backward-compatible: default behaviour (`on_error="raise"`) is unchanged. (#378)
+- 17 new tests (1450 total)
+
+---
+
+## [1.4.5] — 2026-03-31
+
+### Added
+
+- **WeaviateVectorStore** — Weaviate v4 client; lazy collection creation; cosine vector search via `query.near_vector`; metadata filtering; `pip install synapsekit[weaviate]`
+- **PGVectorStore** — PostgreSQL + pgvector; async psycopg3; cosine / L2 / inner-product distance; SQL-injection-safe via `psycopg.sql.Identifier`; metadata JSONB; `pip install synapsekit[pgvector]`
+- **MilvusVectorStore** — IVF_FLAT and HNSW index types; `MilvusIndexType` enum; metadata filtering via Milvus expressions; Zilliz Cloud support; `pip install synapsekit[milvus]`
+- **LanceDBVectorStore** — embedded, serverless; local and cloud (S3/GCS) storage; automatic FTS index; metadata filtering; `pip install synapsekit[lancedb]`
+
+All four backends follow the existing lazy-import `_BACKENDS` pattern and are included in `synapsekit[all]`.
+
+- 0 new tests (1433 total)
+
+---
+
+## [1.4.4] — 2026-03-30
+
+### Added
+
+- **SambaNova provider** — fast inference on Meta Llama, Qwen, and other open models via SambaNova Cloud's OpenAI-compatible API; requires `pip install synapsekit[openai]`; always set `provider="sambanova"`
+- **GoogleDriveLoader** — load files and folders from Google Drive via service-account credentials; supports Google Docs (text export), Sheets (CSV export), PDFs, and text files; `pip install synapsekit[gdrive]`
+- **`split_with_metadata()`** — new method on `BaseSplitter`; returns `list[dict]` with `text` and `metadata` keys; automatically injects `chunk_index`; all splitters inherit it
+
+### Fixed
+
+- `asyncio.get_event_loop()` → `asyncio.get_running_loop()` in `GoogleDriveLoader` (deprecated in Python 3.10+)
+- `build()` in `GoogleDriveLoader.aload()` wrapped in executor (was blocking the event loop)
+- Failed file downloads in `GoogleDriveLoader._load_folder` now log a warning instead of silently skipping
+
+- 49 new tests (1452 total)
+
+---
+
+## [1.4.3] — 2026-03-29
+
+### Added
+
+- **XMLLoader** — load XML files via stdlib `xml.etree.ElementTree`; optional `tags` filter; no new dependencies
+- **DiscordLoader** — load messages from Discord channels via bot token; `before_message_id` / `after_message_id` pagination; rich metadata (author, timestamp, attachments); `pip install synapsekit[discord]`
+- **PythonREPLTool timeout** — `timeout: float = 5.0` parameter; Unix uses `signal.SIGALRM`, Windows uses `multiprocessing.Process`; security warning logged on instantiation
+
+### Improved
+
+- **Mermaid conditional edges** — render as dashed arrows (`-.->`) to distinguish from deterministic edges; branch labels prefixed with condition function name (e.g. `route:approve`)
+- **SQLiteCheckpointer** — supports `async with` for automatic connection cleanup
+- **Windows compatibility** — `audio/x-wav` MIME normalised to `audio/wav`; shell timeout test uses portable Python sleep; graph tracer uses `time.perf_counter()` for sub-millisecond resolution
+
+- 35 new tests (1403 total)
+
+---
+
 ## [1.4.2] — 2026-03-28
 
 ### Added
