@@ -201,6 +201,7 @@ from .retrieval.flare import FLARERetriever
 from .retrieval.graphrag import GraphRAGRetriever, KnowledgeGraph
 from .retrieval.hybrid_search import HybridSearchRetriever
 from .retrieval.hyde import HyDERetriever
+from .retrieval.milvus import MilvusIndexType, MilvusVectorStore
 from .retrieval.multi_step import MultiStepRetriever
 from .retrieval.parent_document import ParentDocumentRetriever
 from .retrieval.query_decomposition import QueryDecompositionRetriever
@@ -262,6 +263,8 @@ __all__ = [
     "InMemoryVectorStore",
     "ChromaVectorStore",
     "FAISSVectorStore",
+    "MilvusIndexType",
+    "MilvusVectorStore",
     "QdrantVectorStore",
     "PineconeVectorStore",
     "PGVectorStore",

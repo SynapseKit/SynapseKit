@@ -9,6 +9,7 @@ from .flare import FLARERetriever
 from .graphrag import GraphRAGRetriever, KnowledgeGraph
 from .hybrid_search import HybridSearchRetriever
 from .hyde import HyDERetriever
+from .milvus import MilvusIndexType, MilvusVectorStore
 from .multi_step import MultiStepRetriever
 from .parent_document import ParentDocumentRetriever
 from .query_decomposition import QueryDecompositionRetriever
@@ -33,6 +34,8 @@ __all__ = [
     "HybridSearchRetriever",
     "HyDERetriever",
     "InMemoryVectorStore",
+    "MilvusIndexType",
+    "MilvusVectorStore",
     "MultiStepRetriever",
     "ParentDocumentRetriever",
     "PineconeVectorStore",
@@ -49,6 +52,7 @@ __all__ = [
 _BACKENDS = {
     "ChromaVectorStore": ".chroma",
     "FAISSVectorStore": ".faiss",
+    "MilvusVectorStore": ".milvus",
     "PGVectorStore": ".pgvector",
     "QdrantVectorStore": ".qdrant",
     "PineconeVectorStore": ".pinecone",
