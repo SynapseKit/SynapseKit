@@ -37,6 +37,7 @@ __all__ = [
     "ParentDocumentRetriever",
     "PineconeVectorStore",
     "QdrantVectorStore",
+    "WeaviateVectorStore",
     "QueryDecompositionRetriever",
     "Retriever",
     "SelfQueryRetriever",
@@ -50,6 +51,7 @@ _BACKENDS = {
     "FAISSVectorStore": ".faiss",
     "QdrantVectorStore": ".qdrant",
     "PineconeVectorStore": ".pinecone",
+    "WeaviateVectorStore": ".weaviate",
 }
 
 

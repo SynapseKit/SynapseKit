@@ -47,6 +47,7 @@ chroma = ["chromadb>=0.5"]
 faiss = ["faiss-cpu>=1.7"]
 qdrant = ["qdrant-client>=1.9"]
 pinecone = ["pinecone>=3.0"]
+weaviate = ["weaviate-client>=4.0"]
 ollama = ["ollama>=0.2"]
 ai21 = ["ai21>=2.0"]
 cohere = ["cohere>=5.0"]
@@ -95,6 +96,7 @@ all = [
     "faiss-cpu>=1.7",
     "qdrant-client>=1.9",
     "pinecone>=3.0",
+    "weaviate-client>=4.0",
     "ollama>=0.2",
     "ai21>=2.0",
     "cohere>=5.0",
@@ -189,6 +191,7 @@ module = [
     "synapsekit.retrieval.faiss",
     "synapsekit.retrieval.qdrant",
     "synapsekit.retrieval.pinecone",
+    "synapsekit.retrieval.weaviate",
     "synapsekit.llm.groq",
     "synapsekit.llm.azure_openai",
     "synapsekit.llm.deepseek",
@@ -227,6 +230,7 @@ python-pptx = "pptx"
 python-docx = "docx"
 tavily-python = "tavily"
 youtube-search-python = "youtubesearchpython"
+weaviate-client = "weaviate"
 google-cloud-aiplatform = "vertexai"
 llama-cpp-python = "llama_cpp"
 "discord.py" = "discord"
