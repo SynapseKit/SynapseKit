@@ -9,6 +9,7 @@ from .flare import FLARERetriever
 from .graphrag import GraphRAGRetriever, KnowledgeGraph
 from .hybrid_search import HybridSearchRetriever
 from .hyde import HyDERetriever
+from .lancedb import LanceDBVectorStore
 from .multi_step import MultiStepRetriever
 from .parent_document import ParentDocumentRetriever
 from .query_decomposition import QueryDecompositionRetriever
@@ -33,6 +34,7 @@ __all__ = [
     "HybridSearchRetriever",
     "HyDERetriever",
     "InMemoryVectorStore",
+    "LanceDBVectorStore",
     "MultiStepRetriever",
     "ParentDocumentRetriever",
     "PineconeVectorStore",
