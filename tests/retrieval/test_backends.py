@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import numpy as np
 import pytest
@@ -335,3 +335,147 @@ class TestPineconeVectorStore:
                 pine_mod.PineconeVectorStore(
                     make_mock_embeddings(), index_name="idx", api_key="key"
                 )
+
+
+# ------------------------------------------------------------------ #
+# PGVectorStore (mocked psycopg + pgvector)
+# ------------------------------------------------------------------ #
+
+
+class TestPGVectorStore:
+    def _make_pgvector_mocks(self):
+        mock_cursor = MagicMock()
+        mock_cursor.fetch.return_value = [
+            ("doc1", {"src": "a"}, 0.9),
+            ("doc2", {"src": "b"}, 0.7),
+        ]
+
+        mock_conn = MagicMock()
+        mock_conn.execute = AsyncMock()
+        mock_conn.fetch = AsyncMock(
+            return_value=[
+                {"text": "doc1", "score": 0.9, "metadata": {"src": "a"}},
+                {"text": "doc2", "score": 0.7, "metadata": {"src": "b"}},
+            ]
+        )
+
+        mock_psycopg = MagicMock()
+        mock_psycopg.AsyncConnection.connect = AsyncMock(return_value=mock_conn)
+
+        mock_pgvector = MagicMock()
+
+        mock_embeddings = make_mock_embeddings(dim=4)
+        mock_embeddings.dimension = 4
+
+        return mock_psycopg, mock_pgvector, mock_conn, mock_embeddings
+
+    def test_import_error_without_psycopg(self):
+        with patch.dict("sys.modules", {"psycopg": None, "pgvector.psycopg": None}):
+            import importlib
+
+            import synapsekit.retrieval.pgvector as pgv_mod
+
+            importlib.reload(pgv_mod)
+            with pytest.raises(ImportError, match="psycopg"):
+                pgv_mod.PGVectorStore(make_mock_embeddings(), "postgresql://localhost/db")
+
+    def test_import_error_without_pgvector(self):
+        with patch.dict("sys.modules", {"pgvector.psycopg": None}):
+            import importlib
+
+            import synapsekit.retrieval.pgvector as pgv_mod
+
+            importlib.reload(pgv_mod)
+            with pytest.raises(ImportError, match="psycopg"):
+                pgv_mod.PGVectorStore(make_mock_embeddings(), "postgresql://localhost/db")
+
+    @pytest.mark.asyncio
+    async def test_add_and_search(self):
+        mock_psycopg, mock_pgvector, mock_conn, mock_emb = self._make_pgvector_mocks()
+        with patch.dict(
+            "sys.modules",
+            {
+                "psycopg": mock_psycopg,
+                "pgvector.psycopg": mock_pgvector,
+            },
+        ):
+            from synapsekit.retrieval.pgvector import PGVectorStore
+
+            store = PGVectorStore(mock_emb, "postgresql://localhost/test")
+            await store.add(["text1", "text2"])
+            assert mock_conn.execute.call_count >= 1
+
+            results = await store.search("query", top_k=2)
+            assert len(results) == 2
+            assert results[0]["text"] == "doc1"
+            assert results[0]["score"] == pytest.approx(0.9)
+
+    @pytest.mark.asyncio
+    async def test_add_empty_does_nothing(self):
+        mock_psycopg, mock_pgvector, mock_conn, mock_emb = self._make_pgvector_mocks()
+        with patch.dict(
+            "sys.modules",
+            {
+                "psycopg": mock_psycopg,
+                "pgvector.psycopg": mock_pgvector,
+            },
+        ):
+            from synapsekit.retrieval.pgvector import PGVectorStore
+
+            store = PGVectorStore(mock_emb, "postgresql://localhost/test")
+            await store.add([])
+            mock_conn.execute.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_search_empty_returns_empty(self):
+        mock_psycopg, mock_pgvector, mock_conn, mock_emb = self._make_pgvector_mocks()
+        mock_conn.fetch.return_value = []
+
+        with patch.dict(
+            "sys.modules",
+            {
+                "psycopg": mock_psycopg,
+                "pgvector.psycopg": mock_pgvector,
+            },
+        ):
+            from synapsekit.retrieval.pgvector import PGVectorStore
+
+            store = PGVectorStore(mock_emb, "postgresql://localhost/test")
+            results = await store.search("query")
+            assert results == []
+
+    @pytest.mark.asyncio
+    async def test_search_with_metadata_filter(self):
+        mock_psycopg, mock_pgvector, mock_conn, mock_emb = self._make_pgvector_mocks()
+        with patch.dict(
+            "sys.modules",
+            {
+                "psycopg": mock_psycopg,
+                "pgvector.psycopg": mock_pgvector,
+            },
+        ):
+            from synapsekit.retrieval.pgvector import PGVectorStore
+
+            store = PGVectorStore(mock_emb, "postgresql://localhost/test")
+            await store.search("query", metadata_filter={"category": "test"})
+            assert mock_conn.fetch.called
+
+    @pytest.mark.asyncio
+    async def test_distance_strategies(self):
+        mock_psycopg, mock_pgvector, _, mock_emb = self._make_pgvector_mocks()
+        from synapsekit.retrieval.pgvector import DistanceStrategy
+
+        with patch.dict(
+            "sys.modules",
+            {
+                "psycopg": mock_psycopg,
+                "pgvector.psycopg": mock_pgvector,
+            },
+        ):
+            from synapsekit.retrieval.pgvector import PGVectorStore
+
+            for strategy in DistanceStrategy:
+                store = PGVectorStore(
+                    mock_emb, "postgresql://localhost/test", distance_strategy=strategy
+                )
+                assert store._distance_strategy == strategy
