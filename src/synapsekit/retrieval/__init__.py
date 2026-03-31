@@ -36,6 +36,7 @@ __all__ = [
     "MultiStepRetriever",
     "ParentDocumentRetriever",
     "PineconeVectorStore",
+    "PGVectorStore",
     "QdrantVectorStore",
     "QueryDecompositionRetriever",
     "Retriever",
@@ -48,6 +49,7 @@ __all__ = [
 _BACKENDS = {
     "ChromaVectorStore": ".chroma",
     "FAISSVectorStore": ".faiss",
+    "PGVectorStore": ".pgvector",
     "QdrantVectorStore": ".qdrant",
     "PineconeVectorStore": ".pinecone",
 }

@@ -264,6 +264,7 @@ __all__ = [
     "FAISSVectorStore",
     "QdrantVectorStore",
     "PineconeVectorStore",
+    "PGVectorStore",
     # Retrieval
     "Retriever",
     "AdaptiveRAGRetriever",
@@ -509,6 +510,7 @@ _LAZY_IMPORTS = {
     "FAISSVectorStore": "retrieval.faiss",
     "QdrantVectorStore": "retrieval.qdrant",
     "PineconeVectorStore": "retrieval.pinecone",
+    "PGVectorStore": "retrieval.pgvector",
     # LLM providers
     "AsyncLRUCache": "llm._cache",
     "DynamoDBCacheBackend": "llm._cache_dynamodb",

@@ -79,6 +79,7 @@ ernie = ["erniebot>=0.5"]
 minimax = ["httpx>=0.27"]
 serve = ["fastapi>=0.110", "uvicorn[standard]>=0.29"]
 postgres = ["psycopg[binary]>=3.1"]
+pgvector = ["psycopg[binary]>=3.1", "pgvector>=0.2"]
 wolfram = ["wolframalpha>=5.0"]
 dynamodb = ["boto3>=1.34"]
 discord = ["discord.py>=2.0"]
@@ -114,6 +115,7 @@ all = [
     "fastapi>=0.110",
     "uvicorn[standard]>=0.29",
     "psycopg[binary]>=3.1",
+    "pgvector>=0.2",
     "groq>=0.9",
     "llama-cpp-python>=0.2",
     "erniebot>=0.5",
@@ -189,6 +191,7 @@ module = [
     "synapsekit.retrieval.faiss",
     "synapsekit.retrieval.qdrant",
     "synapsekit.retrieval.pinecone",
+    "synapsekit.retrieval.pgvector",
     "synapsekit.llm.groq",
     "synapsekit.llm.azure_openai",
     "synapsekit.llm.deepseek",
