@@ -86,14 +86,16 @@ def subgraph_node(
 
         # ── "retry" ────────────────────────────────────────────────────────────
         if on_error == "retry":
-            for attempt in range(1, max_retries + 1):
+            for _ in range(max_retries):
                 try:
                     result = await compiled_graph.run(sub_state)
                     return _map_output(result)
                 except Exception as exc:
                     last_exc = exc
             # All attempts exhausted — surface error info and re-raise
-            raise last_exc.__class__(  # type: ignore[union-attr]
+            assert last_exc is not None
+            exc_type = type(last_exc)
+            raise exc_type(
                 f"Subgraph failed after {max_retries} attempt(s): {last_exc}"
             ) from last_exc
 
