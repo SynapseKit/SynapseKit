@@ -234,6 +234,7 @@ disable_error_code = ["override", "operator", "arg-type", "misc", "attr-defined"
 pep621_dev_dependency_groups = ["dev"]
 
 [tool.deptry.package_module_name_map]
+wikipedia-api = "wikipediaapi"
 google-generativeai = "google"
 google-api-python-client = "googleapiclient"
 google-auth = "google"
