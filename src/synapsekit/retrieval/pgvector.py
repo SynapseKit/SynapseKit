@@ -136,9 +136,9 @@ class PGVectorStore(VectorStore):
 
         for i, text in enumerate(texts):
             await conn.execute(
-                sql.SQL(
-                    "INSERT INTO {} (text, metadata, embedding) VALUES (%s, %s, %s)"
-                ).format(sql.Identifier(self._table_name)),
+                sql.SQL("INSERT INTO {} (text, metadata, embedding) VALUES (%s, %s, %s)").format(
+                    sql.Identifier(self._table_name)
+                ),
                 (text, json.dumps(meta[i]), vecs[i].tolist()),
             )
 
@@ -181,9 +181,7 @@ class PGVectorStore(VectorStore):
             query_parts.append(sql.SQL(" WHERE "))
             query_parts.append(sql.SQL(" AND ").join(where_parts))
 
-        query_parts.append(
-            sql.SQL(" ORDER BY embedding {} %s LIMIT %s").format(sql.SQL(op))
-        )
+        query_parts.append(sql.SQL(" ORDER BY embedding {} %s LIMIT %s").format(sql.SQL(op)))
 
         query_sql = sql.Composed(query_parts)
         all_params = score_params + params + order_params
