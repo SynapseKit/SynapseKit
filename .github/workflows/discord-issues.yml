@@ -1,0 +1,30 @@
+name: Post good-first-issues to Discord
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  issues: read
+
+jobs:
+  notify:
+    if: |
+      github.event.label.name == 'good first issue' ||
+      github.event.label.name == 'help wanted'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post to Discord
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_GOOD_FIRST_ISSUES_WEBHOOK }}
+          TITLE: ${{ github.event.issue.title }}
+          URL: ${{ github.event.issue.html_url }}
+        run: |
+          set -euo pipefail
+          if [ -z "$DISCORD_WEBHOOK" ]; then
+            echo "Missing DISCORD_GOOD_FIRST_ISSUES_WEBHOOK; skipping."
+            exit 0
+          fi
+          curl -sS -H "Content-Type: application/json" \
+            -d "{\"content\": \"👋 **New issue open for contribution:**\\n$TITLE\\n$URL\"}" \
+            "$DISCORD_WEBHOOK"
