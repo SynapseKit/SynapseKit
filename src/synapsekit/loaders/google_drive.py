@@ -91,9 +91,7 @@ class GoogleDriveLoader:
             )
 
         loop = asyncio.get_running_loop()
-        service = await loop.run_in_executor(
-            None, lambda: build("drive", "v3", credentials=creds)
-        )
+        service = await loop.run_in_executor(None, lambda: build("drive", "v3", credentials=creds))
 
         if self.file_id:
             return await self._load_file(service, self.file_id)
@@ -106,7 +104,11 @@ class GoogleDriveLoader:
 
         file_metadata = await loop.run_in_executor(
             None,
-            lambda: service.files().get(fileId=file_id, fields="id,name,mimeType,modifiedTime").execute(),
+            lambda: (
+                service.files()
+                .get(fileId=file_id, fields="id,name,mimeType,modifiedTime")
+                .execute()
+            ),
         )
 
         text = await self._download_file(service, file_id, file_metadata["mimeType"])
@@ -131,9 +133,11 @@ class GoogleDriveLoader:
         query = f"'{folder_id}' in parents and trashed=false"
         results = await loop.run_in_executor(
             None,
-            lambda: service.files()
-            .list(q=query, fields="files(id,name,mimeType,modifiedTime)")
-            .execute(),
+            lambda: (
+                service.files()
+                .list(q=query, fields="files(id,name,mimeType,modifiedTime)")
+                .execute()
+            ),
         )
 
         files = results.get("files", [])
@@ -176,18 +180,16 @@ class GoogleDriveLoader:
         if mime_type == "application/vnd.google-apps.document":
             content: bytes = await loop.run_in_executor(
                 None,
-                lambda: service.files()
-                .export_media(fileId=file_id, mimeType="text/plain")
-                .execute(),
+                lambda: (
+                    service.files().export_media(fileId=file_id, mimeType="text/plain").execute()
+                ),
             )
             return content.decode("utf-8")
 
         elif mime_type == "application/vnd.google-apps.spreadsheet":
             content = await loop.run_in_executor(
                 None,
-                lambda: service.files()
-                .export_media(fileId=file_id, mimeType="text/csv")
-                .execute(),
+                lambda: service.files().export_media(fileId=file_id, mimeType="text/csv").execute(),
             )
             return content.decode("utf-8")
 

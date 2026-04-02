@@ -186,6 +186,7 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) to get started. Look for issues tagged [
 ## Community
 
 - 💬 [Discussions](https://github.com/SynapseKit/SynapseKit/discussions) — ask questions, share ideas
+- 🧭 [Discord roles draft](DISCORD_ROLES.md) — proposed roles and permissions for issue #389
 - 🐛 [Bug reports](https://github.com/SynapseKit/SynapseKit/issues/new?template=bug_report.yml)
 - 💡 [Feature requests](https://github.com/SynapseKit/SynapseKit/issues/new?template=feature_request.yml)
 - 🔒 [Security policy](SECURITY.md)
