@@ -76,7 +76,7 @@ class TestSlackLoaderDocuments:
             replies = thread_replies.get(ts, []) if thread_replies else []
             # Slack API returns parent message + replies
             parent = next((m for m in messages if m.get("ts") == ts), None)
-            all_messages = [parent] + replies if parent else replies
+            all_messages = [parent, *replies] if parent else replies
             return {
                 "ok": True,
                 "messages": all_messages,
