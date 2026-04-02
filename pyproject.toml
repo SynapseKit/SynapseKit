@@ -244,6 +244,7 @@ google-cloud-aiplatform = "vertexai"
 llama-cpp-python = "llama_cpp"
 "discord.py" = "discord"
 slack-sdk = "slack_sdk"
+weaviate-client = "weaviate"
 
 [tool.deptry.per_rule_ignores]
 DEP001 = ["sqlalchemy", "pydantic", "aiohttp", "opentelemetry", "whisper", "botocore", "aiomcache", "nest_asyncio", "huggingface_hub", "serpapi"]
