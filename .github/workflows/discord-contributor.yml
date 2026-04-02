@@ -1,0 +1,45 @@
+name: Assign Discord Contributor Role
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: read
+
+jobs:
+  assign-role:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Look up Discord ID for PR author
+        id: lookup
+        shell: bash
+        run: |
+          set -euo pipefail
+          GH_USER="${{ github.event.pull_request.user.login }}"
+          if [ ! -f .github/discord-members.json ]; then
+            echo "discord_id=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          DISCORD_ID=$(jq -r --arg user "$GH_USER" '.[$user] // empty' .github/discord-members.json)
+          echo "discord_id=$DISCORD_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Assign Contributor role
+        if: steps.lookup.outputs.discord_id != ''
+        env:
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          DISCORD_GUILD_ID: ${{ secrets.DISCORD_GUILD_ID }}
+          DISCORD_CONTRIBUTOR_ROLE_ID: ${{ secrets.DISCORD_CONTRIBUTOR_ROLE_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "$DISCORD_BOT_TOKEN" ] || [ -z "$DISCORD_GUILD_ID" ] || [ -z "$DISCORD_CONTRIBUTOR_ROLE_ID" ]; then
+            echo "Missing DISCORD_* secrets; skipping role assignment."
+            exit 0
+          fi
+          curl -sS -X PUT \
+            -H "Authorization: Bot $DISCORD_BOT_TOKEN" \
+            -H "Content-Type: application/json" \
+            "https://discord.com/api/v10/guilds/$DISCORD_GUILD_ID/members/${{ steps.lookup.outputs.discord_id }}/roles/$DISCORD_CONTRIBUTOR_ROLE_ID"
