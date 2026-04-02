@@ -152,6 +152,8 @@ class NotionLoader:
 
             has_more = data.get("has_more", False)
             start_cursor = data.get("next_cursor")
+            if has_more and not start_cursor:
+                break
 
         # Recursively get children for blocks that have them
         for block in all_blocks[:]:  # Copy list to avoid modification during iteration
