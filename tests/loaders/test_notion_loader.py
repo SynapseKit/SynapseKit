@@ -87,13 +87,13 @@ class TestNotionLoaderPage:
     def _mock_retry_method(self, responses: list[dict]):
         """Create a mock for _request_with_retry that returns responses in sequence."""
         response_iter = iter(responses)
-        
+
         async def mock_request(*args, **kwargs):
             data = next(response_iter)
             mock_resp = MagicMock()
             mock_resp.json = lambda: data
             return mock_resp
-        
+
         return mock_request
 
     async def test_load_single_page(self):
@@ -216,7 +216,7 @@ class TestNotionLoaderPage:
                 with patch.object(loader, "_request_with_retry", side_effect=mock_retry):
                     docs = await loader.load()
 
-        assert "First block\nSecond block" == docs[0].text
+        assert docs[0].text == "First block\nSecond block"
 
     async def test_load_page_with_nested_blocks(self):
         """Test loading blocks with children."""
@@ -253,7 +253,7 @@ class TestNotionLoaderPage:
                 with patch.object(loader, "_request_with_retry", side_effect=mock_retry):
                     docs = await loader.load()
 
-        assert "Parent\nChild" == docs[0].text
+        assert docs[0].text == "Parent\nChild"
 
     async def test_load_page_without_title(self):
         """Test page without a title property."""

@@ -78,11 +78,11 @@ class NotionLoader:
             if self.page_id:
                 return [await self._load_page(client, self.page_id)]
             else:
-                return await self._load_database(
-                    client, self.database_id
-                )  # type: ignore[arg-type]
+                # database_id is guaranteed to be str here due to __init__ validation
+                assert self.database_id is not None
+                return await self._load_database(client, self.database_id)
 
-    async def _load_page(self, client: "httpx.AsyncClient", page_id: str) -> Document:
+    async def _load_page(self, client: httpx.AsyncClient, page_id: str) -> Document:
         """Load a single page by ID."""
         # Get page metadata
         page_response = await self._request_with_retry(
@@ -111,7 +111,7 @@ class NotionLoader:
         return Document(text=text, metadata=metadata)
 
     async def _load_database(
-        self, client: "httpx.AsyncClient", database_id: str
+        self, client: httpx.AsyncClient, database_id: str
     ) -> list[Document]:
         """Load all pages from a database."""
         # Query database for all pages
@@ -133,7 +133,7 @@ class NotionLoader:
         return documents
 
     async def _get_block_children(
-        self, client: "httpx.AsyncClient", block_id: str
+        self, client: httpx.AsyncClient, block_id: str
     ) -> list[dict]:
         """Recursively get all block children."""
         all_blocks = []
@@ -141,7 +141,7 @@ class NotionLoader:
         start_cursor = None
 
         while has_more:
-            params = {}
+            params: dict[str, str] = {}
             if start_cursor:
                 params["start_cursor"] = start_cursor
 
@@ -202,7 +202,7 @@ class NotionLoader:
         properties = page_data.get("properties", {})
 
         # Try to find a title property
-        for prop_name, prop_value in properties.items():
+        for _prop_name, prop_value in properties.items():
             if prop_value.get("type") == "title":
                 title_array = prop_value.get("title", [])
                 if title_array:
@@ -212,12 +212,12 @@ class NotionLoader:
 
     async def _request_with_retry(
         self,
-        client: "httpx.AsyncClient",
+        client: httpx.AsyncClient,
         method: str,
         url: str,
         params: dict | None = None,
         json_data: dict | None = None,
-    ) -> "httpx.Response":
+    ) -> httpx.Response:
         """Make HTTP request with retry logic for transient failures.
 
         Based on Notion API official documentation:
@@ -365,7 +365,7 @@ class NotionLoader:
                 else:
                     raise
 
-            except httpx.HTTPStatusError as e:
+            except httpx.HTTPStatusError:
                 # HTTP errors not caught above - should only be non-retryable ones
                 raise
 
