@@ -87,6 +87,7 @@ wolfram = ["wolframalpha>=5.0"]
 dynamodb = ["boto3>=1.34"]
 discord = ["discord.py>=2.0"]
 gdrive = ["google-api-python-client>=2.0", "google-auth>=2.0"]
+notion = ["httpx>=0.27"]
 all = [
     "openai>=1.0",
     "anthropic>=0.25",
