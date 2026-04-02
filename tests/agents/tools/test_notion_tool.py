@@ -48,7 +48,6 @@ def mock_httpx_client(notion_api_key: str):
     return mock_client
 
 
-@pytest.mark.asyncio
 async def test_search_success(notion_api_key: str, mock_httpx_client: AsyncMock) -> None:
     mock_response = MockResponse(
         200,
@@ -79,7 +78,6 @@ async def test_search_success(notion_api_key: str, mock_httpx_client: AsyncMock)
     assert "page-123" in result.output
 
 
-@pytest.mark.asyncio
 async def test_search_no_results(notion_api_key: str, mock_httpx_client: AsyncMock) -> None:
     mock_response = MockResponse(200, {"results": []})
     mock_httpx_client.post = AsyncMock(return_value=mock_response)
@@ -93,7 +91,6 @@ async def test_search_no_results(notion_api_key: str, mock_httpx_client: AsyncMo
     assert "No pages found" in result.output
 
 
-@pytest.mark.asyncio
 async def test_get_page_success(notion_api_key: str, mock_httpx_client: AsyncMock) -> None:
     page_response = MockResponse(
         200,
@@ -131,7 +128,6 @@ async def test_get_page_success(notion_api_key: str, mock_httpx_client: AsyncMoc
     assert "https://notion.so/page-123" in result.output
 
 
-@pytest.mark.asyncio
 async def test_get_page_no_page_id(notion_api_key: str) -> None:
     with patch.dict(os.environ, {"NOTION_API_KEY": notion_api_key}):
         tool = NotionTool()
@@ -141,7 +137,6 @@ async def test_get_page_no_page_id(notion_api_key: str) -> None:
     assert "No page_id provided" in result.error
 
 
-@pytest.mark.asyncio
 async def test_create_page_success(notion_api_key: str, mock_httpx_client: AsyncMock) -> None:
     mock_response = MockResponse(
         200,
@@ -164,7 +159,6 @@ async def test_create_page_success(notion_api_key: str, mock_httpx_client: Async
     assert "https://notion.so/new-page-789" in result.output
 
 
-@pytest.mark.asyncio
 async def test_create_page_no_parent_id(notion_api_key: str) -> None:
     with patch.dict(os.environ, {"NOTION_API_KEY": notion_api_key}):
         tool = NotionTool()
@@ -174,7 +168,6 @@ async def test_create_page_no_parent_id(notion_api_key: str) -> None:
     assert "No parent_id provided" in result.error
 
 
-@pytest.mark.asyncio
 async def test_append_block_success(notion_api_key: str, mock_httpx_client: AsyncMock) -> None:
     mock_response = MockResponse(200, {"results": []})
     mock_httpx_client.patch = AsyncMock(return_value=mock_response)
@@ -190,7 +183,6 @@ async def test_append_block_success(notion_api_key: str, mock_httpx_client: Asyn
     assert "Content appended successfully" in result.output
 
 
-@pytest.mark.asyncio
 async def test_append_block_no_page_id(notion_api_key: str) -> None:
     with patch.dict(os.environ, {"NOTION_API_KEY": notion_api_key}):
         tool = NotionTool()
@@ -200,7 +192,6 @@ async def test_append_block_no_page_id(notion_api_key: str) -> None:
     assert "No page_id provided" in result.error
 
 
-@pytest.mark.asyncio
 async def test_append_block_no_content(notion_api_key: str) -> None:
     with patch.dict(os.environ, {"NOTION_API_KEY": notion_api_key}):
         tool = NotionTool()
@@ -210,7 +201,6 @@ async def test_append_block_no_content(notion_api_key: str) -> None:
     assert "No content provided" in result.error
 
 
-@pytest.mark.asyncio
 async def test_no_operation_provided(notion_api_key: str) -> None:
     with patch.dict(os.environ, {"NOTION_API_KEY": notion_api_key}):
         tool = NotionTool()
@@ -220,7 +210,6 @@ async def test_no_operation_provided(notion_api_key: str) -> None:
     assert "No operation provided" in result.error
 
 
-@pytest.mark.asyncio
 async def test_unknown_operation(notion_api_key: str) -> None:
     with patch.dict(os.environ, {"NOTION_API_KEY": notion_api_key}):
         tool = NotionTool()
@@ -230,7 +219,6 @@ async def test_unknown_operation(notion_api_key: str) -> None:
     assert "Unknown operation" in result.error
 
 
-@pytest.mark.asyncio
 async def test_missing_api_key() -> None:
     with patch.dict(os.environ, {}, clear=True):
         tool = NotionTool()
@@ -240,13 +228,11 @@ async def test_missing_api_key() -> None:
     assert "NOTION_API_KEY not provided" in result.error
 
 
-@pytest.mark.asyncio
 async def test_api_key_from_init() -> None:
     tool = NotionTool(api_key="init_key_123")
     assert tool._get_api_key() == "init_key_123"
 
 
-@pytest.mark.asyncio
 async def test_http_status_error(notion_api_key: str, mock_httpx_client: AsyncMock) -> None:
     mock_response = MockResponse(401, {"code": "unauthorized", "message": "Invalid API key"})
     mock_httpx_client.post = AsyncMock(return_value=mock_response)
@@ -260,7 +246,6 @@ async def test_http_status_error(notion_api_key: str, mock_httpx_client: AsyncMo
     assert "Notion API error" in result.error
 
 
-@pytest.mark.asyncio
 async def test_search_with_empty_query(notion_api_key: str, mock_httpx_client: AsyncMock) -> None:
     mock_response = MockResponse(
         200,
@@ -281,7 +266,6 @@ async def test_search_with_empty_query(notion_api_key: str, mock_httpx_client: A
     assert "Found pages:" in result.output
 
 
-@pytest.mark.asyncio
 async def test_retry_on_rate_limit(notion_api_key: str, mock_httpx_client: AsyncMock) -> None:
     """Test that the tool retries on 429 rate limit error."""
     rate_limit_response = MockResponse(
@@ -299,7 +283,6 @@ async def test_retry_on_rate_limit(notion_api_key: str, mock_httpx_client: Async
     assert result.error is None
 
 
-@pytest.mark.asyncio
 async def test_retry_on_server_error(notion_api_key: str, mock_httpx_client: AsyncMock) -> None:
     """Test that the tool retries on 500 server error."""
     error_response = MockResponse(500, {"code": "internal_server_error"})
@@ -315,7 +298,6 @@ async def test_retry_on_server_error(notion_api_key: str, mock_httpx_client: Asy
     assert result.error is None
 
 
-@pytest.mark.asyncio
 async def test_no_retry_on_auth_error(notion_api_key: str, mock_httpx_client: AsyncMock) -> None:
     """Test that the tool does not retry on 401 auth error."""
     error_response = MockResponse(401, {"code": "unauthorized"})

@@ -173,7 +173,7 @@ class NotionTool(BaseTool):
                 return ToolResult(output="", error=f"Unknown operation: {operation}")
         except ValueError as e:
             return ToolResult(output="", error=str(e))
-        except Exception as e:
+        except (httpx.HTTPError, RuntimeError) as e:
             return ToolResult(output="", error=f"Notion API error: {e}")
 
     async def search(self, query: str = "") -> ToolResult:
