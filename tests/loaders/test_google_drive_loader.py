@@ -21,9 +21,7 @@ class TestGoogleDriveLoaderValidation:
 
     def test_file_and_folder_mutually_exclusive(self):
         with pytest.raises(ValueError, match="not both"):
-            GoogleDriveLoader(
-                credentials_path="creds.json", file_id="123", folder_id="456"
-            )
+            GoogleDriveLoader(credentials_path="creds.json", file_id="123", folder_id="456")
 
     def test_valid_construction_with_file_id(self):
         loader = GoogleDriveLoader(credentials_path="creds.json", file_id="123")
@@ -36,9 +34,7 @@ class TestGoogleDriveLoaderValidation:
         assert loader.file_id is None
 
     def test_credentials_dict_allowed(self):
-        loader = GoogleDriveLoader(
-            credentials_dict={"type": "service_account"}, file_id="123"
-        )
+        loader = GoogleDriveLoader(credentials_dict={"type": "service_account"}, file_id="123")
         assert loader.credentials_dict == {"type": "service_account"}
         assert loader.credentials_path is None
 
@@ -101,14 +97,17 @@ class TestGoogleDriveLoaderFileLoading:
 
         loader = GoogleDriveLoader(credentials_path="creds.json", file_id="doc123")
 
-        with patch.dict("sys.modules", {
-            "google": mock_google,
-            "google.oauth2": mock_google.oauth2,
-            "google.oauth2.service_account": mock_service_account,
-            "googleapiclient": mock_googleapiclient,
-            "googleapiclient.discovery": mock_googleapiclient.discovery,
-            "googleapiclient.http": mock_googleapiclient.http,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "google": mock_google,
+                "google.oauth2": mock_google.oauth2,
+                "google.oauth2.service_account": mock_service_account,
+                "googleapiclient": mock_googleapiclient,
+                "googleapiclient.discovery": mock_googleapiclient.discovery,
+                "googleapiclient.http": mock_googleapiclient.http,
+            },
+        ):
             docs = await loader.aload()
 
         assert len(docs) == 1
@@ -145,14 +144,17 @@ class TestGoogleDriveLoaderFileLoading:
 
         loader = GoogleDriveLoader(credentials_path="creds.json", file_id="sheet123")
 
-        with patch.dict("sys.modules", {
-            "google": mock_google,
-            "google.oauth2": mock_google.oauth2,
-            "google.oauth2.service_account": mock_service_account,
-            "googleapiclient": mock_googleapiclient,
-            "googleapiclient.discovery": mock_googleapiclient.discovery,
-            "googleapiclient.http": mock_googleapiclient.http,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "google": mock_google,
+                "google.oauth2": mock_google.oauth2,
+                "google.oauth2.service_account": mock_service_account,
+                "googleapiclient": mock_googleapiclient,
+                "googleapiclient.discovery": mock_googleapiclient.discovery,
+                "googleapiclient.http": mock_googleapiclient.http,
+            },
+        ):
             docs = await loader.aload()
 
         assert len(docs) == 1
@@ -198,7 +200,17 @@ class TestGoogleDriveLoaderFileLoading:
 
         loader = GoogleDriveLoader(credentials_path="creds.json", file_id="txt123")
 
-        with patch.dict("sys.modules", {"google": mock_google, "google.oauth2": mock_google.oauth2, "google.oauth2.service_account": mock_service_account, "googleapiclient": mock_googleapiclient, "googleapiclient.discovery": mock_googleapiclient.discovery, "googleapiclient.http": mock_googleapiclient.http}):
+        with patch.dict(
+            "sys.modules",
+            {
+                "google": mock_google,
+                "google.oauth2": mock_google.oauth2,
+                "google.oauth2.service_account": mock_service_account,
+                "googleapiclient": mock_googleapiclient,
+                "googleapiclient.discovery": mock_googleapiclient.discovery,
+                "googleapiclient.http": mock_googleapiclient.http,
+            },
+        ):
             docs = await loader.aload()
 
         assert len(docs) == 1
@@ -255,14 +267,17 @@ class TestGoogleDriveLoaderFolderLoading:
 
         loader = GoogleDriveLoader(credentials_path="creds.json", folder_id="folder123")
 
-        with patch.dict("sys.modules", {
-            "google": mock_google,
-            "google.oauth2": mock_google.oauth2,
-            "google.oauth2.service_account": mock_service_account,
-            "googleapiclient": mock_googleapiclient,
-            "googleapiclient.discovery": mock_googleapiclient.discovery,
-            "googleapiclient.http": mock_googleapiclient.http,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "google": mock_google,
+                "google.oauth2": mock_google.oauth2,
+                "google.oauth2.service_account": mock_service_account,
+                "googleapiclient": mock_googleapiclient,
+                "googleapiclient.discovery": mock_googleapiclient.discovery,
+                "googleapiclient.http": mock_googleapiclient.http,
+            },
+        ):
             docs = await loader.aload()
 
         assert len(docs) == 2
@@ -312,14 +327,17 @@ class TestGoogleDriveLoaderFolderLoading:
 
         loader = GoogleDriveLoader(credentials_path="creds.json", folder_id="folder123")
 
-        with patch.dict("sys.modules", {
-            "google": mock_google,
-            "google.oauth2": mock_google.oauth2,
-            "google.oauth2.service_account": mock_service_account,
-            "googleapiclient": mock_googleapiclient,
-            "googleapiclient.discovery": mock_googleapiclient.discovery,
-            "googleapiclient.http": mock_googleapiclient.http,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "google": mock_google,
+                "google.oauth2": mock_google.oauth2,
+                "google.oauth2.service_account": mock_service_account,
+                "googleapiclient": mock_googleapiclient,
+                "googleapiclient.discovery": mock_googleapiclient.discovery,
+                "googleapiclient.http": mock_googleapiclient.http,
+            },
+        ):
             docs = await loader.aload()
 
         # Should only get the document, not the folder
@@ -348,14 +366,17 @@ class TestGoogleDriveLoaderFolderLoading:
 
         loader = GoogleDriveLoader(credentials_path="creds.json", folder_id="folder123")
 
-        with patch.dict("sys.modules", {
-            "google": mock_google,
-            "google.oauth2": mock_google.oauth2,
-            "google.oauth2.service_account": mock_service_account,
-            "googleapiclient": mock_googleapiclient,
-            "googleapiclient.discovery": mock_googleapiclient.discovery,
-            "googleapiclient.http": mock_googleapiclient.http,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "google": mock_google,
+                "google.oauth2": mock_google.oauth2,
+                "google.oauth2.service_account": mock_service_account,
+                "googleapiclient": mock_googleapiclient,
+                "googleapiclient.discovery": mock_googleapiclient.discovery,
+                "googleapiclient.http": mock_googleapiclient.http,
+            },
+        ):
             docs = await loader.aload()
 
         assert docs == []
@@ -371,10 +392,16 @@ class TestGoogleDriveLoaderSync:
         mock_google = MagicMock()
         mock_googleapiclient = MagicMock()
 
-        with patch.dict("sys.modules", {"google": mock_google, "google.oauth2": mock_google.oauth2, "googleapiclient": mock_googleapiclient, "googleapiclient.discovery": mock_googleapiclient.discovery}):
-            with patch.object(
-                loader, "aload", new=AsyncMock(return_value=expected)
-            ):
+        with patch.dict(
+            "sys.modules",
+            {
+                "google": mock_google,
+                "google.oauth2": mock_google.oauth2,
+                "googleapiclient": mock_googleapiclient,
+                "googleapiclient.discovery": mock_googleapiclient.discovery,
+            },
+        ):
+            with patch.object(loader, "aload", new=AsyncMock(return_value=expected)):
                 result = loader.load()
 
         assert result == expected

@@ -69,9 +69,7 @@ class NotionLoader:
         try:
             import httpx
         except ImportError:
-            raise ImportError(
-                "httpx required: pip install synapsekit[notion]"
-            ) from None
+            raise ImportError("httpx required: pip install synapsekit[notion]") from None
 
         timeout_config = httpx.Timeout(self.timeout, connect=10.0)
         async with httpx.AsyncClient(timeout=timeout_config) as client:
@@ -110,9 +108,7 @@ class NotionLoader:
 
         return Document(text=text, metadata=metadata)
 
-    async def _load_database(
-        self, client: httpx.AsyncClient, database_id: str
-    ) -> list[Document]:
+    async def _load_database(self, client: httpx.AsyncClient, database_id: str) -> list[Document]:
         """Load all pages from a database."""
         # Query database for all pages
         query_response = await self._request_with_retry(
@@ -132,9 +128,7 @@ class NotionLoader:
 
         return documents
 
-    async def _get_block_children(
-        self, client: httpx.AsyncClient, block_id: str
-    ) -> list[dict]:
+    async def _get_block_children(self, client: httpx.AsyncClient, block_id: str) -> list[dict]:
         """Recursively get all block children."""
         all_blocks = []
         has_more = True
@@ -261,9 +255,7 @@ class NotionLoader:
             try:
                 # Make the request
                 if method == "GET":
-                    response = await client.get(
-                        url, headers=self._headers, params=params or {}
-                    )
+                    response = await client.get(url, headers=self._headers, params=params or {})
                 elif method == "POST":
                     response = await client.post(
                         url,

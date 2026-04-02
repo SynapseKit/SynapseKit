@@ -19,9 +19,7 @@ class TestNotionLoaderValidation:
             NotionLoader(api_key="test-key")
 
     def test_cannot_provide_both_page_and_database_id(self):
-        with pytest.raises(
-            ValueError, match="Only one of page_id or database_id can be provided"
-        ):
+        with pytest.raises(ValueError, match="Only one of page_id or database_id can be provided"):
             NotionLoader(api_key="test-key", page_id="page-123", database_id="db-456")
 
     def test_valid_construction_with_page_id(self):
@@ -71,9 +69,7 @@ class TestNotionLoaderPage:
             "next_cursor": None,
         }
 
-    def _make_block(
-        self, block_type: str, text: str, has_children: bool = False
-    ) -> dict:
+    def _make_block(self, block_type: str, text: str, has_children: bool = False) -> dict:
         """Create a mock Notion block."""
         return {
             "id": f"block-{block_type}-id",
@@ -293,16 +289,12 @@ class TestNotionLoaderDatabase:
         page1_data = {
             "id": "page-1",
             "url": "https://notion.so/page-1",
-            "properties": {
-                "Title": {"type": "title", "title": [{"plain_text": "Page 1"}]}
-            },
+            "properties": {"Title": {"type": "title", "title": [{"plain_text": "Page 1"}]}},
         }
         page2_data = {
             "id": "page-2",
             "url": "https://notion.so/page-2",
-            "properties": {
-                "Title": {"type": "title", "title": [{"plain_text": "Page 2"}]}
-            },
+            "properties": {"Title": {"type": "title", "title": [{"plain_text": "Page 2"}]}},
         }
 
         blocks1 = {
