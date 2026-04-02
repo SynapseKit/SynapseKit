@@ -5,6 +5,7 @@ from .markdown import MarkdownLoader
 from .text import StringLoader, TextLoader
 
 __all__ = [
+    "ArXivLoader",
     "AudioLoader",
     "CSVLoader",
     "DirectoryLoader",
@@ -25,6 +26,7 @@ __all__ = [
 ]
 
 _LOADERS = {
+    "ArXivLoader": ".arxiv",
     "PDFLoader": ".pdf",
     "HTMLLoader": ".html",
     "CSVLoader": ".csv",
