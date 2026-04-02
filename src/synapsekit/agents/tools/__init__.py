@@ -19,6 +19,7 @@ from .human_input import HumanInputTool
 from .image_analysis import ImageAnalysisTool
 from .jira import JiraTool
 from .json_query import JSONQueryTool
+from .notion import NotionTool
 from .pdf_reader import PDFReaderTool
 from .pubmed_search import PubMedSearchTool
 from .python_repl import PythonREPLTool
@@ -62,6 +63,7 @@ __all__ = [
     "ImageAnalysisTool",
     "JiraTool",
     "JSONQueryTool",
+    "NotionTool",
     "PDFReaderTool",
     "PubMedSearchTool",
     "PythonREPLTool",
