@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-import pytest
-
 from synapsekit.graph.graph import StateGraph
 from synapsekit.graph.subgraph import subgraph_node
 
+import pytest
 
 # ------------------------------------------------------------------ #
 # Helpers
