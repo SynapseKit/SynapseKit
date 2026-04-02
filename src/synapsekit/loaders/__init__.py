@@ -17,6 +17,7 @@ __all__ = [
     "MarkdownLoader",
     "NotionLoader",
     "PDFLoader",
+    "SlackLoader",
     "StringLoader",
     "TextLoader",
     "VideoLoader",
@@ -39,6 +40,7 @@ _LOADERS = {
     "YAMLLoader": ".yaml_loader",
     "DiscordLoader": ".discord",
     "GoogleDriveLoader": ".google_drive",
+    "SlackLoader": ".slack",
     "NotionLoader": ".notion",
 }
 
