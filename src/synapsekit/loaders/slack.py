@@ -114,9 +114,12 @@ class SlackLoader:
                     response = await client.conversations_history(**kwargs)
                     break
                 except Exception as e:
-                    status = getattr(getattr(e, "response", None), "status_code", None)
+                    exc_response = getattr(e, "response", None)
+                    status = getattr(exc_response, "status_code", None)
                     if status == 429 and rate_retries < max_rate_retries:
-                        retry_after = int(getattr(e.response, "headers", {}).get("Retry-After", 1))
+                        retry_after = int(
+                            getattr(exc_response, "headers", {}).get("Retry-After", 1)
+                        )
                         logger.warning(
                             "SlackLoader: rate limited, retrying in %ds (attempt %d/%d)",
                             retry_after,
