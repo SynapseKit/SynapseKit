@@ -63,6 +63,8 @@ Thumbs.db
 .claude/
 CLAUDE.md
 
+#QWEN
+.qwen/
 
 # Internal docs (not published)
 docs/
