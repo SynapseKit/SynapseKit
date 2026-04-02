@@ -6,6 +6,7 @@ from .text import StringLoader, TextLoader
 
 __all__ = [
     "AudioLoader",
+    "WikipediaLoader",
     "CSVLoader",
     "DirectoryLoader",
     "DiscordLoader",
@@ -13,6 +14,7 @@ __all__ = [
     "Document",
     "GoogleDriveLoader",
     "HTMLLoader",
+    "WikipediaLoader",
     "JSONLoader",
     "MarkdownLoader",
     "PDFLoader",
@@ -38,6 +40,7 @@ _LOADERS = {
     "YAMLLoader": ".yaml_loader",
     "DiscordLoader": ".discord",
     "GoogleDriveLoader": ".google_drive",
+    "WikipediaLoader": ".wikipedia",
 }
 
 
