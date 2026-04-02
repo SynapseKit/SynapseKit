@@ -10,6 +10,13 @@ from synapsekit.loaders.slack import SlackLoader
 
 
 class TestSlackLoaderValidation:
+    def test_load_sync_wraps_aload(self):
+        loader = SlackLoader(bot_token="xoxb-test", channel_id="C123")
+        expected = [MagicMock()]
+        with patch.object(loader, "aload", new=AsyncMock(return_value=expected)):
+            result = loader.load()
+        assert result == expected
+
     def test_valid_construction(self):
         loader = SlackLoader(bot_token="xoxb-test-token", channel_id="C123456")
         assert loader.bot_token == "xoxb-test-token"
@@ -32,7 +39,7 @@ class TestSlackLoaderImport:
         loader = SlackLoader(bot_token="xoxb-test", channel_id="C123")
         with patch.dict(sys.modules, {"slack_sdk": None, "slack_sdk.web": None}):
             with pytest.raises(ImportError, match=r"slack-sdk required"):
-                await loader.load()
+                await loader.aload()
 
 
 class TestSlackLoaderDocuments:
@@ -58,6 +65,8 @@ class TestSlackLoaderDocuments:
     ) -> MagicMock:
         """Create a mock AsyncWebClient."""
         client = MagicMock()
+        client.session = MagicMock()
+        client.session.close = AsyncMock()
 
         # Mock conversations_history
         async def fake_history(**kwargs):
@@ -101,12 +110,15 @@ class TestSlackLoaderDocuments:
 
         loader = SlackLoader(bot_token="xoxb-test", channel_id="C123")
 
-        with patch.dict("sys.modules", {
-            "slack_sdk": slack_sdk_mock,
-            "slack_sdk.web": slack_sdk_mock.web,
-            "slack_sdk.web.async_client": async_client_mock,
-        }):
-            docs = await loader.load()
+        with patch.dict(
+            "sys.modules",
+            {
+                "slack_sdk": slack_sdk_mock,
+                "slack_sdk.web": slack_sdk_mock.web,
+                "slack_sdk.web.async_client": async_client_mock,
+            },
+        ):
+            docs = await loader.aload()
 
         assert len(docs) == 2
         assert docs[0].text == "Hello from Slack"
@@ -126,12 +138,15 @@ class TestSlackLoaderDocuments:
 
         loader = SlackLoader(bot_token="xoxb-test", channel_id="C123")
 
-        with patch.dict("sys.modules", {
-            "slack_sdk": slack_sdk_mock,
-            "slack_sdk.web": slack_sdk_mock.web,
-            "slack_sdk.web.async_client": async_client_mock,
-        }):
-            docs = await loader.load()
+        with patch.dict(
+            "sys.modules",
+            {
+                "slack_sdk": slack_sdk_mock,
+                "slack_sdk.web": slack_sdk_mock.web,
+                "slack_sdk.web.async_client": async_client_mock,
+            },
+        ):
+            docs = await loader.aload()
 
         assert len(docs) == 1
         meta = docs[0].metadata
@@ -145,9 +160,7 @@ class TestSlackLoaderDocuments:
         # Parent message with thread
         parent_ts = "1000.0"
         msgs = [
-            self._make_mock_message(
-                "Parent message", ts=parent_ts, thread_ts=parent_ts
-            ),
+            self._make_mock_message("Parent message", ts=parent_ts, thread_ts=parent_ts),
         ]
 
         # Thread replies
@@ -167,12 +180,15 @@ class TestSlackLoaderDocuments:
 
         loader = SlackLoader(bot_token="xoxb-test", channel_id="C123")
 
-        with patch.dict("sys.modules", {
-            "slack_sdk": slack_sdk_mock,
-            "slack_sdk.web": slack_sdk_mock.web,
-            "slack_sdk.web.async_client": async_client_mock,
-        }):
-            docs = await loader.load()
+        with patch.dict(
+            "sys.modules",
+            {
+                "slack_sdk": slack_sdk_mock,
+                "slack_sdk.web": slack_sdk_mock.web,
+                "slack_sdk.web.async_client": async_client_mock,
+            },
+        ):
+            docs = await loader.aload()
 
         assert len(docs) == 1
         assert "Parent message" in docs[0].text
@@ -198,22 +214,22 @@ class TestSlackLoaderDocuments:
 
         loader = SlackLoader(bot_token="xoxb-test", channel_id="C123")
 
-        with patch.dict("sys.modules", {
-            "slack_sdk": slack_sdk_mock,
-            "slack_sdk.web": slack_sdk_mock.web,
-            "slack_sdk.web.async_client": async_client_mock,
-        }):
-            docs = await loader.load()
+        with patch.dict(
+            "sys.modules",
+            {
+                "slack_sdk": slack_sdk_mock,
+                "slack_sdk.web": slack_sdk_mock.web,
+                "slack_sdk.web.async_client": async_client_mock,
+            },
+        ):
+            docs = await loader.aload()
 
         assert len(docs) == 2
         assert docs[0].text == "Valid message"
         assert docs[1].text == "Another valid"
 
     async def test_load_with_limit(self):
-        msgs = [
-            self._make_mock_message(f"Message {i}", ts=f"{1000+i}.0")
-            for i in range(10)
-        ]
+        msgs = [self._make_mock_message(f"Message {i}", ts=f"{1000 + i}.0") for i in range(10)]
 
         # Mock the slack_sdk module
         slack_sdk_mock = MagicMock()
@@ -224,12 +240,15 @@ class TestSlackLoaderDocuments:
 
         loader = SlackLoader(bot_token="xoxb-test", channel_id="C123", limit=5)
 
-        with patch.dict("sys.modules", {
-            "slack_sdk": slack_sdk_mock,
-            "slack_sdk.web": slack_sdk_mock.web,
-            "slack_sdk.web.async_client": async_client_mock,
-        }):
-            docs = await loader.load()
+        with patch.dict(
+            "sys.modules",
+            {
+                "slack_sdk": slack_sdk_mock,
+                "slack_sdk.web": slack_sdk_mock.web,
+                "slack_sdk.web.async_client": async_client_mock,
+            },
+        ):
+            docs = await loader.aload()
 
         assert len(docs) == 5
 
@@ -243,12 +262,15 @@ class TestSlackLoaderDocuments:
 
         loader = SlackLoader(bot_token="xoxb-test", channel_id="C123")
 
-        with patch.dict("sys.modules", {
-            "slack_sdk": slack_sdk_mock,
-            "slack_sdk.web": slack_sdk_mock.web,
-            "slack_sdk.web.async_client": async_client_mock,
-        }):
-            docs = await loader.load()
+        with patch.dict(
+            "sys.modules",
+            {
+                "slack_sdk": slack_sdk_mock,
+                "slack_sdk.web": slack_sdk_mock.web,
+                "slack_sdk.web.async_client": async_client_mock,
+            },
+        ):
+            docs = await loader.aload()
 
         assert docs == []
 
@@ -282,10 +304,10 @@ class TestSlackLoaderDocuments:
                 }
 
         client = MagicMock()
+        client.session = MagicMock()
+        client.session.close = AsyncMock()
         client.conversations_history = AsyncMock(side_effect=fake_history)
-        client.conversations_replies = AsyncMock(
-            return_value={"ok": True, "messages": []}
-        )
+        client.conversations_replies = AsyncMock(return_value={"ok": True, "messages": []})
 
         # Mock the slack_sdk module
         slack_sdk_mock = MagicMock()
@@ -295,12 +317,15 @@ class TestSlackLoaderDocuments:
 
         loader = SlackLoader(bot_token="xoxb-test", channel_id="C123")
 
-        with patch.dict("sys.modules", {
-            "slack_sdk": slack_sdk_mock,
-            "slack_sdk.web": slack_sdk_mock.web,
-            "slack_sdk.web.async_client": async_client_mock,
-        }):
-            docs = await loader.load()
+        with patch.dict(
+            "sys.modules",
+            {
+                "slack_sdk": slack_sdk_mock,
+                "slack_sdk.web": slack_sdk_mock.web,
+                "slack_sdk.web.async_client": async_client_mock,
+            },
+        ):
+            docs = await loader.aload()
 
         assert len(docs) == 4
         assert call_count == 2
@@ -329,10 +354,10 @@ class TestSlackLoaderDocuments:
                 }
 
         client = MagicMock()
+        client.session = MagicMock()
+        client.session.close = AsyncMock()
         client.conversations_history = AsyncMock(side_effect=fake_history)
-        client.conversations_replies = AsyncMock(
-            return_value={"ok": True, "messages": []}
-        )
+        client.conversations_replies = AsyncMock(return_value={"ok": True, "messages": []})
 
         # Mock the slack_sdk module
         slack_sdk_mock = MagicMock()
@@ -342,12 +367,15 @@ class TestSlackLoaderDocuments:
 
         loader = SlackLoader(bot_token="xoxb-test", channel_id="C123")
 
-        with patch.dict("sys.modules", {
-            "slack_sdk": slack_sdk_mock,
-            "slack_sdk.web": slack_sdk_mock.web,
-            "slack_sdk.web.async_client": async_client_mock,
-        }):
-            docs = await loader.load()
+        with patch.dict(
+            "sys.modules",
+            {
+                "slack_sdk": slack_sdk_mock,
+                "slack_sdk.web": slack_sdk_mock.web,
+                "slack_sdk.web.async_client": async_client_mock,
+            },
+        ):
+            docs = await loader.aload()
 
         assert len(docs) == 1
         assert docs[0].text == "Success"
