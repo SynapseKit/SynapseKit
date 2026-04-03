@@ -1,0 +1,30 @@
+name: Daily SynapseKit Fact
+
+on:
+  schedule:
+    - cron: '0 9 * * *'  # 9am UTC every day
+  workflow_dispatch:
+
+jobs:
+  post-fact:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pick and post a fact
+        run: |
+          FACTS=(
+            "SynapseKit has only 2 hard dependencies. Your node_modules has 47,000. We don't talk about your node_modules."
+            "SynapseKit supports 27 LLM providers. That's 26 more than you'll ever actually use."
+            "SynapseKit is async-native. Unlike your codebase, which is async-occasionally."
+            "SynapseKit has a ColBERT retriever. Most people nod and pretend they know what ColBERT is."
+            "SynapseKit supports retry, fallback, and skip strategies in graph nodes. Your production app supports the 'pray' strategy."
+            "SynapseKit has 24 loaders. Yes, someone really needed a GoogleDriveLoader. We don't judge."
+            "SynapseKit runs on Python. So does your snake, technically, but we wouldn't trust your snake with RAG pipelines."
+            "SynapseKit has HITL (Human-in-the-Loop) support. Mostly so humans can feel useful while the AI does everything."
+            "SynapseKit has 41 tools. You've used 2. We're not upset. We're just disappointed."
+            "SynapseKit supports StateGraph workflows. Named after the existential state you enter when your pipeline fails at 2am."
+          )
+          INDEX=$(( $(date +%j) % ${#FACTS[@]} ))
+          FACT="${FACTS[$INDEX]}"
+          curl -s -X POST "${{ secrets.DISCORD_WEBHOOK_OFF_TOPIC }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"content\":\"🧠 **Daily SynapseKit fact:**\n${FACT}\"}"
