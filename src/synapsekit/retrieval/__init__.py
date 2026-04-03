@@ -16,6 +16,7 @@ from .retriever import Retriever
 from .self_query import SelfQueryRetriever
 from .self_rag import SelfRAGRetriever
 from .step_back import StepBackRetriever
+from .strategies.colbert import ColBERTRetriever
 from .vectorstore import InMemoryVectorStore
 
 __all__ = [
@@ -28,6 +29,7 @@ __all__ = [
     "CRAGRetriever",
     "CrossEncoderReranker",
     "EnsembleRetriever",
+    "ColBERTRetriever",
     "FAISSVectorStore",
     "FLARERetriever",
     "HybridSearchRetriever",
