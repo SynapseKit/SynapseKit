@@ -6,7 +6,14 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 
-def _make_page(title="Test", exists=True, summary="Summary", sections=None, categories=None, url="https://en.wikipedia.org/wiki/Test"):
+def _make_page(
+    title="Test",
+    exists=True,
+    summary="Summary",
+    sections=None,
+    categories=None,
+    url="https://en.wikipedia.org/wiki/Test",
+):
     page = MagicMock()
     page.exists.return_value = exists
     page.summary = summary

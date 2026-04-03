@@ -61,9 +61,7 @@ class WikipediaLoader:
         try:
             import wikipediaapi
         except ImportError:
-            raise ImportError(
-                "wikipedia-api required: pip install synapsekit[wikipedia]"
-            ) from None
+            raise ImportError("wikipedia-api required: pip install synapsekit[wikipedia]") from None
 
         wiki = wikipediaapi.Wikipedia(
             user_agent="SynapseKit/1.0",
