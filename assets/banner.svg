@@ -9,15 +9,12 @@
   <!-- Background: clean off-white -->
   <rect width="900" height="200" fill="#f8fafc" rx="12"/>
 
-  <!-- Left green accent bar -->
-  <rect x="0" y="0" width="5" height="200" fill="#22c55e"/>
-
   <!-- Subtle dot grid -->
   <pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
     <circle cx="10" cy="10" r="1" fill="#e2e8f0"/>
   </pattern>
-  <rect x="5" y="0" width="895" height="200" fill="url(#dots)" opacity="0.9"/>
-  <rect x="5" y="0" width="895" height="200" fill="#f8fafc" opacity="0.7"/>
+  <rect x="0" y="0" width="900" height="200" fill="url(#dots)" opacity="0.9"/>
+  <rect x="0" y="0" width="900" height="200" fill="#f8fafc" opacity="0.7"/>
 
   <!-- Graph node logo mark -->
   <circle cx="55" cy="100" r="10" fill="url(#nodegrad)"/>
