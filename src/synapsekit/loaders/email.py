@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import email
 import imaplib
 from email.message import Message
@@ -53,10 +54,8 @@ class EmailLoader:
                     docs.append(doc)
             return docs
         finally:
-            try:
+            with contextlib.suppress(Exception):
                 mail.logout()
-            except Exception:
-                pass
 
     def _connect(self) -> imaplib.IMAP4_SSL:
         """Connect and login to IMAP server."""
@@ -67,21 +66,24 @@ class EmailLoader:
     def _search(self, mail: imaplib.IMAP4_SSL) -> list[bytes]:
         """Search for emails matching query and return IDs."""
         status, messages = mail.search(None, self.search)
-        if status != "OK":
+        if status != "OK" or not messages[0]:
             return []
 
-        email_ids = messages[0].split()
+        email_ids: list[bytes] = messages[0].split()
         if self.limit is not None:
             email_ids = email_ids[-self.limit :]
         return email_ids
 
     def _fetch_email(self, mail: imaplib.IMAP4_SSL, email_id: bytes) -> Document | None:
         """Fetch and parse a single email into a Document."""
-        status, msg_data = mail.fetch(email_id, "(RFC822)")
+        status, msg_data = mail.fetch(email_id.decode(), "(RFC822)")
         if status != "OK" or not msg_data or not msg_data[0]:
             return None
 
         raw_email = msg_data[0][1]
+        if not isinstance(raw_email, bytes):
+            return None
+
         msg = email.message_from_bytes(raw_email)
 
         subject = msg.get("Subject", "")
@@ -110,12 +112,12 @@ class EmailLoader:
                 content_type = part.get_content_type()
                 if content_type == "text/plain":
                     payload = part.get_payload(decode=True)
-                    if payload:
+                    if payload and isinstance(payload, bytes):
                         body = payload.decode(errors="ignore")
                         break
         else:
             payload = msg.get_payload(decode=True)
-            if payload:
+            if payload and isinstance(payload, bytes):
                 body = payload.decode(errors="ignore")
 
         return body.strip()

@@ -8,7 +8,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from synapsekit.loaders.base import Document
 from synapsekit.loaders.email import EmailLoader
 
 
