@@ -55,5 +55,5 @@ jobs:
           git diff --cached --quiet && echo "No changes" && exit 0
 
           git commit -m "Initialize wiki with Discord community guides"
-          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.wiki.git"
+          git remote add origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.wiki.git"
           git push -f origin HEAD:master
