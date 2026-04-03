@@ -40,6 +40,7 @@ synapsekit = "synapsekit.cli.main:main"
 openai = ["openai>=1.0"]
 anthropic = ["anthropic>=0.25"]
 semantic = ["sentence-transformers>=2.7"]
+colbert = ["ragatouille"]
 pdf = ["pypdf>=4.0"]
 wikipedia = ["wikipedia-api>=0.6"]
 arxiv = ["arxiv>=2.0"]
@@ -95,6 +96,7 @@ all = [
     "openai>=1.0",
     "anthropic>=0.25",
     "sentence-transformers>=2.7",
+    "ragatouille",
     "pypdf>=4.0",
     "wikipedia-api>=0.6",
     "arxiv>=2.0",
