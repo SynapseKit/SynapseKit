@@ -41,6 +41,7 @@ openai = ["openai>=1.0"]
 anthropic = ["anthropic>=0.25"]
 semantic = ["sentence-transformers>=2.7"]
 pdf = ["pypdf>=4.0"]
+wikipedia = ["wikipedia-api>=0.6"]
 html = ["beautifulsoup4>=4.12", "lxml>=5.0"]
 web = ["httpx>=0.27", "beautifulsoup4>=4.12"]
 chroma = ["chromadb>=0.5"]
@@ -94,6 +95,7 @@ all = [
     "anthropic>=0.25",
     "sentence-transformers>=2.7",
     "pypdf>=4.0",
+    "wikipedia-api>=0.6",
     "beautifulsoup4>=4.12",
     "lxml>=5.0",
     "httpx>=0.27",
@@ -232,6 +234,7 @@ disable_error_code = ["override", "operator", "arg-type", "misc", "attr-defined"
 pep621_dev_dependency_groups = ["dev"]
 
 [tool.deptry.package_module_name_map]
+wikipedia-api = "wikipediaapi"
 google-generativeai = "google"
 google-api-python-client = "googleapiclient"
 google-auth = "google"

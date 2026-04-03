@@ -156,6 +156,7 @@ from .loaders.markdown import MarkdownLoader
 from .loaders.pdf import PDFLoader
 from .loaders.text import StringLoader, TextLoader
 from .loaders.web import WebLoader
+from .loaders.wikipedia import WikipediaLoader
 from .mcp import MCPClient, MCPServer, MCPToolAdapter
 from .memory.buffer import BufferMemory
 from .memory.conversation import ConversationMemory
@@ -321,6 +322,7 @@ __all__ = [
     "EmailLoader",
     "MarkdownLoader",
     "WebLoader",
+    "WikipediaLoader",
     "ExcelLoader",
     "PowerPointLoader",
     # Parsers
