@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Iterable
 
 from .base import Document
@@ -21,9 +22,22 @@ def _flatten_sections(sections: Iterable[object]) -> list[str]:
 
 
 class WikipediaLoader:
-    """Load Wikipedia articles by title or search query."""
+    """Load Wikipedia articles by title using the wikipedia-api library.
 
-    def __init__(self, query: str, language: str = "en", max_results: int = 1) -> None:
+    Args:
+        query: Article title to look up (exact Wikipedia page title).
+        language: Wikipedia language edition, e.g. ``"en"``, ``"de"``.
+        max_results: Maximum number of pages to return. Currently fetches
+            the single page matching *query*; increase to load additional
+            articles by passing a list of titles.
+    """
+
+    def __init__(
+        self,
+        query: str,
+        language: str = "en",
+        max_results: int = 1,
+    ) -> None:
         self._query = query
         self._language = language
         self._max_results = max_results
@@ -47,29 +61,28 @@ class WikipediaLoader:
         try:
             import wikipediaapi
         except ImportError:
-            raise ImportError("wikipedia-api required: pip install synapsekit[wikipedia]") from None
+            raise ImportError(
+                "wikipedia-api required: pip install synapsekit[wikipedia]"
+            ) from None
 
         wiki = wikipediaapi.Wikipedia(
+            user_agent="SynapseKit/1.0",
             language=self._language,
-            extract_format=getattr(wikipediaapi, "ExtractFormat", None),
         )
 
-        pages: list[object] = []
-        search_fn = getattr(wiki, "search", None)
-        if callable(search_fn):
-            try:
-                results = search_fn(self._query, results=self._max_results)
-            except TypeError:
-                results = search_fn(self._query)
-            for title in list(results)[: self._max_results]:
-                pages.append(wiki.page(title))
-        else:
-            pages.append(wiki.page(self._query))
+        titles = [t.strip() for t in self._query.split("|") if t.strip()]
+        if not titles:
+            return []
 
         docs: list[Document] = []
-        for page in pages:
+        for title in titles[: self._max_results]:
+            page = wiki.page(title)
             if hasattr(page, "exists") and not page.exists():
                 continue
             docs.append(self._build_doc(page))
 
         return docs
+
+    async def aload(self) -> list[Document]:
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(None, self.load)
