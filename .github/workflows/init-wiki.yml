@@ -1,0 +1,59 @@
+name: Initialize Wiki
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  init-wiki:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Push Discord guides to wiki
+        run: |
+          git config --global user.email "de.amit.nautiyal@gmail.com"
+          git config --global user.name "Amit"
+
+          git clone "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.wiki.git" wiki || {
+            mkdir wiki && cd wiki && git init && git checkout -b master
+            cd ..
+          }
+
+          cd wiki
+
+          cat > Home.md << 'EOF'
+          # SynapseKit Community Wiki
+
+          Welcome to the SynapseKit community wiki — a reference for Discord server admins and community moderators.
+
+          ## Discord Setup Guides
+
+          | Guide | Description |
+          |---|---|
+          | [[Discord Welcome & Onboarding]] | Welcome DM, auto-roles, #rules pinned message |
+          | [[Discord Interest Roles]] | Self-assign roles in #roles via Carl-bot buttons |
+          | [[Discord Automod & Spam Protection]] | Automod rules, slowmode, mod-log setup |
+          | [[Discord Slash Commands]] | Custom /docs, /changelog, /pypi commands |
+
+          ## Useful Links
+
+          - [Documentation](https://synapsekit.github.io/synapsekit-docs/)
+          - [GitHub Repository](https://github.com/SynapseKit/SynapseKit)
+          - [Contributing Guide](https://github.com/SynapseKit/SynapseKit/blob/main/CONTRIBUTING.md)
+          - [PyPI](https://pypi.org/project/synapsekit/)
+          EOF
+
+          cp "$GITHUB_WORKSPACE/.github/discord/WELCOME.md" "Discord-Welcome-&-Onboarding.md"
+          cp "$GITHUB_WORKSPACE/.github/discord/INTEREST_ROLES.md" "Discord-Interest-Roles.md"
+          cp "$GITHUB_WORKSPACE/.github/discord/AUTOMOD.md" "Discord-Automod-&-Spam-Protection.md"
+          cp "$GITHUB_WORKSPACE/.github/discord/COMMANDS.md" "Discord-Slash-Commands.md"
+
+          git add .
+          git diff --cached --quiet && echo "No changes" && exit 0
+
+          git commit -m "Initialize wiki with Discord community guides"
+          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.wiki.git"
+          git push -f origin HEAD:master
