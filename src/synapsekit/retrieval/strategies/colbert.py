@@ -83,7 +83,7 @@ class ColBERTRetriever:
                 index_root=self._index_root,
             )
 
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         await loop.run_in_executor(None, _index)
 
     async def retrieve(
@@ -117,7 +117,7 @@ class ColBERTRetriever:
                 index_name=self._index_name,
             )
 
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         raw_results = await loop.run_in_executor(None, _search)
         return self._normalize_results(raw_results, top_k=top_k)
 
