@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import re
 import tempfile
 from collections.abc import Iterable
@@ -55,8 +56,9 @@ class ArXivLoader:
         else:
             search = arxiv.Search(query=self._query, max_results=self._max_results)
 
+        client = arxiv.Client()
         docs: list[Document] = []
-        for result in search.results():
+        for result in client.results(search):
             with tempfile.TemporaryDirectory() as tmpdir:
                 pdf_path = result.download_pdf(dirpath=tmpdir)
                 pages = PDFLoader(pdf_path).load()
@@ -74,3 +76,7 @@ class ArXivLoader:
             docs.append(Document(text=text, metadata=metadata))
 
         return docs
+
+    async def aload(self) -> list[Document]:
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(None, self.load)

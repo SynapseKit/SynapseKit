@@ -145,6 +145,7 @@ from .llm.cost_router import QUALITY_TABLE, CostRouter, CostRouterConfig, Router
 from .llm.fallback_chain import FallbackChain, FallbackChainConfig
 from .llm.multimodal import AudioContent, ImageContent, MultimodalMessage
 from .llm.structured import generate_structured
+from .loaders.arxiv import ArXivLoader
 from .loaders.base import Document
 from .loaders.csv import CSVLoader
 from .loaders.directory import DirectoryLoader
@@ -310,6 +311,7 @@ __all__ = [
     # Loaders
     "Document",
     "TextLoader",
+    "ArXivLoader",
     "StringLoader",
     "PDFLoader",
     "HTMLLoader",
