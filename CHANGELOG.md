@@ -19,6 +19,18 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.4.7] — 2026-04-02
+
+### Added
+
+- **SlackLoader** — load messages from Slack channels via Bot API; sync `load()` and async `aload()`; configurable `limit`; per-message metadata; `pip install synapsekit[slack]`
+- **NotionLoader** — load pages or full databases from Notion via the Notion API; sync `load()` and async `aload()`; configurable retry/timeout; `pip install synapsekit[notion]`
+- **NotionTool** — agent tool for Notion: `search`, `get_page`, `create_page`, `append_block`; built-in retry with exponential back-off; `pip install synapsekit[notion]`
+- **Subgraph error handling** — `subgraph_node()` gains `on_error` (`"raise"` / `"retry"` / `"fallback"` / `"skip"`), `max_retries`, and `fallback` parameters
+- 17 new tests (1467 total)
+
+---
+
 ## [1.4.6] — 2026-04-01
 
 ### Added
