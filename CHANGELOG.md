@@ -7,6 +7,18 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.4.8] — 2026-04-03
+
+### Added
+
+- **WikipediaLoader** — load Wikipedia articles as Documents via `wikipedia-api`; pipe-delimited multi-title support; async `aload()`; `pip install synapsekit[wikipedia]`
+- **ArXivLoader** — search arXiv and load papers as Documents (downloads PDFs); uses arxiv v2 `Client` API; async `aload()`; `pip install synapsekit[arxiv,pdf]`
+- **EmailLoader** — load emails from IMAP mailboxes (Gmail, Outlook, etc.) as Documents; stdlib-only, no extra deps; configurable folder and IMAP search; async `aload()`
+- **ColBERTRetriever** — late-interaction ColBERT retrieval via RAGatouille; `add()`, `retrieve()`, `retrieve_with_scores()`; lazy-loads ragatouille on first use; `pip install synapsekit[colbert]`
+- 50 new tests (1500 total)
+
+---
+
 ## [1.4.6] — 2026-04-01
 
 ### Added
