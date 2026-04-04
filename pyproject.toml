@@ -63,6 +63,7 @@ gemini = ["google-generativeai>=0.7"]
 bedrock = ["boto3>=1.34"]
 gcal-tool = ["google-api-python-client>=2.0"]
 aws-lambda = ["boto3>=1.34"]
+rss = ["feedparser>=6.0"]
 groq = ["groq>=0.9"]
 audio = ["openai>=1.0"]
 video = ["openai>=1.0"]
@@ -139,6 +140,7 @@ all = [
     "discord.py>=2.0",
     "google-api-python-client>=2.0",
     "google-auth>=2.0",
+    "feedparser>=6.0",
 ]
 
 [dependency-groups]
