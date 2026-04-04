@@ -8,6 +8,7 @@ __all__ = [
     "ArXivLoader",
     "AudioLoader",
     "CSVLoader",
+    "ConfluenceLoader",
     "DirectoryLoader",
     "DiscordLoader",
     "DocxLoader",
@@ -48,6 +49,7 @@ _LOADERS = {
     "SlackLoader": ".slack",
     "NotionLoader": ".notion",
     "WikipediaLoader": ".wikipedia",
+    "ConfluenceLoader": ".confluence",
 }
 
 
