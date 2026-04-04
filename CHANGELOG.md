@@ -7,6 +7,16 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- **CodeSplitter** — split source code using language-aware separators; supports python, javascript, typescript, go, rust, java, cpp; falls back to character-level splitting for oversized segments; preserves logical structures (classes, functions, methods)
+- **SentenceTextSplitter** — split text into chunks by grouping complete sentences; configurable `chunk_size` and `chunk_overlap` (in sentences); regex-based sentence boundary detection (`.`, `!`, `?`)
+- **ConfluenceLoader** — load pages from Atlassian Confluence as Documents; supports single page by `page_id` or full space by `space_key`; automatic pagination; converts Confluence storage format (HTML/XML) to plain text; rich metadata (title, author, version, timestamps, URL); retry logic with exponential backoff for rate limits; sync `load()` and async `aload()`; `pip install synapsekit[confluence]`
+
+---
+
 ## [1.4.8] — 2026-04-03
 
 ### Added
