@@ -1032,6 +1032,18 @@ wheels = [
 ]
 
 [[package]]
+name = "feedparser"
+version = "6.0.12"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "sgmllib3k" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/dc/79/db7edb5e77d6dfbc54d7d9df72828be4318275b2e580549ff45a962f6461/feedparser-6.0.12.tar.gz", hash = "sha256:64f76ce90ae3e8ef5d1ede0f8d3b50ce26bcce71dd8ae5e82b1cd2d4a5f94228", size = 286579, upload-time = "2025-09-10T13:33:59.486Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/4e/eb/c96d64137e29ae17d83ad2552470bafe3a7a915e85434d9942077d7fd011/feedparser-6.0.12-py3-none-any.whl", hash = "sha256:6bbff10f5a52662c00a2e3f86a38928c37c48f77b3c511aedcd51de933549324", size = 81480, upload-time = "2025-09-10T13:33:58.022Z" },
+]
+
+[[package]]
 name = "filelock"
 version = "3.25.2"
 source = { registry = "https://pypi.org/simple" }
@@ -5056,6 +5068,12 @@ wheels = [
 ]
 
 [[package]]
+name = "sgmllib3k"
+version = "1.0.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/9e/bd/3704a8c3e0942d711c1299ebf7b9091930adae6675d7c8f476a7ce48653c/sgmllib3k-1.0.0.tar.gz", hash = "sha256:7868fb1c8bfa764c1ac563d3cf369c381d1325d36124933a726f29fcdaa812e9", size = 5750, upload-time = "2010-08-24T14:33:52.445Z" }
+
+[[package]]
 name = "shellingham"
 version = "1.5.4"
 source = { registry = "https://pypi.org/simple" }
@@ -5149,6 +5167,7 @@ all = [
     { name = "duckduckgo-search" },
     { name = "faiss-cpu" },
     { name = "fastapi" },
+    { name = "feedparser" },
     { name = "google-cloud-aiplatform" },
     { name = "google-generativeai" },
     { name = "httpx" },
@@ -5231,6 +5250,9 @@ qdrant = [
 redis = [
     { name = "redis" },
 ]
+rss = [
+    { name = "feedparser" },
+]
 search = [
     { name = "duckduckgo-search" },
 ]
@@ -5288,6 +5310,8 @@ requires-dist = [
     { name = "faiss-cpu", marker = "extra == 'faiss'", specifier = ">=1.7" },
     { name = "fastapi", marker = "extra == 'all'", specifier = ">=0.110" },
     { name = "fastapi", marker = "extra == 'serve'", specifier = ">=0.110" },
+    { name = "feedparser", marker = "extra == 'all'", specifier = ">=6.0" },
+    { name = "feedparser", marker = "extra == 'rss'", specifier = ">=6.0" },
     { name = "google-cloud-aiplatform", marker = "extra == 'all'", specifier = ">=1.38" },
     { name = "google-cloud-aiplatform", marker = "extra == 'vertex'", specifier = ">=1.38" },
     { name = "google-generativeai", marker = "extra == 'all'", specifier = ">=0.7" },
@@ -5329,7 +5353,7 @@ requires-dist = [
     { name = "youtube-search-python", marker = "extra == 'all'", specifier = ">=1.6" },
     { name = "youtube-search-python", marker = "extra == 'youtube'", specifier = ">=1.6" },
 ]
-provides-extras = ["openai", "anthropic", "semantic", "pdf", "html", "web", "chroma", "faiss", "qdrant", "pinecone", "ollama", "cohere", "mistral", "gemini", "bedrock", "groq", "excel", "pptx", "docx", "http", "search", "tavily", "youtube", "mcp", "redis", "vertex", "serve", "postgres", "all"]
+provides-extras = ["openai", "anthropic", "semantic", "pdf", "html", "web", "rss", "chroma", "faiss", "qdrant", "pinecone", "ollama", "cohere", "mistral", "gemini", "bedrock", "groq", "excel", "pptx", "docx", "http", "search", "tavily", "youtube", "mcp", "redis", "vertex", "serve", "postgres", "all"]
 
 [package.metadata.requires-dev]
 dev = [

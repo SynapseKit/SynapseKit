@@ -11,6 +11,7 @@ __all__ = [
     "JSONLoader",
     "MarkdownLoader",
     "PDFLoader",
+    "RSSLoader",
     "StringLoader",
     "TextLoader",
     "WebLoader",
@@ -24,6 +25,7 @@ _LOADERS = {
     "DirectoryLoader": ".directory",
     "WebLoader": ".web",
     "DocxLoader": ".docx",
+    "RSSLoader": ".rss",
 }
 
 

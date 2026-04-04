@@ -43,6 +43,7 @@ semantic = ["sentence-transformers>=2.7"]
 pdf = ["pypdf>=4.0"]
 html = ["beautifulsoup4>=4.12", "lxml>=5.0"]
 web = ["httpx>=0.27", "beautifulsoup4>=4.12"]
+rss = ["feedparser>=6.0"]
 chroma = ["chromadb>=0.5"]
 faiss = ["faiss-cpu>=1.7"]
 qdrant = ["qdrant-client>=1.9"]
@@ -91,6 +92,7 @@ all = [
     "fastapi>=0.110",
     "uvicorn[standard]>=0.29",
     "psycopg[binary]>=3.1",
+    "feedparser>=6.0",
 ]
 
 [dependency-groups]
