@@ -7,6 +7,14 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- **ConfluenceLoader** — load pages from Atlassian Confluence as Documents; supports single page by `page_id` or full space by `space_key`; automatic pagination; converts Confluence storage format (HTML/XML) to plain text; rich metadata (title, author, version, timestamps, URL); retry logic with exponential backoff for rate limits; sync `load()` and async `aload()`; `pip install synapsekit[confluence]`
+
+---
+
 ## [1.4.8] — 2026-04-03
 
 ### Added
