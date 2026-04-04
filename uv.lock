@@ -5280,6 +5280,7 @@ youtube = [
 [package.dev-dependencies]
 dev = [
     { name = "deptry" },
+    { name = "feedparser" },
     { name = "hatchling" },
     { name = "mypy" },
     { name = "pre-commit" },
@@ -5358,6 +5359,7 @@ provides-extras = ["openai", "anthropic", "semantic", "pdf", "html", "web", "rss
 [package.metadata.requires-dev]
 dev = [
     { name = "deptry", specifier = ">=0.16" },
+    { name = "feedparser", specifier = ">=6.0" },
     { name = "hatchling" },
     { name = "mypy", specifier = ">=1.11" },
     { name = "pre-commit", specifier = ">=3.7" },
