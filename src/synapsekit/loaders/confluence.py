@@ -234,7 +234,9 @@ class ConfluenceLoader:
         if "history" in page:
             last_updated = page["history"].get("lastUpdated", {})
             if last_updated:
-                metadata["author"] = last_updated.get("by", {}).get("displayName", "")
+                metadata["author"] = (
+                    last_updated.get("by", {}).get("displayName", "")
+                )
                 metadata["last_modified"] = last_updated.get("when", "")
 
         return Document(text=text, metadata=metadata)
@@ -245,7 +247,9 @@ class ConfluenceLoader:
             page = await self._fetch_page_content_async(self._page_id)
             return [self._page_to_document(page)]
 
-        pages = await self._get_all_pages_in_space_async(self._space_key)  # type: ignore
+        pages = await self._get_all_pages_in_space_async(
+            self._space_key  # type: ignore[arg-type]
+        )
         return [self._page_to_document(page) for page in pages]
 
     def load(self) -> list[Document]:
@@ -254,5 +258,7 @@ class ConfluenceLoader:
             page = self._fetch_page_content_sync(self._page_id)
             return [self._page_to_document(page)]
 
-        pages = self._get_all_pages_in_space_sync(self._space_key)  # type: ignore
+        pages = self._get_all_pages_in_space_sync(
+            self._space_key  # type: ignore[arg-type]
+        )
         return [self._page_to_document(page) for page in pages]
