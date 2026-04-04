@@ -1,13 +1,18 @@
-import feedparser
-
 from synapsekit.loaders.base import Document
 
 
 class RSSLoader:
+    """Load articles from RSS or Atom feeds."""
+
     def __init__(self, url: str):
         self.url = url
 
     def load(self) -> list[Document]:
+        try:
+            import feedparser
+        except ImportError:
+            raise ImportError("feedparser required: pip install synapsekit[rss]") from None
+
         feed = feedparser.parse(self.url)
         documents = []
 

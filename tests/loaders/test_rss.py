@@ -1,10 +1,12 @@
 from unittest.mock import MagicMock, patch
 
-from synapsekit.loaders import RSSLoader
+import pytest
 
 
-@patch("feedparser.parse")
-def test_rss_loader(mock_parse):
+def test_rss_loader():
+    from synapsekit.loaders.rss import RSSLoader
+
+    mock_feedparser = MagicMock()
     mock_feed = MagicMock()
     mock_feed.entries = [
         {
@@ -28,12 +30,13 @@ def test_rss_loader(mock_parse):
             # No content or summary
         },
     ]
-    mock_parse.return_value = mock_feed
+    mock_feedparser.parse.return_value = mock_feed
 
-    loader = RSSLoader("https://example.com/feed.xml")
-    docs = loader.load()
+    with patch.dict("sys.modules", {"feedparser": mock_feedparser}):
+        loader = RSSLoader("https://example.com/feed.xml")
+        docs = loader.load()
 
-    mock_parse.assert_called_once_with("https://example.com/feed.xml")
+    mock_feedparser.parse.assert_called_once_with("https://example.com/feed.xml")
 
     assert len(docs) == 3
 
@@ -54,3 +57,12 @@ def test_rss_loader(mock_parse):
     assert "published" not in docs[2].metadata
     assert "link" not in docs[2].metadata
     assert "author" not in docs[2].metadata
+
+
+def test_import_error_without_feedparser():
+    from synapsekit.loaders.rss import RSSLoader
+
+    with patch.dict("sys.modules", {"feedparser": None}):
+        loader = RSSLoader("https://example.com/feed.xml")
+        with pytest.raises(ImportError, match="feedparser required"):
+            loader.load()
