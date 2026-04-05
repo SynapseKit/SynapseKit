@@ -147,6 +147,7 @@ from .llm.multimodal import AudioContent, ImageContent, MultimodalMessage
 from .llm.structured import generate_structured
 from .loaders.arxiv import ArXivLoader
 from .loaders.base import Document
+from .loaders.confluence import ConfluenceLoader
 from .loaders.csv import CSVLoader
 from .loaders.directory import DirectoryLoader
 from .loaders.email import EmailLoader
@@ -320,6 +321,7 @@ __all__ = [
     "CSVLoader",
     "JSONLoader",
     "DirectoryLoader",
+    "ConfluenceLoader",
     "DocxLoader",
     "EmailLoader",
     "MarkdownLoader",

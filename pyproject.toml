@@ -94,6 +94,7 @@ discord = ["discord.py>=2.0"]
 gdrive = ["google-api-python-client>=2.0", "google-auth>=2.0"]
 slack = ["slack-sdk>=3.0"]
 notion = ["httpx>=0.27"]
+confluence = ["atlassian-python-api>=3.0", "beautifulsoup4>=4.12"]
 all = [
     "openai>=1.0",
     "anthropic>=0.25",
@@ -255,6 +256,7 @@ llama-cpp-python = "llama_cpp"
 "discord.py" = "discord"
 slack-sdk = "slack_sdk"
 weaviate-client = "weaviate"
+atlassian-python-api = "atlassian"
 
 [tool.deptry.per_rule_ignores]
 DEP001 = ["sqlalchemy", "pydantic", "aiohttp", "opentelemetry", "whisper", "botocore", "aiomcache", "nest_asyncio", "huggingface_hub", "serpapi", "weaviate"]
