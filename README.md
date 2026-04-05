@@ -19,7 +19,7 @@
 
 ---
 
-SynapseKit is a Python framework for building production-grade LLM applications. Built **async-native** and **streaming-first** from day one — not retrofitted. Two hard dependencies. Every abstraction is composable, transparent, and replaceable: plain Python you can read, debug, and extend. No magic. No hidden chains. No lock-in.
+SynapseKit is an async-native Python framework for building LLM applications — RAG pipelines, tool-using agents, and graph workflows. Streaming-first, transparent API, 2 hard deps. 27 providers · 43 tools · 26 loaders · 9 vector stores. Every abstraction is composable and replaceable: plain Python you can read, debug, and extend. No magic. No hidden chains. No lock-in.
 
 ---
 
@@ -86,7 +86,7 @@ Retrieval-augmented generation with streaming, BM25 reranking, conversation memo
 <td width="50%">
 
 **🤖 Agents**<br/>
-ReAct loop (any LLM) and native function calling (OpenAI / Anthropic / Gemini / Mistral). 42 built-in tools including calculator, Python REPL, web search, SQL, HTTP, shell, arxiv, pubmed, wolfram, wikipedia, and more. Fully extensible.
+ReAct loop (any LLM) and native function calling (OpenAI / Anthropic / Gemini / Mistral). 43 built-in tools including calculator, Python REPL, web search, SQL, HTTP, shell, Twilio, arxiv, pubmed, wolfram, wikipedia, and more. Fully extensible.
 
 </td>
 </tr>
@@ -108,7 +108,7 @@ OpenAI, Anthropic, Ollama, Gemini, Cohere, Mistral, Bedrock, Azure OpenAI, Groq,
 <td width="50%">
 
 **🗄 Vector Stores**<br/>
-InMemory (built-in, `.npz` persistence), ChromaDB, FAISS, Qdrant, Pinecone. One interface for all backends.
+InMemory (built-in, `.npz` persistence), ChromaDB, FAISS, Qdrant, Pinecone, Weaviate, PGVector, Milvus, LanceDB. One interface for all 9 backends.
 
 </td>
 <td width="50%">

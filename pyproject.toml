@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "synapsekit"
 version = "1.4.8"
-description = "Async-native Python framework for building production-grade LLM applications. Streaming-first, 2 dependencies, fully transparent."
+description = "Async-native Python framework for building LLM applications — RAG pipelines, tool-using agents, and graph workflows. Streaming-first, transparent API, 2 hard deps."
 authors = [{ name = "Amit", email = "de.amit.nautiyal@gmail.com" }]
 license = { text = "Apache-2.0" }
 readme = "README.md"
