@@ -120,9 +120,7 @@ class JSONSplitter(BaseSplitter):
             # Calculate size with this candidate
             # Size = brackets + candidates + commas between them
             comma_overhead = len(current_group)  # One comma per existing element
-            projected_size = (
-                array_overhead + current_size + candidate_size + comma_overhead
-            )
+            projected_size = array_overhead + current_size + candidate_size + comma_overhead
 
             if projected_size <= self.chunk_size:
                 # Add to current group

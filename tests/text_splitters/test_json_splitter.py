@@ -236,10 +236,9 @@ def test_json_splitter_zero_overlap():
 def test_json_splitter_nested_objects():
     """Test splitting JSON with nested objects."""
     s = JSONSplitter(chunk_size=100)
-    data = json.dumps([
-        {"user": {"name": "Alice", "age": 30}},
-        {"user": {"name": "Bob", "age": 25}}
-    ])
+    data = json.dumps(
+        [{"user": {"name": "Alice", "age": 30}}, {"user": {"name": "Bob", "age": 25}}]
+    )
     result = s.split(data)
 
     # Verify structure is preserved
@@ -250,7 +249,7 @@ def test_json_splitter_nested_objects():
 
     assert all_elements == [
         {"user": {"name": "Alice", "age": 30}},
-        {"user": {"name": "Bob", "age": 25}}
+        {"user": {"name": "Bob", "age": 25}},
     ]
 
 
@@ -340,11 +339,13 @@ def test_json_splitter_empty_object():
 def test_json_splitter_realistic_user_data():
     """Test with realistic user data."""
     s = JSONSplitter(chunk_size=150)
-    data = json.dumps([
-        {"id": 1, "name": "Alice Smith", "email": "alice@example.com", "age": 30},
-        {"id": 2, "name": "Bob Jones", "email": "bob@example.com", "age": 25},
-        {"id": 3, "name": "Charlie Brown", "email": "charlie@example.com", "age": 35}
-    ])
+    data = json.dumps(
+        [
+            {"id": 1, "name": "Alice Smith", "email": "alice@example.com", "age": 30},
+            {"id": 2, "name": "Bob Jones", "email": "bob@example.com", "age": 25},
+            {"id": 3, "name": "Charlie Brown", "email": "charlie@example.com", "age": 35},
+        ]
+    )
     result = s.split(data)
 
     # Verify all data is preserved
