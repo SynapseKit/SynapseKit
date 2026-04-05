@@ -64,7 +64,7 @@ def test_sentence_window_splitter_two_sentences_window_1():
     s = SentenceWindowSplitter(window_size=1)
     text = "First sentence. Second sentence."
     result = s.split(text)
-    
+
     # First sentence: includes itself + 1 after
     # Second sentence: includes 1 before + itself
     assert len(result) == 2
@@ -77,7 +77,7 @@ def test_sentence_window_splitter_three_sentences_window_1():
     s = SentenceWindowSplitter(window_size=1)
     text = "First sentence. Second sentence. Third sentence."
     result = s.split(text)
-    
+
     assert len(result) == 3
     # Window around first: itself + 1 after
     assert result[0] == "First sentence. Second sentence."
@@ -92,7 +92,7 @@ def test_sentence_window_splitter_three_sentences_window_2():
     s = SentenceWindowSplitter(window_size=2)
     text = "First sentence. Second sentence. Third sentence."
     result = s.split(text)
-    
+
     assert len(result) == 3
     # All windows will include all sentences since window_size=2 is >= distance to edges
     assert result[0] == "First sentence. Second sentence. Third sentence."
@@ -105,7 +105,7 @@ def test_sentence_window_splitter_five_sentences_window_2():
     s = SentenceWindowSplitter(window_size=2)
     text = "One. Two. Three. Four. Five."
     result = s.split(text)
-    
+
     assert len(result) == 5
     # Window around "One": itself + 2 after = One, Two, Three
     assert result[0] == "One. Two. Three."
@@ -124,7 +124,7 @@ def test_sentence_window_splitter_zero_window():
     s = SentenceWindowSplitter(window_size=0)
     text = "First. Second. Third."
     result = s.split(text)
-    
+
     assert len(result) == 3
     assert result[0] == "First."
     assert result[1] == "Second."
@@ -147,7 +147,7 @@ def test_sentence_window_metadata_single_sentence():
     """Test split_with_metadata with single sentence."""
     s = SentenceWindowSplitter(window_size=1)
     result = s.split_with_metadata("Single sentence.")
-    
+
     assert len(result) == 1
     assert result[0]["text"] == "Single sentence."
     assert result[0]["metadata"]["chunk_index"] == 0
@@ -159,19 +159,19 @@ def test_sentence_window_metadata_three_sentences():
     s = SentenceWindowSplitter(window_size=1)
     text = "First. Second. Third."
     result = s.split_with_metadata(text)
-    
+
     assert len(result) == 3
-    
+
     # First sentence window
     assert result[0]["text"] == "First. Second."
     assert result[0]["metadata"]["chunk_index"] == 0
     assert result[0]["metadata"]["target_sentence"] == "First."
-    
+
     # Second sentence window
     assert result[1]["text"] == "First. Second. Third."
     assert result[1]["metadata"]["chunk_index"] == 1
     assert result[1]["metadata"]["target_sentence"] == "Second."
-    
+
     # Third sentence window
     assert result[2]["text"] == "Second. Third."
     assert result[2]["metadata"]["chunk_index"] == 2
@@ -184,15 +184,15 @@ def test_sentence_window_metadata_with_parent_metadata():
     text = "First. Second."
     parent_meta = {"source": "test.txt", "page": 1}
     result = s.split_with_metadata(text, metadata=parent_meta)
-    
+
     assert len(result) == 2
-    
+
     # Check first chunk
     assert result[0]["metadata"]["source"] == "test.txt"
     assert result[0]["metadata"]["page"] == 1
     assert result[0]["metadata"]["chunk_index"] == 0
     assert result[0]["metadata"]["target_sentence"] == "First."
-    
+
     # Check second chunk
     assert result[1]["metadata"]["source"] == "test.txt"
     assert result[1]["metadata"]["page"] == 1
@@ -210,7 +210,7 @@ def test_sentence_window_various_punctuation():
     s = SentenceWindowSplitter(window_size=0)
     text = "Question? Exclamation! Statement."
     result = s.split(text)
-    
+
     assert len(result) == 3
     assert result[0] == "Question?"
     assert result[1] == "Exclamation!"
@@ -222,7 +222,7 @@ def test_sentence_window_multiple_spaces():
     s = SentenceWindowSplitter(window_size=0)
     text = "First.    Second.     Third."
     result = s.split(text)
-    
+
     assert len(result) == 3
     assert result[0] == "First."
     assert result[1] == "Second."
@@ -234,7 +234,7 @@ def test_sentence_window_newlines_between_sentences():
     s = SentenceWindowSplitter(window_size=0)
     text = "First.\nSecond.\n\nThird."
     result = s.split(text)
-    
+
     assert len(result) == 3
     assert "First" in result[0]
     assert "Second" in result[1]
@@ -248,7 +248,7 @@ def test_sentence_window_abbreviations():
     # This test documents the behavior
     text = "Dr. Smith works here. She is great."
     result = s.split(text)
-    
+
     # The regex will likely split after "Dr." - this is expected behavior
     # In production, you might want a more sophisticated sentence splitter
     assert len(result) >= 2
@@ -269,9 +269,9 @@ def test_sentence_window_realistic_paragraph():
         "Millions of tourists visit it every year."
     )
     result = s.split_with_metadata(text)
-    
+
     assert len(result) == 4
-    
+
     # For retrieval, you'd store target_sentence as the retrieval key
     # but use the full window text for embedding
     assert result[1]["metadata"]["target_sentence"] == "It was built in 1889."
@@ -285,7 +285,7 @@ def test_sentence_window_large_window_size():
     s = SentenceWindowSplitter(window_size=100)
     text = "First. Second. Third."
     result = s.split(text)
-    
+
     # All windows should include all sentences
     assert len(result) == 3
     for chunk in result:
