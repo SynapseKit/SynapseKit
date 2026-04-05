@@ -144,6 +144,7 @@ class TestTwilioTool:
 
     def test_security_warning_logged(self, caplog):
         import logging
+
         with caplog.at_level(logging.WARNING):
             _make_tool()
         assert any("TwilioTool instantiated" in r.message for r in caplog.records)

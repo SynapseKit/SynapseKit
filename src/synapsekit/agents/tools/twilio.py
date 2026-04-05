@@ -50,10 +50,7 @@ class TwilioTool(BaseTool):
     """
 
     name = "twilio"
-    description = (
-        "Send SMS or WhatsApp messages via Twilio. "
-        "Actions: send_sms, send_whatsapp."
-    )
+    description = "Send SMS or WhatsApp messages via Twilio. Actions: send_sms, send_whatsapp."
     parameters = {
         "type": "object",
         "properties": {
@@ -89,7 +86,9 @@ class TwilioTool(BaseTool):
             "arbitrary phone numbers. Make sure this is intentional."
         )
 
-    async def run(self, action: str = "", to: str = "", body: str = "", **kwargs: Any) -> ToolResult:
+    async def run(
+        self, action: str = "", to: str = "", body: str = "", **kwargs: Any
+    ) -> ToolResult:
         if not action:
             return ToolResult(output="", error="No action specified.")
         if not to:
