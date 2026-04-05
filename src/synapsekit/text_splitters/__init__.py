@@ -5,6 +5,7 @@ from .markdown import MarkdownTextSplitter
 from .recursive import RecursiveCharacterTextSplitter
 from .semantic import SemanticSplitter
 from .sentence import SentenceTextSplitter
+from .sentence_window import SentenceWindowSplitter
 from .token import TokenAwareSplitter
 
 __all__ = [
@@ -15,5 +16,6 @@ __all__ = [
     "RecursiveCharacterTextSplitter",
     "SemanticSplitter",
     "SentenceTextSplitter",
+    "SentenceWindowSplitter",
     "TokenAwareSplitter",
 ]
