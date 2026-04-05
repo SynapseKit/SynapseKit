@@ -221,6 +221,7 @@ from .text_splitters import (
     MarkdownTextSplitter,
     RecursiveCharacterTextSplitter,
     SemanticSplitter,
+    SentenceTextSplitter,
     TokenAwareSplitter,
 )
 
@@ -410,6 +411,7 @@ __all__ = [
     "RecursiveCharacterTextSplitter",
     "TokenAwareSplitter",
     "SemanticSplitter",
+    "SentenceTextSplitter",
     # Graph workflows
     "END",
     "GraphState",
