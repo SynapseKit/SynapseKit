@@ -16,6 +16,7 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **CodeSplitter** — split source code using language-aware separators; supports Python, JavaScript, TypeScript, Go, Rust, Java, C++; preserves logical structures (classes, functions); falls back to recursive character splitting
 - **ConfluenceLoader** — load pages from Atlassian Confluence as Documents; supports single page by `page_id` or full space by `space_key`; automatic pagination; converts Confluence storage format to plain text via BeautifulSoup; rich metadata (title, author, version, URL); retry with exponential back-off for rate limits; sync `load()` and async `aload()`; `pip install synapsekit[confluence]`
 - **SentenceWindowSplitter** — splits text into one chunk per sentence, each padded with up to `window_size` surrounding sentences for context; custom `split_with_metadata()` adds `target_sentence` to chunk metadata; useful for retrieval systems that embed with context but index by target sentence
+- **TwilioTool** — send SMS and WhatsApp messages via the Twilio REST API; stdlib `urllib` only, no extra deps; auth via constructor args or `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` / `TWILIO_FROM_NUMBER` env vars; automatic `whatsapp:` prefix handling for both sender and recipient; security warning logged on instantiation; closes #386
 
 ---
 
