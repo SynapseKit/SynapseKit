@@ -156,6 +156,7 @@ from .loaders.image import ImageLoader
 from .loaders.json_loader import JSONLoader
 from .loaders.markdown import MarkdownLoader
 from .loaders.pdf import PDFLoader
+from .loaders.rss import RSSLoader
 from .loaders.text import StringLoader, TextLoader
 from .loaders.web import WebLoader
 from .loaders.wikipedia import WikipediaLoader
@@ -327,6 +328,7 @@ __all__ = [
     "EmailLoader",
     "MarkdownLoader",
     "WebLoader",
+    "RSSLoader",
     "WikipediaLoader",
     "ExcelLoader",
     "PowerPointLoader",

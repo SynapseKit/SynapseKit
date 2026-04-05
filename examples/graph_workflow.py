@@ -17,12 +17,13 @@ import asyncio
 import os
 from typing import Literal
 
-from synapsekit import StateGraph, END
+from synapsekit import END, StateGraph
 
 
 # Define workflow state
 class ReviewState:
     """State for content review workflow"""
+
     content: str = ""
     word_count: int = 0
     is_approved: bool = False
@@ -46,7 +47,7 @@ async def check_length(state: ReviewState) -> ReviewState:
     else:
         state.is_approved = False
         state.feedback = f"Content too short. Need {10 - state.word_count} more words."
-    
+
     print(f"✅ Approved: {state.is_approved}")
     print(f"💬 Feedback: {state.feedback}")
     return state
@@ -83,7 +84,7 @@ async def main():
     # Add edges
     graph.set_entry_point("count")
     graph.add_edge("count", "check")
-    
+
     # Add conditional edge based on approval
     graph.add_conditional_edges(
         "check",
@@ -91,9 +92,9 @@ async def main():
         {
             "approve": "approve",
             "reject": "reject",
-        }
+        },
     )
-    
+
     # Both approval and rejection lead to end
     graph.add_edge("approve", END)
     graph.add_edge("reject", END)
@@ -104,7 +105,7 @@ async def main():
     # Visualize the graph (optional)
     print("Graph structure:")
     print(workflow.get_mermaid())
-    print("\n" + "="*60 + "\n")
+    print("\n" + "=" * 60 + "\n")
 
     # Test with different inputs
     test_contents = [
@@ -115,10 +116,10 @@ async def main():
     for i, content in enumerate(test_contents, 1):
         print(f"Test {i}: {content[:50]}...")
         print("-" * 60)
-        
+
         result = await workflow.run(ReviewState(content=content))
         print(f"\nFinal state - Approved: {result.is_approved}")
-        print("="*60 + "\n")
+        print("=" * 60 + "\n")
 
 
 if __name__ == "__main__":
