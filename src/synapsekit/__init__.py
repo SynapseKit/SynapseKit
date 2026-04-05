@@ -219,6 +219,7 @@ from .retrieval.vectorstore import InMemoryVectorStore
 from .text_splitters import (
     BaseSplitter,
     CharacterTextSplitter,
+    JSONSplitter,
     MarkdownTextSplitter,
     RecursiveCharacterTextSplitter,
     SemanticSplitter,
@@ -409,6 +410,7 @@ __all__ = [
     # Text splitters
     "BaseSplitter",
     "CharacterTextSplitter",
+    "JSONSplitter",
     "MarkdownTextSplitter",
     "RecursiveCharacterTextSplitter",
     "TokenAwareSplitter",
