@@ -1,6 +1,7 @@
 from .base import BaseSplitter
 from .character import CharacterTextSplitter
 from .code import CodeSplitter
+from .html import HTMLTextSplitter
 from .markdown import MarkdownTextSplitter
 from .recursive import RecursiveCharacterTextSplitter
 from .semantic import SemanticSplitter
@@ -11,6 +12,7 @@ __all__ = [
     "BaseSplitter",
     "CharacterTextSplitter",
     "CodeSplitter",
+    "HTMLTextSplitter",
     "MarkdownTextSplitter",
     "RecursiveCharacterTextSplitter",
     "SemanticSplitter",
