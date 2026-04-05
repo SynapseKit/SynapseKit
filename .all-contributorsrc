@@ -56,6 +56,13 @@
       "avatar_url": "https://avatars.githubusercontent.com/u/178027480?v=4",
       "profile": "https://github.com/adaumsilva",
       "contributions": ["code"]
+    },
+    {
+      "login": "qorexdev",
+      "name": "qorex",
+      "avatar_url": "https://avatars.githubusercontent.com/u/248982649?v=4",
+      "profile": "https://github.com/qorexdev",
+      "contributions": ["code"]
     }
   ],
   "contributorsPerLine": 7
