@@ -34,6 +34,7 @@ from .summarization import SummarizationTool
 from .tavily_search import TavilySearchTool
 from .text_to_speech import TextToSpeechTool
 from .translation import TranslationTool
+from .twilio import TwilioTool
 from .vector_search import VectorSearchTool
 from .web_scraper import WebScraperTool
 from .web_search import WebSearchTool
@@ -78,6 +79,7 @@ __all__ = [
     "TavilySearchTool",
     "TextToSpeechTool",
     "TranslationTool",
+    "TwilioTool",
     "VectorSearchTool",
     "WebScraperTool",
     "WebSearchTool",
