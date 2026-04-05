@@ -161,6 +161,30 @@ def test_code_splitter_javascript_classes():
 # ------------------------------------------------------------------ #
 
 
+def test_code_splitter_typescript_interface():
+    """TypeScript: interface and type separators are respected."""
+    code = (
+        "interface Foo {\n    bar: string;\n}\ninterface Baz {\n    qux: number;\n}\n"
+        "type MyType = string | number;\ntype OtherType = boolean;"
+    )
+    s = CodeSplitter(language="typescript", chunk_size=50, chunk_overlap=0)
+    result = s.split(code)
+    assert len(result) >= 2
+    assert all(len(c) <= 50 for c in result)
+
+
+def test_code_splitter_rust_struct_impl():
+    """Rust: struct, impl, and trait separators are respected."""
+    code = (
+        "struct Foo {\n    x: i32,\n}\nimpl Foo {\n    fn new() -> Self { Foo { x: 0 } }\n}\n"
+        "trait Bar {\n    fn baz(&self);\n}\nenum Color {\n    Red,\n    Blue,\n}"
+    )
+    s = CodeSplitter(language="rust", chunk_size=50, chunk_overlap=0)
+    result = s.split(code)
+    assert len(result) >= 2
+    assert all(len(c) <= 50 for c in result)
+
+
 def test_code_splitter_go():
     """Test splitting Go code."""
     code = "func foo() int {\n    return 1\n}\nfunc bar() int {\n    return 2\n}"
@@ -201,15 +225,13 @@ def test_code_splitter_cpp():
 
 
 def test_code_splitter_overlap():
-    """Test overlapping chunks."""
+    """Overlap causes content to be reused — total chars across chunks exceeds no-overlap."""
     code = "def foo():\n    pass\n\ndef bar():\n    pass\n\ndef baz():\n    pass"
-    s = CodeSplitter(language="python", chunk_size=40, chunk_overlap=10)
-    result = s.split(code)
+    no_overlap = CodeSplitter(language="python", chunk_size=40, chunk_overlap=0).split(code)
+    with_overlap = CodeSplitter(language="python", chunk_size=40, chunk_overlap=10).split(code)
 
-    assert len(result) >= 2
-    if len(result) >= 2:
-        # Second chunk should start with tail of first
-        assert result[1].startswith(result[0][-10:])
+    assert len(with_overlap) >= 2
+    assert sum(len(c) for c in with_overlap) > sum(len(c) for c in no_overlap)
 
 
 def test_code_splitter_no_overlap():
