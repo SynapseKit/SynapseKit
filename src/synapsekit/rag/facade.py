@@ -45,6 +45,8 @@ def _make_llm(
             provider = "ai21"
         elif model.startswith("luminous") or model.startswith("pharia"):
             provider = "aleph-alpha"
+        elif model.startswith("grok"):
+            provider = "xai"
         elif model.startswith("@cf/") or model.startswith("@hf/"):
             provider = "cloudflare"
         elif model.startswith("dbrx") or model.startswith("databricks"):
@@ -158,6 +160,10 @@ def _make_llm(
         from ..llm.aleph_alpha import AlephAlphaLLM
 
         return AlephAlphaLLM(config)
+    elif provider == "xai":
+        from ..llm.xai import XaiLLM
+
+        return XaiLLM(config)
     elif provider == "llamacpp":
         from ..llm.llamacpp import LlamaCppLLM
 
@@ -168,7 +174,7 @@ def _make_llm(
             "Use 'openai', 'anthropic', 'ollama', 'ai21', 'cohere', 'mistral', 'gemini', "
             "'bedrock', 'groq', 'deepseek', 'openrouter', 'together', 'fireworks', "
             "'moonshot', 'minimax', 'zhipu', 'cloudflare', 'databricks', 'ernie', 'sambanova', "
-            "'aleph-alpha', or 'llamacpp'."
+            "'aleph-alpha', 'xai', or 'llamacpp'."
         )
 
 
