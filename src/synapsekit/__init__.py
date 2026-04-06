@@ -263,6 +263,7 @@ __all__ = [
     "SambaNovaLLM",
     "TogetherLLM",
     "VertexAILLM",
+    "XaiLLM",
     "ZhipuLLM",
     # Embeddings
     "SynapsekitEmbeddings",
@@ -553,6 +554,7 @@ _LAZY_IMPORTS = {
     "MinimaxLLM": "llm.minimax",
     "MoonshotLLM": "llm.moonshot",
     "AlephAlphaLLM": "llm.aleph_alpha",
+    "XaiLLM": "llm.xai",
     "ZhipuLLM": "llm.zhipu",
     "CloudflareLLM": "llm.cloudflare",
     # Checkpointers
