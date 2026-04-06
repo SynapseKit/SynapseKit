@@ -42,6 +42,7 @@ __all__ = [
     "SambaNovaLLM",
     "TogetherLLM",
     "VertexAILLM",
+    "WriterLLM",
     "ZhipuLLM",
     "generate_structured",
 ]
@@ -71,6 +72,7 @@ _PROVIDERS = {
     "VertexAILLM": ".vertex_ai",
     "MoonshotLLM": ".moonshot",
     "MinimaxLLM": ".minimax",
+    "WriterLLM": ".writer",
     "ZhipuLLM": ".zhipu",
     "CloudflareLLM": ".cloudflare",
     "DatabricksLLM": ".databricks",
