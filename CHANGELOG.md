@@ -17,6 +17,7 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **ConfluenceLoader** — load pages from Atlassian Confluence as Documents; supports single page by `page_id` or full space by `space_key`; automatic pagination; converts Confluence storage format to plain text via BeautifulSoup; rich metadata (title, author, version, URL); retry with exponential back-off for rate limits; sync `load()` and async `aload()`; `pip install synapsekit[confluence]`
 - **SentenceWindowSplitter** — splits text into one chunk per sentence, each padded with up to `window_size` surrounding sentences for context; custom `split_with_metadata()` adds `target_sentence` to chunk metadata; useful for retrieval systems that embed with context but index by target sentence
 - **TwilioTool** — send SMS and WhatsApp messages via the Twilio REST API; stdlib `urllib` only, no extra deps; auth via constructor args or `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` / `TWILIO_FROM_NUMBER` env vars; automatic `whatsapp:` prefix handling for both sender and recipient; security warning logged on instantiation; closes #386
+- **StripeTool** — read-only Stripe data lookup; actions: get_customer (by ID or email), list_invoices, get_charge, list_products; stdlib urllib only, async-safe via run_in_executor; auth via STRIPE_API_KEY env var; closes #385
 
 ---
 

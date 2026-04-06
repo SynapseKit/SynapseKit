@@ -30,6 +30,7 @@ from .slack import SlackTool
 from .speech_to_text import SpeechToTextTool
 from .sql_query import SQLQueryTool
 from .sql_schema import SQLSchemaInspectionTool
+from .stripe import StripeTool
 from .summarization import SummarizationTool
 from .tavily_search import TavilySearchTool
 from .text_to_speech import TextToSpeechTool
@@ -75,6 +76,7 @@ __all__ = [
     "SpeechToTextTool",
     "SQLQueryTool",
     "SQLSchemaInspectionTool",
+    "StripeTool",
     "SummarizationTool",
     "TavilySearchTool",
     "TextToSpeechTool",
