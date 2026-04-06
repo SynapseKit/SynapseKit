@@ -263,6 +263,7 @@ __all__ = [
     "SambaNovaLLM",
     "TogetherLLM",
     "VertexAILLM",
+    "WriterLLM",
     "ZhipuLLM",
     # Embeddings
     "SynapsekitEmbeddings",
@@ -550,6 +551,7 @@ _LAZY_IMPORTS = {
     "PerplexityLLM": "llm.perplexity",
     "SambaNovaLLM": "llm.sambanova",
     "TogetherLLM": "llm.together",
+    "WriterLLM": "llm.writer",
     "MinimaxLLM": "llm.minimax",
     "MoonshotLLM": "llm.moonshot",
     "AlephAlphaLLM": "llm.aleph_alpha",
