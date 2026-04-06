@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import os
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
@@ -51,7 +51,11 @@ class WeatherTool(BaseTool):
         url = f"{self.base_url}/{endpoint}?{query}"
         req = Request(url, headers={"User-Agent": "SynapseKit/WeatherTool"})
         with urlopen(req, timeout=15) as resp:
-            return json.loads(resp.read().decode("utf-8"))
+            payload = json.loads(resp.read().decode("utf-8"))
+
+        if not isinstance(payload, dict):
+            raise ValueError("Unexpected weather API response format")
+        return cast(dict[str, Any], payload)
 
     async def get_current(self, city: str) -> ToolResult:
         api_key = self._get_api_key()
