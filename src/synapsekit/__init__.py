@@ -221,6 +221,7 @@ from .text_splitters import (
     BaseSplitter,
     CharacterTextSplitter,
     CodeSplitter,
+    HTMLTextSplitter,
     MarkdownTextSplitter,
     RecursiveCharacterTextSplitter,
     SemanticSplitter,
@@ -413,6 +414,7 @@ __all__ = [
     # Text splitters
     "BaseSplitter",
     "CharacterTextSplitter",
+    "HTMLTextSplitter",
     "MarkdownTextSplitter",
     "RecursiveCharacterTextSplitter",
     "CodeSplitter",
