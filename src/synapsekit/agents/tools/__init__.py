@@ -36,6 +36,7 @@ from .text_to_speech import TextToSpeechTool
 from .translation import TranslationTool
 from .twilio import TwilioTool
 from .vector_search import VectorSearchTool
+from .weather import WeatherTool
 from .web_scraper import WebScraperTool
 from .web_search import WebSearchTool
 from .wikipedia import WikipediaTool
@@ -83,6 +84,7 @@ __all__ = [
     "VectorSearchTool",
     "WebScraperTool",
     "WebSearchTool",
+    "WeatherTool",
     "WolframAlphaTool",
     "WikipediaTool",
     "YouTubeSearchTool",
