@@ -158,6 +158,10 @@ def _make_llm(
         from ..llm.aleph_alpha import AlephAlphaLLM
 
         return AlephAlphaLLM(config)
+    elif provider == "novita":
+        from ..llm.novita import NovitaLLM
+
+        return NovitaLLM(config)
     elif provider == "llamacpp":
         from ..llm.llamacpp import LlamaCppLLM
 
@@ -168,7 +172,7 @@ def _make_llm(
             "Use 'openai', 'anthropic', 'ollama', 'ai21', 'cohere', 'mistral', 'gemini', "
             "'bedrock', 'groq', 'deepseek', 'openrouter', 'together', 'fireworks', "
             "'moonshot', 'minimax', 'zhipu', 'cloudflare', 'databricks', 'ernie', 'sambanova', "
-            "'aleph-alpha', or 'llamacpp'."
+            "'aleph-alpha', 'novita', or 'llamacpp'."
         )
 
 
