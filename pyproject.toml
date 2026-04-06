@@ -229,6 +229,7 @@ module = [
     "synapsekit.agents.tools.jira",
     "synapsekit.agents.tools.github_api",
     "synapsekit.agents.tools.email_tool",
+    "synapsekit.agents.tools.news",
     "synapsekit.agents.tools.pubmed_search",
     "synapsekit.graph.streaming",
     "synapsekit._api",
