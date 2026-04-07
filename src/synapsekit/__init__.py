@@ -155,6 +155,7 @@ from .loaders.confluence import ConfluenceLoader
 from .loaders.csv import CSVLoader
 from .loaders.directory import DirectoryLoader
 from .loaders.email import EmailLoader
+from .loaders.gcs import GCSLoader
 from .loaders.html import HTMLLoader
 from .loaders.image import ImageLoader
 from .loaders.json_loader import JSONLoader
@@ -336,6 +337,7 @@ __all__ = [
     "ConfluenceLoader",
     "DocxLoader",
     "EmailLoader",
+    "GCSLoader",
     "MarkdownLoader",
     "WebLoader",
     "RSSLoader",

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import io
 import logging
 from typing import Any
 
@@ -89,19 +88,11 @@ class GCSLoader:
 
         # Build client with credentials
         if self.credentials_path:
-            creds = service_account.Credentials.from_service_account_file(
-                self.credentials_path
-            )
-            client = await loop.run_in_executor(
-                None, lambda: storage.Client(credentials=creds)
-            )
+            creds = service_account.Credentials.from_service_account_file(self.credentials_path)
+            client = await loop.run_in_executor(None, lambda: storage.Client(credentials=creds))
         elif self.credentials_dict:
-            creds = service_account.Credentials.from_service_account_info(
-                self.credentials_dict
-            )
-            client = await loop.run_in_executor(
-                None, lambda: storage.Client(credentials=creds)
-            )
+            creds = service_account.Credentials.from_service_account_info(self.credentials_dict)
+            client = await loop.run_in_executor(None, lambda: storage.Client(credentials=creds))
         else:
             # Use default credentials
             client = await loop.run_in_executor(None, storage.Client)
@@ -140,9 +131,7 @@ class GCSLoader:
                     )
                 )
             except Exception as exc:
-                logger.warning(
-                    "GCSLoader: skipping file %r — %s", blob.name, exc
-                )
+                logger.warning("GCSLoader: skipping file %r — %s", blob.name, exc)
 
         return documents
 
