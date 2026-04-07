@@ -92,7 +92,9 @@ pgvector = ["psycopg[binary]>=3.1", "pgvector>=0.2"]
 wolfram = ["wolframalpha>=5.0"]
 dynamodb = ["boto3>=1.34"]
 discord = ["discord.py>=2.0"]
+gcs = ["google-cloud-storage>=2.0"]
 gdrive = ["google-api-python-client>=2.0", "google-auth>=2.0"]
+sql = ["sqlalchemy>=2.0"]
 slack = ["slack-sdk>=3.0"]
 notion = ["httpx>=0.27"]
 confluence = ["atlassian-python-api>=3.0", "beautifulsoup4>=4.12"]
@@ -225,11 +227,15 @@ module = [
     "synapsekit.llm.vertex_ai",
     "synapsekit.loaders.excel",
     "synapsekit.loaders.pptx",
+    "synapsekit.loaders.gcs",
+    "synapsekit.loaders.github",
+    "synapsekit.loaders.sql",
     "synapsekit.agents.tools.slack",
     "synapsekit.agents.tools.jira",
     "synapsekit.agents.tools.github_api",
     "synapsekit.agents.tools.email_tool",
     "synapsekit.agents.tools.news",
+    "synapsekit.agents.tools.linear",
     "synapsekit.agents.tools.pubmed_search",
     "synapsekit.graph.streaming",
     "synapsekit._api",
@@ -246,6 +252,7 @@ pep621_dev_dependency_groups = ["dev"]
 [tool.deptry.package_module_name_map]
 wikipedia-api = "wikipediaapi"
 google-generativeai = "google"
+google-cloud-storage = "google"
 google-api-python-client = "googleapiclient"
 google-auth = "google"
 beautifulsoup4 = "bs4"

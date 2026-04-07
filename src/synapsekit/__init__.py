@@ -53,6 +53,7 @@ from .agents import (
     ImageAnalysisTool,
     JiraTool,
     JSONQueryTool,
+    LinearTool,
     NewsTool,
     ObservationEvent,
     PDFReaderTool,
@@ -155,12 +156,15 @@ from .loaders.confluence import ConfluenceLoader
 from .loaders.csv import CSVLoader
 from .loaders.directory import DirectoryLoader
 from .loaders.email import EmailLoader
+from .loaders.gcs import GCSLoader
+from .loaders.github import GitHubLoader
 from .loaders.html import HTMLLoader
 from .loaders.image import ImageLoader
 from .loaders.json_loader import JSONLoader
 from .loaders.markdown import MarkdownLoader
 from .loaders.pdf import PDFLoader
 from .loaders.rss import RSSLoader
+from .loaders.sql import SQLLoader
 from .loaders.text import StringLoader, TextLoader
 from .loaders.web import WebLoader
 from .loaders.wikipedia import WikipediaLoader
@@ -336,7 +340,10 @@ __all__ = [
     "ConfluenceLoader",
     "DocxLoader",
     "EmailLoader",
+    "GCSLoader",
+    "GitHubLoader",
     "MarkdownLoader",
+    "SQLLoader",
     "WebLoader",
     "RSSLoader",
     "WikipediaLoader",
@@ -393,6 +400,7 @@ __all__ = [
     "ImageAnalysisTool",
     "JiraTool",
     "JSONQueryTool",
+    "LinearTool",
     "NewsTool",
     "PDFReaderTool",
     "PythonREPLTool",
