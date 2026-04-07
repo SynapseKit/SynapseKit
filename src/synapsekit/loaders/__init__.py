@@ -22,6 +22,7 @@ __all__ = [
     "PDFLoader",
     "RSSLoader",
     "SlackLoader",
+    "SQLLoader",
     "StringLoader",
     "TextLoader",
     "VideoLoader",
@@ -50,6 +51,7 @@ _LOADERS = {
     "SlackLoader": ".slack",
     "NotionLoader": ".notion",
     "RSSLoader": ".rss",
+    "SQLLoader": ".sql",
     "WikipediaLoader": ".wikipedia",
     "ConfluenceLoader": ".confluence",
 }
