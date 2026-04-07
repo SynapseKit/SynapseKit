@@ -6,8 +6,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from synapsekit.loaders.base import Document
-
 
 def _make_mock_response(json_data=None, text_data=None, status_code=200):
     """Create a mock HTTP response."""
@@ -35,20 +33,20 @@ def test_readme_loading():
 
     readme_content = "# Test Project\n\nThis is a test."
     encoded = base64.b64encode(readme_content.encode("utf-8")).decode("utf-8")
-    
+
     mock_response = _make_mock_response(
         json_data={"content": encoded, "encoding": "base64"}
     )
-    
+
     mock_client = MagicMock()
     mock_client.get = AsyncMock(return_value=mock_response)
     mock_client.__aenter__ = AsyncMock(return_value=mock_client)
     mock_client.__aexit__ = AsyncMock(return_value=None)
-    
+
     with patch("httpx.AsyncClient", return_value=mock_client):
         loader = GitHubLoader("owner/repo", content_type="readme")
         docs = loader.load_sync()
-    
+
     assert len(docs) == 1
     assert docs[0].text == readme_content
     assert docs[0].metadata["source"] == "github"
@@ -87,18 +85,18 @@ def test_issues_loading_filters_prs():
             "html_url": "https://github.com/owner/repo/issues/3",
         },
     ]
-    
+
     mock_response = _make_mock_response(json_data=issues_data)
-    
+
     mock_client = MagicMock()
     mock_client.get = AsyncMock(return_value=mock_response)
     mock_client.__aenter__ = AsyncMock(return_value=mock_client)
     mock_client.__aexit__ = AsyncMock(return_value=None)
-    
+
     with patch("httpx.AsyncClient", return_value=mock_client):
         loader = GitHubLoader("owner/repo", content_type="issues")
         docs = loader.load_sync()
-    
+
     # Should only have 2 docs (issue #2 filtered out as it's a PR)
     assert len(docs) == 2
     assert "Bug report" in docs[0].text
@@ -129,18 +127,18 @@ def test_prs_loading():
             "html_url": "https://github.com/owner/repo/pull/11",
         },
     ]
-    
+
     mock_response = _make_mock_response(json_data=prs_data)
-    
+
     mock_client = MagicMock()
     mock_client.get = AsyncMock(return_value=mock_response)
     mock_client.__aenter__ = AsyncMock(return_value=mock_client)
     mock_client.__aexit__ = AsyncMock(return_value=None)
-    
+
     with patch("httpx.AsyncClient", return_value=mock_client):
         loader = GitHubLoader("owner/repo", content_type="prs")
         docs = loader.load_sync()
-    
+
     assert len(docs) == 2
     assert "Add feature X" in docs[0].text
     assert docs[0].metadata["type"] == "pr"
@@ -160,13 +158,13 @@ def test_files_loading():
             {"path": "tests/test_main.py", "type": "blob"},
         ]
     }
-    
+
     file_contents = {
         "README.md": "# Project",
         "src/main.py": "def main(): pass",
         "tests/test_main.py": "def test_main(): pass",
     }
-    
+
     async def mock_get(url, headers=None):
         if "/repos/owner/repo/git/trees/" in url:
             return _make_mock_response(json_data=tree_data)
@@ -178,16 +176,16 @@ def test_files_loading():
                 if filename in url:
                     return _make_mock_response(text_data=content)
         return _make_mock_response(text_data="")
-    
+
     mock_client = MagicMock()
     mock_client.get = AsyncMock(side_effect=mock_get)
     mock_client.__aenter__ = AsyncMock(return_value=mock_client)
     mock_client.__aexit__ = AsyncMock(return_value=None)
-    
+
     with patch("httpx.AsyncClient", return_value=mock_client):
         loader = GitHubLoader("owner/repo", content_type="files")
         docs = loader.load_sync()
-    
+
     # Should have 3 files (tree directory filtered out)
     assert len(docs) == 3
     assert docs[0].metadata["type"] == "file"
@@ -207,26 +205,25 @@ def test_files_with_path_filter():
             {"path": "tests/test_main.py", "type": "blob"},
         ]
     }
-    
+
     async def mock_get(url, headers=None):
         if "/repos/owner/repo/git/trees/" in url:
             return _make_mock_response(json_data=tree_data)
         elif url.startswith("https://api.github.com/repos/owner/repo"):
             return _make_mock_response(json_data=repo_data)
-        elif "raw.githubusercontent.com" in url:
-            if "src/" in url:
-                return _make_mock_response(text_data="# Python code")
+        elif "raw.githubusercontent.com" in url and "src/" in url:
+            return _make_mock_response(text_data="# Python code")
         return _make_mock_response(text_data="")
-    
+
     mock_client = MagicMock()
     mock_client.get = AsyncMock(side_effect=mock_get)
     mock_client.__aenter__ = AsyncMock(return_value=mock_client)
     mock_client.__aexit__ = AsyncMock(return_value=None)
-    
+
     with patch("httpx.AsyncClient", return_value=mock_client):
         loader = GitHubLoader("owner/repo", content_type="files", path="src/")
         docs = loader.load_sync()
-    
+
     # Should only have src/ files
     assert len(docs) == 2
     assert all("src/" in doc.metadata["path"] for doc in docs)
@@ -246,18 +243,18 @@ def test_limit_parameter():
         }
         for i in range(10)
     ]
-    
+
     mock_response = _make_mock_response(json_data=issues_data)
-    
+
     mock_client = MagicMock()
     mock_client.get = AsyncMock(return_value=mock_response)
     mock_client.__aenter__ = AsyncMock(return_value=mock_client)
     mock_client.__aexit__ = AsyncMock(return_value=None)
-    
+
     with patch("httpx.AsyncClient", return_value=mock_client):
         loader = GitHubLoader("owner/repo", content_type="issues", limit=3)
         docs = loader.load_sync()
-    
+
     assert len(docs) == 3
 
 
@@ -267,16 +264,16 @@ def test_token_in_headers():
     readme_content = "# Test"
     encoded = base64.b64encode(readme_content.encode("utf-8")).decode("utf-8")
     mock_response = _make_mock_response(json_data={"content": encoded})
-    
+
     mock_client = MagicMock()
     mock_client.get = AsyncMock(return_value=mock_response)
     mock_client.__aenter__ = AsyncMock(return_value=mock_client)
     mock_client.__aexit__ = AsyncMock(return_value=None)
-    
+
     with patch("httpx.AsyncClient", return_value=mock_client):
         loader = GitHubLoader("owner/repo", token="test_token")
         loader.load_sync()
-    
+
     # Check that token was passed in headers
     call_args = mock_client.get.call_args
     headers = call_args.kwargs.get("headers", {})
@@ -288,21 +285,21 @@ def test_retry_on_rate_limit():
 
     readme_content = "# Test"
     encoded = base64.b64encode(readme_content.encode("utf-8")).decode("utf-8")
-    
+
     # First call returns 429, second call succeeds
     rate_limit_response = _make_mock_response(status_code=429)
     success_response = _make_mock_response(json_data={"content": encoded})
-    
+
     mock_client = MagicMock()
     mock_client.get = AsyncMock(side_effect=[rate_limit_response, success_response])
     mock_client.__aenter__ = AsyncMock(return_value=mock_client)
     mock_client.__aexit__ = AsyncMock(return_value=None)
-    
+
     with patch("httpx.AsyncClient", return_value=mock_client):
         with patch("asyncio.sleep", new_callable=AsyncMock):
             loader = GitHubLoader("owner/repo", content_type="readme")
             docs = loader.load_sync()
-    
+
     # Should succeed after retry
     assert len(docs) == 1
     assert mock_client.get.call_count == 2
@@ -314,7 +311,7 @@ def test_invalid_content_type():
     mock_client = MagicMock()
     mock_client.__aenter__ = AsyncMock(return_value=mock_client)
     mock_client.__aexit__ = AsyncMock(return_value=None)
-    
+
     with patch("httpx.AsyncClient", return_value=mock_client):
         loader = GitHubLoader("owner/repo", content_type="invalid")  # type: ignore
         with pytest.raises(ValueError, match="Unknown content_type"):
@@ -327,18 +324,18 @@ def test_async_load():
     readme_content = "# Async Test"
     encoded = base64.b64encode(readme_content.encode("utf-8")).decode("utf-8")
     mock_response = _make_mock_response(json_data={"content": encoded})
-    
+
     mock_client = MagicMock()
     mock_client.get = AsyncMock(return_value=mock_response)
     mock_client.__aenter__ = AsyncMock(return_value=mock_client)
     mock_client.__aexit__ = AsyncMock(return_value=None)
-    
+
     async def run_test():
         with patch("httpx.AsyncClient", return_value=mock_client):
             loader = GitHubLoader("owner/repo", content_type="readme")
             docs = await loader.load()
         return docs
-    
+
     docs = asyncio.run(run_test())
     assert len(docs) == 1
     assert docs[0].text == readme_content

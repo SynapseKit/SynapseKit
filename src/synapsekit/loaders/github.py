@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
-from typing import Literal
+from typing import Any, Literal, cast
 
 from .base import Document
 
@@ -45,35 +45,35 @@ class GitHubLoader:
 
     async def _request_with_retry(
         self, client, url: str, max_retries: int = 3
-    ) -> dict | list:
+    ) -> Any:
         """Make HTTP request with retry logic for rate limits."""
         for attempt in range(max_retries):
             try:
                 response = await client.get(url, headers=self._get_headers())
-                
-                if response.status_code == 429 or response.status_code >= 500:
-                    if attempt < max_retries - 1:
-                        wait_time = 2 ** attempt
-                        await asyncio.sleep(wait_time)
-                        continue
-                
+
+                if (response.status_code == 429 or response.status_code >= 500) and attempt < max_retries - 1:
+                    wait_time = 2 ** attempt
+                    await asyncio.sleep(wait_time)
+                    continue
+
                 response.raise_for_status()
                 return response.json()
             except Exception:
                 if attempt == max_retries - 1:
                     raise
                 await asyncio.sleep(2 ** attempt)
-        
+
         raise RuntimeError("Max retries exceeded")
 
     async def _load_readme(self, client) -> list[Document]:
         """Load repository README."""
         url = f"https://api.github.com/repos/{self._repo}/readme"
         data = await self._request_with_retry(client, url)
-        
+        data = cast(dict[str, Any], data)
+
         content = base64.b64decode(data["content"]).decode("utf-8")
         readme_url = f"https://github.com/{self._repo}#readme"
-        
+
         return [
             Document(
                 text=content,
@@ -94,15 +94,16 @@ class GitHubLoader:
             params.append(f"per_page={self._limit}")
         if params:
             url += "?" + "&".join(params)
-        
+
         issues = await self._request_with_retry(client, url)
-        
+        issues = cast(list[dict[str, Any]], issues)
+
         docs = []
         for issue in issues:
             # Filter out pull requests
             if "pull_request" in issue:
                 continue
-            
+
             text = f"# {issue['title']}\n\n{issue.get('body', '')}"
             metadata = {
                 "source": "github",
@@ -114,10 +115,10 @@ class GitHubLoader:
                 "number": issue["number"],
             }
             docs.append(Document(text=text, metadata=metadata))
-            
+
             if self._limit and len(docs) >= self._limit:
                 break
-        
+
         return docs
 
     async def _load_prs(self, client) -> list[Document]:
@@ -128,9 +129,10 @@ class GitHubLoader:
             params.append(f"per_page={self._limit}")
         if params:
             url += "?" + "&".join(params)
-        
+
         prs = await self._request_with_retry(client, url)
-        
+        prs = cast(list[dict[str, Any]], prs)
+
         docs = []
         for pr in prs:
             text = f"# {pr['title']}\n\n{pr.get('body', '')}"
@@ -144,10 +146,10 @@ class GitHubLoader:
                 "number": pr["number"],
             }
             docs.append(Document(text=text, metadata=metadata))
-            
+
             if self._limit and len(docs) >= self._limit:
                 break
-        
+
         return docs
 
     async def _load_files(self, client) -> list[Document]:
@@ -155,30 +157,32 @@ class GitHubLoader:
         # Get default branch
         repo_url = f"https://api.github.com/repos/{self._repo}"
         repo_data = await self._request_with_retry(client, repo_url)
+        repo_data = cast(dict[str, Any], repo_data)
         default_branch = repo_data.get("default_branch", "main")
-        
+
         # Get full file tree
         tree_url = f"https://api.github.com/repos/{self._repo}/git/trees/{default_branch}?recursive=1"
         tree_data = await self._request_with_retry(client, tree_url)
-        
+        tree_data = cast(dict[str, Any], tree_data)
+
         # Filter for blob (file) types
         files = [item for item in tree_data["tree"] if item["type"] == "blob"]
-        
+
         # Apply path filter if specified
         if self._path:
             files = [f for f in files if f["path"].startswith(self._path)]
-        
+
         # Apply limit
         if self._limit:
             files = files[: self._limit]
-        
+
         docs = []
         for file_item in files:
             file_path = file_item["path"]
-            
+
             # Fetch file content using raw URL
             raw_url = f"https://raw.githubusercontent.com/{self._repo}/{default_branch}/{file_path}"
-            
+
             try:
                 response = await client.get(raw_url, headers=self._get_headers())
                 response.raise_for_status()
@@ -186,9 +190,9 @@ class GitHubLoader:
             except Exception:
                 # Skip files that can't be fetched (binary, too large, etc.)
                 continue
-            
+
             github_url = f"https://github.com/{self._repo}/blob/{default_branch}/{file_path}"
-            
+
             docs.append(
                 Document(
                     text=content,
@@ -201,7 +205,7 @@ class GitHubLoader:
                     },
                 )
             )
-        
+
         return docs
 
     async def load(self) -> list[Document]:
