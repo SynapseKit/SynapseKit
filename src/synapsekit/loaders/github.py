@@ -43,16 +43,16 @@ class GitHubLoader:
             headers["Authorization"] = f"Bearer {self._token}"
         return headers
 
-    async def _request_with_retry(
-        self, client, url: str, max_retries: int = 3
-    ) -> Any:
+    async def _request_with_retry(self, client, url: str, max_retries: int = 3) -> Any:
         """Make HTTP request with retry logic for rate limits."""
         for attempt in range(max_retries):
             try:
                 response = await client.get(url, headers=self._get_headers())
 
-                if (response.status_code == 429 or response.status_code >= 500) and attempt < max_retries - 1:
-                    wait_time = 2 ** attempt
+                if (
+                    response.status_code == 429 or response.status_code >= 500
+                ) and attempt < max_retries - 1:
+                    wait_time = 2**attempt
                     await asyncio.sleep(wait_time)
                     continue
 
@@ -61,7 +61,7 @@ class GitHubLoader:
             except Exception:
                 if attempt == max_retries - 1:
                     raise
-                await asyncio.sleep(2 ** attempt)
+                await asyncio.sleep(2**attempt)
 
         raise RuntimeError("Max retries exceeded")
 
@@ -161,7 +161,9 @@ class GitHubLoader:
         default_branch = repo_data.get("default_branch", "main")
 
         # Get full file tree
-        tree_url = f"https://api.github.com/repos/{self._repo}/git/trees/{default_branch}?recursive=1"
+        tree_url = (
+            f"https://api.github.com/repos/{self._repo}/git/trees/{default_branch}?recursive=1"
+        )
         tree_data = await self._request_with_retry(client, tree_url)
         tree_data = cast(dict[str, Any], tree_data)
 

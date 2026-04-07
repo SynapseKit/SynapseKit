@@ -34,9 +34,7 @@ def test_readme_loading():
     readme_content = "# Test Project\n\nThis is a test."
     encoded = base64.b64encode(readme_content.encode("utf-8")).decode("utf-8")
 
-    mock_response = _make_mock_response(
-        json_data={"content": encoded, "encoding": "base64"}
-    )
+    mock_response = _make_mock_response(json_data={"content": encoded, "encoding": "base64"})
 
     mock_client = MagicMock()
     mock_client.get = AsyncMock(return_value=mock_response)
