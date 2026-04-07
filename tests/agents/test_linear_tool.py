@@ -115,9 +115,7 @@ class TestLinearTool:
         data = {"issueCreate": {"issue": {"id": "ISS-99", "title": "New feature"}}}
         tool = _make_tool()
         with patch("urllib.request.urlopen", return_value=_mock_urlopen(data)):
-            res = await tool.run(
-                action="create_issue", team_id="team-abc", title="New feature"
-            )
+            res = await tool.run(action="create_issue", team_id="team-abc", title="New feature")
         assert not res.is_error
         assert "New feature" in res.output
         assert "ISS-99" in res.output
@@ -160,9 +158,7 @@ class TestLinearTool:
     @pytest.mark.asyncio
     async def test_graphql_error_propagated(self):
         resp = MagicMock()
-        resp.read.return_value = json.dumps(
-            {"errors": [{"message": "Not authorized"}]}
-        ).encode()
+        resp.read.return_value = json.dumps({"errors": [{"message": "Not authorized"}]}).encode()
         resp.__enter__ = lambda s: s
         resp.__exit__ = MagicMock(return_value=False)
 

@@ -7,6 +7,7 @@ import json
 import logging
 import os
 import urllib.request
+from collections.abc import Callable, Coroutine
 from typing import Any
 
 from ..base import BaseTool, ToolResult
@@ -61,7 +62,8 @@ class LinearTool(BaseTool):
         if not action:
             return ToolResult(output="", error="No action specified.")
 
-        handlers = {
+        _handler_t = Callable[..., Coroutine[Any, Any, ToolResult]]
+        handlers: dict[str, _handler_t] = {
             "list_issues": self._list_issues,
             "get_issue": self._get_issue,
             "create_issue": self._create_issue,
@@ -95,7 +97,7 @@ class LinearTool(BaseTool):
             method="POST",
         )
 
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
 
         def _fetch():
             with urllib.request.urlopen(req, timeout=15) as resp:
@@ -200,11 +202,11 @@ class LinearTool(BaseTool):
             q, {"teamId": team_id, "title": title, "description": description, "priority": priority}
         )
         issue = data.get("issueCreate", {}).get("issue", {})
-        return ToolResult(output=f"Created issue **{issue.get('title', title)}** ({issue.get('id', 'unknown')}).")
+        return ToolResult(
+            output=f"Created issue **{issue.get('title', title)}** ({issue.get('id', 'unknown')})."
+        )
 
-    async def _update_issue(
-        self, issue_id: str = "", status: str = "", **kw: Any
-    ) -> ToolResult:
+    async def _update_issue(self, issue_id: str = "", status: str = "", **kw: Any) -> ToolResult:
         if not issue_id or not status:
             return ToolResult(output="", error="issue_id and status are required for update_issue.")
 
@@ -222,4 +224,6 @@ class LinearTool(BaseTool):
         data = await self._graphql(q, {"issueId": issue_id, "stateId": status})
         issue = data.get("issueUpdate", {}).get("issue", {})
         new_state = (issue.get("state") or {}).get("name", status)
-        return ToolResult(output=f"Updated **{issue.get('title', issue_id)}** to status: {new_state}.")
+        return ToolResult(
+            output=f"Updated **{issue.get('title', issue_id)}** to status: {new_state}."
+        )
