@@ -44,7 +44,8 @@ class TestSQLLoader:
     @pytest.mark.asyncio
     async def test_aload_with_sqlite_memory(self):
         """Test loading from SQLite in-memory database."""
-        from sqlalchemy import create_engine, text
+        sqlalchemy = pytest.importorskip("sqlalchemy")
+        create_engine, text = sqlalchemy.create_engine, sqlalchemy.text
 
         # Create in-memory database and populate
         engine = create_engine("sqlite:///:memory:")
@@ -67,7 +68,8 @@ class TestSQLLoader:
 
     def test_load_with_sqlite_file(self, tmp_path):
         """Test loading from SQLite file database."""
-        from sqlalchemy import create_engine, text
+        sqlalchemy = pytest.importorskip("sqlalchemy")
+        create_engine, text = sqlalchemy.create_engine, sqlalchemy.text
 
         # Create temp database file
         db_path = tmp_path / "test.db"
@@ -111,7 +113,8 @@ class TestSQLLoader:
 
     def test_load_with_text_columns(self, tmp_path):
         """Test loading with specific text columns."""
-        from sqlalchemy import create_engine, text
+        sqlalchemy = pytest.importorskip("sqlalchemy")
+        create_engine, text = sqlalchemy.create_engine, sqlalchemy.text
 
         db_path = tmp_path / "test.db"
         engine = create_engine(f"sqlite:///{db_path}")
@@ -151,7 +154,8 @@ class TestSQLLoader:
 
     def test_load_with_metadata_columns(self, tmp_path):
         """Test loading with specific metadata columns."""
-        from sqlalchemy import create_engine, text
+        sqlalchemy = pytest.importorskip("sqlalchemy")
+        create_engine, text = sqlalchemy.create_engine, sqlalchemy.text
 
         db_path = tmp_path / "test.db"
         engine = create_engine(f"sqlite:///{db_path}")
@@ -192,7 +196,8 @@ class TestSQLLoader:
 
     def test_load_with_where_clause(self, tmp_path):
         """Test loading with WHERE clause filtering."""
-        from sqlalchemy import create_engine, text
+        sqlalchemy = pytest.importorskip("sqlalchemy")
+        create_engine, text = sqlalchemy.create_engine, sqlalchemy.text
 
         db_path = tmp_path / "test.db"
         engine = create_engine(f"sqlite:///{db_path}")
@@ -232,7 +237,8 @@ class TestSQLLoader:
 
     def test_load_empty_result(self, tmp_path):
         """Test loading with query that returns no rows."""
-        from sqlalchemy import create_engine, text
+        sqlalchemy = pytest.importorskip("sqlalchemy")
+        create_engine, text = sqlalchemy.create_engine, sqlalchemy.text
 
         db_path = tmp_path / "test.db"
         engine = create_engine(f"sqlite:///{db_path}")
@@ -256,7 +262,8 @@ class TestSQLLoader:
     @pytest.mark.asyncio
     async def test_aload_async(self, tmp_path):
         """Test asynchronous loading."""
-        from sqlalchemy import create_engine, text
+        sqlalchemy = pytest.importorskip("sqlalchemy")
+        create_engine, text = sqlalchemy.create_engine, sqlalchemy.text
 
         db_path = tmp_path / "test.db"
         engine = create_engine(f"sqlite:///{db_path}")
@@ -294,3 +301,5 @@ class TestSQLLoader:
                     match="SQLAlchemy required",
                 ):
                     await loader.aload()
+
+
