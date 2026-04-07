@@ -226,6 +226,7 @@ module = [
     "synapsekit.llm.vertex_ai",
     "synapsekit.loaders.excel",
     "synapsekit.loaders.pptx",
+    "synapsekit.loaders.gcs",
     "synapsekit.agents.tools.slack",
     "synapsekit.agents.tools.jira",
     "synapsekit.agents.tools.github_api",
@@ -247,6 +248,7 @@ pep621_dev_dependency_groups = ["dev"]
 [tool.deptry.package_module_name_map]
 wikipedia-api = "wikipediaapi"
 google-generativeai = "google"
+google-cloud-storage = "google"
 google-api-python-client = "googleapiclient"
 google-auth = "google"
 beautifulsoup4 = "bs4"
