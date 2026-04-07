@@ -23,6 +23,7 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **StripeTool** — read-only Stripe data lookup: get_customer, list_invoices, get_charge, list_products; stdlib urllib only; auth via STRIPE_API_KEY; async-safe with run_in_executor
 - **HTMLTextSplitter** — split HTML documents on block-level tags (h1-h6, p, div, section, article, li, blockquote, pre); strips tags to plain text; falls back to RecursiveCharacterTextSplitter for long sections; stdlib html.parser only
 - **TwilioTool** — send SMS and WhatsApp messages via the Twilio REST API; stdlib `urllib` only, no extra deps; auth via constructor args or `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` / `TWILIO_FROM_NUMBER` env vars; automatic `whatsapp:` prefix handling for both sender and recipient; security warning logged on instantiation; closes #386
+- **LinearTool** — manage Linear issues and projects; actions: list_issues, get_issue, create_issue, update_issue; GraphQL API via LINEAR_API_KEY env var; closes #387
 - **NewsTool** — fetch top headlines and search articles via NewsAPI; actions: get_headlines, search; stdlib urllib only; auth via constructor arg or NEWS_API_KEY env var; closes #384
 
 ---
