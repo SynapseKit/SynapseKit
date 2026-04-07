@@ -301,5 +301,3 @@ class TestSQLLoader:
                     match="SQLAlchemy required",
                 ):
                     await loader.aload()
-
-
