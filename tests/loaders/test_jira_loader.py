@@ -1,10 +1,11 @@
 """Tests for JiraLoader."""
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from synapsekit.loaders.jira import JiraLoader
+import pytest
+
 from synapsekit.loaders.base import Document
+from synapsekit.loaders.jira import JiraLoader
 
 
 def _make_mock_response(json_data=None, status_code=200):
@@ -452,7 +453,7 @@ class TestAsyncLoad:
             mock_error.status_code = 401
             mock_error.text = "Unauthorized"
 
-            from httpx import HTTPStatusError, Request, Response
+            from httpx import HTTPStatusError, Request
 
             mock_post.side_effect = HTTPStatusError(
                 "401 Unauthorized",
