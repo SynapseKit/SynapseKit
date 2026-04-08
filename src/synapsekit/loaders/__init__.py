@@ -17,6 +17,7 @@ __all__ = [
     "GCSLoader",
     "GitHubLoader",
     "GoogleDriveLoader",
+    "GoogleSheetsLoader",
     "HTMLLoader",
     "JSONLoader",
     "MarkdownLoader",
@@ -37,6 +38,7 @@ __all__ = [
 _LOADERS = {
     "ArXivLoader": ".arxiv",
     "PDFLoader": ".pdf",
+    "GoogleSheetsLoader": ".google_sheets",
     "HTMLLoader": ".html",
     "CSVLoader": ".csv",
     "JSONLoader": ".json_loader",
