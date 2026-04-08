@@ -54,9 +54,7 @@ class GoogleSheetsLoader:
 
         range_name = f"{self._sheet_name}"
         result = (
-            sheets_api.values()
-            .get(spreadsheetId=self._spreadsheet_id, range=range_name)
-            .execute()
+            sheets_api.values().get(spreadsheetId=self._spreadsheet_id, range=range_name).execute()
         )
         values = result.get("values", [])
 
