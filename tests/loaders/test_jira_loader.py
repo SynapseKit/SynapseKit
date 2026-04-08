@@ -17,6 +17,7 @@ def _make_mock_response(json_data=None, status_code=200):
     response.raise_for_status = MagicMock()
     if status_code >= 400:
         from httpx import HTTPStatusError, Request
+
         response.raise_for_status.side_effect = HTTPStatusError(
             f"HTTP {status_code}",
             request=MagicMock(spec=Request),
@@ -72,7 +73,11 @@ def mock_issue_adf():
                         "type": "paragraph",
                         "content": [
                             {"type": "text", "text": "This is "},
-                            {"type": "text", "text": "ADF formatted", "marks": [{"type": "strong"}]},
+                            {
+                                "type": "text",
+                                "text": "ADF formatted",
+                                "marks": [{"type": "strong"}],
+                            },
                             {"type": "text", "text": " text."},
                         ],
                     },
@@ -263,7 +268,10 @@ class TestCommentExtraction:
                     "body": {
                         "type": "doc",
                         "content": [
-                            {"type": "paragraph", "content": [{"type": "text", "text": "ADF comment"}]},
+                            {
+                                "type": "paragraph",
+                                "content": [{"type": "text", "text": "ADF comment"}],
+                            },
                         ],
                     }
                 }
