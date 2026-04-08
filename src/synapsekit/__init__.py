@@ -160,6 +160,7 @@ from .loaders.gcs import GCSLoader
 from .loaders.github import GitHubLoader
 from .loaders.html import HTMLLoader
 from .loaders.image import ImageLoader
+from .loaders.jira import JiraLoader
 from .loaders.json_loader import JSONLoader
 from .loaders.markdown import MarkdownLoader
 from .loaders.pdf import PDFLoader
@@ -343,6 +344,7 @@ __all__ = [
     "GCSLoader",
     "GitHubLoader",
     "MarkdownLoader",
+    "JiraLoader",
     "SQLLoader",
     "WebLoader",
     "RSSLoader",
