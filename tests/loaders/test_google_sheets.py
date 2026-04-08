@@ -31,9 +31,9 @@ def test_load_sheet_data(mock_exists):
     pytest.importorskip("googleapiclient")
     pytest.importorskip("google.oauth2.service_account")
 
-    with patch("google.oauth2.service_account.Credentials.from_service_account_file") as mock_creds, \
+    with patch("google.oauth2.service_account.Credentials.from_service_account_file"), \
          patch("googleapiclient.discovery.build") as mock_build:
-        
+
         mock_service = MagicMock()
         mock_build.return_value = mock_service
         mock_sheets_api = mock_service.spreadsheets.return_value
@@ -63,9 +63,9 @@ def test_load_default_sheet(mock_exists):
     pytest.importorskip("googleapiclient")
     pytest.importorskip("google.oauth2.service_account")
 
-    with patch("google.oauth2.service_account.Credentials.from_service_account_file") as mock_creds, \
+    with patch("google.oauth2.service_account.Credentials.from_service_account_file"), \
          patch("googleapiclient.discovery.build") as mock_build:
-        
+
         mock_service = MagicMock()
         mock_build.return_value = mock_service
         mock_sheets_api = mock_service.spreadsheets.return_value
@@ -97,9 +97,9 @@ def test_load_empty_sheet(mock_exists):
     pytest.importorskip("googleapiclient")
     pytest.importorskip("google.oauth2.service_account")
 
-    with patch("google.oauth2.service_account.Credentials.from_service_account_file") as mock_creds, \
+    with patch("google.oauth2.service_account.Credentials.from_service_account_file"), \
          patch("googleapiclient.discovery.build") as mock_build:
-        
+
         mock_service = MagicMock()
         mock_build.return_value = mock_service
         mock_sheets_api = mock_service.spreadsheets.return_value
