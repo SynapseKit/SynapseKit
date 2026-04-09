@@ -8,7 +8,6 @@ import pytest
 
 from synapsekit.text_splitters.json_splitter import JSONSplitter
 
-
 # ── Basics ────────────────────────────────────────────────────────
 
 
@@ -206,20 +205,39 @@ class TestOverlap:
     def test_overlap_applied(self):
         data = [{"id": i} for i in range(10)]
         text = json.dumps(data)
-        splitter = JSONSplitter(chunk_size=40, chunk_overlap=5)
+        splitter = JSONSplitter(chunk_size=40, chunk_overlap=8)
         chunks = splitter.split(text)
         assert len(chunks) > 1
-        # Second chunk should start with the last 5 chars of the first chunk
-        tail = chunks[0][-5:]
-        assert chunks[1].startswith(tail)
+        # Every chunk must be valid JSON — overlap is at the item level
+        for chunk in chunks:
+            parsed = json.loads(chunk)
+            assert isinstance(parsed, list)
+        # The last element of chunk[0] must appear as the first element of chunk[1]
+        first_last = json.loads(chunks[0])[-1]
+        second_first = json.loads(chunks[1])[0]
+        assert first_last == second_first, (
+            "Overlap must repeat items from the end of the previous chunk, "
+            "not raw character tails that produce invalid JSON."
+        )
+
+    def test_overlap_chunks_are_valid_json(self):
+        """All chunks with overlap must parse as valid JSON arrays."""
+        data = [{"id": i, "val": f"x{i}"} for i in range(20)]
+        text = json.dumps(data)
+        splitter = JSONSplitter(chunk_size=50, chunk_overlap=10)
+        chunks = splitter.split(text)
+        assert len(chunks) > 1
+        for i, chunk in enumerate(chunks):
+            try:
+                json.loads(chunk)
+            except json.JSONDecodeError as e:
+                pytest.fail(f"Chunk {i} is not valid JSON: {e}\nChunk content: {chunk!r}")
 
     def test_no_overlap(self):
         data = [{"id": i} for i in range(10)]
         text = json.dumps(data)
         splitter_no = JSONSplitter(chunk_size=40, chunk_overlap=0)
         chunks_no = splitter_no.split(text)
-        # Without overlap, no chunk should start with the tail of its predecessor
-        # (they start with "[" instead)
         for chunk in chunks_no:
             assert chunk[0] == "["
 
@@ -282,12 +300,12 @@ class TestTopLevelExport:
     """JSONSplitter should be importable from the top-level package."""
 
     def test_import_from_text_splitters(self):
-        from synapsekit.text_splitters import JSONSplitter as JS
-        assert JS is JSONSplitter
+        from synapsekit.text_splitters import JSONSplitter as ImportedSplitter
+        assert ImportedSplitter is JSONSplitter
 
     def test_import_from_synapsekit(self):
-        from synapsekit import JSONSplitter as JS
-        assert JS is JSONSplitter
+        from synapsekit import JSONSplitter as ImportedSplitter
+        assert ImportedSplitter is JSONSplitter
 
 
 # ── ensure_ascii flag ─────────────────────────────────────────────

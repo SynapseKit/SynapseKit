@@ -57,7 +57,7 @@ async def demo_caching():
 
     from synapsekit.llm.openai import OpenAILLM
 
-    llm = OpenAILLM(config=LLMConfig(model="gpt-4o-mini", api_key=api_key, provider="openai"))
+    llm = OpenAILLM(model="gpt-4o-mini", api_key=api_key)
     cache = SimpleCache()
 
     prompt = "What is the capital of France?"

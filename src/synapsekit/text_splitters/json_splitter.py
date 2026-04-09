@@ -34,7 +34,9 @@ class JSONSplitter(BaseSplitter):
 
         Args:
             chunk_size: Maximum chunk size in characters.
-            chunk_overlap: Number of characters to overlap between consecutive chunks.
+            chunk_overlap: Minimum number of characters worth of items to repeat
+                at the start of each successive chunk. Overlap is applied at the
+                item level so every output chunk remains valid JSON.
             ensure_ascii: If True, escape non-ASCII characters in output.
         """
         if chunk_size <= 0:
@@ -103,11 +105,17 @@ class JSONSplitter(BaseSplitter):
 
         Each chunk is wrapped as either a JSON array ``[…]`` or a merged
         JSON object ``{…}`` depending on *wrapper*.
+
+        When ``chunk_overlap > 0``, the last N characters worth of *items*
+        from chunk K are prepended to chunk K+1 so that every output chunk
+        remains valid JSON.
         """
         if not candidates:
             return []
 
         chunks: list[str] = []
+        # Each entry is the list of serialized items that went into that chunk.
+        chunk_item_groups: list[list[str]] = []
         current_items: list[str] = []
         # Overhead: "[" + "]" or "{" + "}" = 2 chars, plus commas between items
         current_length = 2  # opening + closing bracket
@@ -125,11 +133,13 @@ class JSONSplitter(BaseSplitter):
                 # Flush current group
                 if current_items:
                     chunks.append(self._wrap(current_items, wrapper))
+                    chunk_item_groups.append(current_items)
 
                 # Check if the single candidate itself exceeds chunk_size
                 if len(candidate) + 2 > self.chunk_size:
                     # Hard-split the oversized candidate as plain text
                     chunks.extend(self._hard_split(candidate))
+                    chunk_item_groups.extend([[c] for c in self._hard_split(candidate)])
                     current_items = []
                     current_length = 2
                 else:
@@ -139,8 +149,12 @@ class JSONSplitter(BaseSplitter):
         # Flush remaining
         if current_items:
             chunks.append(self._wrap(current_items, wrapper))
+            chunk_item_groups.append(current_items)
 
-        return self._apply_overlap(chunks)
+        if self.chunk_overlap <= 0 or len(chunks) < 2:
+            return chunks
+
+        return self._apply_item_overlap(chunk_item_groups, wrapper)
 
     @staticmethod
     def _wrap(items: list[str], wrapper: str) -> str:
@@ -160,13 +174,29 @@ class JSONSplitter(BaseSplitter):
         step = self.chunk_size - self.chunk_overlap if self.chunk_overlap > 0 else self.chunk_size
         return [text[i : i + self.chunk_size] for i in range(0, len(text), step)]
 
-    def _apply_overlap(self, chunks: list[str]) -> list[str]:
-        """Prepend trailing characters of chunk N to chunk N+1."""
-        if self.chunk_overlap <= 0 or len(chunks) < 2:
-            return chunks
+    def _apply_item_overlap(
+        self,
+        chunk_item_groups: list[list[str]],
+        wrapper: str,
+    ) -> list[str]:
+        """Re-wrap chunks so that the tail items of chunk N appear at the
+        start of chunk N+1, keeping every output chunk valid JSON.
 
-        overlapped = [chunks[0]]
-        for i in range(1, len(chunks)):
-            tail = chunks[i - 1][-self.chunk_overlap :]
-            overlapped.append(tail + chunks[i])
-        return overlapped
+        Items are greedily added from the tail of the previous group until
+        the cumulative character count of the overlap items reaches or
+        exceeds ``chunk_overlap``.
+        """
+        result = [self._wrap(chunk_item_groups[0], wrapper)]
+        for i in range(1, len(chunk_item_groups)):
+            prev_items = chunk_item_groups[i - 1]
+            # Collect tail items from prev group until overlap budget is met
+            overlap_items: list[str] = []
+            total = 0
+            for item in reversed(prev_items):
+                total += len(item) + (1 if overlap_items else 0)
+                overlap_items.insert(0, item)
+                if total >= self.chunk_overlap:
+                    break
+            combined = overlap_items + chunk_item_groups[i]
+            result.append(self._wrap(combined, wrapper))
+        return result
