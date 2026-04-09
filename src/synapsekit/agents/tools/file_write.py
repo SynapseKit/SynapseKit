@@ -44,7 +44,9 @@ class FileWriteTool(BaseTool):
         try:
             resolved = Path(path).resolve()
             if self._base_dir is not None and not str(resolved).startswith(str(self._base_dir)):
-                return ToolResult(output="", error="Access denied: path is outside the allowed directory.")
+                return ToolResult(
+                    output="", error="Access denied: path is outside the allowed directory."
+                )
 
             resolved.parent.mkdir(parents=True, exist_ok=True)
 
