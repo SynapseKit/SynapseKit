@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import os
+from pathlib import Path
 from typing import Any
 
 from ..base import BaseTool, ToolResult
@@ -28,6 +28,9 @@ class FileWriteTool(BaseTool):
         "required": ["path", "content"],
     }
 
+    def __init__(self, base_dir: str | None = None) -> None:
+        self._base_dir = Path(base_dir).resolve() if base_dir else None
+
     async def run(
         self,
         path: str = "",
@@ -39,12 +42,14 @@ class FileWriteTool(BaseTool):
             return ToolResult(output="", error="No file path provided.")
 
         try:
-            parent = os.path.dirname(path)
-            if parent:
-                os.makedirs(parent, exist_ok=True)
+            resolved = Path(path).resolve()
+            if self._base_dir is not None and not str(resolved).startswith(str(self._base_dir)):
+                return ToolResult(output="", error="Access denied: path is outside the allowed directory.")
+
+            resolved.parent.mkdir(parents=True, exist_ok=True)
 
             mode = "a" if append else "w"
-            with open(path, mode, encoding="utf-8") as f:
+            with open(resolved, mode, encoding="utf-8") as f:
                 f.write(content)
 
             action = "Appended to" if append else "Written to"

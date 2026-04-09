@@ -1,8 +1,37 @@
 from __future__ import annotations
 
+import ipaddress
+import socket
 from typing import Any
+from urllib.parse import urlparse
 
 from ..base import BaseTool, ToolResult
+
+_PRIVATE_NETS = [
+    ipaddress.ip_network("10.0.0.0/8"),
+    ipaddress.ip_network("172.16.0.0/12"),
+    ipaddress.ip_network("192.168.0.0/16"),
+    ipaddress.ip_network("127.0.0.0/8"),
+    ipaddress.ip_network("169.254.0.0/16"),
+    ipaddress.ip_network("::1/128"),
+    ipaddress.ip_network("fc00::/7"),
+]
+_MAX_CSS_SELECTOR_LEN = 200
+
+
+def _validate_url(url: str) -> None:
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        raise ValueError(f"URL scheme {parsed.scheme!r} is not allowed; use http or https.")
+    host = parsed.hostname or ""
+    if not host:
+        raise ValueError("URL has no hostname.")
+    try:
+        addr = ipaddress.ip_address(socket.gethostbyname(host))
+    except (socket.gaierror, ValueError):
+        return
+    if any(addr in net for net in _PRIVATE_NETS):
+        raise ValueError(f"Requests to private/internal addresses are not allowed: {host!r}")
 
 
 class WebScraperTool(BaseTool):
@@ -46,6 +75,10 @@ class WebScraperTool(BaseTool):
             element.decompose()
 
         if css_selector:
+            if len(css_selector) > _MAX_CSS_SELECTOR_LEN:
+                raise ValueError(
+                    f"CSS selector exceeds maximum length of {_MAX_CSS_SELECTOR_LEN} characters."
+                )
             elements = soup.select(css_selector)
             if not elements:
                 return ""
@@ -67,6 +100,11 @@ class WebScraperTool(BaseTool):
         target_url = url or kwargs.get("input", "")
         if not target_url:
             return ToolResult(output="", error="No URL provided.")
+
+        try:
+            _validate_url(target_url)
+        except ValueError as e:
+            return ToolResult(output="", error=str(e))
 
         try:
             async with httpx.AsyncClient() as client:

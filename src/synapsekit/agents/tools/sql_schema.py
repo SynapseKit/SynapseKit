@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import re
 import sqlite3
 from typing import Any
 
 from ..base import BaseTool, ToolResult
+
+_TABLE_NAME_RE = re.compile(r"^[A-Za-z0-9_]+$")
 
 
 class SQLSchemaInspectionTool(BaseTool):
@@ -49,6 +52,8 @@ class SQLSchemaInspectionTool(BaseTool):
             conn.close()
 
     def _describe_table_sqlite(self, table_name: str) -> list[dict[str, Any]]:
+        if not _TABLE_NAME_RE.match(table_name):
+            raise ValueError(f"Invalid table name: {table_name!r}")
         conn = sqlite3.connect(self._connection_string)
         try:
             rows = conn.execute(f"PRAGMA table_info({table_name})").fetchall()

@@ -1,12 +1,42 @@
 from __future__ import annotations
 
+import ipaddress
+import socket
+from urllib.parse import urlparse
+
 from .base import Document
+
+_PRIVATE_NETS = [
+    ipaddress.ip_network("10.0.0.0/8"),
+    ipaddress.ip_network("172.16.0.0/12"),
+    ipaddress.ip_network("192.168.0.0/16"),
+    ipaddress.ip_network("127.0.0.0/8"),
+    ipaddress.ip_network("169.254.0.0/16"),
+    ipaddress.ip_network("::1/128"),
+    ipaddress.ip_network("fc00::/7"),
+]
+
+
+def _validate_url(url: str) -> None:
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        raise ValueError(f"URL scheme {parsed.scheme!r} is not allowed; use http or https.")
+    host = parsed.hostname or ""
+    if not host:
+        raise ValueError("URL has no hostname.")
+    try:
+        addr = ipaddress.ip_address(socket.gethostbyname(host))
+    except (socket.gaierror, ValueError):
+        return
+    if any(addr in net for net in _PRIVATE_NETS):
+        raise ValueError(f"Requests to private/internal addresses are not allowed: {host!r}")
 
 
 class WebLoader:
     """Fetch a URL and return its text content as a Document."""
 
     def __init__(self, url: str) -> None:
+        _validate_url(url)
         self._url = url
 
     def _parse(self, html: str) -> str:

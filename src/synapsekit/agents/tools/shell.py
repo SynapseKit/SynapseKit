@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import shlex
 from typing import Any
 
 from ..base import BaseTool, ToolResult
@@ -40,17 +41,23 @@ class ShellTool(BaseTool):
         if not target:
             return ToolResult(output="", error="No command provided.")
 
-        if self.allowed_commands is not None:
-            base_cmd = target.split()[0]
-            if base_cmd not in self.allowed_commands:
-                return ToolResult(
-                    output="",
-                    error=f"Command {base_cmd!r} is not in the allowed list.",
-                )
+        try:
+            argv = shlex.split(target)
+        except ValueError as e:
+            return ToolResult(output="", error=f"Invalid command: {e}")
+
+        if not argv:
+            return ToolResult(output="", error="No command provided.")
+
+        if self.allowed_commands is not None and argv[0] not in self.allowed_commands:
+            return ToolResult(
+                output="",
+                error=f"Command {argv[0]!r} is not in the allowed list.",
+            )
 
         try:
-            proc = await asyncio.create_subprocess_shell(
-                target,
+            proc = await asyncio.create_subprocess_exec(
+                *argv,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )

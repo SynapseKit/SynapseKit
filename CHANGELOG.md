@@ -17,6 +17,15 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **`JiraLoader`** — load Jira issues via JQL queries; full Atlassian Document Format (ADF) parsing; pagination; rate-limit retry; async `aload()` via httpx; optional `limit`; `pip install synapsekit[jira]`
 - **`SupabaseLoader`** — load rows from a Supabase table as Documents; configurable text/metadata columns; env var auth (`SUPABASE_URL`, `SUPABASE_KEY`); `pip install synapsekit[supabase]`
 
+### Security
+
+- **SQL injection** — `SQLSchemaInspectionTool` now validates table names against `^[A-Za-z0-9_]+$` before interpolating into `PRAGMA table_info()`; closes #494
+- **Shell injection** — `ShellTool` switched from `create_subprocess_shell` to `create_subprocess_exec` with `shlex.split()`; allowlist now checked against the actual binary (`argv[0]`) instead of a whitespace split; closes #495
+- **Path traversal** — `FileReadTool` and `FileWriteTool` now accept an optional `base_dir`; all paths are resolved with `Path.resolve()` and checked to be within the sandbox before I/O; closes #496
+- **TOCTOU in VideoLoader** — replaced `tempfile.mktemp()` with `tempfile.NamedTemporaryFile(delete=False)` to eliminate the race window; closes #497
+- **SSRF** — `WebLoader` and `WebScraperTool` now validate URL scheme (must be `http`/`https`) and block requests to private/internal IP ranges (RFC 1918, loopback, link-local, IPv6 ULA); closes #498
+- **ReDoS** — `WebScraperTool` limits CSS selector length to 200 characters; closes #498
+
 ---
 
 ## [1.5.0] — 2026-04-07

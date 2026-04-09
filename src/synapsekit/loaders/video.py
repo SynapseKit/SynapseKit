@@ -137,4 +137,7 @@ class VideoLoader:
         suffix = ".wav"
         if self._keep_audio:
             return self._path.with_suffix(suffix)
-        return Path(tempfile.mktemp(suffix=suffix, prefix="synapsekit_audio_"))
+        with tempfile.NamedTemporaryFile(
+            suffix=suffix, prefix="synapsekit_audio_", delete=False
+        ) as fd:
+            return Path(fd.name)
