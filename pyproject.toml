@@ -172,6 +172,10 @@ packages = ["src/synapsekit"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+# Windows asyncio transport cleanup warnings are harmless GC artifacts
+filterwarnings = [
+    "ignore::pytest.PytestUnraisableExceptionWarning",
+]
 
 [tool.ruff]
 target-version = "py310"

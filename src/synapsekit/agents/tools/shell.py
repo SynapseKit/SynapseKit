@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import platform
 import shlex
 from typing import Any
 
@@ -56,14 +57,27 @@ class ShellTool(BaseTool):
             )
 
         try:
-            proc = await asyncio.create_subprocess_exec(
-                *argv,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
+            # On Windows, use shell=True to support builtins like echo, dir, etc.
+            if platform.system() == "Windows":
+                proc = await asyncio.create_subprocess_shell(
+                    target,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+            else:
+                proc = await asyncio.create_subprocess_exec(
+                    *argv,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
             stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=self.timeout)
             output = stdout.decode() if stdout else ""
             err = stderr.decode() if stderr else ""
+
+            # Ensure subprocess is fully cleaned up
+            if proc.returncode is None:
+                proc.kill()
+                await proc.wait()
 
             if proc.returncode != 0:
                 return ToolResult(
