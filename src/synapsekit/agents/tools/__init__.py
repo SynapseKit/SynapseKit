@@ -4,6 +4,7 @@ from .aws_lambda import AWSLambdaTool
 from .bing_search import BingSearchTool
 from .brave_search import BraveSearchTool
 from .calculator import CalculatorTool
+from .code_interpreter import CodeInterpreterTool
 from .datetime_tool import DateTimeTool
 from .duck_search import DuckDuckGoSearchTool
 from .email_tool import EmailTool
@@ -53,6 +54,7 @@ __all__ = [
     "BingSearchTool",
     "BraveSearchTool",
     "CalculatorTool",
+    "CodeInterpreterTool",
     "DateTimeTool",
     "DuckDuckGoSearchTool",
     "EmailTool",
