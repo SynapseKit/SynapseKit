@@ -9,7 +9,9 @@ import pytest
 from synapsekit.loaders.teams import TeamsLoader
 
 
-def _make_mock_response(status_code: int, json_data: dict | None = None, headers: dict | None = None) -> MagicMock:
+def _make_mock_response(
+    status_code: int, json_data: dict | None = None, headers: dict | None = None
+) -> MagicMock:
     """Create a mock httpx.Response object."""
     response = MagicMock()
     response.status_code = status_code
@@ -269,9 +271,7 @@ class TestTeamsLoaderHTMLStripping:
         messages = [
             {
                 "id": "msg-1",
-                "body": {
-                    "content": "<p>Hi <at>John Doe</at>, please review this.</p>"
-                },
+                "body": {"content": "<p>Hi <at>John Doe</at>, please review this.</p>"},
             },
         ]
 
