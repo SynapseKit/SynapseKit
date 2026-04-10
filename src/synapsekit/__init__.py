@@ -168,6 +168,7 @@ from .loaders.markdown import MarkdownLoader
 from .loaders.pdf import PDFLoader
 from .loaders.rss import RSSLoader
 from .loaders.sql import SQLLoader
+from .loaders.teams import TeamsLoader
 from .loaders.text import StringLoader, TextLoader
 from .loaders.web import WebLoader
 from .loaders.wikipedia import WikipediaLoader
@@ -352,6 +353,7 @@ __all__ = [
     "MarkdownLoader",
     "SQLLoader",
     "SupabaseLoader",
+    "TeamsLoader",
     "WebLoader",
     "RSSLoader",
     "WikipediaLoader",
@@ -595,6 +597,7 @@ _LAZY_IMPORTS = {
     "DocxLoader": "loaders.docx",
     "ExcelLoader": "loaders.excel",
     "PowerPointLoader": "loaders.pptx",
+    "TeamsLoader": "loaders.teams",
     "YAMLLoader": "loaders.yaml_loader",
     "DiscordLoader": "loaders.discord",
     "XMLLoader": "loaders.xml_loader",

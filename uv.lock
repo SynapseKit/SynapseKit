@@ -7378,7 +7378,7 @@ wheels = [
 
 [[package]]
 name = "synapsekit"
-version = "1.5.1"
+version = "1.5.2"
 source = { editable = "." }
 dependencies = [
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
@@ -7607,6 +7607,9 @@ supabase = [
 tavily = [
     { name = "tavily-python" },
 ]
+teams = [
+    { name = "httpx" },
+]
 vertex = [
     { name = "google-cloud-aiplatform" },
 ]
@@ -7707,6 +7710,7 @@ requires-dist = [
     { name = "httpx", marker = "extra == 'jira'", specifier = ">=0.27" },
     { name = "httpx", marker = "extra == 'minimax'", specifier = ">=0.27" },
     { name = "httpx", marker = "extra == 'notion'", specifier = ">=0.27" },
+    { name = "httpx", marker = "extra == 'teams'", specifier = ">=0.27" },
     { name = "httpx", marker = "extra == 'web'", specifier = ">=0.27" },
     { name = "huggingface-hub", marker = "extra == 'all'", specifier = ">=0.20" },
     { name = "huggingface-hub", marker = "extra == 'huggingface'", specifier = ">=0.20" },
@@ -7769,7 +7773,7 @@ requires-dist = [
     { name = "youtube-search-python", marker = "extra == 'all'", specifier = ">=1.6" },
     { name = "youtube-search-python", marker = "extra == 'youtube'", specifier = ">=1.6" },
 ]
-provides-extras = ["openai", "anthropic", "semantic", "colbert", "pdf", "wikipedia", "arxiv", "html", "web", "chroma", "faiss", "qdrant", "pinecone", "weaviate", "milvus", "lancedb", "ollama", "ai21", "cohere", "mistral", "gemini", "bedrock", "gcal-tool", "aws-lambda", "rss", "groq", "audio", "video", "excel", "pptx", "docx", "yaml", "http", "search", "huggingface", "google-search", "tavily", "youtube", "mcp", "redis", "memcached", "vertex", "cloudflare", "aleph-alpha", "llamacpp", "ernie", "minimax", "serve", "postgres", "pgvector", "wolfram", "dynamodb", "discord", "gcs", "gdrive", "git", "gsheets", "jira", "sql", "slack", "supabase", "notion", "confluence", "all"]
+provides-extras = ["openai", "anthropic", "semantic", "colbert", "pdf", "wikipedia", "arxiv", "html", "web", "chroma", "faiss", "qdrant", "pinecone", "weaviate", "milvus", "lancedb", "ollama", "ai21", "cohere", "mistral", "gemini", "bedrock", "gcal-tool", "aws-lambda", "rss", "groq", "audio", "video", "excel", "pptx", "docx", "yaml", "teams", "http", "search", "huggingface", "google-search", "tavily", "youtube", "mcp", "redis", "memcached", "vertex", "cloudflare", "aleph-alpha", "llamacpp", "ernie", "minimax", "serve", "postgres", "pgvector", "wolfram", "dynamodb", "discord", "gcs", "gdrive", "git", "gsheets", "jira", "sql", "slack", "supabase", "notion", "confluence", "all"]
 
 [package.metadata.requires-dev]
 dev = [
