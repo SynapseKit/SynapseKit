@@ -173,7 +173,6 @@ packages = ["src/synapsekit"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
-addopts = "--tb=line"
 
 [tool.ruff]
 target-version = "py310"
