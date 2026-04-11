@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import platform
 
 import pytest
 
@@ -91,6 +92,10 @@ async def test_code_interpreter_times_out() -> None:
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(
+    platform.system() != "Linux",
+    reason="resource.setrlimit(RLIMIT_AS) is only enforced on Linux; macOS/Windows silently ignore it",
+)
 async def test_code_interpreter_enforces_memory_limit() -> None:
     tool = CodeInterpreterTool(timeout=5.0, memory_limit_mb=64)
 
