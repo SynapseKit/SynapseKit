@@ -13,6 +13,7 @@ __all__ = [
     "DiscordLoader",
     "DocxLoader",
     "Document",
+    "DropboxLoader",
     "EmailLoader",
     "GCSLoader",
     "GitHubLoader",
@@ -68,6 +69,7 @@ _LOADERS = {
     "TeamsLoader": ".teams",
     "WikipediaLoader": ".wikipedia",
     "ConfluenceLoader": ".confluence",
+    "DropboxLoader": ".dropbox",
 }
 
 

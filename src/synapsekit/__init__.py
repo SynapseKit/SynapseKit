@@ -343,6 +343,7 @@ __all__ = [
     "CSVLoader",
     "JSONLoader",
     "DirectoryLoader",
+    "DropboxLoader",
     "ConfluenceLoader",
     "DocxLoader",
     "EmailLoader",
@@ -604,6 +605,7 @@ _LAZY_IMPORTS = {
     "DiscordLoader": "loaders.discord",
     "XMLLoader": "loaders.xml_loader",
     "GoogleDriveLoader": "loaders.google_drive",
+    "DropboxLoader": "loaders.dropbox",
 }
 
 
