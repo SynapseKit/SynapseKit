@@ -165,6 +165,7 @@ from .loaders.image import ImageLoader
 from .loaders.jira import JiraLoader
 from .loaders.json_loader import JSONLoader
 from .loaders.markdown import MarkdownLoader
+from .loaders.mongodb import MongoDBLoader
 from .loaders.pdf import PDFLoader
 from .loaders.rss import RSSLoader
 from .loaders.sql import SQLLoader
@@ -350,6 +351,7 @@ __all__ = [
     "GoogleSheetsLoader",
     "JiraLoader",
     "MarkdownLoader",
+    "MongoDBLoader",
     "SQLLoader",
     "SupabaseLoader",
     "WebLoader",
@@ -599,6 +601,7 @@ _LAZY_IMPORTS = {
     "DiscordLoader": "loaders.discord",
     "XMLLoader": "loaders.xml_loader",
     "GoogleDriveLoader": "loaders.google_drive",
+    "MongoDBLoader": "loaders.mongodb",
 }
 
 

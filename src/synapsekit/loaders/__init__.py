@@ -2,6 +2,7 @@ from typing import Any
 
 from .base import Document
 from .markdown import MarkdownLoader
+from .mongodb import MongoDBLoader
 from .text import StringLoader, TextLoader
 
 __all__ = [
@@ -23,6 +24,7 @@ __all__ = [
     "JSONLoader",
     "JiraLoader",
     "MarkdownLoader",
+    "MongoDBLoader",
     "NotionLoader",
     "PDFLoader",
     "RSSLoader",
@@ -66,6 +68,7 @@ _LOADERS = {
     "SupabaseLoader": ".supabase",
     "WikipediaLoader": ".wikipedia",
     "ConfluenceLoader": ".confluence",
+    "MongoDBLoader": ".mongodb",
 }
 
 
