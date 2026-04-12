@@ -221,6 +221,7 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) to get started. Look for issues tagged [
 
 ## Community
 
+💬 [Discord](https://discord.gg/INVITE) — chat, help, show and tell
 - 💬 [Discussions](https://github.com/SynapseKit/SynapseKit/discussions) — ask questions, share ideas
 - 🧭 [Discord roles draft](DISCORD_ROLES.md) — proposed roles and permissions for issue #389
 - 🧭 [Discord release webhook draft](DISCORD_RELEASE_WEBHOOKS.md) — automate release announcements for issue #390
