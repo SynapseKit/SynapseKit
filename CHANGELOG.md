@@ -9,6 +9,11 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- **Recursive Subgraph Support** — allow a `StateGraph` to be passed to `subgraph_node()`, enabling self-referential / recursive workflows; implements a `max_recursion_depth` guard (default 10) to prevent infinite loops; tracks depth via internal `__recursion_depth__` state key; adds `RecursionDepthError` to handle limit breaches; lazy compilation supports definition-time self-referencing.
+- **Discord community link** — added Discord server link to README community section.
+
 ---
 
 ## [1.5.4] — 2026-04-12
