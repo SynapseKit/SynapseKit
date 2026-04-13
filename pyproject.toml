@@ -56,6 +56,7 @@ weaviate = ["weaviate-client>=4.0"]
 milvus = ["pymilvus>=2.4"]
 lancedb = ["lancedb>=0.5"]
 ollama = ["ollama>=0.2"]
+lmstudio = ["openai>=1.0"]
 ai21 = ["ai21>=2.0"]
 cohere = ["cohere>=5.0"]
 mistral = ["mistralai>=1.0"]
@@ -102,11 +103,14 @@ sql = ["sqlalchemy>=2.0"]
 mongodb = ["pymongo>=4.0"]
 azure = ["azure-storage-blob>=12.0"]
 s3 = ["boto3>=1.34"]
+onedrive = []
 slack = ["slack-sdk>=3.0"]
 supabase = ["supabase>=2.0"]
 notion = ["httpx>=0.27"]
 confluence = ["atlassian-python-api>=3.0", "beautifulsoup4>=4.12"]
 dropbox = ["dropbox>=12.0"]
+rtf = ["striprtf>=0.0.26"]
+epub = ["ebooklib>=0.18"]
 all = [
     "openai>=1.0",
     "anthropic>=0.25",
@@ -294,7 +298,7 @@ gitpython = "git"
 azure-storage-blob = "azure"
 
 [tool.deptry.per_rule_ignores]
-DEP001 = ["sqlalchemy", "pydantic", "aiohttp", "opentelemetry", "whisper", "botocore", "aiomcache", "nest_asyncio", "huggingface_hub", "serpapi", "weaviate"]
+DEP001 = ["sqlalchemy", "pydantic", "aiohttp", "opentelemetry", "whisper", "botocore", "aiomcache", "nest_asyncio", "huggingface_hub", "serpapi", "weaviate", "uvicorn"]
 DEP002 = ["numpy", "rank-bm25", "beautifulsoup4", "lxml", "faiss-cpu", "google-generativeai", "tavily-python", "youtube-search-python", "psycopg", "google-search-results", "discord.py", "google-auth", "weaviate-client", "pymilvus", "lancedb", "pgvector", "slack-sdk", "supabase", "pymongo", "azure-storage-blob"]
-DEP003 = ["sqlalchemy", "botocore", "nest_asyncio"]
+DEP003 = ["sqlalchemy", "botocore", "nest_asyncio", "opentelemetry", "starlette", "uvicorn"]
 DEP004 = ["pydantic"]
