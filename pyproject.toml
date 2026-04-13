@@ -33,7 +33,7 @@ dependencies = [
 Homepage = "https://github.com/SynapseKit/SynapseKit"
 Repository = "https://github.com/SynapseKit/SynapseKit"
 Documentation = "https://synapsekit.github.io/synapsekit-docs/"
-Discord = "https://discord.gg/unn4cXXH"
+Discord = "https://discord.gg/PSuAXHRywJ"
 
 [project.scripts]
 synapsekit = "synapsekit.cli.main:main"
