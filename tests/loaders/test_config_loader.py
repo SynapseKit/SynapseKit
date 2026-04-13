@@ -162,3 +162,8 @@ class TestTomlLoader:
         docs = ConfigLoader(str(p)).load()
         assert len(docs) == 1
         assert docs[0].text == ""
+
+    def test_aload_is_coroutine_function(self):
+        import inspect
+
+        assert inspect.iscoroutinefunction(ConfigLoader("/tmp/x.env").aload)

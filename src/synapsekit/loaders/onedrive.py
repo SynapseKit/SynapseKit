@@ -69,13 +69,6 @@ class OneDriveLoader:
 
     async def aload(self) -> list[Document]:
         """Asynchronously fetch files from OneDrive/SharePoint."""
-        try:
-            import msgraph  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                "OneDrive dependencies required: pip install synapsekit[onedrive]"
-            ) from None
-
         loop = asyncio.get_running_loop()
         queue: list[str] = [self._children_url(self.folder_id)]
         documents: list[Document] = []

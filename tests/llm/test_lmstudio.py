@@ -261,3 +261,22 @@ class TestCallWithTools:
 
         assert result["content"] == "Just a plain response."
         assert result["tool_calls"] is None
+
+
+# ------------------------------------------------------------------ #
+# Coroutine function checks
+# ------------------------------------------------------------------ #
+
+
+def test_stream_is_async_generator():
+    import inspect
+
+    llm = LMStudioLLM(make_config())
+    assert inspect.isasyncgenfunction(llm.stream)
+
+
+def test_stream_with_messages_is_async_generator():
+    import inspect
+
+    llm = LMStudioLLM(make_config())
+    assert inspect.isasyncgenfunction(llm.stream_with_messages)
