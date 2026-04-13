@@ -112,3 +112,8 @@ class TestTSVLoader:
         docs = await TSVLoader(str(p)).aload()
         assert len(docs) == 2
         assert docs[0].metadata["source"] == str(p)
+
+    def test_aload_is_coroutine_function(self):
+        import inspect
+
+        assert inspect.iscoroutinefunction(TSVLoader("/tmp/x.tsv").aload)

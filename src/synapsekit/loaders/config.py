@@ -121,7 +121,12 @@ class ConfigLoader:
         try:
             import tomllib
         except ImportError:
-            raise ImportError("TOML loading requires Python 3.11+") from None
+            try:
+                import tomli as tomllib  # type: ignore[no-redef]
+            except ImportError:
+                raise ImportError(
+                    "TOML loading requires Python 3.11+ or: pip install tomli"
+                ) from None
 
         data = tomllib.loads(content)
         if not isinstance(data, dict):

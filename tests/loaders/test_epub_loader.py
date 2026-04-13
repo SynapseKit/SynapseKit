@@ -180,3 +180,8 @@ class TestEPUBLoader:
             docs = await EPUBLoader(str(p)).aload()
         assert len(docs) == 1
         assert "Async chapter" in docs[0].text
+
+    def test_aload_is_coroutine_function(self):
+        import inspect
+
+        assert inspect.iscoroutinefunction(EPUBLoader("/tmp/x.epub").aload)

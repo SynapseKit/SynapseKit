@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -35,17 +35,6 @@ class TestOneDriveLoader:
         )
         assert loader.file_extensions == {".txt", ".pdf", ".json"}
 
-    @pytest.mark.asyncio
-    async def test_aload_missing_dependencies(self):
-        import sys
-
-        loader = OneDriveLoader(access_token="token", drive_id="drive123")
-
-        with patch.dict(sys.modules, {"msgraph": None}):
-            with pytest.raises(ImportError, match="synapsekit\\[onedrive\\]"):
-                await loader.aload()
-
-    @patch.dict("sys.modules", {"msgraph": MagicMock()})
     def test_load_with_text_and_binary_files(self):
         loader = OneDriveLoader(access_token="token", drive_id="drive123")
 
@@ -97,7 +86,6 @@ class TestOneDriveLoader:
         assert docs[1].text == "[Binary file: image/png]"
         assert docs[1].metadata["item_id"] == "item-2"
 
-    @patch.dict("sys.modules", {"msgraph": MagicMock()})
     def test_load_applies_extension_filters(self):
         loader = OneDriveLoader(
             access_token="token",
@@ -121,7 +109,6 @@ class TestOneDriveLoader:
         assert len(docs) == 1
         assert docs[0].metadata["file_name"] == "a.txt"
 
-    @patch.dict("sys.modules", {"msgraph": MagicMock()})
     def test_load_extracts_supported_file_via_loader(self):
         loader = OneDriveLoader(access_token="token", drive_id="drive123")
 
@@ -150,7 +137,6 @@ class TestOneDriveLoader:
         assert docs[0].text == "Extracted Page 1\n\nExtracted Page 2"
         run_loader.assert_called_once()
 
-    @patch.dict("sys.modules", {"msgraph": MagicMock()})
     def test_load_handles_recursive_folder_traversal(self):
         loader = OneDriveLoader(access_token="token", drive_id="drive123", recursive=True)
 
@@ -192,7 +178,6 @@ class TestOneDriveLoader:
         names = {doc.metadata["file_name"] for doc in docs}
         assert names == {"root.txt", "child.txt"}
 
-    @patch.dict("sys.modules", {"msgraph": MagicMock()})
     def test_load_non_recursive_skips_subfolder_items(self):
         loader = OneDriveLoader(access_token="token", drive_id="drive123", recursive=False)
 
@@ -212,7 +197,6 @@ class TestOneDriveLoader:
         assert len(docs) == 1
         assert docs[0].metadata["file_name"] == "root.txt"
 
-    @patch.dict("sys.modules", {"msgraph": MagicMock()})
     def test_load_respects_max_files(self):
         loader = OneDriveLoader(access_token="token", drive_id="drive123", max_files=1)
 
@@ -232,7 +216,6 @@ class TestOneDriveLoader:
         assert len(docs) == 1
         assert docs[0].metadata["item_id"] == "a"
 
-    @patch.dict("sys.modules", {"msgraph": MagicMock()})
     def test_aload_runs(self):
         loader = OneDriveLoader(access_token="token", drive_id="drive123")
 
@@ -257,3 +240,8 @@ class TestOneDriveLoader:
         loader = OneDriveLoader(access_token="token", drive_id="drive123")
         out = loader._extract_with_supported_loader("blob.bin", b"raw", ".bin")
         assert out is None
+
+    def test_aload_is_coroutine_function(self):
+        import inspect
+
+        assert inspect.iscoroutinefunction(OneDriveLoader(access_token="t", drive_id="d").aload)

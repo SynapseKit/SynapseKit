@@ -188,3 +188,8 @@ class TestLaTeXLoader:
         p.write_text("No LaTeX here at all.")
         docs = LaTeXLoader(str(p)).load()
         assert "No LaTeX here at all." in docs[0].text
+
+    def test_aload_is_coroutine_function(self):
+        import inspect
+
+        assert inspect.iscoroutinefunction(LaTeXLoader("/tmp/x.tex").aload)

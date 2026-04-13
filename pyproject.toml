@@ -103,7 +103,7 @@ sql = ["sqlalchemy>=2.0"]
 mongodb = ["pymongo>=4.0"]
 azure = ["azure-storage-blob>=12.0"]
 s3 = ["boto3>=1.34"]
-onedrive = ["msgraph-sdk>=1.0"]
+onedrive = []
 slack = ["slack-sdk>=3.0"]
 supabase = ["supabase>=2.0"]
 notion = ["httpx>=0.27"]
@@ -161,7 +161,6 @@ all = [
     "supabase>=2.0",
     "pymongo>=4.0",
     "azure-storage-blob>=12.0",
-    "msgraph-sdk>=1.0",
 ]
 
 [dependency-groups]
@@ -297,10 +296,9 @@ weaviate-client = "weaviate"
 atlassian-python-api = "atlassian"
 gitpython = "git"
 azure-storage-blob = "azure"
-msgraph-sdk = "msgraph"
 
 [tool.deptry.per_rule_ignores]
 DEP001 = ["sqlalchemy", "pydantic", "aiohttp", "opentelemetry", "whisper", "botocore", "aiomcache", "nest_asyncio", "huggingface_hub", "serpapi", "weaviate", "uvicorn"]
-DEP002 = ["numpy", "rank-bm25", "beautifulsoup4", "lxml", "faiss-cpu", "google-generativeai", "tavily-python", "youtube-search-python", "psycopg", "google-search-results", "discord.py", "google-auth", "weaviate-client", "pymilvus", "lancedb", "pgvector", "slack-sdk", "supabase", "pymongo", "azure-storage-blob", "msgraph-sdk"]
+DEP002 = ["numpy", "rank-bm25", "beautifulsoup4", "lxml", "faiss-cpu", "google-generativeai", "tavily-python", "youtube-search-python", "psycopg", "google-search-results", "discord.py", "google-auth", "weaviate-client", "pymilvus", "lancedb", "pgvector", "slack-sdk", "supabase", "pymongo", "azure-storage-blob"]
 DEP003 = ["sqlalchemy", "botocore", "nest_asyncio", "opentelemetry", "starlette", "uvicorn"]
 DEP004 = ["pydantic"]

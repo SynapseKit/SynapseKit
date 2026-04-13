@@ -84,3 +84,8 @@ class TestRTFLoader:
             docs = await RTFLoader(str(p)).aload()
         assert len(docs) == 1
         assert docs[0].metadata["source"] == str(p)
+
+    def test_aload_is_coroutine_function(self):
+        import inspect
+
+        assert inspect.iscoroutinefunction(RTFLoader("/tmp/x.rtf").aload)

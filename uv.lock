@@ -1544,6 +1544,19 @@ wheels = [
 ]
 
 [[package]]
+name = "ebooklib"
+version = "0.20"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "lxml" },
+    { name = "six" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/77/85/322e8882a582d4b707220d1929cfb74c125f2ba513991edbce40dbc462de/ebooklib-0.20.tar.gz", hash = "sha256:35e2f9d7d39907be8d39ae2deb261b19848945903ae3dbb6577b187ead69e985", size = 127066, upload-time = "2025-10-26T20:56:20.968Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bf/ee/aa015c5de8b0dc42a8e507eae8c2de5d1c0e068c896858fec6d502402ed6/ebooklib-0.20-py3-none-any.whl", hash = "sha256:fff5322517a37e31c972d27be7d982cc3928c16b3dcc5fd7e8f7c0f5d7bcf42b", size = 40995, upload-time = "2025-10-26T20:56:19.104Z" },
+]
+
+[[package]]
 name = "erniebot"
 version = "0.5.9"
 source = { registry = "https://pypi.org/simple" }
@@ -7472,6 +7485,15 @@ wheels = [
 ]
 
 [[package]]
+name = "striprtf"
+version = "0.0.29"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/f3/86/7154b7c625a3ff704581dab70c05389e1de90233b7a751f79f712c2ca0e9/striprtf-0.0.29.tar.gz", hash = "sha256:5a822d075e17417934ed3add6fc79b5fc8fb544fe4370b2f894cdd28f0ddd78e", size = 7533, upload-time = "2025-03-27T22:55:56.874Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/08/3e/1418afacc4aae04690cff282078f22620c89a99490499878ececc3021654/striprtf-0.0.29-py3-none-any.whl", hash = "sha256:0fc6a41999d015358d19627776b616424dd501ad698105c81d76734d1e14d91b", size = 7879, upload-time = "2025-03-27T22:55:55.977Z" },
+]
+
+[[package]]
 name = "supabase"
 version = "2.28.3"
 source = { registry = "https://pypi.org/simple" }
@@ -7643,6 +7665,9 @@ dropbox = [
 dynamodb = [
     { name = "boto3" },
 ]
+epub = [
+    { name = "ebooklib" },
+]
 ernie = [
     { name = "erniebot" },
 ]
@@ -7697,6 +7722,9 @@ lancedb = [
 llamacpp = [
     { name = "llama-cpp-python" },
 ]
+lmstudio = [
+    { name = "openai" },
+]
 mcp = [
     { name = "mcp" },
 ]
@@ -7748,6 +7776,9 @@ redis = [
 ]
 rss = [
     { name = "feedparser" },
+]
+rtf = [
+    { name = "striprtf" },
 ]
 s3 = [
     { name = "boto3" },
@@ -7850,6 +7881,7 @@ requires-dist = [
     { name = "dropbox", marker = "extra == 'dropbox'", specifier = ">=12.0" },
     { name = "duckduckgo-search", marker = "extra == 'all'", specifier = ">=6.0" },
     { name = "duckduckgo-search", marker = "extra == 'search'", specifier = ">=6.0" },
+    { name = "ebooklib", marker = "extra == 'epub'", specifier = ">=0.18" },
     { name = "erniebot", marker = "extra == 'all'", specifier = ">=0.5" },
     { name = "erniebot", marker = "extra == 'ernie'", specifier = ">=0.5" },
     { name = "faiss-cpu", marker = "extra == 'all'", specifier = ">=1.7" },
@@ -7900,6 +7932,7 @@ requires-dist = [
     { name = "ollama", marker = "extra == 'ollama'", specifier = ">=0.2" },
     { name = "openai", marker = "extra == 'all'", specifier = ">=1.0" },
     { name = "openai", marker = "extra == 'audio'", specifier = ">=1.0" },
+    { name = "openai", marker = "extra == 'lmstudio'", specifier = ">=1.0" },
     { name = "openai", marker = "extra == 'openai'", specifier = ">=1.0" },
     { name = "openai", marker = "extra == 'video'", specifier = ">=1.0" },
     { name = "openpyxl", marker = "extra == 'excel'", specifier = ">=3.1" },
@@ -7931,6 +7964,7 @@ requires-dist = [
     { name = "sentence-transformers", marker = "extra == 'semantic'", specifier = ">=2.7" },
     { name = "slack-sdk", marker = "extra == 'slack'", specifier = ">=3.0" },
     { name = "sqlalchemy", marker = "extra == 'sql'", specifier = ">=2.0" },
+    { name = "striprtf", marker = "extra == 'rtf'", specifier = ">=0.0.26" },
     { name = "supabase", marker = "extra == 'all'", specifier = ">=2.0" },
     { name = "supabase", marker = "extra == 'supabase'", specifier = ">=2.0" },
     { name = "tavily-python", marker = "extra == 'all'", specifier = ">=0.3" },
@@ -7946,7 +7980,7 @@ requires-dist = [
     { name = "youtube-search-python", marker = "extra == 'all'", specifier = ">=1.6" },
     { name = "youtube-search-python", marker = "extra == 'youtube'", specifier = ">=1.6" },
 ]
-provides-extras = ["openai", "anthropic", "semantic", "colbert", "pdf", "wikipedia", "arxiv", "html", "web", "chroma", "faiss", "qdrant", "pinecone", "weaviate", "milvus", "lancedb", "ollama", "ai21", "cohere", "mistral", "gemini", "bedrock", "gcal-tool", "aws-lambda", "rss", "groq", "audio", "video", "excel", "pptx", "docx", "yaml", "teams", "http", "search", "huggingface", "google-search", "tavily", "youtube", "mcp", "redis", "memcached", "vertex", "cloudflare", "aleph-alpha", "llamacpp", "ernie", "minimax", "serve", "postgres", "pgvector", "wolfram", "dynamodb", "discord", "gcs", "gdrive", "git", "gsheets", "jira", "sql", "mongodb", "azure", "s3", "slack", "supabase", "notion", "confluence", "dropbox", "all"]
+provides-extras = ["openai", "anthropic", "semantic", "colbert", "pdf", "wikipedia", "arxiv", "html", "web", "chroma", "faiss", "qdrant", "pinecone", "weaviate", "milvus", "lancedb", "ollama", "lmstudio", "ai21", "cohere", "mistral", "gemini", "bedrock", "gcal-tool", "aws-lambda", "rss", "groq", "audio", "video", "excel", "pptx", "docx", "yaml", "teams", "http", "search", "huggingface", "google-search", "tavily", "youtube", "mcp", "redis", "memcached", "vertex", "cloudflare", "aleph-alpha", "llamacpp", "ernie", "minimax", "serve", "postgres", "pgvector", "wolfram", "dynamodb", "discord", "gcs", "gdrive", "git", "gsheets", "jira", "sql", "mongodb", "azure", "s3", "onedrive", "slack", "supabase", "notion", "confluence", "dropbox", "rtf", "epub", "all"]
 
 [package.metadata.requires-dev]
 dev = [
