@@ -34,13 +34,13 @@
 
   <!-- Stat pills -->
   <rect x="132" y="159" width="90"  height="22" rx="11" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.5"/>
-  <text x="177" y="174" font-family="'SF Mono','Fira Code','Consolas',monospace" font-size="10" fill="#15803d" text-anchor="middle">30 providers</text>
+  <text x="177" y="174" font-family="'SF Mono','Fira Code','Consolas',monospace" font-size="10" fill="#15803d" text-anchor="middle">31 providers</text>
 
   <rect x="230" y="159" width="68"  height="22" rx="11" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.5"/>
-  <text x="264" y="174" font-family="'SF Mono','Fira Code','Consolas',monospace" font-size="10" fill="#15803d" text-anchor="middle">46 tools</text>
+  <text x="264" y="174" font-family="'SF Mono','Fira Code','Consolas',monospace" font-size="10" fill="#15803d" text-anchor="middle">48 tools</text>
 
   <rect x="306" y="159" width="76"  height="22" rx="11" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.5"/>
-  <text x="344" y="174" font-family="'SF Mono','Fira Code','Consolas',monospace" font-size="10" fill="#15803d" text-anchor="middle">33 loaders</text>
+  <text x="344" y="174" font-family="'SF Mono','Fira Code','Consolas',monospace" font-size="10" fill="#15803d" text-anchor="middle">43 loaders</text>
 
   <rect x="390" y="159" width="100" height="22" rx="11" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1.5"/>
   <text x="440" y="174" font-family="'SF Mono','Fira Code','Consolas',monospace" font-size="10" fill="#64748b" text-anchor="middle">9 vector stores</text>
