@@ -165,9 +165,9 @@ from .loaders.github import GitHubLoader
 from .loaders.google_sheets import GoogleSheetsLoader
 from .loaders.html import HTMLLoader
 from .loaders.image import ImageLoader
-from .loaders.latex import LaTeXLoader
 from .loaders.jira import JiraLoader
 from .loaders.json_loader import JSONLoader
+from .loaders.latex import LaTeXLoader
 from .loaders.markdown import MarkdownLoader
 from .loaders.mongodb import MongoDBLoader
 from .loaders.pdf import PDFLoader
