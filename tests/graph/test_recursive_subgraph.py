@@ -328,12 +328,12 @@ async def test_recursion_depth_error_with_on_error_skip():
 
 
 def test_recursion_depth_error_importable_from_synapsekit():
-    from synapsekit import RecursionDepthError as RDE  # noqa: F401
+    from synapsekit import RecursionDepthError as RDE
 
     assert RDE is RecursionDepthError
 
 
 def test_recursion_depth_error_importable_from_graph():
-    from synapsekit.graph import RecursionDepthError as RDE  # noqa: F401
+    from synapsekit.graph import RecursionDepthError as RDE
 
     assert RDE is RecursionDepthError
