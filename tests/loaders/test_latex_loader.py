@@ -79,18 +79,14 @@ class TestLaTeXLoader:
 
     def test_strips_document_environment(self, tmp_path):
         p = tmp_path / "env.tex"
-        p.write_text(
-            "\\begin{document}\nSome text\n\\end{document}"
-        )
+        p.write_text("\\begin{document}\nSome text\n\\end{document}")
         docs = LaTeXLoader(str(p)).load()
         assert "begin" not in docs[0].text
         assert "end" not in docs[0].text
 
     def test_strips_equation_environment(self, tmp_path):
         p = tmp_path / "eq.tex"
-        p.write_text(
-            "Before\n\\begin{equation}\nE = mc^2\n\\end{equation}\nAfter"
-        )
+        p.write_text("Before\n\\begin{equation}\nE = mc^2\n\\end{equation}\nAfter")
         docs = LaTeXLoader(str(p)).load()
         assert "equation" not in docs[0].text
         assert "E = mc^2" not in docs[0].text
@@ -134,8 +130,7 @@ class TestLaTeXLoader:
     def test_extracts_section_titles(self, tmp_path):
         p = tmp_path / "sections.tex"
         p.write_text(
-            "\\section{Introduction}\nSome intro text.\n"
-            "\\section{Methods}\nSome method text.\n"
+            "\\section{Introduction}\nSome intro text.\n\\section{Methods}\nSome method text.\n"
         )
         docs = LaTeXLoader(str(p)).load()
         assert "sections" in docs[0].metadata
@@ -150,9 +145,7 @@ class TestLaTeXLoader:
 
     def test_first_section_becomes_title(self, tmp_path):
         p = tmp_path / "title.tex"
-        p.write_text(
-            "\\section{Overview}\nText.\n\\section{Details}\nMore text.\n"
-        )
+        p.write_text("\\section{Overview}\nText.\n\\section{Details}\nMore text.\n")
         docs = LaTeXLoader(str(p)).load()
         assert docs[0].metadata.get("title") == "Overview"
 
