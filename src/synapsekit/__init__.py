@@ -159,6 +159,7 @@ from .loaders.confluence import ConfluenceLoader
 from .loaders.csv import CSVLoader
 from .loaders.directory import DirectoryLoader
 from .loaders.email import EmailLoader
+from .loaders.epub import EPUBLoader
 from .loaders.gcs import GCSLoader
 from .loaders.git import GitLoader
 from .loaders.github import GitHubLoader
@@ -353,6 +354,7 @@ __all__ = [
     "JSONLoader",
     "DirectoryLoader",
     "DropboxLoader",
+    "EPUBLoader",
     "ConfluenceLoader",
     "DocxLoader",
     "EmailLoader",
