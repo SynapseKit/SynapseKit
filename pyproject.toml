@@ -300,7 +300,7 @@ azure-storage-blob = "azure"
 msgraph-sdk = "msgraph"
 
 [tool.deptry.per_rule_ignores]
-DEP001 = ["sqlalchemy", "pydantic", "aiohttp", "opentelemetry", "whisper", "botocore", "aiomcache", "nest_asyncio", "huggingface_hub", "serpapi", "weaviate"]
+DEP001 = ["sqlalchemy", "pydantic", "aiohttp", "opentelemetry", "whisper", "botocore", "aiomcache", "nest_asyncio", "huggingface_hub", "serpapi", "weaviate", "uvicorn"]
 DEP002 = ["numpy", "rank-bm25", "beautifulsoup4", "lxml", "faiss-cpu", "google-generativeai", "tavily-python", "youtube-search-python", "psycopg", "google-search-results", "discord.py", "google-auth", "weaviate-client", "pymilvus", "lancedb", "pgvector", "slack-sdk", "supabase", "pymongo", "azure-storage-blob", "msgraph-sdk"]
-DEP003 = ["sqlalchemy", "botocore", "nest_asyncio"]
+DEP003 = ["sqlalchemy", "botocore", "nest_asyncio", "opentelemetry", "starlette", "uvicorn"]
 DEP004 = ["pydantic"]
