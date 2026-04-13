@@ -25,18 +25,16 @@ class LMStudioLLM(BaseLLM):
 
     Custom server URL::
 
-        config = LLMConfig(
-            model="mistral-7b-instruct",
-            provider="lmstudio",
+        llm = LMStudioLLM(
+            LLMConfig(model="mistral-7b-instruct", provider="lmstudio"),
             base_url="http://192.168.1.10:1234/v1",
         )
-        llm = LMStudioLLM(config)
     """
 
-    def __init__(self, config: LLMConfig) -> None:
+    def __init__(self, config: LLMConfig, *, base_url: str | None = None) -> None:
         super().__init__(config)
         self._client = None
-        self._base_url: str = getattr(config, "base_url", None) or _DEFAULT_BASE_URL
+        self._base_url: str = base_url or _DEFAULT_BASE_URL
 
     def _get_client(self):
         if self._client is None:
@@ -68,10 +66,9 @@ class LMStudioLLM(BaseLLM):
             temperature=kw.get("temperature", self.config.temperature),
             max_tokens=kw.get("max_tokens", self.config.max_tokens),
             stream=True,
-            stream_options={"include_usage": True},
         )
         async for chunk in stream:
-            if chunk.usage:
+            if getattr(chunk, "usage", None):
                 self._input_tokens += chunk.usage.prompt_tokens or 0
                 self._output_tokens += chunk.usage.completion_tokens or 0
             if chunk.choices and chunk.choices[0].delta.content:

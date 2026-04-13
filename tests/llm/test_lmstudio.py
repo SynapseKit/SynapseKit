@@ -51,11 +51,9 @@ class TestGetClient:
             )
 
     def test_uses_custom_base_url(self):
-        config = make_config()
-        config.base_url = "http://192.168.1.10:1234/v1"
         mock_openai = _make_mock_openai()
         with patch.dict("sys.modules", {"openai": mock_openai}):
-            llm = LMStudioLLM(config)
+            llm = LMStudioLLM(make_config(), base_url="http://192.168.1.10:1234/v1")
             llm._client = None
             llm._get_client()
             mock_openai.AsyncOpenAI.assert_called_once_with(

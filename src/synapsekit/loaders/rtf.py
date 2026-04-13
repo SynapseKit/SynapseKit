@@ -12,7 +12,7 @@ class RTFLoader:
     Requires: pip install synapsekit[rtf]
     """
 
-    def __init__(self, path: str, encoding: str = "utf-8") -> None:
+    def __init__(self, path: str, encoding: str = "latin-1") -> None:
         self._path = path
         self._encoding = encoding
 

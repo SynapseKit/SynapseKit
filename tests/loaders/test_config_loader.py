@@ -56,6 +56,21 @@ class TestEnvLoader:
         docs = ConfigLoader(str(p)).load()
         assert "abc123" not in docs[0].text
 
+    def test_env_local_treated_as_env(self, tmp_path):
+        """Regression: .env.local / .env.staging must be parsed as .env, not raise ValueError."""
+        p = tmp_path / ".env.local"
+        p.write_text("STAGE=local\nDB_HOST=localhost\n")
+        docs = ConfigLoader(str(p)).load()
+        assert len(docs) == 1
+        assert "STAGE: local" in docs[0].text
+        assert docs[0].metadata["type"] == "env"
+
+    def test_env_staging_treated_as_env(self, tmp_path):
+        p = tmp_path / ".env.staging"
+        p.write_text("STAGE=staging\n")
+        docs = ConfigLoader(str(p)).load()
+        assert docs[0].metadata["type"] == "env"
+
     def test_metadata_type(self, tmp_path):
         p = tmp_path / ".env"
         p.write_text("HOST=localhost\n")

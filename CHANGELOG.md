@@ -7,20 +7,27 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
-## [Unreleased]
+## [1.5.5] — 2026-04-13
 
 ### Added
 
 - **Recursive Subgraph Support** — allow a `StateGraph` to be passed to `subgraph_node()`, enabling self-referential / recursive workflows; implements a `max_recursion_depth` guard (default 10) to prevent infinite loops; tracks depth via internal `__recursion_depth__` state key; adds `RecursionDepthError` to handle limit breaches; lazy compilation supports definition-time self-referencing.
 - **Discord community link** — added Discord server link to README community section.
-- **`LMStudioLLM`** — local model provider via LM Studio's OpenAI-compatible API; connects to a running LM Studio server (default `http://localhost:1234/v1`); supports streaming, tool calling, and custom `base_url`; no API key required; `pip install synapsekit[lmstudio]`; closes #176
+- **`LMStudioLLM`** — local model provider via LM Studio's OpenAI-compatible API; connects to a running LM Studio server (default `http://localhost:1234/v1`); supports streaming, tool calling, and custom `base_url` via constructor kwarg; no API key required; `pip install synapsekit[lmstudio]`; closes #176
 - **`MCPServer` SSE transport + package refactor** — `MCPServer` now lives in `synapsekit.mcp.server` package; adds `run_sse(host, port, api_key)` for HTTP/SSE MCP serving with optional Bearer auth; backwards-compatible with existing `MCPServer(tools=[...])`, `MCPServer(rag)`, and `MCPServer(agent)` usage
 - **`LaTeXLoader`** — load `.tex` files as plain text; strips commands, environments, inline/display math, and comments via regex; captures section/subsection titles into metadata; no external deps required
 - **`TSVLoader`** — load tab-separated files one Document per row; configurable `text_column` to extract a specific column as text; remaining columns become metadata; skips empty rows; async `aload()`
 - **`RTFLoader`** — load RTF files as plain text via `striprtf`; handles malformed RTF gracefully; `pip install synapsekit[rtf]`
 - **`EPUBLoader`** — load EPUB files chapter-by-chapter; extracts title, author, and chapter name into metadata; strips HTML tags safely; `pip install synapsekit[epub]`
-- **`ConfigLoader`** — load `.env`, `.ini`, `.cfg`, and `.toml` config files into Documents; redacts sensitive keys (password, secret, token, api_key, auth) automatically; one Document per INI section; Python 3.11+ uses stdlib `tomllib`, falls back to `tomli` on older versions
+- **`ConfigLoader`** — load `.env`, `.ini`, `.cfg`, `.toml`, and environment-specific dotfiles (`.env.local`, `.env.staging`, `.env.production`) into Documents; redacts sensitive keys (password, secret, token, api_key, auth) automatically; one Document per INI section; Python 3.11+ uses stdlib `tomllib`, falls back to `tomli` on older versions
 - **`OneDriveLoader`** — load files from OneDrive and SharePoint via Microsoft Graph API; folder traversal with optional recursion; extension filtering; `max_files` cap; extracts PDF, DOCX, XLSX, PPTX, CSV, JSON, HTML via existing loaders; async `aload()`; uses stdlib HTTP (no external SDK required)
+
+### Fixed
+
+- **`LMStudioLLM` `base_url`** — `LLMConfig` has no `base_url` field; passing it via `LLMConfig(base_url=...)` would raise `TypeError` before `LMStudioLLM.__init__` ran. Fixed by adding `base_url: str | None = None` as a keyword argument to `LMStudioLLM.__init__` directly (mirrors the `XaiLLM` / `NovitaLLM` pattern). Custom server usage: `LMStudioLLM(config, base_url="http://192.168.1.10:1234/v1")`
+- **`LMStudioLLM` stream stability** — removed `stream_options={"include_usage": True}` which caused API errors on older LM Studio builds; usage tracking now reads `chunk.usage` defensively via `getattr` so it still captures tokens when the server returns them
+- **`ConfigLoader` rejects `.env.local` / `.env.staging`** — `os.path.splitext(".env.local")` returns `('.env', '.local')` making `ext = '.local'` which fell through to `ValueError: Unsupported config file type`. Fixed by detecting any file whose basename starts with `.env` and treating it as the env format regardless of secondary extension
+- **`RTFLoader` default encoding** — changed default from `"utf-8"` to `"latin-1"` (Windows-1252 superset) since real-world RTF files from Office/WordPad are almost universally Windows-encoded, not UTF-8
 
 ---
 
