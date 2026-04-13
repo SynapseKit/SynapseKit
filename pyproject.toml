@@ -107,6 +107,7 @@ supabase = ["supabase>=2.0"]
 notion = ["httpx>=0.27"]
 confluence = ["atlassian-python-api>=3.0", "beautifulsoup4>=4.12"]
 dropbox = ["dropbox>=12.0"]
+rtf = ["striprtf>=0.0.26"]
 all = [
     "openai>=1.0",
     "anthropic>=0.25",
