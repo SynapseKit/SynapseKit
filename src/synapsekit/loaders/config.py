@@ -70,11 +70,13 @@ class ConfigLoader:
         if not os.path.exists(self._path):
             raise FileNotFoundError(f"Config file not found: {self._path}")
 
+        basename = os.path.basename(self._path).lower()
         ext = os.path.splitext(self._path)[1].lower()
-        # dotfiles like ".env" have no extension; treat the whole filename as the ext
-        if not ext:
-            ext = os.path.basename(self._path).lower()
-            if not ext.startswith("."):
+        # dotfiles like ".env" have no extension; treat the whole filename as the ext.
+        # Also handles ".env.local", ".env.staging", etc.
+        if not ext or basename.startswith(".env"):
+            ext = ".env" if basename.startswith(".env") else basename
+            if ext and not ext.startswith("."):
                 ext = f".{ext}"
         if ext not in _SUPPORTED_EXTENSIONS:
             raise ValueError(f"Unsupported config file type: {ext!r}")
