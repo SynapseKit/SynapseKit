@@ -55,6 +55,7 @@ pinecone = ["pinecone>=3.0"]
 weaviate = ["weaviate-client>=4.0"]
 milvus = ["pymilvus>=2.4"]
 lancedb = ["lancedb>=0.5"]
+sqlite-vec = ["sqlite-vec>=0.1"]
 ollama = ["ollama>=0.2"]
 lmstudio = ["openai>=1.0"]
 ai21 = ["ai21>=2.0"]
@@ -129,6 +130,7 @@ all = [
     "weaviate-client>=4.0",
     "pymilvus>=2.4",
     "lancedb>=0.5",
+    "sqlite-vec>=0.1",
     "pgvector>=0.2",
     "ollama>=0.2",
     "ai21>=2.0",
@@ -296,6 +298,7 @@ weaviate-client = "weaviate"
 atlassian-python-api = "atlassian"
 gitpython = "git"
 azure-storage-blob = "azure"
+sqlite-vec = "sqlite_vec"
 
 [tool.deptry.per_rule_ignores]
 DEP001 = ["sqlalchemy", "pydantic", "aiohttp", "opentelemetry", "whisper", "botocore", "aiomcache", "nest_asyncio", "huggingface_hub", "serpapi", "weaviate", "uvicorn", "starlette", "tomli"]

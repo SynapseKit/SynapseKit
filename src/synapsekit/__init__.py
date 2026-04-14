@@ -305,6 +305,7 @@ __all__ = [
     "QdrantVectorStore",
     "PineconeVectorStore",
     "WeaviateVectorStore",
+    "SQLiteVecStore",
     # Retrieval
     "Retriever",
     "AdaptiveRAGRetriever",
@@ -589,6 +590,7 @@ _LAZY_IMPORTS = {
     "QdrantVectorStore": "retrieval.qdrant",
     "PineconeVectorStore": "retrieval.pinecone",
     "WeaviateVectorStore": "retrieval.weaviate",
+    "SQLiteVecStore": "retrieval.sqlite_vec",
     # LLM providers
     "AsyncLRUCache": "llm._cache",
     "DynamoDBCacheBackend": "llm._cache_dynamodb",

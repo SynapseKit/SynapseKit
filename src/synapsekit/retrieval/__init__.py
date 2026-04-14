@@ -44,6 +44,7 @@ __all__ = [
     "QdrantVectorStore",
     "QueryDecompositionRetriever",
     "WeaviateVectorStore",
+    "SQLiteVecStore",
     "Retriever",
     "SelfQueryRetriever",
     "SelfRAGRetriever",
@@ -60,6 +61,7 @@ _BACKENDS = {
     "QdrantVectorStore": ".qdrant",
     "PineconeVectorStore": ".pinecone",
     "WeaviateVectorStore": ".weaviate",
+    "SQLiteVecStore": ".sqlite_vec",
 }
 
 
