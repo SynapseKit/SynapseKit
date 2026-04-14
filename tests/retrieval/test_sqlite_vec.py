@@ -171,8 +171,9 @@ class TestSQLiteVecStore:
         fake_sqlite = FakeSQLiteFactory()
         fake_sqlite_vec = MagicMock()
 
-        with patch("sqlite3.connect", side_effect=fake_sqlite.connect), patch.dict(
-            "sys.modules", {"sqlite_vec": fake_sqlite_vec}
+        with (
+            patch("sqlite3.connect", side_effect=fake_sqlite.connect),
+            patch.dict("sys.modules", {"sqlite_vec": fake_sqlite_vec}),
         ):
             import synapsekit.retrieval.sqlite_vec as sqlite_vec_mod
 
@@ -199,8 +200,9 @@ class TestSQLiteVecStore:
         fake_sqlite = FakeSQLiteFactory()
         fake_sqlite_vec = MagicMock()
 
-        with patch("sqlite3.connect", side_effect=fake_sqlite.connect), patch.dict(
-            "sys.modules", {"sqlite_vec": fake_sqlite_vec}
+        with (
+            patch("sqlite3.connect", side_effect=fake_sqlite.connect),
+            patch.dict("sys.modules", {"sqlite_vec": fake_sqlite_vec}),
         ):
             import synapsekit.retrieval.sqlite_vec as sqlite_vec_mod
 
@@ -224,8 +226,9 @@ class TestSQLiteVecStore:
         fake_sqlite = FakeSQLiteFactory()
         fake_sqlite_vec = MagicMock()
 
-        with patch("sqlite3.connect", side_effect=fake_sqlite.connect), patch.dict(
-            "sys.modules", {"sqlite_vec": fake_sqlite_vec}
+        with (
+            patch("sqlite3.connect", side_effect=fake_sqlite.connect),
+            patch.dict("sys.modules", {"sqlite_vec": fake_sqlite_vec}),
         ):
             import synapsekit.retrieval.sqlite_vec as sqlite_vec_mod
 
