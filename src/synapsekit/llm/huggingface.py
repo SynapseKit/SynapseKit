@@ -42,7 +42,6 @@ class HuggingFaceLLM(BaseLLM):
         self.client = AsyncInferenceClient(**kwargs)
 
     async def _generate(self, prompt: str, system: str | None = None, **kwargs: Any) -> str:
-
         params = {
             "max_new_tokens": kwargs.get("max_tokens", self.config.max_tokens or 1024),
             "temperature": kwargs.get("temperature", self.config.temperature or 0.7),
@@ -62,7 +61,6 @@ class HuggingFaceLLM(BaseLLM):
     async def stream(
         self, prompt: str, system: str | None = None, **kwargs: Any
     ) -> AsyncGenerator[str, None]:
-
         params = {
             "max_new_tokens": kwargs.get("max_tokens", self.config.max_tokens or 1024),
             "temperature": kwargs.get("temperature", self.config.temperature or 0.7),

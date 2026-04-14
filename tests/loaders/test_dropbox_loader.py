@@ -341,7 +341,12 @@ class TestDropboxLoader:
         """Dict entries (test mocks) pass through unchanged."""
         from synapsekit.loaders.dropbox import DropboxLoader
 
-        entry = {".tag": "file", "name": "a.txt", "path_display": "/a.txt", "server_modified": "2026-01-01"}
+        entry = {
+            ".tag": "file",
+            "name": "a.txt",
+            "path_display": "/a.txt",
+            "server_modified": "2026-01-01",
+        }
         result = DropboxLoader._normalise_entry(entry)
         assert result is entry
 
