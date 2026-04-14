@@ -40,6 +40,9 @@ class ParquetLoader:
         table = pq.read_table(self._path)
         rows: list[dict[str, Any]] = table.to_pylist()
 
+        if not rows:
+            return []
+
         if self._limit is not None:
             rows = rows[: self._limit]
 
@@ -62,10 +65,11 @@ class ParquetLoader:
         return await loop.run_in_executor(None, self.load)
 
     def _build_text(self, row: dict[str, Any]) -> str:
-        if self._text_fields:
-            return " ".join(
-                str(row[field])
-                for field in self._text_fields
-                if row.get(field) is not None and row.get(field) != ""
-            )
+        if self._text_fields is not None:
+            parts = []
+            for field in self._text_fields:
+                val = row.get(field)
+                if val not in (None, ""):
+                    parts.append(str(row.get(field, "")))
+            return " ".join(parts)
         return " ".join(str(v) for v in row.values() if v is not None and v != "")
