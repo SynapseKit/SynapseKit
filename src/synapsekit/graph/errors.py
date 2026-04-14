@@ -7,3 +7,7 @@ class GraphConfigError(Exception):
 
 class GraphRuntimeError(Exception):
     """Raised during graph execution for runtime failures."""
+
+
+class RecursionDepthError(GraphRuntimeError):
+    """Raised when a recursive subgraph exceeds its max_recursion_depth limit."""

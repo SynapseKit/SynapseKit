@@ -8,7 +8,7 @@ from .checkpointers import (
 from .compiled import CompiledGraph
 from .dynamic_route import dynamic_route_node
 from .edge import ConditionalEdge, ConditionFn, Edge
-from .errors import GraphConfigError, GraphRuntimeError
+from .errors import GraphConfigError, GraphRuntimeError, RecursionDepthError
 from .fan_out import fan_out_node
 from .graph import StateGraph
 from .interrupt import GraphInterrupt, InterruptState
@@ -32,6 +32,7 @@ __all__ = [
     "GraphVisualizer",
     "GraphConfigError",
     "GraphEvent",
+    "RecursionDepthError",
     "GraphInterrupt",
     "GraphRuntimeError",
     "GraphState",

@@ -4,6 +4,7 @@ from .azure_blob import AzureBlobLoader
 from .base import Document
 from .markdown import MarkdownLoader
 from .mongodb import MongoDBLoader
+from .onedrive import OneDriveLoader
 from .s3 import S3Loader
 from .text import StringLoader, TextLoader
 
@@ -12,12 +13,14 @@ __all__ = [
     "AudioLoader",
     "AzureBlobLoader",
     "CSVLoader",
+    "ConfigLoader",
     "ConfluenceLoader",
     "DirectoryLoader",
     "DiscordLoader",
     "DocxLoader",
     "Document",
     "DropboxLoader",
+    "EPUBLoader",
     "EmailLoader",
     "GCSLoader",
     "GitHubLoader",
@@ -25,13 +28,16 @@ __all__ = [
     "GoogleDriveLoader",
     "GoogleSheetsLoader",
     "HTMLLoader",
+    "LaTeXLoader",
     "JSONLoader",
     "JiraLoader",
     "MarkdownLoader",
     "MongoDBLoader",
     "NotionLoader",
+    "OneDriveLoader",
     "PDFLoader",
     "RSSLoader",
+    "RTFLoader",
     "S3Loader",
     "SQLLoader",
     "SlackLoader",
@@ -39,6 +45,7 @@ __all__ = [
     "SupabaseLoader",
     "TeamsLoader",
     "TextLoader",
+    "TSVLoader",
     "VideoLoader",
     "WebLoader",
     "WikipediaLoader",
@@ -51,7 +58,10 @@ _LOADERS = {
     "AzureBlobLoader": ".azure_blob",
     "PDFLoader": ".pdf",
     "HTMLLoader": ".html",
+    "LaTeXLoader": ".latex",
     "CSVLoader": ".csv",
+    "TSVLoader": ".tsv",
+    "ConfigLoader": ".config",
     "JSONLoader": ".json_loader",
     "DirectoryLoader": ".directory",
     "WebLoader": ".web",
@@ -70,7 +80,9 @@ _LOADERS = {
     "JiraLoader": ".jira",
     "SlackLoader": ".slack",
     "NotionLoader": ".notion",
+    "OneDriveLoader": ".onedrive",
     "RSSLoader": ".rss",
+    "RTFLoader": ".rtf",
     "S3Loader": ".s3",
     "SQLLoader": ".sql",
     "SupabaseLoader": ".supabase",
@@ -79,6 +91,7 @@ _LOADERS = {
     "ConfluenceLoader": ".confluence",
     "MongoDBLoader": ".mongodb",
     "DropboxLoader": ".dropbox",
+    "EPUBLoader": ".epub",
 }
 
 
