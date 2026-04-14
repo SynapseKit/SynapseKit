@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from datetime import datetime, timezone
+from typing import Any
 
 from ..base import BaseMemoryBackend, MemoryRecord, MemoryType
 
@@ -11,7 +12,7 @@ class PostgresMemoryBackend(BaseMemoryBackend):
 
     def __init__(self, dsn: str) -> None:
         self._dsn = dsn
-        self._pool = None
+        self._pool: Any | None = None
 
     async def _ensure_pool(self):
         if self._pool is not None:
@@ -22,6 +23,7 @@ class PostgresMemoryBackend(BaseMemoryBackend):
             raise ImportError("asyncpg required: pip install asyncpg") from None
 
         self._pool = await asyncpg.create_pool(self._dsn)
+        assert self._pool is not None
         async with self._pool.acquire() as conn:
             await conn.execute(
                 """
@@ -154,7 +156,7 @@ class PostgresMemoryBackend(BaseMemoryBackend):
                 agent_id,
                 record_id,
             )
-        return result.endswith("1")
+        return str(result).endswith("1")
 
     async def clear(self, agent_id: str, memory_type: MemoryType | None = None) -> int:
         pool = await self._ensure_pool()

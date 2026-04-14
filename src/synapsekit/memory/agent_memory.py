@@ -212,8 +212,9 @@ class AgentMemory:
             )
             try:
                 summary = await self._llm.generate(prompt)
-                if summary and summary.strip():
-                    return summary.strip()
+                summary_text = str(summary).strip()
+                if summary_text:
+                    return summary_text
             except Exception:
                 pass
 
