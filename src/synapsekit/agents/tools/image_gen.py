@@ -17,8 +17,10 @@ class ImageGenerationTool:
                 quality=quality
             )
             return result.data[0].url
-        except Exception as e:
+        except Exception as e:   
+            
             return str(e)
+        
         
         
         
