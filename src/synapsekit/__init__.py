@@ -292,6 +292,7 @@ __all__ = [
     "WriterLLM",
     "ZhipuLLM",
     "LMStudioLLM",
+    "VLLMLLM",
     # Embeddings
     "SynapsekitEmbeddings",
     # Vector stores
@@ -612,6 +613,7 @@ _LAZY_IMPORTS = {
     "WriterLLM": "llm.writer",
     "ZhipuLLM": "llm.zhipu",
     "LMStudioLLM": "llm.lmstudio",
+    "VLLMLLM": "llm.vllm",
     "CloudflareLLM": "llm.cloudflare",
     # Checkpointers
     "RedisCheckpointer": "graph.checkpointers.redis",

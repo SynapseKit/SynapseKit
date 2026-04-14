@@ -57,6 +57,7 @@ milvus = ["pymilvus>=2.4"]
 lancedb = ["lancedb>=0.5"]
 ollama = ["ollama>=0.2"]
 lmstudio = ["openai>=1.0"]
+vllm = ["openai>=1.0"]
 ai21 = ["ai21>=2.0"]
 cohere = ["cohere>=5.0"]
 mistral = ["mistralai>=1.0"]
@@ -247,6 +248,7 @@ module = [
     "synapsekit.llm.perplexity",
     "synapsekit.llm.cerebras",
     "synapsekit.llm.vertex_ai",
+    "synapsekit.llm.vllm",
     "synapsekit.loaders.excel",
     "synapsekit.loaders.pptx",
     "synapsekit.loaders.dropbox",
