@@ -27,4 +27,3 @@ class ImageGenerationTool:
             return result.data[0].url
         except Exception as e:
             return str(e)
-
