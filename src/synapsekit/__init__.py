@@ -359,6 +359,7 @@ __all__ = [
     "DirectoryLoader",
     "DropboxLoader",
     "EPUBLoader",
+    "ElasticsearchLoader",
     "ConfluenceLoader",
     "DocxLoader",
     "EmailLoader",
@@ -636,6 +637,7 @@ _LAZY_IMPORTS = {
     "DropboxLoader": "loaders.dropbox",
     "ParquetLoader": "loaders.parquet",
     "RedisLoader": "loaders.redis_loader",
+    "ElasticsearchLoader": "loaders.elasticsearch",
 }
 
 

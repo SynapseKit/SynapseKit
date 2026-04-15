@@ -1557,6 +1557,36 @@ wheels = [
 ]
 
 [[package]]
+name = "elastic-transport"
+version = "9.2.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "certifi" },
+    { name = "sniffio" },
+    { name = "urllib3" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/23/0a/a92140b666afdcb9862a16e4d80873b3c887c1b7e3f17e945fc3460edf1b/elastic_transport-9.2.1.tar.gz", hash = "sha256:97d9abd638ba8aa90faa4ca1bf1a18bde0fe2088fbc8757f2eb7b299f205773d", size = 77403, upload-time = "2025-12-23T11:54:12.849Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2c/e6/a42b600ae8b808371f740381f6c32050cad93f870d36cc697b8b7006bf7c/elastic_transport-9.2.1-py3-none-any.whl", hash = "sha256:39e1a25e486af34ce7aa1bc9005d1c736f1b6fb04c9b64ea0604ded5a61fc1d4", size = 65327, upload-time = "2025-12-23T11:54:11.681Z" },
+]
+
+[[package]]
+name = "elasticsearch"
+version = "9.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anyio" },
+    { name = "elastic-transport" },
+    { name = "python-dateutil" },
+    { name = "sniffio" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/0d/15/283459c9299d412ffa2aaab69b082857631c519233f5491d6c567e3320ca/elasticsearch-9.3.0.tar.gz", hash = "sha256:f76e149c0a22d5ccbba58bdc30c9f51cf894231b359ef4fd7e839b558b59f856", size = 893538, upload-time = "2026-02-03T20:26:38.914Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/05/37/3a196f8918743f2104cb66b1f56218079ecac6e128c061de7df7f4faef02/elasticsearch-9.3.0-py3-none-any.whl", hash = "sha256:67bd2bb4f0800f58c2847d29cd57d6e7bf5bc273483b4f17421f93e75ba09f39", size = 979405, upload-time = "2026-02-03T20:26:34.552Z" },
+]
+
+[[package]]
 name = "erniebot"
 version = "0.5.9"
 source = { registry = "https://pypi.org/simple" }
@@ -7580,6 +7610,7 @@ all = [
     { name = "cohere" },
     { name = "discord-py" },
     { name = "duckduckgo-search" },
+    { name = "elasticsearch" },
     { name = "erniebot" },
     { name = "faiss-cpu" },
     { name = "fastapi" },
@@ -7664,6 +7695,9 @@ dropbox = [
 ]
 dynamodb = [
     { name = "boto3" },
+]
+elasticsearch = [
+    { name = "elasticsearch" },
 ]
 epub = [
     { name = "ebooklib" },
@@ -7886,6 +7920,8 @@ requires-dist = [
     { name = "duckduckgo-search", marker = "extra == 'all'", specifier = ">=6.0" },
     { name = "duckduckgo-search", marker = "extra == 'search'", specifier = ">=6.0" },
     { name = "ebooklib", marker = "extra == 'epub'", specifier = ">=0.18" },
+    { name = "elasticsearch", marker = "extra == 'all'", specifier = ">=8.0" },
+    { name = "elasticsearch", marker = "extra == 'elasticsearch'", specifier = ">=8.0" },
     { name = "erniebot", marker = "extra == 'all'", specifier = ">=0.5" },
     { name = "erniebot", marker = "extra == 'ernie'", specifier = ">=0.5" },
     { name = "faiss-cpu", marker = "extra == 'all'", specifier = ">=1.7" },
@@ -7985,7 +8021,11 @@ requires-dist = [
     { name = "youtube-search-python", marker = "extra == 'all'", specifier = ">=1.6" },
     { name = "youtube-search-python", marker = "extra == 'youtube'", specifier = ">=1.6" },
 ]
+<<<<<<< HEAD
 provides-extras = ["openai", "anthropic", "semantic", "colbert", "pdf", "wikipedia", "arxiv", "html", "web", "chroma", "faiss", "qdrant", "pinecone", "weaviate", "milvus", "lancedb", "ollama", "lmstudio", "ai21", "cohere", "mistral", "gemini", "bedrock", "gcal-tool", "aws-lambda", "rss", "groq", "audio", "video", "excel", "pptx", "docx", "yaml", "teams", "http", "search", "huggingface", "google-search", "tavily", "youtube", "mcp", "redis", "memcached", "vertex", "cloudflare", "aleph-alpha", "llamacpp", "ernie", "minimax", "serve", "postgres", "pgvector", "wolfram", "dynamodb", "discord", "gcs", "gdrive", "git", "gsheets", "jira", "sql", "mongodb", "azure", "s3", "onedrive", "slack", "supabase", "notion", "confluence", "dropbox", "rtf", "epub", "parquet", "all"]
+=======
+provides-extras = ["openai", "anthropic", "semantic", "colbert", "pdf", "wikipedia", "arxiv", "html", "web", "chroma", "faiss", "qdrant", "pinecone", "weaviate", "milvus", "lancedb", "ollama", "lmstudio", "ai21", "cohere", "mistral", "gemini", "bedrock", "gcal-tool", "aws-lambda", "rss", "groq", "audio", "video", "excel", "pptx", "docx", "yaml", "teams", "http", "search", "huggingface", "google-search", "tavily", "youtube", "mcp", "redis", "memcached", "vertex", "cloudflare", "aleph-alpha", "llamacpp", "ernie", "minimax", "serve", "postgres", "pgvector", "wolfram", "dynamodb", "discord", "gcs", "gdrive", "git", "gsheets", "jira", "sql", "mongodb", "azure", "s3", "onedrive", "slack", "supabase", "notion", "confluence", "dropbox", "rtf", "epub", "elasticsearch", "all"]
+>>>>>>> Abhay-Mmmm/feat/elastic-loader
 
 [package.metadata.requires-dev]
 dev = [
