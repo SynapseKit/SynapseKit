@@ -14,7 +14,6 @@ from synapsekit import CalculatorTool, DateTimeTool, FunctionCallingAgent, ReAct
 from synapsekit.agents.base import BaseTool, ToolResult
 from synapsekit.llm.base import BaseLLM, LLMConfig
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -132,8 +131,9 @@ def test_react_agent_stream_is_async_generator():
 @pytest.mark.asyncio
 async def test_function_calling_agent_unsupported_llm_raises():
     """BaseLLM without _call_with_tools_impl override raises RuntimeError."""
-    from synapsekit.llm.base import BaseLLM, LLMConfig
     from collections.abc import AsyncGenerator
+
+    from synapsekit.llm.base import BaseLLM, LLMConfig
 
     # Create a concrete subclass that does NOT override _call_with_tools_impl
     class MinimalLLM(BaseLLM):

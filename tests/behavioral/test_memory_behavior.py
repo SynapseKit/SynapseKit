@@ -12,7 +12,6 @@ import pytest
 
 from synapsekit.memory.conversation import ConversationMemory
 
-
 # ---------------------------------------------------------------------------
 # ConversationMemory
 # ---------------------------------------------------------------------------

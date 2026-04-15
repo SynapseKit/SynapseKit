@@ -8,8 +8,6 @@ import pytest
 
 from synapsekit import StateGraph
 from synapsekit.graph.errors import GraphConfigError
-from synapsekit.graph.state import END
-
 
 # ---------------------------------------------------------------------------
 # Helpers

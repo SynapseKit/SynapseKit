@@ -12,7 +12,6 @@ import pytest
 from synapsekit import RAG
 from synapsekit.loaders import Document, StringLoader
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

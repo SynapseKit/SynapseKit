@@ -14,8 +14,7 @@ from __future__ import annotations
 import importlib
 import inspect
 import re
-from unittest.mock import MagicMock, patch
-
+from unittest.mock import patch
 
 # ---------------------------------------------------------------------------
 # 1. Package version
@@ -32,6 +31,7 @@ def test_version_is_valid_semver():
 def test_version_matches_pyproject():
     """Version in __init__ matches pyproject.toml."""
     import pathlib
+
     import synapsekit
 
     try:
@@ -349,6 +349,7 @@ def test_public_api_decorator_adds_marker():
 
 def test_experimental_decorator_fires_warning():
     import warnings
+
     from synapsekit import experimental
 
     @experimental
@@ -364,6 +365,7 @@ def test_experimental_decorator_fires_warning():
 
 def test_deprecated_decorator_fires_deprecation_warning():
     import warnings
+
     from synapsekit import deprecated
 
     @deprecated("use new_fn instead")
