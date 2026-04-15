@@ -7,6 +7,27 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- **`GPT4AllLLM`** — local model provider via GPT4All's Python bindings; loads GGUF models locally with no API key; streaming via callback shim (blocking `generate()` wrapped in `run_in_executor` for async safety); `pip install synapsekit[gpt4all]`; closes #548
+- **`VLLMLlm`** — high-throughput local/self-hosted inference via vLLM's OpenAI-compatible API; reuses `AsyncOpenAI` client with custom `base_url`; supports streaming, tool calling, and temperature/max-token overrides; `pip install synapsekit[vllm]`; closes #547
+- **`SQLiteVecStore`** — zero-infra vector store backed by `sqlite-vec`; stores and retrieves embeddings in a local SQLite file; drop-in replacement for `InMemoryVectorStore` when persistence across sessions is needed; `pip install synapsekit[sqlite-vec]`; closes #545
+- **`ParquetLoader`** — load Parquet files as Documents; configurable `text_column` for body text; remaining columns become metadata; supports local files and URLs via `pandas.read_parquet`; one Document per row; async `aload()` via executor; `pip install synapsekit[parquet]`; closes #546
+- **`RedisLoader`** — load key/value pairs from a Redis database as Documents; supports string, hash, and JSON value types (via `json.loads`); key pattern filtering via `scan_iter`; metadata includes key and value type; `pip install synapsekit[redis]`; closes #544
+- **`ElasticsearchLoader`** — load documents from an Elasticsearch index as Documents; supports both `search` (query DSL) and full `scan` modes; configurable `text_field` and `metadata_fields`; async `aload()` via executor; `pip install synapsekit[elasticsearch]`; closes #543
+- **`DynamoDBLoader`** — load items from an AWS DynamoDB table as Documents; supports `scan` (full table) and `query` (key condition) modes with automatic pagination; `text_fields` concatenated as body text; remaining fields become metadata; deserialises typed DynamoDB attribute values; `pip install synapsekit[dynamodb]`; closes #540
+- **Production-grade test suite** — four new test categories added; `tests/preflight/` (35 smoke tests: version, imports, async contracts), `tests/e2e/` (RAG, Graph, Agent full-pipeline tests with mocked LLMs), `tests/behavioral/` (Memory, Tracer, Pipeline edge-case tests), `tests/api/` (FastAPI endpoint tests, MCP server handler tests); all tests run with zero API calls and zero network dependencies
+
+### Fixed
+
+- **Stream disconnect race condition** — fixed a race condition where a client disconnect during streaming would raise an unhandled exception instead of cleanly terminating the generator; closes #554
+- **Summary buffer memory corruption** — fixed a bug where the summary buffer was being mutated before the summarisation LLM call completed, causing stale or partial summaries under concurrent usage; closes #552
+- **`__version__` stale in `__init__.py`**  — `src/synapsekit/__init__.py` was hardcoded to `1.3.0` while `pyproject.toml` was `1.5.5`; now reads dynamically or is kept in sync; caught by the new preflight `test_version_matches_pyproject` test
+
+---
+
 ## [1.5.5] — 2026-04-13
 
 ### Added
