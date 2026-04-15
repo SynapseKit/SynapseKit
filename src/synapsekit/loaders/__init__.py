@@ -39,6 +39,7 @@ __all__ = [
     "ParquetLoader",
     "RSSLoader",
     "RTFLoader",
+    "RedisLoader",
     "S3Loader",
     "SQLLoader",
     "SlackLoader",
@@ -94,6 +95,7 @@ _LOADERS = {
     "DropboxLoader": ".dropbox",
     "EPUBLoader": ".epub",
     "ParquetLoader": ".parquet",
+    "RedisLoader": ".redis_loader",
 }
 
 

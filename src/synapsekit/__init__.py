@@ -377,6 +377,7 @@ __all__ = [
     "WebLoader",
     "RSSLoader",
     "RTFLoader",
+    "RedisLoader",
     "S3Loader",
     "WikipediaLoader",
     "ExcelLoader",
@@ -634,6 +635,7 @@ _LAZY_IMPORTS = {
     "S3Loader": "loaders.s3",
     "DropboxLoader": "loaders.dropbox",
     "ParquetLoader": "loaders.parquet",
+    "RedisLoader": "loaders.redis_loader",
 }
 
 
