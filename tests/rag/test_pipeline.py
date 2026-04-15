@@ -91,6 +91,80 @@ class TestRAGPipeline:
         assert len(tokens) > 0  # LLM still responds
 
     @pytest.mark.asyncio
+    async def test_stream_commits_memory_on_consumer_disconnect(self, pipeline):
+        """Consumer breaks after 1 token and explicitly closes the generator —
+        simulates a streaming-HTTP client disconnect, which causes the ASGI
+        server (starlette/anyio) to call aclose() on the response generator.
+        Memory must still reflect the query and the partial answer the
+        consumer saw. Fails before the fix."""
+        seen = []
+        gen = pipeline.stream("Partial question?")
+        try:
+            async for token in gen:
+                seen.append(token)
+                break  # simulate consumer stopping iteration
+        finally:
+            await gen.aclose()  # simulate ASGI-level disconnect cleanup
+
+        assert seen == ["Hello"]
+        messages = pipeline.config.memory.get_messages()
+        contents = [m["content"] for m in messages]
+        assert "Partial question?" in contents
+        assert "Hello" in contents  # partial answer preserved
+
+    @pytest.mark.asyncio
+    async def test_stream_no_memory_commit_on_pre_stream_failure(self):
+        """If the LLM fails before yielding any token, memory should not
+        record a ghost turn with an empty assistant response."""
+        llm = MagicMock()
+        llm.tokens_used = {"input": 0, "output": 0}
+
+        async def failing_stream(messages, **kw):
+            raise RuntimeError("auth error")
+            yield  # unreachable; marks this as an async generator
+
+        llm.stream_with_messages = failing_stream
+
+        retriever = make_mock_retriever()
+        memory = ConversationMemory()
+        pipeline = RAGPipeline(RAGConfig(llm=llm, retriever=retriever, memory=memory))
+
+        with pytest.raises(RuntimeError, match="auth error"):
+            async for _ in pipeline.stream("Never streams."):
+                pass
+
+        assert len(memory) == 0, "No memory should be recorded when no tokens were emitted"
+
+    @pytest.mark.asyncio
+    async def test_stream_commits_partial_answer_on_mid_stream_llm_failure(self):
+        """If the LLM yields some tokens then raises mid-stream (e.g. transient
+        network error), memory must capture the partial answer the consumer
+        already saw, not silently drop it."""
+        llm = MagicMock()
+        llm.tokens_used = {"input": 10, "output": 5}
+
+        async def partial_failure_stream(messages, **kw):
+            yield "Partial "
+            yield "answer"
+            raise RuntimeError("connection reset")
+
+        llm.stream_with_messages = partial_failure_stream
+
+        retriever = make_mock_retriever()
+        memory = ConversationMemory()
+        pipeline = RAGPipeline(RAGConfig(llm=llm, retriever=retriever, memory=memory))
+
+        seen = []
+        with pytest.raises(RuntimeError, match="connection reset"):
+            async for token in pipeline.stream("Mid-stream failure?"):
+                seen.append(token)
+
+        assert seen == ["Partial ", "answer"]
+        contents = [m["content"] for m in memory.get_messages()]
+        assert "Mid-stream failure?" in contents
+        assert "Partial answer" in contents  # partial answer preserved despite LLM error
+
+    @pytest.mark.asyncio
     async def test_add_chunks_text(self):
         llm = make_mock_llm()
         retriever = make_mock_retriever()

@@ -102,21 +102,30 @@ class RAGPipeline:
         t0 = tracer.start_timer() if tracer else 0.0
 
         answer_parts: list[str] = []
-        async for token in self.config.llm.stream_with_messages(messages):
-            answer_parts.append(token)
-            yield token
+        try:
+            async for token in self.config.llm.stream_with_messages(messages):
+                answer_parts.append(token)
+                yield token
+        finally:
+            # Commit the turn to memory + tracer only if at least one token
+            # was delivered to the consumer. This preserves the user query
+            # and partial answer when the consumer disconnects early (client
+            # HTTP drop, upstream exception, explicit break) — the finally
+            # runs even when GeneratorExit is raised at the yield point.
+            # The answer_parts guard prevents recording a "ghost turn" when
+            # the LLM call failed before streaming began.
+            if answer_parts:
+                answer = "".join(answer_parts)
+                self.config.memory.add("user", query)
+                self.config.memory.add("assistant", answer)
 
-        answer = "".join(answer_parts)
-        self.config.memory.add("user", query)
-        self.config.memory.add("assistant", answer)
-
-        if tracer:
-            used = self.config.llm.tokens_used
-            tracer.record(
-                input_tokens=used["input"],
-                output_tokens=used["output"],
-                latency_ms=tracer.elapsed_ms(t0),
-            )
+                if tracer:
+                    used = self.config.llm.tokens_used
+                    tracer.record(
+                        input_tokens=used["input"],
+                        output_tokens=used["output"],
+                        latency_ms=tracer.elapsed_ms(t0),
+                    )
 
     async def ask(self, query: str, top_k: int | None = None) -> str:
         return "".join([t async for t in self.stream(query, top_k=top_k)])
