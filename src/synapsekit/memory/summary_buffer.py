@@ -67,7 +67,6 @@ class SummaryBufferMemory:
         while self._buffer_tokens() > self._max_tokens and len(self._messages) > 2:
             # Take the oldest pair of messages to summarize
             to_summarize = self._messages[:2]
-            self._messages = self._messages[2:]
 
             conversation = "\n".join(
                 f"{m['role'].capitalize()}: {m['content']}" for m in to_summarize
@@ -81,7 +80,13 @@ class SummaryBufferMemory:
                 )
             else:
                 prompt = f"Summarize this conversation exchange concisely:\n\n{conversation}"
-            self._summary = await self._llm.generate(prompt)
+
+            # Await the LLM first; only mutate state after the summary is
+            # successfully computed. If generate() raises, self._summary and
+            # self._messages are left untouched so the caller can retry.
+            new_summary = await self._llm.generate(prompt)
+            self._summary = new_summary
+            self._messages = self._messages[2:]
 
         result = []
         if self._summary:

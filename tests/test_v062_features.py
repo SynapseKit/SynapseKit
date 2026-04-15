@@ -462,6 +462,32 @@ def test_summary_buffer_clear():
     assert mem.summary == ""
 
 
+@pytest.mark.asyncio
+async def test_summary_buffer_preserves_history_on_summarizer_failure():
+    """If the summarizer LLM fails, messages must not be silently dropped."""
+    from synapsekit import SummaryBufferMemory
+
+    mock_llm = AsyncMock()
+    mock_llm.generate = AsyncMock(side_effect=RuntimeError("rate limit"))
+
+    mem = SummaryBufferMemory(llm=mock_llm, max_tokens=100, chars_per_token=1)
+    # Fill the buffer above max_tokens so summarization triggers
+    for i in range(20):
+        mem.add("user", f"This is a longer message number {i} with some content")
+        mem.add("assistant", f"This is a reply to message number {i}")
+
+    initial_len = len(mem)
+
+    with pytest.raises(RuntimeError, match="rate limit"):
+        await mem.get_messages()
+
+    # Invariant: on LLM failure, message buffer is unchanged AND summary is unchanged
+    assert len(mem) == initial_len, (
+        f"Messages were silently dropped on LLM failure: {initial_len} -> {len(mem)}"
+    )
+    assert mem.summary == "", "Summary should remain empty when summarizer failed"
+
+
 # ------------------------------------------------------------------ #
 # Human Input Tool
 # ------------------------------------------------------------------ #
