@@ -159,6 +159,7 @@ from .loaders.config import ConfigLoader
 from .loaders.confluence import ConfluenceLoader
 from .loaders.csv import CSVLoader
 from .loaders.directory import DirectoryLoader
+from .loaders.dynamodb import DynamoDBLoader
 from .loaders.email import EmailLoader
 from .loaders.epub import EPUBLoader
 from .loaders.gcs import GCSLoader
@@ -371,6 +372,7 @@ __all__ = [
     "LaTeXLoader",
     "MarkdownLoader",
     "MongoDBLoader",
+    "DynamoDBLoader",
     "OneDriveLoader",
     "SQLLoader",
     "SupabaseLoader",
