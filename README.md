@@ -48,7 +48,7 @@ Token-level streaming is the default,<br/>not an afterthought.<br/>Works across 
 <tr>
 <td align="center" width="33%">
 <h3>🔌 One interface</h3>
-31 LLM providers and 9 vector stores<br/>behind the same API.<br/>Swap without rewriting.
+33 LLM providers and 10 vector stores<br/>behind the same API.<br/>Swap without rewriting.
 </td>
 <td align="center" width="33%">
 <h3>🧩 Composable</h3>
@@ -77,7 +77,7 @@ No hidden chains.<br/>Every step is plain Python<br/>you can read and override.
 | Cost tracking | **✅ Built-in** | ❌ LangSmith (SaaS) | ❌ No |
 | Evaluation | **✅ CLI + GitHub Action** | ❌ LangSmith (SaaS) | ✅ Built-in |
 | Graph workflows | **✅ Built-in** | ✅ LangGraph (separate pkg) | ❌ No |
-| LLM providers | **31** | 38+ | 20+ |
+| LLM providers | **33** | 38+ | 20+ |
 | Stack traces | **Your code** | Framework internals | Framework internals |
 
 </div>
