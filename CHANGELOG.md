@@ -7,7 +7,7 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
-## [Unreleased]
+## [1.5.6] — 2026-04-16
 
 ### Added
 
