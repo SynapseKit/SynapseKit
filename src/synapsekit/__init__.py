@@ -178,6 +178,7 @@ from .loaders.pdf import PDFLoader
 from .loaders.rss import RSSLoader
 from .loaders.rtf import RTFLoader
 from .loaders.s3 import S3Loader
+from .loaders.salesforce import SalesforceLoader
 from .loaders.sql import SQLLoader
 from .loaders.teams import TeamsLoader
 from .loaders.text import StringLoader, TextLoader
@@ -385,6 +386,7 @@ __all__ = [
     "RTFLoader",
     "RedisLoader",
     "S3Loader",
+    "SalesforceLoader",
     "WikipediaLoader",
     "ExcelLoader",
     "PowerPointLoader",
@@ -642,6 +644,7 @@ _LAZY_IMPORTS = {
     "OneDriveLoader": "loaders.onedrive",
     "AzureBlobLoader": "loaders.azure_blob",
     "S3Loader": "loaders.s3",
+    "SalesforceLoader": "loaders.salesforce",
     "DropboxLoader": "loaders.dropbox",
     "ParquetLoader": "loaders.parquet",
     "RedisLoader": "loaders.redis_loader",

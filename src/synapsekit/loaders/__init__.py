@@ -6,6 +6,7 @@ from .markdown import MarkdownLoader
 from .mongodb import MongoDBLoader
 from .onedrive import OneDriveLoader
 from .s3 import S3Loader
+from .salesforce import SalesforceLoader
 from .text import StringLoader, TextLoader
 
 __all__ = [
@@ -43,6 +44,7 @@ __all__ = [
     "RTFLoader",
     "RedisLoader",
     "S3Loader",
+    "SalesforceLoader",
     "SQLLoader",
     "SlackLoader",
     "StringLoader",
@@ -88,6 +90,7 @@ _LOADERS = {
     "RSSLoader": ".rss",
     "RTFLoader": ".rtf",
     "S3Loader": ".s3",
+    "SalesforceLoader": ".salesforce",
     "SQLLoader": ".sql",
     "SupabaseLoader": ".supabase",
     "TeamsLoader": ".teams",
