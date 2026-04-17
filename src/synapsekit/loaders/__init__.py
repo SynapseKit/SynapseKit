@@ -2,6 +2,7 @@ from typing import Any
 
 from .azure_blob import AzureBlobLoader
 from .base import Document
+from .bigquery import BigQueryLoader
 from .markdown import MarkdownLoader
 from .mongodb import MongoDBLoader
 from .onedrive import OneDriveLoader

@@ -155,6 +155,7 @@ from .llm.structured import generate_structured
 from .loaders.arxiv import ArXivLoader
 from .loaders.azure_blob import AzureBlobLoader
 from .loaders.base import Document
+from .loaders.bigquery import BigQueryLoader
 from .loaders.config import ConfigLoader
 from .loaders.confluence import ConfluenceLoader
 from .loaders.csv import CSVLoader
