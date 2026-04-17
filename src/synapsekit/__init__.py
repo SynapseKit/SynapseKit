@@ -385,6 +385,7 @@ __all__ = [
     "RTFLoader",
     "RedisLoader",
     "S3Loader",
+    "SitemapLoader",
     "WikipediaLoader",
     "ExcelLoader",
     "PowerPointLoader",
@@ -646,6 +647,7 @@ _LAZY_IMPORTS = {
     "ParquetLoader": "loaders.parquet",
     "RedisLoader": "loaders.redis_loader",
     "ElasticsearchLoader": "loaders.elasticsearch",
+    "SitemapLoader": "loaders.sitemap",
 }
 
 

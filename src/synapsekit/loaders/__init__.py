@@ -43,6 +43,7 @@ __all__ = [
     "RTFLoader",
     "RedisLoader",
     "S3Loader",
+    "SitemapLoader",
     "SQLLoader",
     "SlackLoader",
     "StringLoader",
@@ -100,6 +101,7 @@ _LOADERS = {
     "ParquetLoader": ".parquet",
     "RedisLoader": ".redis_loader",
     "ElasticsearchLoader": ".elasticsearch",
+    "SitemapLoader": ".sitemap",
 }
 
 
