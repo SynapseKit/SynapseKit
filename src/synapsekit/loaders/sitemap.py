@@ -85,9 +85,7 @@ class SitemapLoader:
             raise ValueError("url must be provided")
         parsed = urlparse(url)
         if parsed.scheme not in ("http", "https"):
-            raise ValueError(
-                f"URL scheme {parsed.scheme!r} is not allowed; use http or https."
-            )
+            raise ValueError(f"URL scheme {parsed.scheme!r} is not allowed; use http or https.")
 
         self._url = url
         self._limit = limit
@@ -107,11 +105,7 @@ class SitemapLoader:
         url_entries = await self._collect_urls(httpx)
 
         if self._filter_urls:
-            url_entries = [
-                e
-                for e in url_entries
-                if any(f in e["loc"] for f in self._filter_urls)
-            ]
+            url_entries = [e for e in url_entries if any(f in e["loc"] for f in self._filter_urls)]
 
         if self._limit is not None:
             url_entries = url_entries[: self._limit]
