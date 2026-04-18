@@ -55,6 +55,7 @@ __all__ = [
     "WikipediaLoader",
     "XMLLoader",
     "YAMLLoader",
+    "YouTubeLoader",
 ]
 
 _LOADERS = {
@@ -100,6 +101,7 @@ _LOADERS = {
     "ParquetLoader": ".parquet",
     "RedisLoader": ".redis_loader",
     "ElasticsearchLoader": ".elasticsearch",
+    "YouTubeLoader": ".youtube",
 }
 
 
