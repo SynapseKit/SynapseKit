@@ -22,6 +22,7 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **`HubSpotLoader`** — load HubSpot CRM contacts, deals, and tickets via `hubspot-api-client`; configurable `text_fields` and `metadata_fields`; `pip install synapsekit[hubspot]`; closes #88
 - **`SalesforceLoader`** — load Salesforce records via SOQL query using `simple_salesforce`; configurable field mappings; `pip install synapsekit[salesforce]`; closes #89
 - **`BigQueryLoader`** — load BigQuery table rows or query results via `google-cloud-bigquery`; supports both `table` (full scan) and `query` modes; `pip install synapsekit[bigquery]`; closes #91
+- **Subgraph checkpoint scoping** — each subgraph execution gets its own scoped checkpoint ID (`parent::name::step`); failed subgraphs can be resumed independently without restarting the parent graph; `subgraph_node()` gains optional `name` parameter (default `"subgraph"`); new `CompiledGraph.resume_subgraph()` convenience method; works with all checkpointer backends (InMemory, SQLite, JSON, Redis, Postgres); closes #252
 
 ---
 
