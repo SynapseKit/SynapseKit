@@ -19,6 +19,13 @@ if TYPE_CHECKING:
 _MAX_STEPS = 100
 _CHECKPOINT_VERSION_KEY = "__synapsekit_graph_version"
 
+# Transient keys injected into state during execution so that subgraph nodes
+# can read the parent's checkpointer / graph_id / step and forward them.
+# These are stripped before checkpointing and before returning final state.
+_CHECKPOINTER_KEY = "__checkpointer__"
+_GRAPH_ID_KEY = "__graph_id__"
+_STEP_KEY = "__step__"
+
 
 class CompiledGraph:
     """
@@ -65,6 +72,9 @@ class CompiledGraph:
             state, checkpointer=checkpointer, graph_id=graph_id, hooks=hooks
         ):
             pass
+        # Strip transient context keys before returning to the caller.
+        for k in (_CHECKPOINTER_KEY, _GRAPH_ID_KEY, _STEP_KEY):
+            state.pop(k, None)
         return state
 
     async def stream(
@@ -114,6 +124,26 @@ class CompiledGraph:
         if updates:
             state.update(updates)
         return await self.run(state, checkpointer=checkpointer, graph_id=graph_id)
+
+    async def resume_subgraph(
+        self,
+        parent_graph_id: str,
+        subgraph_name: str,
+        step: int,
+        checkpointer: BaseCheckpointer,
+        updates: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Resume a subgraph from its independently checkpointed state.
+
+        Args:
+            parent_graph_id: The graph_id of the parent execution.
+            subgraph_name: The name given to the subgraph node.
+            step: The parent step at which the subgraph ran.
+            checkpointer: The checkpointer holding the saved state.
+            updates: Optional state updates before resuming.
+        """
+        scoped_id = f"{parent_graph_id}::{subgraph_name}::{step}"
+        return await self.resume(scoped_id, checkpointer, updates=updates)
 
     async def _apply_migration_chain(
         self,
@@ -257,6 +287,13 @@ class CompiledGraph:
                 )
             steps += 1
 
+            # Inject transient checkpoint context so subgraph nodes can
+            # forward the checkpointer into their own graph.run() calls.
+            if checkpointer is not None and graph_id is not None:
+                state[_CHECKPOINTER_KEY] = checkpointer
+                state[_GRAPH_ID_KEY] = graph_id
+                state[_STEP_KEY] = steps
+
             # Emit wave_start event
             if hooks is not None:
                 await hooks.emit(
@@ -316,6 +353,9 @@ class CompiledGraph:
 
     def _checkpoint_state(self, state: dict[str, Any]) -> dict[str, Any]:
         payload = dict(state)
+        # Strip transient runtime-only context before persisting.
+        for k in (_CHECKPOINTER_KEY, _GRAPH_ID_KEY, _STEP_KEY):
+            payload.pop(k, None)
         payload[_CHECKPOINT_VERSION_KEY] = self._graph.version
         return payload
 

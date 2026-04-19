@@ -20,6 +20,7 @@ def subgraph_node(
     input_mapping: dict[str, str] | None = None,
     output_mapping: dict[str, str] | None = None,
     *,
+    name: str = "subgraph",
     on_error: Literal["raise", "retry", "fallback", "skip"] = "raise",
     max_retries: int = 3,
     fallback: Any | None = None,
@@ -52,6 +53,9 @@ def subgraph_node(
             before a :class:`RecursionDepthError` is raised.  Defaults to
             ``10``.  Must be >= 1.  Only meaningful when the graph calls itself
             recursively; has no effect on non-recursive subgraph usage.
+        name: Logical name for this subgraph node, used to derive a scoped
+            ``graph_id`` when the parent graph has a checkpointer attached.
+            Defaults to ``"subgraph"``.
 
     The parent state will contain ``"__subgraph_error__"`` after a handled
     failure (``"retry"`` exhausted, ``"fallback"`` used, or ``"skip"``), set to
@@ -119,8 +123,14 @@ def subgraph_node(
         return dict(state)
 
     def _map_output(result: dict[str, Any]) -> dict[str, Any]:
-        # Always strip the internal depth key before surfacing to the parent.
+        # Always strip internal keys before surfacing to the parent.
         result.pop(_RECURSION_DEPTH_KEY, None)
+        # Strip transient checkpoint context keys injected by the parent
+        # execution engine (see compiled.py) so they never leak upstream.
+        from .compiled import _CHECKPOINTER_KEY, _GRAPH_ID_KEY, _STEP_KEY
+
+        for _k in (_CHECKPOINTER_KEY, _GRAPH_ID_KEY, _STEP_KEY):
+            result.pop(_k, None)
         if out_map:
             return {parent_key: result[sub_key] for sub_key, parent_key in out_map.items()}
         return dict(result)
@@ -138,6 +148,21 @@ def subgraph_node(
 
         graph = _get_compiled()
 
+        # ── Checkpoint context forwarding ──────────────────────────────────────
+        # If the parent graph injected checkpoint context into state, build
+        # a scoped graph_id for this subgraph and forward the checkpointer.
+        from .compiled import _CHECKPOINTER_KEY, _GRAPH_ID_KEY, _STEP_KEY
+
+        parent_checkpointer = state.get(_CHECKPOINTER_KEY)
+        parent_graph_id = state.get(_GRAPH_ID_KEY)
+        parent_step = state.get(_STEP_KEY)
+
+        cp_kwargs: dict[str, Any] = {}
+        if parent_checkpointer is not None and parent_graph_id is not None:
+            sub_graph_id = f"{parent_graph_id}::{name}::{parent_step}"
+            cp_kwargs["checkpointer"] = parent_checkpointer
+            cp_kwargs["graph_id"] = sub_graph_id
+
         # Build sub-state and inject the incremented depth counter so that
         # any nested recursive call can read and enforce the limit.
         sub_state = _build_sub_state(state)
@@ -148,7 +173,7 @@ def subgraph_node(
         # ── "raise" (fast path — no error wrapping overhead) ──────────────────
         if on_error == "raise":
             _check_depth()
-            result = await graph.run(sub_state)
+            result = await graph.run(sub_state, **cp_kwargs)
             return _map_output(result)
 
         # ── "retry" ────────────────────────────────────────────────────────────
@@ -156,7 +181,7 @@ def subgraph_node(
             _check_depth()
             for _ in range(max_retries):
                 try:
-                    result = await graph.run(sub_state)
+                    result = await graph.run(sub_state, **cp_kwargs)
                     return _map_output(result)
                 except Exception as exc:
                     last_exc = exc
@@ -171,11 +196,11 @@ def subgraph_node(
         if on_error == "fallback":
             try:
                 _check_depth()
-                result = await graph.run(sub_state)
+                result = await graph.run(sub_state, **cp_kwargs)
                 return _map_output(result)
             except Exception as exc:
                 last_exc = exc
-                fallback_result = await fallback.run(sub_state)  # type: ignore[union-attr]
+                fallback_result = await fallback.run(sub_state, **cp_kwargs)  # type: ignore[union-attr]
                 mapped = _map_output(fallback_result)
                 mapped["__subgraph_error__"] = {
                     "type": type(last_exc).__name__,
@@ -188,7 +213,7 @@ def subgraph_node(
         if on_error == "skip":
             try:
                 _check_depth()
-                result = await graph.run(sub_state)
+                result = await graph.run(sub_state, **cp_kwargs)
                 return _map_output(result)
             except Exception as exc:
                 return {
