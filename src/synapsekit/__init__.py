@@ -157,6 +157,7 @@ from .llm.structured import generate_structured
 from .loaders.arxiv import ArXivLoader
 from .loaders.azure_blob import AzureBlobLoader
 from .loaders.base import Document
+from .loaders.bigquery import BigQueryLoader
 from .loaders.config import ConfigLoader
 from .loaders.confluence import ConfluenceLoader
 from .loaders.csv import CSVLoader
@@ -360,6 +361,7 @@ __all__ = [
     "TextLoader",
     "ArXivLoader",
     "AzureBlobLoader",
+    "BigQueryLoader",
     "StringLoader",
     "PDFLoader",
     "HTMLLoader",
@@ -652,6 +654,7 @@ _LAZY_IMPORTS = {
     "MongoDBLoader": "loaders.mongodb",
     "OneDriveLoader": "loaders.onedrive",
     "AzureBlobLoader": "loaders.azure_blob",
+    "BigQueryLoader": "loaders.bigquery",
     "S3Loader": "loaders.s3",
     "SalesforceLoader": "loaders.salesforce",
     "DropboxLoader": "loaders.dropbox",

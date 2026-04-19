@@ -2,6 +2,7 @@ from typing import Any
 
 from .azure_blob import AzureBlobLoader
 from .base import Document
+from .bigquery import BigQueryLoader
 from .markdown import MarkdownLoader
 from .mongodb import MongoDBLoader
 from .onedrive import OneDriveLoader
@@ -13,6 +14,7 @@ __all__ = [
     "ArXivLoader",
     "AudioLoader",
     "AzureBlobLoader",
+    "BigQueryLoader",
     "CSVLoader",
     "ConfigLoader",
     "ConfluenceLoader",
@@ -63,6 +65,7 @@ __all__ = [
 _LOADERS = {
     "ArXivLoader": ".arxiv",
     "AzureBlobLoader": ".azure_blob",
+    "BigQueryLoader": ".bigquery",
     "PDFLoader": ".pdf",
     "HTMLLoader": ".html",
     "LaTeXLoader": ".latex",

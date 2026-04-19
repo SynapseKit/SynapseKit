@@ -148,6 +148,7 @@ LOADER_NAMES = [
     "ArXivLoader",
     "AudioLoader",
     "AzureBlobLoader",
+    "BigQueryLoader",
     "CSVLoader",
     "ConfigLoader",
     "ConfluenceLoader",
