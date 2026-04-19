@@ -60,6 +60,7 @@ __all__ = [
     "WikipediaLoader",
     "XMLLoader",
     "YAMLLoader",
+    "YouTubeLoader",
 ]
 
 _LOADERS = {
@@ -108,6 +109,7 @@ _LOADERS = {
     "RedisLoader": ".redis_loader",
     "ElasticsearchLoader": ".elasticsearch",
     "SitemapLoader": ".sitemap",
+    "YouTubeLoader": ".youtube",
 }
 
 

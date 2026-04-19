@@ -120,6 +120,7 @@ epub = ["ebooklib>=0.18"]
 parquet = ["pyarrow>=14.0"]
 elasticsearch = ["elasticsearch>=8.0"]
 browser = ["playwright>=1.40"]
+youtube_transcript = ["youtube-transcript-api>=0.6"]
 all = [
     "openai>=1.0",
     "anthropic>=0.25",

@@ -400,6 +400,8 @@ __all__ = [
     "ExcelLoader",
     "PowerPointLoader",
     "ParquetLoader",
+    "SitemapLoader",
+    "YouTubeLoader",
     # Parsers
     "JSONParser",
     "PydanticParser",
@@ -662,6 +664,7 @@ _LAZY_IMPORTS = {
     "RedisLoader": "loaders.redis_loader",
     "ElasticsearchLoader": "loaders.elasticsearch",
     "SitemapLoader": "loaders.sitemap",
+    "YouTubeLoader": "loaders.youtube",
 }
 
 
