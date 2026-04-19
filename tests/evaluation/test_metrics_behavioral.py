@@ -4,6 +4,7 @@ Tests that FaithfulnessMetric, GroundednessMetric, and RelevancyMetric
 return correct scores and MetricResult fields under all branching conditions.
 No real LLM calls — all llm.generate() calls are mocked.
 """
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock
@@ -49,7 +50,7 @@ class TestFaithfulnessMetric:
         llm = _mock_llm(
             "1. Python is a language.\n2. Python was created in 1980.",  # claims
             "YES",  # claim 1 supported
-            "NO",   # claim 2 not supported
+            "NO",  # claim 2 not supported
         )
         metric = FaithfulnessMetric(llm)
         result = await metric.evaluate(
@@ -66,9 +67,7 @@ class TestFaithfulnessMetric:
         """If LLM says NONE, score=1.0."""
         llm = _mock_llm("NONE")
         metric = FaithfulnessMetric(llm)
-        result = await metric.evaluate(
-            question="q", answer="I don't know.", contexts=["context"]
-        )
+        result = await metric.evaluate(question="q", answer="I don't know.", contexts=["context"])
         assert result.score == pytest.approx(1.0)
         assert result.details["claims"] == []
 
@@ -77,9 +76,7 @@ class TestFaithfulnessMetric:
         """If LLM returns non-numbered text, score=1.0."""
         llm = _mock_llm("No claims here")
         metric = FaithfulnessMetric(llm)
-        result = await metric.evaluate(
-            question="q", answer="answer", contexts=["ctx"]
-        )
+        result = await metric.evaluate(question="q", answer="answer", contexts=["ctx"])
         assert result.score == pytest.approx(1.0)
 
     @pytest.mark.asyncio
@@ -177,9 +174,7 @@ class TestGroundednessMetric:
     async def test_mid_score_normalized(self):
         llm = _mock_llm("5")
         metric = GroundednessMetric(llm)
-        result = await metric.evaluate(
-            answer="partial answer", contexts=["context"]
-        )
+        result = await metric.evaluate(answer="partial answer", contexts=["context"])
         assert result.score == pytest.approx(0.5)
 
     @pytest.mark.asyncio
@@ -234,18 +229,14 @@ class TestRelevancyMetric:
     async def test_none_relevant_returns_0(self):
         llm = _mock_llm("NO", "NO")
         metric = RelevancyMetric(llm)
-        result = await metric.evaluate(
-            question="What is Python?", contexts=["weather", "sports"]
-        )
+        result = await metric.evaluate(question="What is Python?", contexts=["weather", "sports"])
         assert result.score == pytest.approx(0.0)
 
     @pytest.mark.asyncio
     async def test_mixed_relevancy_returns_fraction(self):
         llm = _mock_llm("YES", "NO", "YES", "NO")
         metric = RelevancyMetric(llm)
-        result = await metric.evaluate(
-            question="Python?", contexts=["c1", "c2", "c3", "c4"]
-        )
+        result = await metric.evaluate(question="Python?", contexts=["c1", "c2", "c3", "c4"])
         assert result.score == pytest.approx(0.5)
         assert "2/4" in result.reason
 
