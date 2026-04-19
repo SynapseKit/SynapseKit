@@ -3,6 +3,7 @@ from .arxiv_search import ArxivSearchTool
 from .aws_lambda import AWSLambdaTool
 from .bing_search import BingSearchTool
 from .brave_search import BraveSearchTool
+from .browser import BrowserTool
 from .calculator import CalculatorTool
 from .code_interpreter import CodeInterpreterTool
 from .datetime_tool import DateTimeTool
@@ -53,6 +54,7 @@ __all__ = [
     "AWSLambdaTool",
     "BingSearchTool",
     "BraveSearchTool",
+    "BrowserTool",
     "CalculatorTool",
     "CodeInterpreterTool",
     "DateTimeTool",
