@@ -57,6 +57,16 @@ Configure response caching, automatic retries, and cost tracking with budget lim
 python examples/caching_retries.py
 ```
 
+### 6. `agent_memory.py` — Persistent Memory in Agents
+Shows PR2-style memory integration:
+- auto-recall injected into each turn
+- episodic memory stored after each run
+- `AgentExecutor` wiring with `PersistentAgentMemory`
+
+```bash
+python examples/agent_memory.py
+```
+
 ## General Pattern
 
 All examples follow this pattern:

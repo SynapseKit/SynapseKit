@@ -6,9 +6,10 @@ from typing import Literal
 
 from .._compat import run_sync
 from ..llm.base import BaseLLM
+from ..memory.agent_memory import AgentMemory as PersistentAgentMemory
 from .base import BaseTool
 from .function_calling import FunctionCallingAgent
-from .memory import AgentMemory
+from .memory import AgentScratchpad
 from .react import ReActAgent
 
 
@@ -20,6 +21,9 @@ class AgentConfig:
     max_iterations: int = 10
     system_prompt: str = "You are a helpful AI assistant."
     verbose: bool = False
+    memory: PersistentAgentMemory | None = None
+    agent_id: str = "default"
+    memory_top_k: int = 5
 
 
 class AgentExecutor:
@@ -43,21 +47,27 @@ class AgentExecutor:
         self._agent = self._build_agent()
 
     def _build_agent(self) -> ReActAgent | FunctionCallingAgent:
-        memory = AgentMemory(max_steps=self.config.max_iterations)
+        scratchpad = AgentScratchpad(max_steps=self.config.max_iterations)
         if self.config.agent_type == "react":
             return ReActAgent(
                 llm=self.config.llm,
                 tools=self.config.tools,
                 max_iterations=self.config.max_iterations,
-                memory=memory,
+                memory=self.config.memory,
+                scratchpad=scratchpad,
+                agent_id=self.config.agent_id,
+                memory_top_k=self.config.memory_top_k,
             )
         elif self.config.agent_type == "function_calling":
             return FunctionCallingAgent(
                 llm=self.config.llm,
                 tools=self.config.tools,
                 max_iterations=self.config.max_iterations,
-                memory=memory,
+                memory=self.config.memory,
+                scratchpad=scratchpad,
                 system_prompt=self.config.system_prompt,
+                agent_id=self.config.agent_id,
+                memory_top_k=self.config.memory_top_k,
             )
         else:
             raise ValueError(
@@ -79,5 +89,9 @@ class AgentExecutor:
         return run_sync(self.run(query))
 
     @property
-    def memory(self) -> AgentMemory:
+    def memory(self) -> AgentScratchpad:
         return self._agent.memory
+
+    @property
+    def persistent_memory(self) -> PersistentAgentMemory | None:
+        return getattr(self._agent, "persistent_memory", None)

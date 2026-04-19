@@ -8,7 +8,7 @@ from .guardrails import (
     PIIDetector,
     TopicRestrictor,
 )
-from .memory import AgentMemory, AgentStep
+from .memory import AgentMemory, AgentScratchpad, AgentStep
 from .multi import (
     Crew,
     CrewAgent,
@@ -89,6 +89,7 @@ __all__ = [
     "ToolResult",
     "ToolRegistry",
     "AgentMemory",
+    "AgentScratchpad",
     "AgentStep",
     # Agents
     "ReActAgent",

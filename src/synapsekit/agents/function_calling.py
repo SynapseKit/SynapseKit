@@ -5,34 +5,43 @@ from collections.abc import AsyncGenerator
 from typing import Any
 
 from ..llm.base import BaseLLM
+from ..memory.agent_memory import AgentMemory as PersistentAgentMemory
 from .base import BaseTool
-from .memory import AgentMemory, AgentStep
+from .memory import AgentScratchpad, AgentStep
 from .registry import ToolRegistry
 
 
 class FunctionCallingAgent:
-    """
-    Agent that uses native LLM function-calling (OpenAI tool_calls / Anthropic tool_use).
-
-    Falls back gracefully: if the LLM doesn't support call_with_tools(),
-    raises RuntimeError with a suggestion to use ReActAgent instead.
-    """
+    """Function-calling agent with optional persistent memory integration."""
 
     def __init__(
         self,
         llm: BaseLLM,
         tools: list[BaseTool],
         max_iterations: int = 10,
-        memory: AgentMemory | None = None,
+        memory: PersistentAgentMemory | AgentScratchpad | None = None,
         system_prompt: str = "You are a helpful AI assistant.",
+        *,
+        agent_id: str = "default",
+        memory_top_k: int = 5,
+        scratchpad: AgentScratchpad | None = None,
     ) -> None:
         if max_iterations < 1:
             raise ValueError("max_iterations must be >= 1")
         self._llm = llm
         self._registry = ToolRegistry(tools)
         self._max_iterations = max_iterations
-        self._memory = memory or AgentMemory(max_steps=max_iterations)
         self._system_prompt = system_prompt
+        self._agent_id = agent_id
+        self._memory_top_k = memory_top_k
+
+        self._persistent_memory: PersistentAgentMemory | None = None
+        if isinstance(memory, AgentScratchpad):
+            self._scratchpad = memory
+        else:
+            self._scratchpad = scratchpad or AgentScratchpad(max_steps=max_iterations)
+            if memory is not None:
+                self._persistent_memory = memory
 
     def __repr__(self) -> str:
         llm = type(self._llm).__name__
@@ -40,7 +49,6 @@ class FunctionCallingAgent:
         return f"FunctionCallingAgent(llm={llm!r}, tools={tools}, max_iterations={self._max_iterations})"
 
     def _check_support(self) -> None:
-        # Check if the provider has overridden _call_with_tools_impl (not just the base NotImplementedError)
         method = getattr(type(self._llm), "_call_with_tools_impl", None)
         if method is getattr(BaseLLM, "_call_with_tools_impl", None):
             raise RuntimeError(
@@ -48,13 +56,51 @@ class FunctionCallingAgent:
                 "Use ReActAgent instead, or switch to OpenAILLM / AnthropicLLM / GeminiLLM / MistralLLM."
             )
 
+    async def _build_system_prompt(self, query: str) -> str:
+        if self._persistent_memory is None:
+            return self._system_prompt
+        records = await self._persistent_memory.recall(
+            agent_id=self._agent_id,
+            query=query,
+            top_k=self._memory_top_k,
+        )
+        if not records:
+            return self._system_prompt
+
+        lines = []
+        for rec in records:
+            memory_type = getattr(rec, "memory_type", "semantic")
+            content = getattr(rec, "content", "")
+            if content:
+                lines.append(f"- [{memory_type}] {content}")
+        if not lines:
+            return self._system_prompt
+
+        return (
+            f"{self._system_prompt}\n\n"
+            "Relevant persistent memories (use when helpful and factual):\n"
+            + "\n".join(lines)
+        )
+
+    async def _store_episode(self, query: str, answer: str) -> None:
+        if self._persistent_memory is None:
+            return
+        await self._persistent_memory.store(
+            agent_id=self._agent_id,
+            content=f"User query: {query}\nAgent answer: {answer}",
+            memory_type="episodic",
+            metadata={
+                "tool_count": len(self._scratchpad.steps),
+                "tools": [step.action for step in self._scratchpad.steps],
+            },
+        )
+
     async def run(self, query: str) -> str:
-        """Run the function-calling loop and return the final answer."""
         self._check_support()
-        self._memory.clear()
+        self._scratchpad.clear()
 
         messages: list[dict] = [
-            {"role": "system", "content": self._system_prompt},
+            {"role": "system", "content": await self._build_system_prompt(query)},
             {"role": "user", "content": query},
         ]
 
@@ -66,11 +112,11 @@ class FunctionCallingAgent:
             tool_calls = result.get("tool_calls")
             content = result.get("content")
 
-            # No tool calls → final answer
             if not tool_calls:
-                return content or ""
+                final_answer = content or ""
+                await self._store_episode(query, final_answer)
+                return final_answer
 
-            # Append assistant message with tool_calls
             messages.append(
                 {
                     "role": "assistant",
@@ -89,7 +135,6 @@ class FunctionCallingAgent:
                 }
             )
 
-            # Execute each tool and append observations
             for tc in tool_calls:
                 try:
                     tool = self._registry.get(tc["name"])
@@ -108,7 +153,7 @@ class FunctionCallingAgent:
                     }
                 )
 
-                self._memory.add_step(
+                self._scratchpad.add_step(
                     AgentStep(
                         thought="",
                         action=tc["name"],
@@ -117,20 +162,17 @@ class FunctionCallingAgent:
                     )
                 )
 
-        return "I was unable to complete the task within the allowed number of steps."
+        fallback = "I was unable to complete the task within the allowed number of steps."
+        await self._store_episode(query, fallback)
+        return fallback
 
     async def stream(self, query: str) -> AsyncGenerator[str]:
-        """Stream the final answer (intermediate tool calls run silently)."""
         answer = await self.run(query)
         for word in answer.split(" "):
             yield word + " "
 
     async def stream_steps(self, query: str) -> AsyncGenerator:
-        """Stream step-by-step events for function-calling agent.
-
-        Yields ``StepEvent`` instances (``ActionEvent``, ``ObservationEvent``,
-        ``TokenEvent``, ``FinalAnswerEvent``, ``ErrorEvent``).
-        """
+        """Stream step-by-step events for function-calling agent."""
         from .step_events import (
             ActionEvent,
             ErrorEvent,
@@ -140,10 +182,10 @@ class FunctionCallingAgent:
         )
 
         self._check_support()
-        self._memory.clear()
+        self._scratchpad.clear()
 
         messages: list[dict] = [
-            {"role": "system", "content": self._system_prompt},
+            {"role": "system", "content": await self._build_system_prompt(query)},
             {"role": "user", "content": query},
         ]
 
@@ -155,15 +197,14 @@ class FunctionCallingAgent:
             tool_calls = result.get("tool_calls")
             content = result.get("content")
 
-            # No tool calls → final answer
             if not tool_calls:
                 answer = content or ""
+                await self._store_episode(query, answer)
                 for token in answer.split(" "):
                     yield TokenEvent(token=token + " ")
                 yield FinalAnswerEvent(answer=answer)
                 return
 
-            # Append assistant message with tool_calls
             messages.append(
                 {
                     "role": "assistant",
@@ -182,7 +223,6 @@ class FunctionCallingAgent:
                 }
             )
 
-            # Execute each tool
             for tc in tool_calls:
                 yield ActionEvent(tool=tc["name"], tool_input=tc["arguments"])
 
@@ -203,7 +243,7 @@ class FunctionCallingAgent:
                 )
                 yield ObservationEvent(observation=observation, tool=tc["name"])
 
-                self._memory.add_step(
+                self._scratchpad.add_step(
                     AgentStep(
                         thought="",
                         action=tc["name"],
@@ -212,10 +252,14 @@ class FunctionCallingAgent:
                     )
                 )
 
-        yield FinalAnswerEvent(
-            answer="I was unable to complete the task within the allowed number of steps."
-        )
+        fallback = "I was unable to complete the task within the allowed number of steps."
+        await self._store_episode(query, fallback)
+        yield FinalAnswerEvent(answer=fallback)
 
     @property
-    def memory(self) -> AgentMemory:
-        return self._memory
+    def memory(self) -> AgentScratchpad:
+        return self._scratchpad
+
+    @property
+    def persistent_memory(self) -> PersistentAgentMemory | None:
+        return self._persistent_memory

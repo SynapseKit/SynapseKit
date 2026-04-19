@@ -14,10 +14,53 @@ class Node:
     fn: NodeFn
 
 
-def agent_node(executor: Any, input_key: str = "input", output_key: str = "output") -> NodeFn:
-    """Wrap an AgentExecutor as a NodeFn."""
+def agent_node(
+    executor: Any,
+    input_key: str = "input",
+    output_key: str = "output",
+    *,
+    memory_key: str | None = None,
+    agent_id_key: str | None = None,
+    memory_top_k_key: str | None = None,
+) -> NodeFn:
+    """Wrap an AgentExecutor as a NodeFn.
+
+    Optional state wiring for memory-aware agents:
+    - ``memory_key``: state key containing persistent ``AgentMemory`` instance
+    - ``agent_id_key``: state key containing per-run agent/user id
+    - ``memory_top_k_key``: state key overriding recall top-k
+
+    When provided, these values are applied to ``executor.config`` before each run.
+    """
+
+    def _configure_executor_from_state(state: dict[str, Any]) -> None:
+        config = getattr(executor, "config", None)
+        if config is None:
+            return
+
+        changed = False
+
+        if memory_key and memory_key in state and getattr(config, "memory", None) is not state[memory_key]:
+            config.memory = state[memory_key]
+            changed = True
+
+        if agent_id_key and agent_id_key in state:
+            agent_id = state[agent_id_key]
+            if agent_id is not None and getattr(config, "agent_id", None) != str(agent_id):
+                config.agent_id = str(agent_id)
+                changed = True
+
+        if memory_top_k_key and memory_top_k_key in state:
+            top_k = int(state[memory_top_k_key])
+            if getattr(config, "memory_top_k", None) != top_k:
+                config.memory_top_k = top_k
+                changed = True
+
+        if changed and hasattr(executor, "_build_agent"):
+            executor._agent = executor._build_agent()
 
     async def _fn(state: dict[str, Any]) -> dict[str, Any]:
+        _configure_executor_from_state(state)
         result = await executor.run(state[input_key])
         return {output_key: result}
 

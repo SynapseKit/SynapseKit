@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import re
 from collections.abc import AsyncGenerator
+from typing import Any
 
 from ..llm.base import BaseLLM
+from ..memory.agent_memory import AgentMemory as PersistentAgentMemory
 from .base import BaseTool
-from .memory import AgentMemory, AgentStep
+from .memory import AgentScratchpad, AgentStep
 from .registry import ToolRegistry
 
 _REACT_SYSTEM = """\
@@ -59,67 +61,118 @@ def _parse_final_answer(text: str) -> str | None:
 
 
 class ReActAgent:
-    """
-    Reasoning + Acting agent.
-
-    Loops: Thought → Action → Observation → repeat until Final Answer.
-    Works with any BaseLLM — no native function-calling required.
-    """
+    """Reasoning + Acting agent with optional persistent memory integration."""
 
     def __init__(
         self,
         llm: BaseLLM,
         tools: list[BaseTool],
         max_iterations: int = 10,
-        memory: AgentMemory | None = None,
+        memory: PersistentAgentMemory | AgentScratchpad | None = None,
+        *,
+        agent_id: str = "default",
+        memory_top_k: int = 5,
+        scratchpad: AgentScratchpad | None = None,
     ) -> None:
         if max_iterations < 1:
             raise ValueError("max_iterations must be >= 1")
         self._llm = llm
         self._registry = ToolRegistry(tools)
         self._max_iterations = max_iterations
-        self._memory = memory or AgentMemory(max_steps=max_iterations)
+        self._agent_id = agent_id
+        self._memory_top_k = memory_top_k
+
+        self._persistent_memory: PersistentAgentMemory | None = None
+        if isinstance(memory, AgentScratchpad):
+            self._scratchpad = memory
+        else:
+            self._scratchpad = scratchpad or AgentScratchpad(max_steps=max_iterations)
+            if memory is not None:
+                self._persistent_memory = memory
 
     def __repr__(self) -> str:
         llm = type(self._llm).__name__
         tools = len(self._registry.schemas())
         return f"ReActAgent(llm={llm!r}, tools={tools}, max_iterations={self._max_iterations})"
 
-    def _build_system_prompt(self) -> str:
-        return _REACT_SYSTEM.format(tools=self._registry.describe())
+    @staticmethod
+    def _format_recalled_memories(records: list[Any]) -> str:
+        if not records:
+            return ""
+        lines = []
+        for rec in records:
+            memory_type = getattr(rec, "memory_type", "semantic")
+            content = getattr(rec, "content", "")
+            if content:
+                lines.append(f"- [{memory_type}] {content}")
+        return "\n".join(lines)
 
-    def _build_messages(self, query: str) -> list[dict]:
-        scratchpad = self._memory.format_scratchpad()
+    async def _recall_context(self, query: str) -> str:
+        if self._persistent_memory is None:
+            return ""
+        records = await self._persistent_memory.recall(
+            agent_id=self._agent_id,
+            query=query,
+            top_k=self._memory_top_k,
+        )
+        return self._format_recalled_memories(records)
+
+    async def _store_episode(self, query: str, answer: str) -> None:
+        if self._persistent_memory is None:
+            return
+        tool_names = [step.action for step in self._scratchpad.steps]
+        await self._persistent_memory.store(
+            agent_id=self._agent_id,
+            content=f"User query: {query}\nAgent answer: {answer}",
+            memory_type="episodic",
+            metadata={
+                "tool_count": len(tool_names),
+                "tools": tool_names,
+            },
+        )
+
+    def _build_system_prompt(self, memory_context: str = "") -> str:
+        prompt = _REACT_SYSTEM.format(tools=self._registry.describe())
+        if not memory_context:
+            return prompt
+        return (
+            f"{prompt}\n\n"
+            "Relevant persistent memories (use when helpful and factual):\n"
+            f"{memory_context}"
+        )
+
+    def _build_messages(self, query: str, memory_context: str = "") -> list[dict]:
+        scratchpad = self._scratchpad.format_scratchpad()
         user_content = f"Question: {query}"
         if scratchpad:
             user_content += f"\n\n{scratchpad}"
         return [
-            {"role": "system", "content": self._build_system_prompt()},
+            {"role": "system", "content": self._build_system_prompt(memory_context)},
             {"role": "user", "content": user_content},
         ]
 
     async def run(self, query: str) -> str:
         """Run the ReAct loop and return the final answer."""
-        self._memory.clear()
+        self._scratchpad.clear()
+        memory_context = await self._recall_context(query)
 
         for _ in range(self._max_iterations):
-            messages = self._build_messages(query)
+            messages = self._build_messages(query, memory_context)
             response = await self._llm.generate_with_messages(messages)
 
-            # Check for final answer first
             final = _parse_final_answer(response)
             if final is not None:
+                await self._store_episode(query, final)
                 return final
 
-            # Parse action
             action_name, action_input = _parse_action(response)
             thought = _parse_thought(response)
 
             if not action_name:
-                # LLM didn't follow format — treat whole response as final answer
-                return response.strip()
+                final_answer = response.strip()
+                await self._store_episode(query, final_answer)
+                return final_answer
 
-            # Execute tool
             try:
                 tool = self._registry.get(action_name)
                 result = await tool.run(input=action_input)
@@ -129,7 +182,7 @@ class ReActAgent:
             except Exception as e:
                 observation = f"Tool error: {e}"
 
-            self._memory.add_step(
+            self._scratchpad.add_step(
                 AgentStep(
                     thought=thought,
                     action=action_name,
@@ -138,23 +191,17 @@ class ReActAgent:
                 )
             )
 
-        return "I was unable to find the answer within the allowed number of steps."
+        fallback = "I was unable to find the answer within the allowed number of steps."
+        await self._store_episode(query, fallback)
+        return fallback
 
     async def stream(self, query: str) -> AsyncGenerator[str]:
-        """
-        Stream the final answer. Intermediate tool calls run silently.
-        Yields the final answer string (may be multi-token on last LLM call).
-        """
         answer = await self.run(query)
         for word in answer.split(" "):
             yield word + " "
 
     async def stream_steps(self, query: str) -> AsyncGenerator:
-        """Stream step-by-step events including thoughts, actions, and tokens.
-
-        Yields ``StepEvent`` instances (``ThoughtEvent``, ``ActionEvent``,
-        ``ObservationEvent``, ``TokenEvent``, ``FinalAnswerEvent``, ``ErrorEvent``).
-        """
+        """Stream step-by-step events including thoughts, actions, and tokens."""
         from .step_events import (
             ActionEvent,
             ErrorEvent,
@@ -164,24 +211,23 @@ class ReActAgent:
             TokenEvent,
         )
 
-        self._memory.clear()
+        self._scratchpad.clear()
+        memory_context = await self._recall_context(query)
 
         for _ in range(self._max_iterations):
-            messages = self._build_messages(query)
+            messages = self._build_messages(query, memory_context)
 
-            # Stream tokens live
             full_response = ""
             async for token in self._llm.stream_with_messages(messages):
                 yield TokenEvent(token=token)
                 full_response += token
 
-            # Check for final answer
             final = _parse_final_answer(full_response)
             if final is not None:
+                await self._store_episode(query, final)
                 yield FinalAnswerEvent(answer=final)
                 return
 
-            # Parse action
             action_name, action_input = _parse_action(full_response)
             thought = _parse_thought(full_response)
 
@@ -189,12 +235,13 @@ class ReActAgent:
                 yield ThoughtEvent(thought=thought)
 
             if not action_name:
-                yield FinalAnswerEvent(answer=full_response.strip())
+                final_answer = full_response.strip()
+                await self._store_episode(query, final_answer)
+                yield FinalAnswerEvent(answer=final_answer)
                 return
 
             yield ActionEvent(tool=action_name, tool_input=action_input)
 
-            # Execute tool
             try:
                 tool = self._registry.get(action_name)
                 result = await tool.run(input=action_input)
@@ -205,7 +252,7 @@ class ReActAgent:
 
             yield ObservationEvent(observation=observation, tool=action_name)
 
-            self._memory.add_step(
+            self._scratchpad.add_step(
                 AgentStep(
                     thought=thought,
                     action=action_name,
@@ -214,10 +261,14 @@ class ReActAgent:
                 )
             )
 
-        yield FinalAnswerEvent(
-            answer="I was unable to find the answer within the allowed number of steps."
-        )
+        fallback = "I was unable to find the answer within the allowed number of steps."
+        await self._store_episode(query, fallback)
+        yield FinalAnswerEvent(answer=fallback)
 
     @property
-    def memory(self) -> AgentMemory:
-        return self._memory
+    def memory(self) -> AgentScratchpad:
+        return self._scratchpad
+
+    @property
+    def persistent_memory(self) -> PersistentAgentMemory | None:
+        return self._persistent_memory

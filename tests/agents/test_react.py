@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -41,6 +42,12 @@ def make_mock_llm(responses):
     llm = MagicMock()
     llm.generate_with_messages = AsyncMock(side_effect=responses)
     return llm
+
+
+@dataclass
+class _MemoryRecord:
+    content: str
+    memory_type: str = "semantic"
 
 
 # ------------------------------------------------------------------ #
@@ -175,3 +182,41 @@ class TestReActAgent:
         agent = ReActAgent(llm=llm, tools=[])
         result = await agent.run("What is 42?")
         assert "42" in result
+
+    @pytest.mark.asyncio
+    async def test_persistent_memory_recalled_and_injected(self):
+        persistent = MagicMock()
+        persistent.recall = AsyncMock(
+            return_value=[_MemoryRecord(content="User prefers concise answers")]
+        )
+        persistent.store = AsyncMock()
+
+        llm = make_mock_llm(["Thought: done\nFinal Answer: acknowledged"])
+        agent = ReActAgent(llm=llm, tools=[], memory=persistent, agent_id="user-123")
+
+        result = await agent.run("How should I answer?")
+        assert result == "acknowledged"
+
+        persistent.recall.assert_awaited_once_with(
+            agent_id="user-123", query="How should I answer?", top_k=5
+        )
+        messages = llm.generate_with_messages.call_args.args[0]
+        assert "Relevant persistent memories" in messages[0]["content"]
+        assert "User prefers concise answers" in messages[0]["content"]
+
+    @pytest.mark.asyncio
+    async def test_persistent_memory_stores_episodic_run(self):
+        persistent = MagicMock()
+        persistent.recall = AsyncMock(return_value=[])
+        persistent.store = AsyncMock()
+
+        llm = make_mock_llm(["Thought: done\nFinal Answer: Paris"])
+        agent = ReActAgent(llm=llm, tools=[], memory=persistent, agent_id="u1")
+
+        await agent.run("capital?")
+        persistent.store.assert_awaited_once()
+        payload = persistent.store.await_args.kwargs
+        assert payload["agent_id"] == "u1"
+        assert payload["memory_type"] == "episodic"
+        assert "capital?" in payload["content"]
+        assert "Paris" in payload["content"]

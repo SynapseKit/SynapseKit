@@ -21,6 +21,7 @@ from .agents import (
     AgentConfig,
     AgentExecutor,
     AgentMemory,
+    AgentScratchpad,
     AgentStep,
     ArxivSearchTool,
     BaseTool,
@@ -185,6 +186,7 @@ from .loaders.tsv import TSVLoader
 from .loaders.web import WebLoader
 from .loaders.wikipedia import WikipediaLoader
 from .mcp import MCPClient, MCPServer, MCPToolAdapter
+from .memory import AgentMemory as PersistentAgentMemory
 from .memory.buffer import BufferMemory
 from .memory.conversation import ConversationMemory
 from .memory.entity import EntityMemory
@@ -339,6 +341,7 @@ __all__ = [
     "BudgetExceededError",
     "CircuitState",
     # Memory / observability
+    "PersistentAgentMemory",
     "BufferMemory",
     "ConversationMemory",
     "EntityMemory",
@@ -403,6 +406,7 @@ __all__ = [
     "ToolResult",
     "ToolRegistry",
     "AgentMemory",
+    "AgentScratchpad",
     "AgentStep",
     "ReActAgent",
     "FunctionCallingAgent",
