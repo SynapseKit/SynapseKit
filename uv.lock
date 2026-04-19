@@ -7910,9 +7910,11 @@ youtube = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "beautifulsoup4" },
     { name = "deptry" },
     { name = "hatchling" },
     { name = "httpx" },
+    { name = "lxml" },
     { name = "mypy" },
     { name = "pre-commit" },
     { name = "pyarrow" },
@@ -8066,9 +8068,11 @@ provides-extras = ["openai", "anthropic", "semantic", "colbert", "pdf", "wikiped
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "beautifulsoup4", specifier = ">=4.14.3" },
     { name = "deptry", specifier = ">=0.16" },
     { name = "hatchling" },
     { name = "httpx", specifier = ">=0.27" },
+    { name = "lxml", specifier = ">=6.0.2" },
     { name = "mypy", specifier = ">=1.11" },
     { name = "pre-commit", specifier = ">=3.7" },
     { name = "pyarrow", specifier = ">=23.0.1" },

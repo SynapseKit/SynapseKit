@@ -9,6 +9,7 @@ import pytest
 from synapsekit.agents.executor import AgentConfig, AgentExecutor
 from synapsekit.agents.registry import ToolRegistry
 from synapsekit.agents.tools.calculator import CalculatorTool
+from synapsekit.memory import AgentMemory as PersistentAgentMemory
 
 # ------------------------------------------------------------------ #
 # ToolRegistry
@@ -99,6 +100,24 @@ class TestAgentExecutorReAct:
         executor = AgentExecutor(AgentConfig(llm=llm, tools=[], agent_type="react"))
         await executor.run("test")
         assert executor.memory is not None
+
+    @pytest.mark.asyncio
+    async def test_persistent_memory_accessible(self):
+        llm = self._make_react_llm("done")
+        persistent = PersistentAgentMemory(backend="memory")
+        executor = AgentExecutor(
+            AgentConfig(
+                llm=llm,
+                tools=[],
+                agent_type="react",
+                memory=persistent,
+                agent_id="u1",
+            )
+        )
+
+        await executor.run("test")
+        assert executor.persistent_memory is persistent
+        assert await persistent.count(agent_id="u1", memory_type="episodic") == 1
 
 
 # ------------------------------------------------------------------ #

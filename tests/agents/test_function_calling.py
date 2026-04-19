@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -46,6 +47,12 @@ def make_no_fc_llm():
             yield "x"
 
     return _NoFCLLM(LLMConfig(model="test", api_key="test", provider="test"))
+
+
+@dataclass
+class _MemoryRecord:
+    content: str
+    memory_type: str = "semantic"
 
 
 # ------------------------------------------------------------------ #
@@ -153,3 +160,41 @@ class TestFunctionCallingAgent:
         result = await agent.run("compute both")
         assert result == "Results: 3 and 7."
         assert len(agent.memory) == 2
+
+    @pytest.mark.asyncio
+    async def test_persistent_memory_recalled_and_injected(self):
+        persistent = MagicMock()
+        persistent.recall = AsyncMock(return_value=[_MemoryRecord(content="Use metric units")])
+        persistent.store = AsyncMock()
+
+        responses = [{"content": "Done", "tool_calls": None}]
+        llm = make_fc_llm(responses)
+        agent = FunctionCallingAgent(llm=llm, tools=[], memory=persistent, agent_id="u1")
+
+        result = await agent.run("How should I format output?")
+        assert result == "Done"
+
+        persistent.recall.assert_awaited_once_with(
+            agent_id="u1", query="How should I format output?", top_k=5
+        )
+        messages = llm.call_with_tools.call_args.args[0]
+        assert "Relevant persistent memories" in messages[0]["content"]
+        assert "Use metric units" in messages[0]["content"]
+
+    @pytest.mark.asyncio
+    async def test_persistent_memory_stores_episodic_run(self):
+        persistent = MagicMock()
+        persistent.recall = AsyncMock(return_value=[])
+        persistent.store = AsyncMock()
+
+        responses = [{"content": "final", "tool_calls": None}]
+        llm = make_fc_llm(responses)
+        agent = FunctionCallingAgent(llm=llm, tools=[], memory=persistent, agent_id="u2")
+
+        await agent.run("question")
+        persistent.store.assert_awaited_once()
+        payload = persistent.store.await_args.kwargs
+        assert payload["agent_id"] == "u2"
+        assert payload["memory_type"] == "episodic"
+        assert "question" in payload["content"]
+        assert "final" in payload["content"]

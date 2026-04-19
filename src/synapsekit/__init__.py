@@ -21,11 +21,13 @@ from .agents import (
     AgentConfig,
     AgentExecutor,
     AgentMemory,
+    AgentScratchpad,
     AgentStep,
     ArxivSearchTool,
     BaseTool,
     BingSearchTool,
     BraveSearchTool,
+    BrowserTool,
     CalculatorTool,
     CodeInterpreterTool,
     ContentFilter,
@@ -155,6 +157,7 @@ from .llm.structured import generate_structured
 from .loaders.arxiv import ArXivLoader
 from .loaders.azure_blob import AzureBlobLoader
 from .loaders.base import Document
+from .loaders.bigquery import BigQueryLoader
 from .loaders.config import ConfigLoader
 from .loaders.confluence import ConfluenceLoader
 from .loaders.csv import CSVLoader
@@ -167,17 +170,20 @@ from .loaders.git import GitLoader
 from .loaders.github import GitHubLoader
 from .loaders.google_sheets import GoogleSheetsLoader
 from .loaders.html import HTMLLoader
+from .loaders.hubspot import HubSpotLoader
 from .loaders.image import ImageLoader
 from .loaders.jira import JiraLoader
 from .loaders.json_loader import JSONLoader
 from .loaders.latex import LaTeXLoader
 from .loaders.markdown import MarkdownLoader
 from .loaders.mongodb import MongoDBLoader
+from .loaders.obsidian import ObsidianLoader
 from .loaders.onedrive import OneDriveLoader
 from .loaders.pdf import PDFLoader
 from .loaders.rss import RSSLoader
 from .loaders.rtf import RTFLoader
 from .loaders.s3 import S3Loader
+from .loaders.salesforce import SalesforceLoader
 from .loaders.sql import SQLLoader
 from .loaders.teams import TeamsLoader
 from .loaders.text import StringLoader, TextLoader
@@ -185,6 +191,7 @@ from .loaders.tsv import TSVLoader
 from .loaders.web import WebLoader
 from .loaders.wikipedia import WikipediaLoader
 from .mcp import MCPClient, MCPServer, MCPToolAdapter
+from .memory import AgentMemory as PersistentAgentMemory
 from .memory.buffer import BufferMemory
 from .memory.conversation import ConversationMemory
 from .memory.entity import EntityMemory
@@ -230,6 +237,7 @@ from .retrieval.flare import FLARERetriever
 from .retrieval.graphrag import GraphRAGRetriever, KnowledgeGraph
 from .retrieval.hybrid_search import HybridSearchRetriever
 from .retrieval.hyde import HyDERetriever
+from .retrieval.mongodb_atlas import MongoDBAtlasVectorStore
 from .retrieval.multi_step import MultiStepRetriever
 from .retrieval.parent_document import ParentDocumentRetriever
 from .retrieval.query_decomposition import QueryDecompositionRetriever
@@ -304,6 +312,7 @@ __all__ = [
     "FAISSVectorStore",
     "LanceDBVectorStore",
     "MilvusVectorStore",
+    "MongoDBAtlasVectorStore",
     "PGVectorStore",
     "QdrantVectorStore",
     "PineconeVectorStore",
@@ -339,6 +348,7 @@ __all__ = [
     "BudgetExceededError",
     "CircuitState",
     # Memory / observability
+    "PersistentAgentMemory",
     "BufferMemory",
     "ConversationMemory",
     "EntityMemory",
@@ -353,6 +363,7 @@ __all__ = [
     "TextLoader",
     "ArXivLoader",
     "AzureBlobLoader",
+    "BigQueryLoader",
     "StringLoader",
     "PDFLoader",
     "HTMLLoader",
@@ -371,9 +382,11 @@ __all__ = [
     "GitHubLoader",
     "GitLoader",
     "GoogleSheetsLoader",
+    "HubSpotLoader",
     "JiraLoader",
     "LaTeXLoader",
     "MarkdownLoader",
+    "ObsidianLoader",
     "MongoDBLoader",
     "DynamoDBLoader",
     "OneDriveLoader",
@@ -385,10 +398,14 @@ __all__ = [
     "RTFLoader",
     "RedisLoader",
     "S3Loader",
+    "SalesforceLoader",
+    "SitemapLoader",
     "WikipediaLoader",
     "ExcelLoader",
     "PowerPointLoader",
     "ParquetLoader",
+    "SitemapLoader",
+    "YouTubeLoader",
     # Parsers
     "JSONParser",
     "PydanticParser",
@@ -403,6 +420,7 @@ __all__ = [
     "ToolResult",
     "ToolRegistry",
     "AgentMemory",
+    "AgentScratchpad",
     "AgentStep",
     "ReActAgent",
     "FunctionCallingAgent",
@@ -428,6 +446,7 @@ __all__ = [
     "ArxivSearchTool",
     "BingSearchTool",
     "BraveSearchTool",
+    "BrowserTool",
     "CalculatorTool",
     "CodeInterpreterTool",
     "DateTimeTool",
@@ -572,6 +591,7 @@ __all__ = [
     "ImageContent",
     "MultimodalMessage",
     "AudioLoader",
+    "AirtableLoader",
     "VideoLoader",
     "ImageLoader",
     "YAMLLoader",
@@ -628,6 +648,7 @@ _LAZY_IMPORTS = {
     "RedisCheckpointer": "graph.checkpointers.redis",
     "PostgresCheckpointer": "graph.checkpointers.postgres",
     # Loaders
+    "AirtableLoader": "loaders.airtable",
     "AudioLoader": "loaders.audio",
     "VideoLoader": "loaders.video",
     "DocxLoader": "loaders.docx",
@@ -638,14 +659,20 @@ _LAZY_IMPORTS = {
     "DiscordLoader": "loaders.discord",
     "XMLLoader": "loaders.xml_loader",
     "GoogleDriveLoader": "loaders.google_drive",
+    "HubSpotLoader": "loaders.hubspot",
     "MongoDBLoader": "loaders.mongodb",
+    "ObsidianLoader": "loaders.obsidian",
     "OneDriveLoader": "loaders.onedrive",
     "AzureBlobLoader": "loaders.azure_blob",
+    "BigQueryLoader": "loaders.bigquery",
     "S3Loader": "loaders.s3",
+    "SalesforceLoader": "loaders.salesforce",
     "DropboxLoader": "loaders.dropbox",
     "ParquetLoader": "loaders.parquet",
     "RedisLoader": "loaders.redis_loader",
     "ElasticsearchLoader": "loaders.elasticsearch",
+    "SitemapLoader": "loaders.sitemap",
+    "YouTubeLoader": "loaders.youtube",
 }
 
 
