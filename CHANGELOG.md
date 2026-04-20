@@ -9,6 +9,21 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Performance
+
+- **Semantic cache O(n) → O(1) lookup** — `SemanticCache` now L2-normalises vectors on insertion and stacks them into a matrix that is rebuilt lazily; lookup is a single batched `matrix @ query_vec` BLAS call instead of a Python for-loop over 256 individual dot products; closes #568
+- **Vector store O(1) amortised inserts** — `InMemoryVectorStore.add()` queues batches in a pending list and consolidates via one `np.vstack` at search time, eliminating the previous `np.concatenate` on every insert that caused O(n²) total memory copies; closes #569
+- **Vector store O(result) metadata filtering** — inverted index (`field → value → set[doc_idx]`) built and maintained on every `add()`; metadata filter queries now intersect small sets instead of scanning all N documents linearly; closes #574
+- **MMR precomputed similarity matrix** — `search_mmr()` computes the full `(fetch_k × fetch_k)` pairwise similarity matrix with one BLAS call before the greedy loop, replacing O(top_k × fetch_k × selected) Python-level dot-product recomputation; closes #572
+- **Async DNS in web scraper** — `socket.gethostbyname()` in the SSRF guard now runs in the thread-pool executor (`loop.run_in_executor`) so it never blocks the asyncio event loop; closes #570
+- **Persistent HTTP session in `HTTPRequestTool`** — single `aiohttp.ClientSession` created lazily and reused across all calls on the same tool instance; eliminates TCP + TLS handshake overhead on every request; `aclose()` and async context manager protocol added; closes #571
+- **Rate limiter sleep moved outside lock** — `TokenBucketRateLimiter.acquire()` releases the `asyncio.Lock` before calling `asyncio.sleep`, so multiple concurrent callers each wait independently instead of being serialised behind a single sleeper; closes #573
+- **Ensemble retriever parallel fan-out** — `EnsembleRetriever.retrieve()` uses `asyncio.gather` to query all retrievers concurrently; total latency is now bounded by the slowest retriever rather than the sum; closes #576
+- **Cache key generation overhead removed** — dropped redundant `sort_keys=True` from `json.dumps` in `AsyncLRUCache.make_key`; Python 3.7+ dict insertion order is already stable so sorting was redundant O(k log k) work on every cache lookup; closes #577
+- **SQLite cache guaranteed close** — `SQLiteLLMCache` now implements `__enter__` / `__exit__` / `__del__` so the connection is guaranteed to close on all exit paths; `close()` is idempotent; closes #578
+- **Evaluation metrics parallel execution** — `EvaluationPipeline.evaluate()` runs all metrics concurrently via `asyncio.gather`; `evaluate_batch()` also parallelises samples with a configurable `asyncio.Semaphore` (default `concurrency=10`); closes #575
+- **Sitemap BFS queue O(1) dequeue** — `SitemapLoader._collect_urls()` BFS queue switched from `list.pop(0)` (O(n)) to `collections.deque.popleft()` (O(1)); closes #579
+
 ### Added
 
 - **`AgentMemory`** — persistent episodic + semantic memory for agents; SQLite, Redis, Postgres, and in-memory backends; semantic similarity search via cosine over optional embeddings or built-in bloom hash; episodic consolidation window; integrates into `ReactAgent`, `FunctionCallingAgent`, and graph `llm_node`; closes #506
