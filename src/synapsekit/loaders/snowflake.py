@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 from typing import Any
 
 from .base import Document
@@ -70,22 +71,18 @@ class SnowflakeLoader:
             raise RuntimeError(f"Snowflake query failed: {e}") from e
         finally:
             if cur is not None:
-                try:
+                with suppress(Exception):
                     cur.close()
-                except Exception:
-                    pass
             if conn is not None:
-                try:
+                with suppress(Exception):
                     conn.close()
-                except Exception:
-                    pass
 
         if self._limit is not None:
             rows = rows[: self._limit]
 
         docs: list[Document] = []
         for row in rows:
-            record = dict(zip(columns, row))
+            record = dict(zip(columns, row, strict=False))
 
             if self._text_fields is not None:
                 text = " ".join(str(record.get(f, "")) for f in self._text_fields if record.get(f))
