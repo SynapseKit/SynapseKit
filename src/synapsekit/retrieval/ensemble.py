@@ -2,12 +2,18 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from .retriever import Retriever
 
 
 class EnsembleRetriever:
     """Ensemble Retrieval: combines results from multiple retrievers using
     Reciprocal Rank Fusion (RRF) for better recall and diversity.
+
+    All retrievers are queried **concurrently** via ``asyncio.gather``, so
+    total latency is bounded by the slowest individual retriever rather than
+    the sum of all retriever latencies.
 
     Usage::
 
@@ -38,11 +44,17 @@ class EnsembleRetriever:
         top_k: int = 5,
         metadata_filter: dict | None = None,
     ) -> list[str]:
-        """Retrieve from all retrievers and fuse with weighted RRF."""
-        scores: dict[str, float] = {}
+        """Retrieve from all retrievers concurrently and fuse with weighted RRF."""
+        # Fan out to all retrievers in parallel — no sequential waiting
+        all_results: list[list[str]] = await asyncio.gather(
+            *[
+                retriever.retrieve(query, top_k=top_k, metadata_filter=metadata_filter)
+                for retriever in self._retrievers
+            ]
+        )
 
-        for retriever, weight in zip(self._retrievers, self._weights, strict=True):
-            results = await retriever.retrieve(query, top_k=top_k, metadata_filter=metadata_filter)
+        scores: dict[str, float] = {}
+        for results, weight in zip(all_results, self._weights):
             for rank, text in enumerate(results):
                 scores[text] = scores.get(text, 0.0) + weight / (self._rrf_k + rank + 1)
 

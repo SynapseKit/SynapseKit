@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections import deque
 from typing import Any
 from urllib.parse import urljoin, urlparse
 
@@ -132,14 +133,15 @@ class SitemapLoader:
     async def _collect_urls(self, httpx: Any) -> list[dict[str, str]]:
         """Fetch and parse sitemaps, following sitemap index files."""
         base_url = "{0.scheme}://{0.netloc}".format(urlparse(self._url))
-        to_visit: list[str] = [self._url]
+        # deque gives O(1) popleft vs O(n) for list.pop(0)
+        to_visit: deque[str] = deque([self._url])
         visited: set[str] = set()
         seen: set[str] = set()
         all_entries: list[dict[str, str]] = []
 
         async with httpx.AsyncClient(follow_redirects=True, timeout=_DEFAULT_TIMEOUT) as client:
             while to_visit:
-                sitemap_url = to_visit.pop(0)
+                sitemap_url = to_visit.popleft()
                 if sitemap_url in visited:
                     continue
                 visited.add(sitemap_url)
