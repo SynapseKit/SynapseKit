@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sqlite3
+from contextlib import suppress
 from typing import Any
 
 from ._cache import AsyncLRUCache
@@ -67,14 +68,12 @@ class SQLiteLLMCache:
 
     def close(self) -> None:
         """Close the underlying SQLite connection. Idempotent."""
-        try:
+        with suppress(Exception):
             self._conn.close()
-        except Exception:
-            pass
 
     # ── context manager ────────────────────────────────────────────────────
 
-    def __enter__(self) -> "SQLiteLLMCache":
+    def __enter__(self) -> SQLiteLLMCache:
         return self
 
     def __exit__(self, *_: object) -> None:
@@ -82,7 +81,5 @@ class SQLiteLLMCache:
 
     def __del__(self) -> None:
         """Last-resort cleanup if the caller forgets to call close()."""
-        try:
+        with suppress(Exception):
             self.close()
-        except Exception:
-            pass
