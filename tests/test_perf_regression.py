@@ -851,7 +851,9 @@ class TestSitemapLoaderRegression:
 
         import synapsekit.loaders.sitemap as sitemap_module
 
-        source = inspect.getsource(sitemap_module._SitemapLoader__class__ if False else sitemap_module)
+        source = inspect.getsource(
+            sitemap_module._SitemapLoader__class__ if False else sitemap_module
+        )
         # Check deque is imported and used in the source
         assert "deque" in source
         assert "popleft" in source
