@@ -27,7 +27,7 @@ class InMemoryVectorStore(VectorStore):
 
     * **O(fetch_k²) MMR precomputation** — the pairwise similarity matrix for
       the candidate pool is computed once with a single BLAS call before the
-      greedy selection loop, replacing O(top_k × fetch_k × selected) Python-
+      greedy selection loop, replacing O(top_k x fetch_k x selected) Python-
       level dot products.
     """
 
@@ -84,9 +84,7 @@ class InMemoryVectorStore(VectorStore):
         """
         if not metadata_filter:
             return None
-        candidate_sets = [
-            self._index.get(k, {}).get(v, set()) for k, v in metadata_filter.items()
-        ]
+        candidate_sets = [self._index.get(k, {}).get(v, set()) for k, v in metadata_filter.items()]
         if not candidate_sets or any(not s for s in candidate_sets):
             return []
         return sorted(set.intersection(*candidate_sets))
@@ -173,7 +171,7 @@ class InMemoryVectorStore(VectorStore):
 
         The pairwise similarity matrix for the candidate pool is precomputed
         with a single BLAS call before the greedy loop, replacing the previous
-        O(top_k × fetch_k × selected) Python-level dot-product recomputation.
+        O(top_k x fetch_k x selected) Python-level dot-product recomputation.
         """
         if not self._texts:
             return []
@@ -204,17 +202,16 @@ class InMemoryVectorStore(VectorStore):
             return []
 
         pool_indices = [idx for idx, _ in pool]
-        pool_rel_scores = [rel for _, rel in pool]
 
         # ── precompute pairwise similarity matrix for the pool (one BLAS call) ──
-        pool_vecs = self._vectors[pool_indices]     # (fetch_k, D)
-        sim_matrix = pool_vecs @ pool_vecs.T         # (fetch_k, fetch_k)
+        pool_vecs = self._vectors[pool_indices]  # (fetch_k, D)
+        sim_matrix = pool_vecs @ pool_vecs.T  # (fetch_k, fetch_k)
 
         # Greedy MMR selection
-        selected: list[int] = []           # global indices of selected docs
-        selected_pos: list[int] = []       # corresponding positions in pool
+        selected: list[int] = []  # global indices of selected docs
+        selected_pos: list[int] = []  # corresponding positions in pool
 
-        selected_set: set[int] = set()     # O(1) membership test
+        selected_set: set[int] = set()  # O(1) membership test
 
         for _ in range(min(top_k, len(pool))):
             best_global_idx = -1
