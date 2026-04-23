@@ -34,6 +34,7 @@ from .agents import (
     Crew,
     CrewAgent,
     CrewResult,
+    CronTrigger,
     DateTimeTool,
     DuckDuckGoSearchTool,
     EmailTool,
@@ -54,6 +55,7 @@ from .agents import (
     HTTPRequestTool,
     HumanInputTool,
     ImageAnalysisTool,
+    ImageGenerationTool,
     JiraTool,
     JSONQueryTool,
     LinearTool,
@@ -69,6 +71,7 @@ from .agents import (
     RegexTool,
     SentimentAnalysisTool,
     ShellTool,
+    SimpleAgent,
     SlackTool,
     SpeechToTextTool,
     SQLQueryTool,
@@ -86,6 +89,7 @@ from .agents import (
     ToolResult,
     TopicRestrictor,
     TranslationTool,
+    TriggerResult,
     TwilioTool,
     VectorSearchTool,
     WeatherTool,
@@ -95,6 +99,7 @@ from .agents import (
     WolframAlphaTool,
     WorkerAgent,
     YouTubeSearchTool,
+    agent,
     tool,
 )
 from .embeddings.backend import SynapsekitEmbeddings
@@ -180,10 +185,12 @@ from .loaders.mongodb import MongoDBLoader
 from .loaders.obsidian import ObsidianLoader
 from .loaders.onedrive import OneDriveLoader
 from .loaders.pdf import PDFLoader
+from .loaders.pubmed import PubMedLoader
 from .loaders.rss import RSSLoader
 from .loaders.rtf import RTFLoader
 from .loaders.s3 import S3Loader
 from .loaders.salesforce import SalesforceLoader
+from .loaders.snowflake import SnowflakeLoader
 from .loaders.sql import SQLLoader
 from .loaders.teams import TeamsLoader
 from .loaders.text import StringLoader, TextLoader
@@ -400,10 +407,12 @@ __all__ = [
     "S3Loader",
     "SalesforceLoader",
     "SitemapLoader",
+    "SnowflakeLoader",
     "WikipediaLoader",
     "ExcelLoader",
     "PowerPointLoader",
     "ParquetLoader",
+    "PubMedLoader",
     "SitemapLoader",
     "YouTubeLoader",
     # Parsers
@@ -426,6 +435,10 @@ __all__ = [
     "FunctionCallingAgent",
     "AgentExecutor",
     "AgentConfig",
+    "CronTrigger",
+    "TriggerResult",
+    "SimpleAgent",
+    "agent",
     # Tool decorator
     "tool",
     # Multi-agent
@@ -458,6 +471,7 @@ __all__ = [
     "HTTPRequestTool",
     "HumanInputTool",
     "ImageAnalysisTool",
+    "ImageGenerationTool",
     "JiraTool",
     "JSONQueryTool",
     "LinearTool",
@@ -667,8 +681,10 @@ _LAZY_IMPORTS = {
     "BigQueryLoader": "loaders.bigquery",
     "S3Loader": "loaders.s3",
     "SalesforceLoader": "loaders.salesforce",
+    "SnowflakeLoader": "loaders.snowflake",
     "DropboxLoader": "loaders.dropbox",
     "ParquetLoader": "loaders.parquet",
+    "PubMedLoader": "loaders.pubmed",
     "RedisLoader": "loaders.redis_loader",
     "ElasticsearchLoader": "loaders.elasticsearch",
     "SitemapLoader": "loaders.sitemap",

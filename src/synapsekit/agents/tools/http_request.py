@@ -69,7 +69,7 @@ class HTTPRequestTool(BaseTool):
             await self._session.close()
             self._session = None
 
-    async def __aenter__(self) -> "HTTPRequestTool":
+    async def __aenter__(self) -> HTTPRequestTool:
         return self
 
     async def __aexit__(self, *_: object) -> None:

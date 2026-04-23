@@ -38,8 +38,12 @@ jobs:
           URL="${{ github.event.pull_request.html_url }}"
           NUMBER="${{ github.event.pull_request.number }}"
           PAYLOAD="{\"embeds\":[{\"title\":\"PR #${NUMBER} opened\",\"description\":\"**${TITLE}**\n\n[View PR](${URL})\",\"color\":3447003,\"footer\":{\"text\":\"${AUTHOR}\"}}]}"
-          curl -s -X POST "${{ secrets.DISCORD_WEBHOOK_PR_FEED }}" -H "Content-Type: application/json" -d "$PAYLOAD"
-          curl -s -X POST "${{ secrets.DISCORD_WEBHOOK_GITHUB_ACTIVITY }}" -H "Content-Type: application/json" -d "$PAYLOAD"
+          if [ -n "${{ secrets.DISCORD_WEBHOOK_PR_FEED }}" ]; then
+            curl -s -X POST "${{ secrets.DISCORD_WEBHOOK_PR_FEED }}" -H "Content-Type: application/json" -d "$PAYLOAD"
+          fi
+          if [ -n "${{ secrets.DISCORD_WEBHOOK_GITHUB_ACTIVITY }}" ]; then
+            curl -s -X POST "${{ secrets.DISCORD_WEBHOOK_GITHUB_ACTIVITY }}" -H "Content-Type: application/json" -d "$PAYLOAD"
+          fi
 
   notify-pr-merged:
     if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true

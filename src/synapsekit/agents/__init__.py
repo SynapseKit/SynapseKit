@@ -1,5 +1,6 @@
 from .base import BaseTool, ToolResult
 from .executor import AgentConfig, AgentExecutor
+from .facade import SimpleAgent, agent
 from .function_calling import FunctionCallingAgent
 from .guardrails import (
     ContentFilter,
@@ -55,6 +56,7 @@ from .tools import (
     HTTPRequestTool,
     HumanInputTool,
     ImageAnalysisTool,
+    ImageGenerationTool,
     JiraTool,
     JSONQueryTool,
     LinearTool,
@@ -83,6 +85,7 @@ from .tools import (
     WolframAlphaTool,
     YouTubeSearchTool,
 )
+from .triggers import CronTrigger, TriggerResult
 
 __all__ = [
     # Core
@@ -97,6 +100,10 @@ __all__ = [
     "FunctionCallingAgent",
     "AgentExecutor",
     "AgentConfig",
+    "CronTrigger",
+    "TriggerResult",
+    "SimpleAgent",
+    "agent",
     # Guardrails
     "ContentFilter",
     "Guardrails",
@@ -127,6 +134,7 @@ __all__ = [
     "HTTPRequestTool",
     "HumanInputTool",
     "ImageAnalysisTool",
+    "ImageGenerationTool",
     "JiraTool",
     "JSONQueryTool",
     "LinearTool",

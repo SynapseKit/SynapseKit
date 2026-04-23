@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import asyncio
 import sys
-from collections import deque
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -333,9 +332,9 @@ class TestWebScraperRegression:
 
     @pytest.mark.asyncio
     async def test_validate_url_is_async_coroutine(self):
-        from synapsekit.agents.tools.web_scraper import _validate_url
-
         import inspect
+
+        from synapsekit.agents.tools.web_scraper import _validate_url
 
         assert inspect.iscoroutinefunction(_validate_url)
 
@@ -384,8 +383,9 @@ class TestWebScraperRegression:
 
     @pytest.mark.asyncio
     async def test_gaierror_is_ignored(self):
-        from synapsekit.agents.tools.web_scraper import _validate_url
         import socket
+
+        from synapsekit.agents.tools.web_scraper import _validate_url
 
         with patch("socket.gethostbyname", side_effect=socket.gaierror):
             # Should not raise — unknown hosts are allowed through
@@ -421,9 +421,9 @@ class TestHTTPRequestToolRegression:
         mock_instance.request.return_value.__aenter__ = AsyncMock(return_value=resp)
         mock_instance.request.return_value.__aexit__ = AsyncMock(return_value=False)
 
-        MockSession = MagicMock(return_value=mock_instance)
+        mock_session_cls = MagicMock(return_value=mock_instance)
         mock_aiohttp = MagicMock()
-        mock_aiohttp.ClientSession = MockSession
+        mock_aiohttp.ClientSession = mock_session_cls
         mock_aiohttp.ClientTimeout = MagicMock(return_value=MagicMock())
 
         with patch.dict(sys.modules, {"aiohttp": mock_aiohttp}):
@@ -433,7 +433,7 @@ class TestHTTPRequestToolRegression:
             await tool.run(url="https://example.com")
 
         # Session constructor called exactly once despite two run() calls
-        assert MockSession.call_count == 1
+        assert mock_session_cls.call_count == 1
 
     @pytest.mark.asyncio
     async def test_aclose_clears_session(self):
@@ -812,8 +812,8 @@ class TestEvaluationPipelineRegression:
     @pytest.mark.asyncio
     async def test_batch_concurrency_semaphore_limits_concurrent(self):
         """Semaphore must cap concurrent evaluations at `concurrency`."""
-        from synapsekit.evaluation.pipeline import EvaluationPipeline
         from synapsekit.evaluation.base import MetricResult
+        from synapsekit.evaluation.pipeline import EvaluationPipeline
 
         active: list[int] = []
         peak: list[int] = [0]
@@ -832,7 +832,7 @@ class TestEvaluationPipelineRegression:
         pipeline = EvaluationPipeline([m])
         samples = [{"question": f"q{i}", "answer": "a"} for i in range(20)]
         await pipeline.evaluate_batch(samples, concurrency=3)
-        # Peak concurrent evaluations must not exceed concurrency × metrics
+        # Peak concurrent evaluations must not exceed concurrency x metrics
         assert peak[0] <= 3
 
 
@@ -847,16 +847,17 @@ class TestSitemapLoaderRegression:
     @pytest.mark.asyncio
     async def test_collect_urls_uses_deque(self):
         """_collect_urls must use a deque, not a plain list."""
-        import synapsekit.loaders.sitemap as sitemap_module
         import inspect
 
-        source = inspect.getsource(sitemap_module._SitemapLoader__class__ if False else sitemap_module)
+        from synapsekit.loaders import sitemap as sitemap_module
+
+        source = inspect.getsource(sitemap_module)
         # Check deque is imported and used in the source
         assert "deque" in source
         assert "popleft" in source
 
     def test_deque_imported_in_module(self):
-        import synapsekit.loaders.sitemap as mod
+        from synapsekit.loaders import sitemap as mod
 
         # deque must be importable from the module's namespace
         assert "deque" in dir(mod) or hasattr(mod, "deque") or "deque" in mod.__dict__
