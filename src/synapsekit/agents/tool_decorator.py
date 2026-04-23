@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import inspect
+from collections.abc import Callable
 from typing import Any
 
 from .base import BaseTool, ToolResult
 
 
 def tool(
-    name: str | callable | None = None,
+    name: str | Callable | None = None,
     description: str | None = None,
 ) -> Any:
     """Decorator that wraps a plain function into a BaseTool.

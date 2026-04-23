@@ -96,6 +96,8 @@ __all__ = [
     "FunctionCallingAgent",
     "AgentExecutor",
     "AgentConfig",
+    "SimpleAgent",
+    "agent",
     # Guardrails
     "ContentFilter",
     "Guardrails",

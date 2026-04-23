@@ -412,6 +412,8 @@ __all__ = [
     "FunctionCallingAgent",
     "AgentExecutor",
     "AgentConfig",
+    "SimpleAgent",
+    "agent",
     # Tool decorator
     "tool",
     # Multi-agent

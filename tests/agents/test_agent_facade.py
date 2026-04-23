@@ -13,13 +13,13 @@ def get_weather(city: str) -> str:
 async def test_simple_agent_async():
     # Use a cheap fast model or mock if possible, but for integration we can use a known provider.
     # To avoid API calls in CI without keys, we can use a mock LLM. But since synapsekit provides no built-in MockLLM out of the box in the test setup, we will just construct the agent to ensure factory works.
-    
+
     my_agent = agent(
         model="gpt-4o-mini",
         api_key="dummy",
         tools=[get_weather],
     )
-    
+
     assert my_agent._executor is not None
     assert my_agent._memory is None
     assert len(my_agent._executor.config.tools) == 1
@@ -33,7 +33,7 @@ def test_simple_agent_sync():
         tools=[get_weather],
         memory=True,
     )
-    
+
     assert my_agent._memory is not None
     assert len(my_agent._memory) == 0
 

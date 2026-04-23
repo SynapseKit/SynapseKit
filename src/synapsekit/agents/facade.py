@@ -70,8 +70,8 @@ def agent(
         max_iterations=10,
         system_prompt=system_prompt,
     )
-    
+
     executor = AgentExecutor(config)
     conv_memory = ConversationMemory() if memory else None
-    
+
     return SimpleAgent(executor=executor, memory=conv_memory)
