@@ -139,4 +139,3 @@ def test_facade_explicit_sambanova():
 
         llm = make_llm("Meta-Llama-3.1-8B-Instruct", "key", "sambanova", "sys", 0.2, 100)
         assert isinstance(llm, SambaNovaLLM)
-

@@ -14,7 +14,7 @@ class SemanticCache:
     cached responses when similarity exceeds a threshold.
 
     Vectors are L2-normalised on insertion so lookup reduces to a single
-    batched matrix–vector multiply (one BLAS call) instead of a Python
+    batched matrix-vector multiply (one BLAS call) instead of a Python
     for-loop over individual dot products.
 
     Usage::
@@ -65,7 +65,7 @@ class SemanticCache:
 
         Returns the cached response if similarity >= threshold, else None.
         All cached vectors are L2-normalised, so the cosine similarity matrix
-        is computed as a single BLAS matrix–vector multiply instead of a
+        is computed as a single BLAS matrix-vector multiply instead of a
         Python-level loop.
         """
         if not self._entries:
@@ -77,11 +77,11 @@ class SemanticCache:
 
         # Rebuild the stacked matrix only when entries have changed
         if self._dirty or self._matrix is None:
-            self._matrix = np.vstack(self._vectors)  # (n, D) – one allocation
+            self._matrix = np.vstack(self._vectors)  # (n, D) - one allocation
             self._dirty = False
 
         # One BLAS call replaces the entire Python for-loop
-        scores = self._matrix @ query_arr  # (n,) – dot == cosine for unit vecs
+        scores = self._matrix @ query_arr  # (n,) - dot == cosine for unit vecs
         best_idx = int(np.argmax(scores))
         best_score = float(scores[best_idx])
 

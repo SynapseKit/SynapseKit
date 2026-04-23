@@ -150,4 +150,3 @@ def test_facade_explicit_gpt4all() -> None:
     with patch.dict("sys.modules", {"gpt4all": mock_gpt4all}):
         llm = make_llm("orca-mini-3b-gguf2-q4_0.gguf", "", "gpt4all", "sys", 0.2, 100)
         assert isinstance(llm, GPT4AllLLM)
-

@@ -54,7 +54,7 @@ class EnsembleRetriever:
         )
 
         scores: dict[str, float] = {}
-        for results, weight in zip(all_results, self._weights):
+        for results, weight in zip(all_results, self._weights, strict=False):
             for rank, text in enumerate(results):
                 scores[text] = scores.get(text, 0.0) + weight / (self._rrf_k + rank + 1)
 

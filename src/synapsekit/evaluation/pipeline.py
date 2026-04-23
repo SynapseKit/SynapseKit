@@ -73,8 +73,8 @@ class EvaluationPipeline:
             ]
         )
 
-        scores = {m.name: r.score for m, r in zip(self._metrics, metric_results)}
-        details = {m.name: r for m, r in zip(self._metrics, metric_results)}
+        scores = {m.name: r.score for m, r in zip(self._metrics, metric_results, strict=False)}
+        details = {m.name: r for m, r in zip(self._metrics, metric_results, strict=False)}
         return EvaluationResult(scores=scores, details=details)
 
     async def evaluate_batch(
