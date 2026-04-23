@@ -184,6 +184,7 @@ from .loaders.mongodb import MongoDBLoader
 from .loaders.obsidian import ObsidianLoader
 from .loaders.onedrive import OneDriveLoader
 from .loaders.pdf import PDFLoader
+from .loaders.pubmed import PubMedLoader
 from .loaders.rss import RSSLoader
 from .loaders.rtf import RTFLoader
 from .loaders.s3 import S3Loader
@@ -408,6 +409,7 @@ __all__ = [
     "ExcelLoader",
     "PowerPointLoader",
     "ParquetLoader",
+    "PubMedLoader",
     "SitemapLoader",
     "YouTubeLoader",
     # Parsers
@@ -677,6 +679,7 @@ _LAZY_IMPORTS = {
     "SalesforceLoader": "loaders.salesforce",
     "DropboxLoader": "loaders.dropbox",
     "ParquetLoader": "loaders.parquet",
+    "PubMedLoader": "loaders.pubmed",
     "RedisLoader": "loaders.redis_loader",
     "ElasticsearchLoader": "loaders.elasticsearch",
     "SitemapLoader": "loaders.sitemap",
