@@ -1,5 +1,6 @@
 from .base import BaseTool, ToolResult
 from .executor import AgentConfig, AgentExecutor
+from .facade import SimpleAgent, agent
 from .function_calling import FunctionCallingAgent
 from .guardrails import (
     ContentFilter,
@@ -97,6 +98,8 @@ __all__ = [
     "FunctionCallingAgent",
     "AgentExecutor",
     "AgentConfig",
+    "SimpleAgent",
+    "agent",
     # Guardrails
     "ContentFilter",
     "Guardrails",

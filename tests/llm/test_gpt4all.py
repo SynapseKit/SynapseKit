@@ -144,9 +144,10 @@ class TestGPT4AllLLM:
 
 
 def test_facade_explicit_gpt4all() -> None:
-    from synapsekit.rag.facade import _make_llm
+    from synapsekit.llm._factory import make_llm
 
     mock_gpt4all = MagicMock()
     with patch.dict("sys.modules", {"gpt4all": mock_gpt4all}):
-        llm = _make_llm("orca-mini-3b-gguf2-q4_0.gguf", "", "gpt4all", "sys", 0.2, 100)
+        llm = make_llm("orca-mini-3b-gguf2-q4_0.gguf", "", "gpt4all", "sys", 0.2, 100)
         assert isinstance(llm, GPT4AllLLM)
+

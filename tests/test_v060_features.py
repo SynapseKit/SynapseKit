@@ -346,7 +346,7 @@ def test_openrouter_base_url():
     from synapsekit import LLMConfig
     from synapsekit.llm.openrouter import _OPENROUTER_BASE_URL, OpenRouterLLM
 
-    llm = OpenRouterLLM(LLMConfig(model="openai/gpt-4o", api_key="test"))
+    llm = OpenRouterLLM(LLMConfig(model="openai/gpt-4o", api_key="test", provider="openrouter"))
     assert llm._base_url == _OPENROUTER_BASE_URL
 
 
@@ -355,7 +355,7 @@ def test_together_base_url():
     from synapsekit import LLMConfig
     from synapsekit.llm.together import _TOGETHER_BASE_URL, TogetherLLM
 
-    llm = TogetherLLM(LLMConfig(model="meta-llama/Llama-3-70b", api_key="test"))
+    llm = TogetherLLM(LLMConfig(model="meta-llama/Llama-3-70b", api_key="test", provider="together"))
     assert llm._base_url == _TOGETHER_BASE_URL
 
 
@@ -364,7 +364,7 @@ def test_fireworks_base_url():
     from synapsekit import LLMConfig
     from synapsekit.llm.fireworks import _FIREWORKS_BASE_URL, FireworksLLM
 
-    llm = FireworksLLM(LLMConfig(model="accounts/fireworks/models/llama", api_key="test"))
+    llm = FireworksLLM(LLMConfig(model="accounts/fireworks/models/llama", api_key="test", provider="fireworks"))
     assert llm._base_url == _FIREWORKS_BASE_URL
 
 
@@ -373,7 +373,7 @@ def test_openrouter_custom_base_url():
     from synapsekit import LLMConfig
     from synapsekit.llm.openrouter import OpenRouterLLM
 
-    llm = OpenRouterLLM(LLMConfig(model="test", api_key="test"), base_url="http://localhost:8000")
+    llm = OpenRouterLLM(LLMConfig(model="test", api_key="test", provider="openrouter"), base_url="http://localhost:8000")
     assert llm._base_url == "http://localhost:8000"
 
 
@@ -383,12 +383,12 @@ def test_openrouter_custom_base_url():
 
 
 def test_facade_openrouter_detection():
-    from synapsekit.rag.facade import _make_llm
+    from synapsekit.llm._factory import make_llm
 
     # Model with slash should auto-detect as openrouter
     # We can't actually instantiate without openai, so just test the logic
     try:
-        llm = _make_llm("openai/gpt-4o", "test-key", None, "sys", 0.2, 1024)
+        llm = make_llm("openai/gpt-4o", "test-key", None, "sys", 0.2, 1024)
         # If openai is installed, check type
         assert type(llm).__name__ == "OpenRouterLLM"
     except ImportError:
@@ -397,9 +397,9 @@ def test_facade_openrouter_detection():
 
 def test_facade_explicit_together():
     try:
-        from synapsekit.rag.facade import _make_llm
+        from synapsekit.llm._factory import make_llm
 
-        llm = _make_llm("meta-llama/Llama-3-70b", "test-key", "together", "sys", 0.2, 1024)
+        llm = make_llm("meta-llama/Llama-3-70b", "test-key", "together", "sys", 0.2, 1024)
         assert type(llm).__name__ == "TogetherLLM"
     except ImportError:
         pytest.skip("openai not installed")
@@ -407,9 +407,9 @@ def test_facade_explicit_together():
 
 def test_facade_explicit_fireworks():
     try:
-        from synapsekit.rag.facade import _make_llm
+        from synapsekit.llm._factory import make_llm
 
-        llm = _make_llm("llama-v3-70b", "test-key", "fireworks", "sys", 0.2, 1024)
+        llm = make_llm("llama-v3-70b", "test-key", "fireworks", "sys", 0.2, 1024)
         assert type(llm).__name__ == "FireworksLLM"
     except ImportError:
         pytest.skip("openai not installed")
@@ -510,3 +510,5 @@ def test_version():
     import synapsekit
 
     assert synapsekit.__version__ == "1.5.6"
+
+
