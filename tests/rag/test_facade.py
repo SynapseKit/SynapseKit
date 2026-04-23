@@ -161,3 +161,7 @@ class TestRAGFacade:
         _patch_rag(rag)
         await rag.ask("test")
         assert rag.tracer.summary()["calls"] == 0
+
+    def test_auto_eval_flag_propagates_to_pipeline(self):
+        rag = RAG(model="gpt-4o-mini", api_key="sk-test", auto_eval=True)
+        assert rag._pipeline.config.auto_eval is True
