@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from ..observability.tracer import COST_TABLE
-from ..rag.facade import _make_llm
+from ..llm._factory import make_llm
 from .base import BaseLLM, LLMConfig
 
 # Static quality scores (0-1) for known models.
@@ -112,7 +112,7 @@ class CostRouter(BaseLLM):
 
     @staticmethod
     def _build_llm(spec: RouterModelSpec) -> BaseLLM:
-        return _make_llm(
+        return make_llm(
             model=spec.model,
             api_key=spec.api_key,
             provider=spec.provider,
