@@ -9,7 +9,7 @@ from .base import BaseTool, ToolResult
 
 
 def tool(
-    name: str | None = None,
+    name: str | callable | None = None,
     description: str | None = None,
 ) -> Any:
     """Decorator that wraps a plain function into a BaseTool.
@@ -21,13 +21,15 @@ def tool(
             return str(a + b)
 
         # Or minimal — infers name and description from function:
-        @tool()
+        @tool
         def multiply(a: int, b: int) -> str:
             \"\"\"Multiply two numbers.\"\"\"
             return str(a * b)
 
     The decorated function can be sync or async.
     """
+    if callable(name):
+        return tool()(name)
 
     def decorator(fn: Any) -> BaseTool:
         tool_name = name or fn.__name__
