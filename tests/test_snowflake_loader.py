@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import sys
 import types
-from unittest.mock import MagicMock, AsyncMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from synapsekit.loaders.snowflake import SnowflakeLoader
-
 
 # ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -107,7 +106,7 @@ class TestSnowflakeLoaderLimitSQL:
             account="a", user="u", password="p",
             query="SELECT * FROM t", limit=2
         )
-        mock_pkg, mock_connector, mock_conn, mock_cur = _make_snowflake_mock(
+        mock_pkg, mock_connector, _mock_conn, mock_cur = _make_snowflake_mock(
             rows=[("r1",), ("r2",)], columns=["col"]
         )
         with patch.dict(sys.modules, {"snowflake": mock_pkg, "snowflake.connector": mock_connector}):
@@ -124,7 +123,7 @@ class TestSnowflakeLoaderLimitSQL:
             account="a", user="u", password="p",
             query="SELECT * FROM t"
         )
-        mock_pkg, mock_connector, mock_conn, mock_cur = _make_snowflake_mock(
+        mock_pkg, mock_connector, _mock_conn, mock_cur = _make_snowflake_mock(
             rows=[("v1",), ("v2",), ("v3",)], columns=["col"]
         )
         with patch.dict(sys.modules, {"snowflake": mock_pkg, "snowflake.connector": mock_connector}):
@@ -191,7 +190,7 @@ class TestSnowflakeLoaderDocuments:
 
     def test_query_error_raises_runtime_error(self):
         loader = SnowflakeLoader(account="a", user="u", password="p", query="BAD SQL")
-        mock_pkg, mock_connector, mock_conn, mock_cur = _make_snowflake_mock(rows=[], columns=[])
+        mock_pkg, mock_connector, _mock_conn, mock_cur = _make_snowflake_mock(rows=[], columns=[])
         mock_cur.execute.side_effect = RuntimeError("SQL compilation error")
         with patch.dict(sys.modules, {"snowflake": mock_pkg, "snowflake.connector": mock_connector}):
             with pytest.raises(RuntimeError, match="Snowflake query failed"):

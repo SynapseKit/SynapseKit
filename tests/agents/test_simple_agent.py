@@ -10,7 +10,6 @@ import pytest
 from synapsekit.agents.facade import SimpleAgent, agent
 from synapsekit.memory.conversation import ConversationMemory
 
-
 # ── SimpleAgent structure ────────────────────────────────────────────────────
 
 
@@ -133,12 +132,12 @@ class TestAgentFactory:
 
     def test_api_key_defaults_to_empty_string(self):
         """api_key must have a default so local models (Ollama) don't require it."""
-        sa, mock_llm, _ = self._make_agent(model="llama3.2")
+        _sa, mock_llm, _ = self._make_agent(model="llama3.2")
         call_kwargs = mock_llm.call_args[1]
         assert call_kwargs["api_key"] == ""
 
     def test_explicit_api_key_is_forwarded(self):
-        sa, mock_llm, _ = self._make_agent(model="gpt-4o-mini", api_key="sk-test")
+        _sa, mock_llm, _ = self._make_agent(model="gpt-4o-mini", api_key="sk-test")
         call_kwargs = mock_llm.call_args[1]
         assert call_kwargs["api_key"] == "sk-test"
 
@@ -151,7 +150,7 @@ class TestAgentFactory:
         assert isinstance(sa._memory, ConversationMemory)
 
     def test_system_prompt_forwarded_to_make_llm(self):
-        sa, mock_llm, _ = self._make_agent(
+        _sa, mock_llm, _ = self._make_agent(
             model="gpt-4o-mini", system_prompt="You are a pirate."
         )
         call_kwargs = mock_llm.call_args[1]

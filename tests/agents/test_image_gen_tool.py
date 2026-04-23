@@ -10,7 +10,6 @@ import pytest
 from synapsekit.agents.base import BaseTool, ToolResult
 from synapsekit.agents.tools.image_gen import ImageGenerationTool
 
-
 # ── construction & subclassing ──────────────────────────────────────────────
 
 
