@@ -263,4 +263,4 @@ class TestRAGPipeline:
         await asyncio.sleep(0)
 
         assert not called
-        assert tracer.summary()["avg_faithfulness"] == 0.0
+        assert tracer.summary()["avg_faithfulness"] is None

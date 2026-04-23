@@ -43,6 +43,13 @@ class SnowflakeLoader:
         self._text_fields = text_fields
         self._limit = limit
 
+    def _effective_query(self) -> str:
+        """Append LIMIT to the query when set, so Snowflake enforces it server-side."""
+        if self._limit is None:
+            return self._query
+        q = self._query.rstrip().rstrip(";")
+        return f"{q} LIMIT {int(self._limit)}"
+
     def load(self) -> list[Document]:
         try:
             import snowflake.connector
@@ -64,7 +71,7 @@ class SnowflakeLoader:
                 role=self._role,
             )
             cur = conn.cursor()
-            cur.execute(self._query)
+            cur.execute(self._effective_query())
             rows = cur.fetchall()
             columns = [col[0] for col in (cur.description or [])]
         except Exception as e:
@@ -76,9 +83,6 @@ class SnowflakeLoader:
             if conn is not None:
                 with suppress(Exception):
                     conn.close()
-
-        if self._limit is not None:
-            rows = rows[: self._limit]
 
         docs: list[Document] = []
         for row in rows:

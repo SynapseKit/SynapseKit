@@ -160,9 +160,9 @@ class TokenTracer:
         relevancy_values = [r.relevancy for r in self._quality_records if r.relevancy is not None]
 
         avg_faithfulness = (
-            sum(faithfulness_values) / len(faithfulness_values) if faithfulness_values else 0.0
+            sum(faithfulness_values) / len(faithfulness_values) if faithfulness_values else None
         )
-        avg_relevancy = sum(relevancy_values) / len(relevancy_values) if relevancy_values else 0.0
+        avg_relevancy = sum(relevancy_values) / len(relevancy_values) if relevancy_values else None
 
         return {
             "model": self.model,
@@ -172,8 +172,8 @@ class TokenTracer:
             "total_tokens": total_input + total_output,
             "total_latency_ms": round(total_latency, 2),
             "estimated_cost_usd": round(cost_input + cost_output, 6),
-            "avg_faithfulness": round(avg_faithfulness, 4),
-            "avg_relevancy": round(avg_relevancy, 4),
+            "avg_faithfulness": round(avg_faithfulness, 4) if avg_faithfulness is not None else None,
+            "avg_relevancy": round(avg_relevancy, 4) if avg_relevancy is not None else None,
             "quality_trend": self._quality_trend(),
         }
 

@@ -47,7 +47,7 @@ class SimpleAgent:
 
 def agent(
     model: str,
-    api_key: str,
+    api_key: str = "",
     tools: list[BaseTool] | None = None,
     memory: bool = False,
     provider: str | None = None,

@@ -100,12 +100,13 @@ def test_empty_results_returns_empty_list() -> None:
 
 
 def test_limit_restricts_row_count() -> None:
+    # LIMIT is now injected into SQL (server-side), so the mock cursor returns
+    # only the rows the DB would return with LIMIT 2.
     mock_cur = MagicMock()
     mock_cur.description = [("id",), ("title",)]
     mock_cur.fetchall.return_value = [
         (1, "One"),
         (2, "Two"),
-        (3, "Three"),
     ]
 
     mock_conn = MagicMock()
@@ -122,6 +123,9 @@ def test_limit_restricts_row_count() -> None:
         )
         docs = loader.load()
 
+    # Verify LIMIT was applied in SQL, not Python
+    executed_query = mock_cur.execute.call_args[0][0]
+    assert "LIMIT 2" in executed_query
     assert len(docs) == 2
     assert docs[0].metadata["id"] == 1
     assert docs[1].metadata["id"] == 2

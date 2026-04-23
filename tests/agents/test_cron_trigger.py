@@ -67,7 +67,7 @@ async def test_interval_trigger_runs_and_logs_to_audit_log() -> None:
     trigger = CronTrigger(
         agent=agent,
         every="5s",
-        input="summarize yesterday",
+        prompt="summarize yesterday",
         timezone="UTC",
         audit_log=audit_log,
         clock=clock.now,
@@ -113,7 +113,7 @@ async def test_cron_expression_uses_croniter_when_available(
     trigger = CronTrigger(
         agent=agent,
         schedule="*/15 * * * *",
-        input="tick",
+        prompt="tick",
         timezone="UTC",
         clock=clock.now,
         sleep_func=clock.sleep,
@@ -140,7 +140,7 @@ async def test_catch_up_replays_missed_interval_runs() -> None:
     trigger = CronTrigger(
         agent=agent,
         every="5s",
-        input="check queue",
+        prompt="check queue",
         timezone="UTC",
         missed_run_policy="catch_up",
         clock=clock.now,
@@ -172,7 +172,7 @@ async def test_stop_waits_for_in_flight_run_to_finish() -> None:
     trigger = CronTrigger(
         agent=agent,
         every="5s",
-        input="do work",
+        prompt="do work",
         timezone="UTC",
         clock=clock.now,
         sleep_func=clock.sleep,
@@ -207,7 +207,7 @@ async def test_skip_policy_drops_overdue_runs_after_long_execution() -> None:
     trigger = CronTrigger(
         agent=SimpleNamespace(run=run),
         every="5s",
-        input="process once",
+        prompt="process once",
         timezone="UTC",
         audit_log=audit_log,
         clock=clock.now,
@@ -237,7 +237,7 @@ async def test_result_sink_can_stop_trigger_without_self_await_deadlock() -> Non
     trigger = CronTrigger(
         agent=SimpleNamespace(run=AsyncMock(return_value="done")),
         every="5s",
-        input="stop after first run",
+        prompt="stop after first run",
         timezone="UTC",
         clock=clock.now,
         sleep_func=clock.sleep,
@@ -261,7 +261,7 @@ def test_default_clock_is_timezone_aware(monkeypatch: pytest.MonkeyPatch) -> Non
     trigger = CronTrigger(
         agent=SimpleNamespace(run=AsyncMock(return_value="done")),
         every="5s",
-        input="aware now",
+        prompt="aware now",
         timezone="Asia/Kolkata",
     )
 
@@ -298,7 +298,7 @@ async def test_missing_croniter_error_mentions_synapsekit_cron_extra(
     trigger = CronTrigger(
         agent=SimpleNamespace(run=AsyncMock(return_value="done")),
         schedule="0 9 * * *",
-        input="cron",
+        prompt="cron",
         timezone="UTC",
         clock=lambda: datetime(2026, 1, 1, 9, 0, tzinfo=UTC),
         sleep_func=AsyncMock(),
@@ -306,3 +306,34 @@ async def test_missing_croniter_error_mentions_synapsekit_cron_extra(
 
     with pytest.raises(ImportError, match="synapsekit\\[cron\\]"):
         await trigger.start()
+
+
+# ── regression: prompt param must not shadow builtins.input ─────────────────
+
+
+def test_cron_trigger_init_uses_prompt_not_input() -> None:
+    """Regression: CronTrigger.__init__ must accept 'prompt', not 'input'.
+
+    Using 'input' as a parameter name shadows the Python builtin; the parameter
+    was renamed to 'prompt' to fix this.
+    """
+    import inspect
+
+    sig = inspect.signature(CronTrigger.__init__)
+    assert "prompt" in sig.parameters, "CronTrigger must accept 'prompt' keyword argument"
+    assert "input" not in sig.parameters, (
+        "'input' shadows the builtin; use 'prompt' instead"
+    )
+
+
+def test_cron_trigger_stores_prompt_on_self() -> None:
+    """The payload string must be accessible as .prompt, not .input."""
+    trigger = CronTrigger(
+        agent=lambda s: s,
+        prompt="daily-digest",
+        every="1h",
+    )
+    assert trigger.prompt == "daily-digest"
+    assert not hasattr(trigger, "input"), (
+        "CronTrigger must not expose .input — use .prompt"
+    )
