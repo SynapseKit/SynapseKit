@@ -34,6 +34,7 @@ from .agents import (
     Crew,
     CrewAgent,
     CrewResult,
+    CronTrigger,
     DateTimeTool,
     DuckDuckGoSearchTool,
     EmailTool,
@@ -86,6 +87,7 @@ from .agents import (
     ToolResult,
     TopicRestrictor,
     TranslationTool,
+    TriggerResult,
     TwilioTool,
     VectorSearchTool,
     WeatherTool,
@@ -426,6 +428,8 @@ __all__ = [
     "FunctionCallingAgent",
     "AgentExecutor",
     "AgentConfig",
+    "CronTrigger",
+    "TriggerResult",
     # Tool decorator
     "tool",
     # Multi-agent

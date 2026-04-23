@@ -70,6 +70,7 @@ rss = ["feedparser>=6.0"]
 groq = ["groq>=0.9"]
 audio = ["openai>=1.0"]
 video = ["openai>=1.0"]
+cron = ["croniter>=2.0"]
 excel = ["openpyxl>=3.1"]
 pptx = ["python-pptx>=0.6"]
 docx = ["python-docx>=1.0"]
@@ -164,6 +165,7 @@ all = [
     "psycopg[binary]>=3.1",
     "asyncpg>=0.29",
     "groq>=0.9",
+    "croniter>=2.0",
     "llama-cpp-python>=0.2",
     "erniebot>=0.5",
     "wolframalpha>=5.0",
