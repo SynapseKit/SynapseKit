@@ -131,11 +131,12 @@ class TestSambaNovaLLM:
 
 
 def test_facade_explicit_sambanova():
-    from synapsekit.rag.facade import _make_llm
+    from synapsekit.llm._factory import make_llm
 
     mock_openai = MagicMock()
     with patch.dict("sys.modules", {"openai": mock_openai}):
         from synapsekit.llm.sambanova import SambaNovaLLM
 
-        llm = _make_llm("Meta-Llama-3.1-8B-Instruct", "key", "sambanova", "sys", 0.2, 100)
+        llm = make_llm("Meta-Llama-3.1-8B-Instruct", "key", "sambanova", "sys", 0.2, 100)
         assert isinstance(llm, SambaNovaLLM)
+

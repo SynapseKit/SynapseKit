@@ -141,11 +141,11 @@ class TestVLLMLLM:
 
 
 def test_facade_explicit_vllm():
-    from synapsekit.rag.facade import _make_llm
+    from synapsekit.llm._factory import make_llm
 
     mock_openai = MagicMock()
     with patch.dict("sys.modules", {"openai": mock_openai}):
         from synapsekit.llm.vllm import VLLMLLM
 
-        llm = _make_llm("meta-llama/Llama-3.1-8B-Instruct", "key", "vllm", "sys", 0.2, 100)
+        llm = make_llm("meta-llama/Llama-3.1-8B-Instruct", "key", "vllm", "sys", 0.2, 100)
         assert isinstance(llm, VLLMLLM)
