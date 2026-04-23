@@ -64,3 +64,32 @@ class TestTokenTracer:
         t0 = tracer.start_timer()
         elapsed = tracer.elapsed_ms(t0)
         assert elapsed >= 0.0
+
+    def test_quality_history_and_averages(self):
+        tracer = TokenTracer(model="gpt-4o-mini")
+        tracer.record(input_tokens=100, output_tokens=50, latency_ms=10.0)
+        tracer.record_quality(faithfulness=0.8, relevancy=0.6, call_id=1)
+        tracer.record(input_tokens=100, output_tokens=50, latency_ms=10.0)
+        tracer.record_quality(faithfulness=1.0, relevancy=0.9, call_id=2)
+
+        history = tracer.quality_history()
+        assert len(history) == 2
+        assert history[0]["call_id"] == 1
+        assert history[1]["call_id"] == 2
+
+        s = tracer.summary()
+        assert s["avg_faithfulness"] == 0.9
+        assert s["avg_relevancy"] == 0.75
+
+    def test_quality_trend_improving_and_degrading(self):
+        improving = TokenTracer(model="gpt-4o-mini", quality_window=4, quality_trend_threshold=0.01)
+        for score in [0.2, 0.3, 0.8, 0.9]:
+            improving.record(input_tokens=1, output_tokens=1, latency_ms=1.0)
+            improving.record_quality(faithfulness=score, relevancy=score)
+        assert improving.summary()["quality_trend"] == "improving"
+
+        degrading = TokenTracer(model="gpt-4o-mini", quality_window=4, quality_trend_threshold=0.01)
+        for score in [0.9, 0.8, 0.3, 0.2]:
+            degrading.record(input_tokens=1, output_tokens=1, latency_ms=1.0)
+            degrading.record_quality(faithfulness=score, relevancy=score)
+        assert degrading.summary()["quality_trend"] == "degrading"

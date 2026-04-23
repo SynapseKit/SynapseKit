@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from collections.abc import AsyncGenerator
 from dataclasses import dataclass, field
 
@@ -25,6 +26,7 @@ class RAGConfig:
     system_prompt: str = "Answer using only the provided context. If the context does not contain the answer, say so."
     chunk_size: int = 512
     chunk_overlap: int = 50
+    auto_eval: bool = False
     splitter: BaseSplitter | None = field(default=None)
 
 
@@ -40,6 +42,7 @@ class RAGPipeline:
             chunk_size=config.chunk_size,
             chunk_overlap=config.chunk_overlap,
         )
+        self._auto_eval_tasks: set[asyncio.Task[None]] = set()
 
     def __repr__(self) -> str:
         model = type(self.config.llm).__name__
@@ -121,11 +124,75 @@ class RAGPipeline:
 
                 if tracer:
                     used = self.config.llm.tokens_used
-                    tracer.record(
+                    call_id = tracer.record(
                         input_tokens=used["input"],
                         output_tokens=used["output"],
                         latency_ms=tracer.elapsed_ms(t0),
                     )
+
+                    if self.config.auto_eval and tracer.enabled:
+                        self._schedule_auto_eval(
+                            query=query,
+                            answer=answer,
+                            contexts=chunks,
+                            call_id=call_id,
+                        )
+
+    def _schedule_auto_eval(
+        self,
+        query: str,
+        answer: str,
+        contexts: list[str],
+        call_id: int,
+    ) -> None:
+        task = asyncio.create_task(
+            self._run_auto_eval(
+                query=query,
+                answer=answer,
+                contexts=contexts,
+                call_id=call_id,
+            )
+        )
+        self._auto_eval_tasks.add(task)
+        task.add_done_callback(self._auto_eval_tasks.discard)
+
+    async def _run_auto_eval(
+        self,
+        query: str,
+        answer: str,
+        contexts: list[str],
+        call_id: int,
+    ) -> None:
+        tracer = self.config.tracer
+        if tracer is None or not tracer.enabled:
+            return
+
+        try:
+            from ..evaluation import EvaluationPipeline, FaithfulnessMetric, RelevancyMetric
+
+            metrics = [
+                FaithfulnessMetric(self.config.llm),
+                RelevancyMetric(self.config.llm),
+            ]
+            pipeline = EvaluationPipeline(metrics=metrics)
+            result = await pipeline.evaluate(
+                question=query,
+                answer=answer,
+                contexts=contexts,
+            )
+            tracer.record_quality(
+                faithfulness=result.scores.get("faithfulness"),
+                relevancy=result.scores.get("relevancy"),
+                call_id=call_id,
+            )
+        except Exception:
+            # Auto-eval is best-effort. Never break the primary RAG call.
+            return
+
+    async def wait_for_auto_eval(self) -> None:
+        if not self._auto_eval_tasks:
+            return
+        await asyncio.gather(*list(self._auto_eval_tasks), return_exceptions=True)
 
     async def ask(self, query: str, top_k: int | None = None) -> str:
         return "".join([t async for t in self.stream(query, top_k=top_k)])

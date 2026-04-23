@@ -54,6 +54,7 @@ class RAG:
         temperature: float = 0.2,
         max_tokens: int = 1024,
         trace: bool = True,
+        auto_eval: bool = False,
     ) -> None:
         llm = make_llm(model, api_key, provider, system_prompt, temperature, max_tokens)
         embeddings = SynapsekitEmbeddings(model=embedding_model)
@@ -70,6 +71,7 @@ class RAG:
                 tracer=tracer,
                 retrieval_top_k=retrieval_top_k,
                 system_prompt=system_prompt,
+                auto_eval=auto_eval,
             )
         )
         self._embeddings = embeddings
