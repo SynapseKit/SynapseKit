@@ -186,6 +186,7 @@ LOADER_NAMES = [
     "S3Loader",
     "SalesforceLoader",
     "SitemapLoader",
+    "SnowflakeLoader",
     "SQLLoader",
     "SlackLoader",
     "StringLoader",

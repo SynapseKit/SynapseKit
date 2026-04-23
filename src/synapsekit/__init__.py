@@ -189,6 +189,7 @@ from .loaders.rss import RSSLoader
 from .loaders.rtf import RTFLoader
 from .loaders.s3 import S3Loader
 from .loaders.salesforce import SalesforceLoader
+from .loaders.snowflake import SnowflakeLoader
 from .loaders.sql import SQLLoader
 from .loaders.teams import TeamsLoader
 from .loaders.text import StringLoader, TextLoader
@@ -405,6 +406,7 @@ __all__ = [
     "S3Loader",
     "SalesforceLoader",
     "SitemapLoader",
+    "SnowflakeLoader",
     "WikipediaLoader",
     "ExcelLoader",
     "PowerPointLoader",
@@ -677,6 +679,7 @@ _LAZY_IMPORTS = {
     "BigQueryLoader": "loaders.bigquery",
     "S3Loader": "loaders.s3",
     "SalesforceLoader": "loaders.salesforce",
+    "SnowflakeLoader": "loaders.snowflake",
     "DropboxLoader": "loaders.dropbox",
     "ParquetLoader": "loaders.parquet",
     "PubMedLoader": "loaders.pubmed",
