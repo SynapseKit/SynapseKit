@@ -70,23 +70,19 @@ class TestSnowflakeLoaderLimitSQL:
     """
 
     def test_effective_query_without_limit(self):
-        loader = SnowflakeLoader(
-            account="a", user="u", password="p", query="SELECT * FROM t"
-        )
+        loader = SnowflakeLoader(account="a", user="u", password="p", query="SELECT * FROM t")
         assert loader._effective_query() == "SELECT * FROM t"
 
     def test_effective_query_appends_limit(self):
         loader = SnowflakeLoader(
-            account="a", user="u", password="p",
-            query="SELECT * FROM t", limit=10
+            account="a", user="u", password="p", query="SELECT * FROM t", limit=10
         )
         q = loader._effective_query()
         assert q.endswith("LIMIT 10"), f"Expected LIMIT 10 in query, got: {q!r}"
 
     def test_effective_query_strips_trailing_semicolon_before_limit(self):
         loader = SnowflakeLoader(
-            account="a", user="u", password="p",
-            query="SELECT * FROM t;", limit=5
+            account="a", user="u", password="p", query="SELECT * FROM t;", limit=5
         )
         q = loader._effective_query()
         assert ";" not in q, "Semicolon should be stripped before LIMIT"
@@ -94,8 +90,7 @@ class TestSnowflakeLoaderLimitSQL:
 
     def test_effective_query_strips_trailing_whitespace_before_limit(self):
         loader = SnowflakeLoader(
-            account="a", user="u", password="p",
-            query="SELECT * FROM t   ", limit=3
+            account="a", user="u", password="p", query="SELECT * FROM t   ", limit=3
         )
         q = loader._effective_query()
         assert q.endswith("LIMIT 3")
@@ -103,13 +98,14 @@ class TestSnowflakeLoaderLimitSQL:
     def test_limit_is_applied_in_sql_not_python(self):
         """Verify execute() receives the LIMIT-bearing query, not the plain one."""
         loader = SnowflakeLoader(
-            account="a", user="u", password="p",
-            query="SELECT * FROM t", limit=2
+            account="a", user="u", password="p", query="SELECT * FROM t", limit=2
         )
         mock_pkg, mock_connector, _mock_conn, mock_cur = _make_snowflake_mock(
             rows=[("r1",), ("r2",)], columns=["col"]
         )
-        with patch.dict(sys.modules, {"snowflake": mock_pkg, "snowflake.connector": mock_connector}):
+        with patch.dict(
+            sys.modules, {"snowflake": mock_pkg, "snowflake.connector": mock_connector}
+        ):
             docs = loader.load()
 
         executed_query = mock_cur.execute.call_args[0][0]
@@ -119,14 +115,13 @@ class TestSnowflakeLoaderLimitSQL:
         assert len(docs) == 2
 
     def test_no_limit_fetches_all_rows(self):
-        loader = SnowflakeLoader(
-            account="a", user="u", password="p",
-            query="SELECT * FROM t"
-        )
+        loader = SnowflakeLoader(account="a", user="u", password="p", query="SELECT * FROM t")
         mock_pkg, mock_connector, _mock_conn, mock_cur = _make_snowflake_mock(
             rows=[("v1",), ("v2",), ("v3",)], columns=["col"]
         )
-        with patch.dict(sys.modules, {"snowflake": mock_pkg, "snowflake.connector": mock_connector}):
+        with patch.dict(
+            sys.modules, {"snowflake": mock_pkg, "snowflake.connector": mock_connector}
+        ):
             docs = loader.load()
 
         executed_query = mock_cur.execute.call_args[0][0]
@@ -135,10 +130,7 @@ class TestSnowflakeLoaderLimitSQL:
 
     def test_limit_integer_cast_safety(self):
         """Ensure the limit value is always cast to int."""
-        loader = SnowflakeLoader(
-            account="a", user="u", password="p",
-            query="SELECT 1", limit=50
-        )
+        loader = SnowflakeLoader(account="a", user="u", password="p", query="SELECT 1", limit=50)
         q = loader._effective_query()
         assert q.endswith("LIMIT 50")
         assert ";" not in q
@@ -150,13 +142,17 @@ class TestSnowflakeLoaderLimitSQL:
 class TestSnowflakeLoaderDocuments:
     def _load_with_rows(self, rows, columns, text_fields=None, limit=None):
         loader = SnowflakeLoader(
-            account="a", user="u", password="p",
+            account="a",
+            user="u",
+            password="p",
             query="SELECT 1",
             text_fields=text_fields,
             limit=limit,
         )
         mock_pkg, mock_connector, _, _ = _make_snowflake_mock(rows=rows, columns=columns)
-        with patch.dict(sys.modules, {"snowflake": mock_pkg, "snowflake.connector": mock_connector}):
+        with patch.dict(
+            sys.modules, {"snowflake": mock_pkg, "snowflake.connector": mock_connector}
+        ):
             return loader.load()
 
     def test_all_columns_joined_as_text(self):
@@ -192,7 +188,9 @@ class TestSnowflakeLoaderDocuments:
         loader = SnowflakeLoader(account="a", user="u", password="p", query="BAD SQL")
         mock_pkg, mock_connector, _mock_conn, mock_cur = _make_snowflake_mock(rows=[], columns=[])
         mock_cur.execute.side_effect = RuntimeError("SQL compilation error")
-        with patch.dict(sys.modules, {"snowflake": mock_pkg, "snowflake.connector": mock_connector}):
+        with patch.dict(
+            sys.modules, {"snowflake": mock_pkg, "snowflake.connector": mock_connector}
+        ):
             with pytest.raises(RuntimeError, match="Snowflake query failed"):
                 loader.load()
 
@@ -204,10 +202,10 @@ class TestSnowflakeLoaderAsync:
     @pytest.mark.asyncio
     async def test_aload_returns_documents(self):
         loader = SnowflakeLoader(account="a", user="u", password="p", query="SELECT 1")
-        mock_pkg, mock_connector, _, _ = _make_snowflake_mock(
-            rows=[("hello",)], columns=["col"]
-        )
-        with patch.dict(sys.modules, {"snowflake": mock_pkg, "snowflake.connector": mock_connector}):
+        mock_pkg, mock_connector, _, _ = _make_snowflake_mock(rows=[("hello",)], columns=["col"])
+        with patch.dict(
+            sys.modules, {"snowflake": mock_pkg, "snowflake.connector": mock_connector}
+        ):
             docs = await loader.aload()
 
         assert len(docs) == 1

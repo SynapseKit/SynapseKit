@@ -172,7 +172,9 @@ class TokenTracer:
             "total_tokens": total_input + total_output,
             "total_latency_ms": round(total_latency, 2),
             "estimated_cost_usd": round(cost_input + cost_output, 6),
-            "avg_faithfulness": round(avg_faithfulness, 4) if avg_faithfulness is not None else None,
+            "avg_faithfulness": round(avg_faithfulness, 4)
+            if avg_faithfulness is not None
+            else None,
             "avg_relevancy": round(avg_relevancy, 4) if avg_relevancy is not None else None,
             "quality_trend": self._quality_trend(),
         }

@@ -56,9 +56,7 @@ class ImageGenerationTool(BaseTool):
             try:
                 from openai import AsyncOpenAI
             except ImportError:
-                raise ImportError(
-                    "openai package required: pip install openai"
-                ) from None
+                raise ImportError("openai package required: pip install openai") from None
             self._client = AsyncOpenAI(
                 api_key=self._api_key or None,
                 base_url=self._base_url,

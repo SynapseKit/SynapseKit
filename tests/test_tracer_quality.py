@@ -123,9 +123,16 @@ class TestTracerSummaryReturnTypes:
         tracer = TokenTracer(model="gpt-4o-mini")
         summary = tracer.summary()
         expected_keys = {
-            "model", "calls", "total_input_tokens", "total_output_tokens",
-            "total_tokens", "total_latency_ms", "estimated_cost_usd",
-            "avg_faithfulness", "avg_relevancy", "quality_trend",
+            "model",
+            "calls",
+            "total_input_tokens",
+            "total_output_tokens",
+            "total_tokens",
+            "total_latency_ms",
+            "estimated_cost_usd",
+            "avg_faithfulness",
+            "avg_relevancy",
+            "quality_trend",
         }
         assert expected_keys.issubset(summary.keys())
 

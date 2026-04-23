@@ -321,9 +321,7 @@ def test_cron_trigger_init_uses_prompt_not_input() -> None:
 
     sig = inspect.signature(CronTrigger.__init__)
     assert "prompt" in sig.parameters, "CronTrigger must accept 'prompt' keyword argument"
-    assert "input" not in sig.parameters, (
-        "'input' shadows the builtin; use 'prompt' instead"
-    )
+    assert "input" not in sig.parameters, "'input' shadows the builtin; use 'prompt' instead"
 
 
 def test_cron_trigger_stores_prompt_on_self() -> None:
@@ -334,6 +332,4 @@ def test_cron_trigger_stores_prompt_on_self() -> None:
         every="1h",
     )
     assert trigger.prompt == "daily-digest"
-    assert not hasattr(trigger, "input"), (
-        "CronTrigger must not expose .input — use .prompt"
-    )
+    assert not hasattr(trigger, "input"), "CronTrigger must not expose .input — use .prompt"

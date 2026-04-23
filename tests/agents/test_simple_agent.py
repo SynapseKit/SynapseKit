@@ -119,8 +119,10 @@ class TestSimpleAgentMemory:
 
 class TestAgentFactory:
     def _make_agent(self, **kwargs):
-        with patch("synapsekit.agents.facade.make_llm") as mock_llm, \
-             patch("synapsekit.agents.facade.AgentExecutor") as mock_exec:
+        with (
+            patch("synapsekit.agents.facade.make_llm") as mock_llm,
+            patch("synapsekit.agents.facade.AgentExecutor") as mock_exec,
+        ):
             mock_llm.return_value = MagicMock()
             mock_exec.return_value = MagicMock()
             mock_exec.return_value.run = AsyncMock(return_value="ok")
@@ -150,18 +152,19 @@ class TestAgentFactory:
         assert isinstance(sa._memory, ConversationMemory)
 
     def test_system_prompt_forwarded_to_make_llm(self):
-        _sa, mock_llm, _ = self._make_agent(
-            model="gpt-4o-mini", system_prompt="You are a pirate."
-        )
+        _sa, mock_llm, _ = self._make_agent(model="gpt-4o-mini", system_prompt="You are a pirate.")
         call_kwargs = mock_llm.call_args[1]
         assert call_kwargs["system_prompt"] == "You are a pirate."
 
     def test_custom_tools_forwarded_to_config(self):
         from synapsekit.agents.tools.calculator import CalculatorTool
+
         tools = [CalculatorTool()]
-        with patch("synapsekit.agents.facade.make_llm") as mock_llm, \
-             patch("synapsekit.agents.facade.AgentConfig") as mock_config, \
-             patch("synapsekit.agents.facade.AgentExecutor"):
+        with (
+            patch("synapsekit.agents.facade.make_llm") as mock_llm,
+            patch("synapsekit.agents.facade.AgentConfig") as mock_config,
+            patch("synapsekit.agents.facade.AgentExecutor"),
+        ):
             mock_llm.return_value = MagicMock()
             agent(model="gpt-4o-mini", tools=tools)
             call_kwargs = mock_config.call_args[1]
@@ -170,5 +173,6 @@ class TestAgentFactory:
     def test_top_level_export(self):
         from synapsekit import SimpleAgent as TopLevelSimpleAgent
         from synapsekit import agent as top_level_agent
+
         assert TopLevelSimpleAgent is SimpleAgent
         assert top_level_agent is agent
