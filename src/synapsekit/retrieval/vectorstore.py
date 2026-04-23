@@ -25,7 +25,7 @@ class InMemoryVectorStore(VectorStore):
       ``field → value → set[doc_idx]`` so that filter queries intersect small
       sets instead of scanning all documents.
 
-    * **O(fetch_k²) MMR precomputation** — the pairwise similarity matrix for
+    * **O(fetch_k²) MMR precomputation** - the pairwise similarity matrix for
       the candidate pool is computed once with a single BLAS call before the
       greedy selection loop, replacing O(top_k x fetch_k x selected) Python-
       level dot products.

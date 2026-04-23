@@ -70,6 +70,7 @@ from .agents import (
     RegexTool,
     SentimentAnalysisTool,
     ShellTool,
+    SimpleAgent,
     SlackTool,
     SpeechToTextTool,
     SQLQueryTool,
@@ -97,6 +98,7 @@ from .agents import (
     WolframAlphaTool,
     WorkerAgent,
     YouTubeSearchTool,
+    agent,
     tool,
 )
 from .embeddings.backend import SynapsekitEmbeddings
@@ -430,6 +432,8 @@ __all__ = [
     "AgentConfig",
     "CronTrigger",
     "TriggerResult",
+    "SimpleAgent",
+    "agent",
     # Tool decorator
     "tool",
     # Multi-agent

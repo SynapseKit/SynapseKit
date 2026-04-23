@@ -65,6 +65,27 @@ No hidden chains.<br/>Every step is plain Python<br/>you can read and override.
 
 ---
 
+## 10-Line Agent Example
+
+```python
+from synapsekit import agent, tool
+
+@tool
+def get_weather(city: str) -> str:
+    """Get current weather for a city."""
+    return f"Sunny, 22°C in {city}"
+
+my_agent = agent(
+    model="gpt-4o-mini",
+    api_key="sk-...",
+    tools=[get_weather],
+)
+
+print(my_agent.run("What's the weather in Tokyo?"))
+```
+
+---
+
 ## SynapseKit vs LangChain vs LlamaIndex
 
 <div align="center">
