@@ -9,6 +9,7 @@ from .flare import FLARERetriever
 from .graphrag import GraphRAGRetriever, KnowledgeGraph
 from .hybrid_search import HybridSearchRetriever
 from .hyde import HyDERetriever
+from .mongodb_atlas import MongoDBAtlasVectorStore
 from .multi_step import MultiStepRetriever
 from .parent_document import ParentDocumentRetriever
 from .query_decomposition import QueryDecompositionRetriever
@@ -39,6 +40,7 @@ __all__ = [
     "ParentDocumentRetriever",
     "LanceDBVectorStore",
     "MilvusVectorStore",
+    "MongoDBAtlasVectorStore",
     "PGVectorStore",
     "PineconeVectorStore",
     "QdrantVectorStore",

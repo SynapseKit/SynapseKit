@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import ipaddress
 import socket
 from typing import Any
@@ -19,7 +20,12 @@ _PRIVATE_NETS = [
 _MAX_CSS_SELECTOR_LEN = 200
 
 
-def _validate_url(url: str) -> None:
+async def _validate_url(url: str) -> None:
+    """Validate URL scheme and guard against SSRF to private networks.
+
+    The DNS lookup is offloaded to the thread-pool executor so it never
+    blocks the asyncio event loop.
+    """
     parsed = urlparse(url)
     if parsed.scheme not in ("http", "https"):
         raise ValueError(f"URL scheme {parsed.scheme!r} is not allowed; use http or https.")
@@ -27,7 +33,9 @@ def _validate_url(url: str) -> None:
     if not host:
         raise ValueError("URL has no hostname.")
     try:
-        addr = ipaddress.ip_address(socket.gethostbyname(host))
+        loop = asyncio.get_running_loop()
+        resolved = await loop.run_in_executor(None, socket.gethostbyname, host)
+        addr = ipaddress.ip_address(resolved)
     except (socket.gaierror, ValueError):
         return
     if any(addr in net for net in _PRIVATE_NETS):
@@ -102,7 +110,7 @@ class WebScraperTool(BaseTool):
             return ToolResult(output="", error="No URL provided.")
 
         try:
-            _validate_url(target_url)
+            await _validate_url(target_url)
         except ValueError as e:
             return ToolResult(output="", error=str(e))
 

@@ -22,7 +22,12 @@ class AsyncLRUCache:
         temperature: float,
         max_tokens: int,
     ) -> str:
-        """Deterministic cache key from request parameters."""
+        """Deterministic cache key from request parameters.
+
+        ``sort_keys`` is intentionally omitted: Python 3.7+ guarantees dict
+        insertion order, so the literal key order is already stable and
+        sorting is redundant overhead.
+        """
         payload = json.dumps(
             {
                 "model": model,
@@ -30,7 +35,6 @@ class AsyncLRUCache:
                 "temperature": temperature,
                 "max_tokens": max_tokens,
             },
-            sort_keys=True,
         )
         return hashlib.sha256(payload.encode()).hexdigest()
 

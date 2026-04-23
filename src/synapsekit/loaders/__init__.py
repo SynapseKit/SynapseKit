@@ -2,17 +2,21 @@ from typing import Any
 
 from .azure_blob import AzureBlobLoader
 from .base import Document
+from .bigquery import BigQueryLoader
 from .hubspot import HubSpotLoader
 from .markdown import MarkdownLoader
 from .mongodb import MongoDBLoader
 from .onedrive import OneDriveLoader
 from .s3 import S3Loader
+from .salesforce import SalesforceLoader
 from .text import StringLoader, TextLoader
 
 __all__ = [
+    "AirtableLoader",
     "ArXivLoader",
     "AudioLoader",
     "AzureBlobLoader",
+    "BigQueryLoader",
     "CSVLoader",
     "ConfigLoader",
     "ConfluenceLoader",
@@ -38,6 +42,7 @@ __all__ = [
     "MarkdownLoader",
     "MongoDBLoader",
     "NotionLoader",
+    "ObsidianLoader",
     "OneDriveLoader",
     "PDFLoader",
     "ParquetLoader",
@@ -45,6 +50,8 @@ __all__ = [
     "RTFLoader",
     "RedisLoader",
     "S3Loader",
+    "SalesforceLoader",
+    "SitemapLoader",
     "SQLLoader",
     "SlackLoader",
     "StringLoader",
@@ -57,11 +64,14 @@ __all__ = [
     "WikipediaLoader",
     "XMLLoader",
     "YAMLLoader",
+    "YouTubeLoader",
 ]
 
 _LOADERS = {
+    "AirtableLoader": ".airtable",
     "ArXivLoader": ".arxiv",
     "AzureBlobLoader": ".azure_blob",
+    "BigQueryLoader": ".bigquery",
     "PDFLoader": ".pdf",
     "HTMLLoader": ".html",
     "LaTeXLoader": ".latex",
@@ -87,10 +97,12 @@ _LOADERS = {
     "JiraLoader": ".jira",
     "SlackLoader": ".slack",
     "NotionLoader": ".notion",
+    "ObsidianLoader": ".obsidian",
     "OneDriveLoader": ".onedrive",
     "RSSLoader": ".rss",
     "RTFLoader": ".rtf",
     "S3Loader": ".s3",
+    "SalesforceLoader": ".salesforce",
     "SQLLoader": ".sql",
     "SupabaseLoader": ".supabase",
     "TeamsLoader": ".teams",
@@ -103,6 +115,8 @@ _LOADERS = {
     "ParquetLoader": ".parquet",
     "RedisLoader": ".redis_loader",
     "ElasticsearchLoader": ".elasticsearch",
+    "SitemapLoader": ".sitemap",
+    "YouTubeLoader": ".youtube",
 }
 
 

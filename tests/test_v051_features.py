@@ -111,12 +111,14 @@ class TestVectorStoreExports:
         assert "FAISSVectorStore" in ret.__all__
         assert "QdrantVectorStore" in ret.__all__
         assert "PineconeVectorStore" in ret.__all__
+        assert "MongoDBAtlasVectorStore" in ret.__all__
 
     def test_top_level_exports(self):
         import synapsekit
 
         assert "ChromaVectorStore" in synapsekit.__all__
         assert "FAISSVectorStore" in synapsekit.__all__
+        assert "MongoDBAtlasVectorStore" in synapsekit.__all__
 
 
 # ------------------------------------------------------------------ #

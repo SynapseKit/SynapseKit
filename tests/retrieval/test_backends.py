@@ -335,3 +335,104 @@ class TestPineconeVectorStore:
                 pine_mod.PineconeVectorStore(
                     make_mock_embeddings(), index_name="idx", api_key="key"
                 )
+
+
+# ------------------------------------------------------------------ #
+# MongoDBAtlasVectorStore (mocked pymongo)
+# ------------------------------------------------------------------ #
+
+
+class TestMongoDBAtlasVectorStore:
+    def _make_mongodb_mocks(self):
+        mock_collection = MagicMock()
+        mock_collection.aggregate.return_value = [
+            {"text": "mongo doc", "metadata": {"category": "test"}, "score": 0.91}
+        ]
+
+        mock_db = MagicMock()
+        mock_db.__getitem__.return_value = mock_collection
+
+        mock_client = MagicMock()
+        mock_client.__getitem__.return_value = mock_db
+
+        mock_pymongo = MagicMock()
+        mock_pymongo.MongoClient.return_value = mock_client
+
+        return mock_pymongo, mock_collection
+
+    @pytest.mark.asyncio
+    async def test_add_and_search_with_metadata_filter(self):
+        mock_pymongo, mock_collection = self._make_mongodb_mocks()
+        with patch.dict("sys.modules", {"pymongo": mock_pymongo}):
+            import synapsekit.retrieval.mongodb_atlas as mongo_mod
+
+            store = mongo_mod.MongoDBAtlasVectorStore(
+                make_mock_embeddings(),
+                database_name="db",
+                collection_name="docs",
+                index_name="atlas_vec_idx",
+            )
+
+            await store.add(["mongo text"], metadata=[{"category": "test"}])
+            mock_collection.insert_many.assert_called_once()
+            inserted_docs = mock_collection.insert_many.call_args.args[0]
+            assert inserted_docs[0]["metadata"] == {"category": "test"}
+
+            results = await store.search("query", top_k=3, metadata_filter={"category": "test"})
+            assert len(results) == 1
+            assert results[0]["text"] == "mongo doc"
+            assert results[0]["score"] == pytest.approx(0.91)
+            assert results[0]["metadata"]["category"] == "test"
+
+            pipeline = mock_collection.aggregate.call_args.args[0]
+            search_stage = pipeline[0]["$vectorSearch"]
+            assert search_stage["index"] == "atlas_vec_idx"
+            assert search_stage["filter"] == {"metadata.category": "test"}
+
+    @pytest.mark.asyncio
+    async def test_search_supports_raw_mql_filter(self):
+        mock_pymongo, mock_collection = self._make_mongodb_mocks()
+        with patch.dict("sys.modules", {"pymongo": mock_pymongo}):
+            import synapsekit.retrieval.mongodb_atlas as mongo_mod
+
+            store = mongo_mod.MongoDBAtlasVectorStore(make_mock_embeddings())
+            raw_filter = {
+                "$or": [{"metadata.category": "test"}, {"metadata.priority": {"$gte": 1}}]
+            }
+
+            await store.search("query", metadata_filter=raw_filter)
+            pipeline = mock_collection.aggregate.call_args.args[0]
+            assert pipeline[0]["$vectorSearch"]["filter"] == raw_filter
+
+    @pytest.mark.asyncio
+    async def test_accepts_injected_client_without_pymongo(self):
+        mock_collection = MagicMock()
+        mock_collection.aggregate.return_value = []
+        mock_db = MagicMock()
+        mock_db.__getitem__.return_value = mock_collection
+        mock_client = MagicMock()
+        mock_client.__getitem__.return_value = mock_db
+
+        with patch.dict("sys.modules", {"pymongo": None}):
+            import importlib
+
+            import synapsekit.retrieval.mongodb_atlas as mongo_mod
+
+            importlib.reload(mongo_mod)
+            store = mongo_mod.MongoDBAtlasVectorStore(
+                make_mock_embeddings(),
+                client=mock_client,
+            )
+            await store.add(["doc"], metadata=[{"source": "test"}])
+
+        mock_collection.insert_many.assert_called_once()
+
+    def test_import_error_without_pymongo(self):
+        with patch.dict("sys.modules", {"pymongo": None}):
+            import importlib
+
+            import synapsekit.retrieval.mongodb_atlas as mongo_mod
+
+            importlib.reload(mongo_mod)
+            with pytest.raises(ImportError, match="mongodb-vector"):
+                mongo_mod.MongoDBAtlasVectorStore(make_mock_embeddings())

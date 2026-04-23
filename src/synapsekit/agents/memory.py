@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass
 
 
@@ -13,7 +14,7 @@ class AgentStep:
     observation: str
 
 
-class AgentMemory:
+class AgentScratchpad:
     """Scratchpad that records agent steps for the current run."""
 
     def __init__(self, max_steps: int = 20) -> None:
@@ -45,3 +46,17 @@ class AgentMemory:
 
     def __len__(self) -> int:
         return len(self._steps)
+
+
+class AgentMemory(AgentScratchpad):
+    """Backward-compatible alias for AgentScratchpad (deprecated)."""
+
+    def __init__(self, max_steps: int = 20) -> None:
+        warnings.warn(
+            "synapsekit.agents.memory.AgentMemory is deprecated; "
+            "use AgentScratchpad for step scratchpad, and synapsekit.memory.AgentMemory "
+            "for persistent memory.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(max_steps=max_steps)

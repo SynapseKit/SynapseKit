@@ -7,17 +7,16 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from synapsekit import RAG
+from synapsekit.loaders.base import Document
 from synapsekit.memory.conversation import ConversationMemory
 from synapsekit.observability.tracer import TokenTracer
 
 
 def _patch_rag(rag: RAG, tokens=("Answer", " here")):
     """Replace the pipeline's LLM and retriever with mocks."""
-    # Patch retriever
     rag._pipeline.config.retriever.retrieve = AsyncMock(return_value=["context"])
     rag._pipeline.config.retriever._store.add = AsyncMock()
 
-    # Patch LLM stream
     async def mock_stream(messages, **kw):
         for t in tokens:
             yield t
@@ -26,7 +25,6 @@ def _patch_rag(rag: RAG, tokens=("Answer", " here")):
     rag._pipeline.config.llm._input_tokens = 5
     rag._pipeline.config.llm._output_tokens = 3
 
-    # Patch splitter
     mock_splitter = MagicMock()
     mock_splitter.split = MagicMock(return_value=["chunk"])
     rag._pipeline._splitter = mock_splitter
@@ -59,6 +57,68 @@ class TestRAGFacade:
         _patch_rag(rag)
         await rag.add_async("Some document text.")
         rag._pipeline._splitter.split.assert_called_once()
+
+    def test_add_sync_autodetects_image_file(self, tmp_path):
+        image_file = tmp_path / "diagram.png"
+        image_file.write_bytes(b"png")
+
+        rag = RAG(model="gpt-4o-mini", api_key="sk-test")
+        _patch_rag(rag)
+
+        with patch(
+            "synapsekit.loaders.image.ImageLoader.aload",
+            new=AsyncMock(
+                return_value=[Document(text="caption", metadata={"source_type": "image"})]
+            ),
+        ):
+            rag.add(str(image_file))
+
+        rag._pipeline._splitter.split.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_add_async_autodetects_audio_file(self, tmp_path):
+        audio_file = tmp_path / "meeting.mp3"
+        audio_file.write_bytes(b"audio")
+
+        rag = RAG(model="gpt-4o-mini", api_key="sk-test")
+        _patch_rag(rag)
+
+        with patch(
+            "synapsekit.loaders.audio.AudioLoader.aload",
+            new=AsyncMock(
+                return_value=[Document(text="transcript", metadata={"source_type": "audio"})]
+            ),
+        ):
+            await rag.add_async(str(audio_file))
+
+        rag._pipeline._splitter.split.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_add_async_existing_non_multimodal_path_falls_back_to_text(self, tmp_path):
+        text_file = tmp_path / "notes.txt"
+        text_file.write_text("hello", encoding="utf-8")
+
+        rag = RAG(model="gpt-4o-mini", api_key="sk-test")
+        rag._pipeline.add = AsyncMock()
+
+        await rag.add_async(str(text_file))
+
+        rag._pipeline.add.assert_awaited_once_with(str(text_file), None)
+
+    def test_add_image_caption_kw_passed_to_loader(self, tmp_path):
+        image_file = tmp_path / "diagram.png"
+        image_file.write_bytes(b"png")
+
+        rag = RAG(model="gpt-4o-mini", api_key="sk-test")
+        _patch_rag(rag)
+
+        with patch("synapsekit.loaders.image.ImageLoader") as mock_loader_cls:
+            mock_loader = mock_loader_cls.return_value
+            mock_loader.aload = AsyncMock(return_value=[Document(text="caption", metadata={})])
+
+            rag.add(str(image_file), caption="Login flow from Q4 review")
+
+            assert mock_loader_cls.call_args.kwargs["prompt"] == "Login flow from Q4 review"
 
     @pytest.mark.asyncio
     async def test_ask_returns_string(self):

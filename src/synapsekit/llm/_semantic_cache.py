@@ -13,6 +13,10 @@ class SemanticCache:
     Uses embeddings to find semantically similar prompts and returns
     cached responses when similarity exceeds a threshold.
 
+    Vectors are L2-normalised on insertion so lookup reduces to a single
+    batched matrix–vector multiply (one BLAS call) instead of a Python
+    for-loop over individual dot products.
+
     Usage::
 
         from synapsekit.llm._semantic_cache import SemanticCache
@@ -43,39 +47,43 @@ class SemanticCache:
         self._threshold = threshold
         self._maxsize = maxsize
         self._entries: list[dict[str, Any]] = []
+        # Normalised unit vectors stored individually (easy append/evict)
         self._vectors: list[np.ndarray] = []
+        # Stacked matrix rebuilt lazily; None means it needs rebuilding
+        self._matrix: np.ndarray | None = None
+        self._dirty: bool = False
         self.hits: int = 0
         self.misses: int = 0
 
-    def _cosine_similarity(self, a: np.ndarray, b: np.ndarray) -> float:
-        """Compute cosine similarity between two vectors."""
-        dot = float(np.dot(a, b))
-        norm_a = float(np.linalg.norm(a))
-        norm_b = float(np.linalg.norm(b))
-        if norm_a == 0 or norm_b == 0:
-            return 0.0
-        return dot / (norm_a * norm_b)
+    @staticmethod
+    def _normalize(arr: np.ndarray) -> np.ndarray:
+        norm = float(np.linalg.norm(arr))
+        return arr / norm if norm > 0.0 else arr
 
     async def get(self, prompt: str) -> str | None:
         """Look up a semantically similar prompt in the cache.
 
         Returns the cached response if similarity >= threshold, else None.
+        All cached vectors are L2-normalised, so the cosine similarity matrix
+        is computed as a single BLAS matrix–vector multiply instead of a
+        Python-level loop.
         """
         if not self._entries:
             self.misses += 1
             return None
 
         query_vec = await self._embeddings.embed(prompt)
-        query_arr = np.array(query_vec, dtype=np.float32)
+        query_arr = self._normalize(np.array(query_vec, dtype=np.float32))
 
-        best_score = -1.0
-        best_idx = -1
+        # Rebuild the stacked matrix only when entries have changed
+        if self._dirty or self._matrix is None:
+            self._matrix = np.vstack(self._vectors)  # (n, D) – one allocation
+            self._dirty = False
 
-        for i, vec in enumerate(self._vectors):
-            score = self._cosine_similarity(query_arr, vec)
-            if score > best_score:
-                best_score = score
-                best_idx = i
+        # One BLAS call replaces the entire Python for-loop
+        scores = self._matrix @ query_arr  # (n,) – dot == cosine for unit vecs
+        best_idx = int(np.argmax(scores))
+        best_score = float(scores[best_idx])
 
         if best_score >= self._threshold:
             self.hits += 1
@@ -86,12 +94,17 @@ class SemanticCache:
         return None
 
     async def put(self, prompt: str, response: str) -> None:
-        """Store a prompt-response pair in the cache."""
+        """Store a prompt-response pair in the cache.
+
+        The embedding is L2-normalised before storage so that cosine
+        similarity at lookup time is a plain dot product.
+        """
         vec = await self._embeddings.embed(prompt)
-        arr = np.array(vec, dtype=np.float32)
+        arr = self._normalize(np.array(vec, dtype=np.float32))
 
         self._entries.append({"prompt": prompt, "response": response})
         self._vectors.append(arr)
+        self._dirty = True  # matrix must be rebuilt before next lookup
 
         # Evict oldest if over maxsize
         if len(self._entries) > self._maxsize:
@@ -102,6 +115,8 @@ class SemanticCache:
         """Clear all cached entries."""
         self._entries.clear()
         self._vectors.clear()
+        self._matrix = None
+        self._dirty = False
 
     def __len__(self) -> int:
         return len(self._entries)

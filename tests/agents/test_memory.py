@@ -1,18 +1,20 @@
-"""Tests for AgentMemory."""
+"""Tests for agent scratchpad memory."""
 
 from __future__ import annotations
 
-from synapsekit.agents.memory import AgentMemory, AgentStep
+import pytest
+
+from synapsekit.agents.memory import AgentMemory, AgentScratchpad, AgentStep
 
 
-class TestAgentMemory:
+class TestAgentScratchpad:
     def test_empty_on_init(self):
-        mem = AgentMemory()
+        mem = AgentScratchpad()
         assert len(mem) == 0
         assert mem.steps == []
 
     def test_add_step(self):
-        mem = AgentMemory()
+        mem = AgentScratchpad()
         step = AgentStep(
             thought="Let me calculate",
             action="calculator",
@@ -24,7 +26,7 @@ class TestAgentMemory:
         assert mem.steps[0].observation == "4"
 
     def test_multiple_steps(self):
-        mem = AgentMemory()
+        mem = AgentScratchpad()
         for i in range(3):
             mem.add_step(
                 AgentStep(
@@ -37,7 +39,7 @@ class TestAgentMemory:
         assert len(mem) == 3
 
     def test_format_scratchpad(self):
-        mem = AgentMemory()
+        mem = AgentScratchpad()
         mem.add_step(
             AgentStep(
                 thought="I need to add",
@@ -53,25 +55,33 @@ class TestAgentMemory:
         assert "Observation: 2" in scratchpad
 
     def test_format_scratchpad_empty(self):
-        mem = AgentMemory()
+        mem = AgentScratchpad()
         assert mem.format_scratchpad() == ""
 
     def test_is_full(self):
-        mem = AgentMemory(max_steps=2)
+        mem = AgentScratchpad(max_steps=2)
         assert not mem.is_full()
         mem.add_step(AgentStep("t", "a", "i", "o"))
         mem.add_step(AgentStep("t", "a", "i", "o"))
         assert mem.is_full()
 
     def test_clear(self):
-        mem = AgentMemory()
+        mem = AgentScratchpad()
         mem.add_step(AgentStep("t", "a", "i", "o"))
         mem.clear()
         assert len(mem) == 0
 
     def test_steps_returns_copy(self):
-        mem = AgentMemory()
+        mem = AgentScratchpad()
         mem.add_step(AgentStep("t", "a", "i", "o"))
         steps = mem.steps
         steps.clear()
         assert len(mem) == 1  # original unaffected
+
+
+class TestAgentMemoryCompatibility:
+    def test_agent_memory_alias_warns(self):
+        with pytest.deprecated_call(match="AgentMemory is deprecated"):
+            mem = AgentMemory()
+        mem.add_step(AgentStep("t", "a", "i", "o"))
+        assert len(mem) == 1

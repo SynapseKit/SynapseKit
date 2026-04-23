@@ -12,13 +12,22 @@ class SQLiteLLMCache:
     Stores cache entries on disk so they survive process restarts.
     Uses the same ``make_key`` logic as :class:`AsyncLRUCache`.
 
+    Implements the context manager protocol so the underlying connection is
+    always closed, even if an exception occurs:
+
     Usage::
 
         from synapsekit.llm._sqlite_cache import SQLiteLLMCache
 
+        with SQLiteLLMCache("llm_cache.db") as cache:
+            cache.put(key, value)
+            cached = cache.get(key)
+
+        # Or without context manager — close() is called by __del__ as fallback
         cache = SQLiteLLMCache("llm_cache.db")
         cache.put(key, value)
         cached = cache.get(key)
+        cache.close()
     """
 
     make_key = staticmethod(AsyncLRUCache.make_key)
@@ -57,4 +66,23 @@ class SQLiteLLMCache:
         return row[0] if row else 0
 
     def close(self) -> None:
-        self._conn.close()
+        """Close the underlying SQLite connection. Idempotent."""
+        try:
+            self._conn.close()
+        except Exception:
+            pass
+
+    # ── context manager ────────────────────────────────────────────────────
+
+    def __enter__(self) -> "SQLiteLLMCache":
+        return self
+
+    def __exit__(self, *_: object) -> None:
+        self.close()
+
+    def __del__(self) -> None:
+        """Last-resort cleanup if the caller forgets to call close()."""
+        try:
+            self.close()
+        except Exception:
+            pass

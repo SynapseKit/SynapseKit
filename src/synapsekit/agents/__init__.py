@@ -9,7 +9,7 @@ from .guardrails import (
     PIIDetector,
     TopicRestrictor,
 )
-from .memory import AgentMemory, AgentStep
+from .memory import AgentMemory, AgentScratchpad, AgentStep
 from .multi import (
     Crew,
     CrewAgent,
@@ -40,6 +40,7 @@ from .tools import (
     AWSLambdaTool,
     BingSearchTool,
     BraveSearchTool,
+    BrowserTool,
     CalculatorTool,
     CodeInterpreterTool,
     DateTimeTool,
@@ -90,6 +91,7 @@ __all__ = [
     "ToolResult",
     "ToolRegistry",
     "AgentMemory",
+    "AgentScratchpad",
     "AgentStep",
     # Agents
     "ReActAgent",
@@ -112,6 +114,7 @@ __all__ = [
     "AWSLambdaTool",
     "BingSearchTool",
     "BraveSearchTool",
+    "BrowserTool",
     "CalculatorTool",
     "CodeInterpreterTool",
     "DateTimeTool",

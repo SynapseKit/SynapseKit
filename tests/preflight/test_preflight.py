@@ -145,9 +145,11 @@ def test_llm_provider_count_matches_spec():
 # ---------------------------------------------------------------------------
 
 LOADER_NAMES = [
+    "AirtableLoader",
     "ArXivLoader",
     "AudioLoader",
     "AzureBlobLoader",
+    "BigQueryLoader",
     "CSVLoader",
     "ConfigLoader",
     "ConfluenceLoader",
@@ -173,6 +175,7 @@ LOADER_NAMES = [
     "MarkdownLoader",
     "MongoDBLoader",
     "NotionLoader",
+    "ObsidianLoader",
     "OneDriveLoader",
     "PDFLoader",
     "ParquetLoader",
@@ -180,6 +183,8 @@ LOADER_NAMES = [
     "RTFLoader",
     "RedisLoader",
     "S3Loader",
+    "SalesforceLoader",
+    "SitemapLoader",
     "SQLLoader",
     "SlackLoader",
     "StringLoader",
@@ -192,6 +197,7 @@ LOADER_NAMES = [
     "WikipediaLoader",
     "XMLLoader",
     "YAMLLoader",
+    "YouTubeLoader",
 ]
 
 
@@ -203,7 +209,7 @@ def test_all_loaders_in_all_list():
 
 
 def test_loader_count_matches_spec():
-    """We have exactly 47 names in the loaders __all__ (includes Document + StringLoader)."""
+    """We have exactly 53 names in the loaders __all__ (includes Document + StringLoader)."""
     import synapsekit.loaders as loaders_mod
 
     assert len(loaders_mod.__all__) == len(LOADER_NAMES)

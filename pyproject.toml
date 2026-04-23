@@ -92,12 +92,13 @@ gpt4all = ["gpt4all>=2.0"]
 ernie = ["erniebot>=0.5"]
 minimax = ["httpx>=0.27"]
 serve = ["fastapi>=0.110", "uvicorn[standard]>=0.29"]
-postgres = ["psycopg[binary]>=3.1"]
+postgres = ["psycopg[binary]>=3.1", "asyncpg>=0.29"]
 pgvector = ["psycopg[binary]>=3.1", "pgvector>=0.2"]
 wolfram = ["wolframalpha>=5.0"]
 dynamodb = ["boto3>=1.34"]
 discord = ["discord.py>=2.0"]
 gcs = ["google-cloud-storage>=2.0"]
+bigquery = ["google-cloud-bigquery>=3.0"]
 gdrive = ["google-api-python-client>=2.0", "google-auth>=2.0"]
 git = ["gitpython>=3.1"]
 gsheets = ["google-api-python-client>=2.0", "google-auth>=2.0"]
@@ -105,6 +106,8 @@ jira = ["httpx>=0.27"]
 hubspot = ["hubspot-api-client>=8.0"]
 sql = ["sqlalchemy>=2.0"]
 mongodb = ["pymongo>=4.0"]
+mongodb-vector = ["pymongo>=4.0"]
+salesforce = ["simple-salesforce>=1.12"]
 azure = ["azure-storage-blob>=12.0"]
 s3 = ["boto3>=1.34"]
 onedrive = []
@@ -117,6 +120,9 @@ rtf = ["striprtf>=0.0.26"]
 epub = ["ebooklib>=0.18"]
 parquet = ["pyarrow>=14.0"]
 elasticsearch = ["elasticsearch>=8.0"]
+browser = ["playwright>=1.40"]
+youtube_transcript = ["youtube-transcript-api>=0.6"]
+airtable = ["pyairtable>=2.0"]
 all = [
     "openai>=1.0",
     "anthropic>=0.25",
@@ -156,6 +162,7 @@ all = [
     "fastapi>=0.110",
     "uvicorn[standard]>=0.29",
     "psycopg[binary]>=3.1",
+    "asyncpg>=0.29",
     "groq>=0.9",
     "llama-cpp-python>=0.2",
     "erniebot>=0.5",
@@ -163,13 +170,18 @@ all = [
     "discord.py>=2.0",
     "google-api-python-client>=2.0",
     "google-auth>=2.0",
+    "google-cloud-bigquery>=3.0",
     "feedparser>=6.0",
     "gitpython>=3.1",
     "hubspot-api-client>=8.0",
     "supabase>=2.0",
     "pymongo>=4.0",
+    "simple-salesforce>=1.12",
     "azure-storage-blob>=12.0",
     "elasticsearch>=8.0",
+    "pyairtable>=2.0",
+    "playwright>=1.40",
+    "youtube-transcript-api>=0.6",
 ]
 
 [dependency-groups]
@@ -185,6 +197,8 @@ dev = [
     "pydantic>=2.12.5",
     "httpx>=0.27",
     "pyarrow>=23.0.1",
+    "lxml>=6.0.2",
+    "beautifulsoup4>=4.14.3",
 ]
 
 [tool.hatch.build.targets.wheel]
@@ -248,6 +262,7 @@ module = [
     "synapsekit.retrieval.qdrant",
     "synapsekit.retrieval.pinecone",
     "synapsekit.retrieval.weaviate",
+    "synapsekit.retrieval.mongodb_atlas",
     "synapsekit.llm.groq",
     "synapsekit.llm.azure_openai",
     "synapsekit.llm.deepseek",
@@ -292,6 +307,7 @@ pep621_dev_dependency_groups = ["dev"]
 wikipedia-api = "wikipediaapi"
 google-generativeai = "google"
 google-cloud-storage = "google"
+google-cloud-bigquery = "google"
 google-api-python-client = "googleapiclient"
 google-auth = "google"
 beautifulsoup4 = "bs4"
@@ -307,6 +323,7 @@ slack-sdk = "slack_sdk"
 weaviate-client = "weaviate"
 atlassian-python-api = "atlassian"
 gitpython = "git"
+simple-salesforce = "simple_salesforce"
 hubspot-api-client = "hubspot"
 azure-storage-blob = "azure"
 sqlite-vec = "sqlite_vec"

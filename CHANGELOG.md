@@ -7,6 +7,40 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [Unreleased]
+
+### Performance
+
+- **Semantic cache O(n) → O(1) lookup** — `SemanticCache` now L2-normalises vectors on insertion and stacks them into a matrix that is rebuilt lazily; lookup is a single batched `matrix @ query_vec` BLAS call instead of a Python for-loop over 256 individual dot products; closes #568
+- **Vector store O(1) amortised inserts** — `InMemoryVectorStore.add()` queues batches in a pending list and consolidates via one `np.vstack` at search time, eliminating the previous `np.concatenate` on every insert that caused O(n²) total memory copies; closes #569
+- **Vector store O(result) metadata filtering** — inverted index (`field → value → set[doc_idx]`) built and maintained on every `add()`; metadata filter queries now intersect small sets instead of scanning all N documents linearly; closes #574
+- **MMR precomputed similarity matrix** — `search_mmr()` computes the full `(fetch_k × fetch_k)` pairwise similarity matrix with one BLAS call before the greedy loop, replacing O(top_k × fetch_k × selected) Python-level dot-product recomputation; closes #572
+- **Async DNS in web scraper** — `socket.gethostbyname()` in the SSRF guard now runs in the thread-pool executor (`loop.run_in_executor`) so it never blocks the asyncio event loop; closes #570
+- **Persistent HTTP session in `HTTPRequestTool`** — single `aiohttp.ClientSession` created lazily and reused across all calls on the same tool instance; eliminates TCP + TLS handshake overhead on every request; `aclose()` and async context manager protocol added; closes #571
+- **Rate limiter sleep moved outside lock** — `TokenBucketRateLimiter.acquire()` releases the `asyncio.Lock` before calling `asyncio.sleep`, so multiple concurrent callers each wait independently instead of being serialised behind a single sleeper; closes #573
+- **Ensemble retriever parallel fan-out** — `EnsembleRetriever.retrieve()` uses `asyncio.gather` to query all retrievers concurrently; total latency is now bounded by the slowest retriever rather than the sum; closes #576
+- **Cache key generation overhead removed** — dropped redundant `sort_keys=True` from `json.dumps` in `AsyncLRUCache.make_key`; Python 3.7+ dict insertion order is already stable so sorting was redundant O(k log k) work on every cache lookup; closes #577
+- **SQLite cache guaranteed close** — `SQLiteLLMCache` now implements `__enter__` / `__exit__` / `__del__` so the connection is guaranteed to close on all exit paths; `close()` is idempotent; closes #578
+- **Evaluation metrics parallel execution** — `EvaluationPipeline.evaluate()` runs all metrics concurrently via `asyncio.gather`; `evaluate_batch()` also parallelises samples with a configurable `asyncio.Semaphore` (default `concurrency=10`); closes #575
+- **Sitemap BFS queue O(1) dequeue** — `SitemapLoader._collect_urls()` BFS queue switched from `list.pop(0)` (O(n)) to `collections.deque.popleft()` (O(1)); closes #579
+
+### Added
+
+- **`AgentMemory`** — persistent episodic + semantic memory for agents; SQLite, Redis, Postgres, and in-memory backends; semantic similarity search via cosine over optional embeddings or built-in bloom hash; episodic consolidation window; integrates into `ReactAgent`, `FunctionCallingAgent`, and graph `llm_node`; closes #506
+- **`BrowserTool`** — Playwright-based browser automation tool; selector-based interaction (navigate, click, fill, get_text, screenshot, etc.); domain allow/block lists; optional screenshot-on-action for multimodal models; `pip install synapsekit[browser]`; closes #555
+- **`MongoDBAtlasVectorStore`** — MongoDB Atlas Vector Search backend; MQL metadata filter passthrough; configurable vector/text/metadata field names; `pip install synapsekit[mongodb-vector]`; closes #121
+- **Multimodal loaders enhanced** — `AudioLoader` gains Whisper transcription (API + local); `VideoLoader` gains frame extraction + multi-track audio; `ImageLoader` enhanced with vision-model captioning; `RAG.add()` facade auto-routes by MIME type; closes #510
+- **`YouTubeLoader`** — load video transcripts via `youtube-transcript-api`; accepts full URLs or bare video IDs; language override; `pip install synapsekit[youtube_transcript]`; closes #560
+- **`ObsidianLoader`** — load Obsidian vault Markdown notes; extracts YAML frontmatter, wikilinks, and tags into metadata; recursive vault traversal; no extra deps; closes #562
+- **`AirtableLoader`** — load Airtable records via `pyairtable`; configurable `text_fields` and `metadata_fields`; `pip install synapsekit[airtable]`; closes #561
+- **`SitemapLoader`** — recursive sitemap XML parsing with HTTP page fetch; BS4 text extraction; configurable max depth and concurrency; `pip install synapsekit[sitemap]` (uses beautifulsoup4); closes #557
+- **`HubSpotLoader`** — load HubSpot CRM contacts, deals, and tickets via `hubspot-api-client`; configurable `text_fields` and `metadata_fields`; `pip install synapsekit[hubspot]`; closes #88
+- **`SalesforceLoader`** — load Salesforce records via SOQL query using `simple_salesforce`; configurable field mappings; `pip install synapsekit[salesforce]`; closes #89
+- **`BigQueryLoader`** — load BigQuery table rows or query results via `google-cloud-bigquery`; supports both `table` (full scan) and `query` modes; `pip install synapsekit[bigquery]`; closes #91
+- **Subgraph checkpoint scoping** — each subgraph execution gets its own scoped checkpoint ID (`parent::name::step`); failed subgraphs can be resumed independently without restarting the parent graph; `subgraph_node()` gains optional `name` parameter (default `"subgraph"`); new `CompiledGraph.resume_subgraph()` convenience method; works with all checkpointer backends (InMemory, SQLite, JSON, Redis, Postgres); closes #252
+
+---
+
 ## [1.5.6] — 2026-04-16
 
 ### Added
@@ -41,6 +75,7 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **`@eval_case(capture_io=True)`** — opt-in capture of `input`, `output`, and `ideal` fields in eval case results; required for `EvalDataset.export()`
 - **`synapsekit eval` CLI** — `report <snapshot>` summarises scores and weak cases; `export <snapshot> --format openai --output data.jsonl` writes fine-tune dataset; `compare <baseline> <current>` runs regression comparison
 - **`synapsekit finetune` CLI** — `submit <dataset> --provider openai --base-model gpt-4o-mini`; `status <job_id>`; `wait <job_id>` blocks until completion
+- **Subgraph Checkpoint Scoping** — each subgraph execution now gets its own checkpoint scope via a scoped `graph_id` (`parent::name::step`); subgraph state is checkpointed independently so failed subgraphs can be resumed without restarting the parent; `subgraph_node()` gains optional `name` parameter; `CompiledGraph.resume_subgraph()` convenience method; works with all existing checkpointer backends (InMemory, SQLite, JSON, Redis, Postgres); 11 new tests
 - **Recursive Subgraph Support** — allow a `StateGraph` to be passed to `subgraph_node()`, enabling self-referential / recursive workflows; implements a `max_recursion_depth` guard (default 10) to prevent infinite loops; tracks depth via internal `__recursion_depth__` state key; adds `RecursionDepthError` to handle limit breaches; lazy compilation supports definition-time self-referencing.
 - **Discord community link** — added Discord server link to README community section.
 - **`LMStudioLLM`** — local model provider via LM Studio's OpenAI-compatible API; connects to a running LM Studio server (default `http://localhost:1234/v1`); supports streaming, tool calling, and custom `base_url` via constructor kwarg; no API key required; `pip install synapsekit[lmstudio]`; closes #176
