@@ -189,7 +189,11 @@ class VoiceAgent:
                             print("Processing speech...")
                             wav_io = io.BytesIO()
                             with sf.SoundFile(
-                                wav_io, mode="w", samplerate=sample_rate, channels=1, subtype="PCM_16"
+                                wav_io,
+                                mode="w",
+                                samplerate=sample_rate,
+                                channels=1,
+                                subtype="PCM_16",
                             ) as file:
                                 import numpy as np
 
@@ -248,24 +252,18 @@ class VoiceAgent:
                 audio_bytes = await self._tts.synthesize(response_text)
 
                 if hasattr(websocket, "send_json"):
-                    await websocket.send_json(
-                        {"transcript": transcript, "response": response_text}
-                    )
+                    await websocket.send_json({"transcript": transcript, "response": response_text})
                 elif hasattr(websocket, "send_text"):
                     import json
 
                     await websocket.send_text(
-                        json.dumps(
-                            {"transcript": transcript, "response": response_text}
-                        )
+                        json.dumps({"transcript": transcript, "response": response_text})
                     )
                 elif hasattr(websocket, "send"):
                     import json
 
                     await websocket.send(
-                        json.dumps(
-                            {"transcript": transcript, "response": response_text}
-                        )
+                        json.dumps({"transcript": transcript, "response": response_text})
                     )
 
                 if audio_bytes:
