@@ -98,6 +98,8 @@ from .agents import (
     WorkerAgent,
     YouTubeSearchTool,
     tool,
+    VoiceAgent,
+    VoiceResult,
 )
 from .embeddings.backend import SynapsekitEmbeddings
 from .evaluation import (
@@ -430,6 +432,8 @@ __all__ = [
     "AgentConfig",
     "CronTrigger",
     "TriggerResult",
+    "VoiceAgent",
+    "VoiceResult",
     # Tool decorator
     "tool",
     # Multi-agent

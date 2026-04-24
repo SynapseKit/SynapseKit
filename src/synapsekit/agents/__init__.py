@@ -83,6 +83,7 @@ from .tools import (
     WolframAlphaTool,
     YouTubeSearchTool,
 )
+from .voice import VoiceAgent, VoiceResult
 from .triggers import CronTrigger, TriggerResult
 
 __all__ = [
@@ -100,6 +101,8 @@ __all__ = [
     "AgentConfig",
     "CronTrigger",
     "TriggerResult",
+    "VoiceAgent",
+    "VoiceResult",
     # Guardrails
     "ContentFilter",
     "Guardrails",
