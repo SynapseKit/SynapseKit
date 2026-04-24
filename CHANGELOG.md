@@ -9,6 +9,23 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- **`CronTrigger`** — schedule-based agent execution via cron expressions (`"0 9 * * *"`) or interval shorthand (`"30m"`, `"1h"`, `"2d"`); missed-run policies (`skip` / `catch_up` with configurable `max_catch_up_runs`); injectable `clock` and `sleep_func` for deterministic testing; `AuditLog` integration; `TriggerResult` dataclass with timing and error metadata; optional `result_sink` callback (sync or async); `pip install synapsekit[cron]` for cron expression support; closes #583
+- **`SimpleAgent` + `agent()` factory** — 10-line happy-path agent facade wrapping `AgentExecutor`; optional conversation memory; auto-detects LLM provider from model name prefix; `agent(model="gpt-4o-mini", api_key="...")` returns a `SimpleAgent` ready to call `.run()` or `.arun()`; `api_key` defaults to `""` so local models (Ollama, LMStudio) require no key; closes #599
+- **`make_llm()` shared factory** (`llm/_factory.py`) — extracted provider-detection and `LLMConfig` construction into a reusable module; resolves provider from model name prefix (claude→anthropic, gemini→google, llama→groq, `/`→openrouter, etc.); used by `SimpleAgent` and available as a public helper
+- **Auto-eval metrics on traced RAG calls** — `RAGPipeline` with `auto_eval=True` and an active `TokenTracer` fires a background `asyncio.Task` after every streamed answer that evaluates faithfulness and relevancy via `EvaluationPipeline`; scores are recorded in `TokenTracer` via `record_quality()`; `tracer.summary()` now includes `avg_faithfulness`, `avg_relevancy` (both `None` when no data), and `quality_trend` (`improving`/`degrading`/`stable`); `RAGPipeline.wait_for_auto_eval()` flushes pending tasks; closes #591
+- **`PubMedLoader`** — fetch medical literature from NCBI PubMed via E-utilities API (`esearch` + `efetch`); supports search query string, `max_results`, `api_key` for higher rate limits, and `email` for NCBI courtesy identification; parses XML response; returns one `Document` per article with title, abstract, authors, and PMID in metadata; async `aload()` via executor; no extra deps; closes #75
+- **`SnowflakeLoader`** — load documents from a Snowflake query; configurable `account`, `user`, `password`, `database`, `schema`, `warehouse`, `role`; `text_fields` selects which columns form the document body; `limit` pushed into SQL via `LIMIT N` (not Python slice) so Snowflake enforces it server-side; async `aload()` via executor; `pip install synapsekit[snowflake]`; closes #90
+- **`ImageGenerationTool`** — generate images from text prompts via OpenAI DALL-E 3; subclasses `BaseTool`; lazy `AsyncOpenAI` client initialisation; returns `ToolResult` with image URL; validates `size` (1024×1024, 1792×1024, 1024×1792) and `quality` (standard, hd) before calling API; exported from `synapsekit.agents.tools` and top-level `synapsekit`; `pip install openai`; closes #215
+
+### Fixed
+
+- **`CronTrigger.prompt`** — renamed `input` parameter to `prompt`; `input` was shadowing the Python builtin `input()` function making it impossible to call the builtin inside trigger callbacks
+- **`SimpleAgent.api_key` default** — `api_key` was a required positional-style kwarg; local models (Ollama, LMStudio, LlamaCpp) that need no API key now work without passing an empty string
+- **`TokenTracer` zero-data quality fields** — `tracer.summary()` returned `avg_faithfulness=0.0` and `avg_relevancy=0.0` when no quality records existed, falsely indicating zero scores; both fields now return `None` when no quality data has been recorded
+- **`SnowflakeLoader` LIMIT applied server-side** — `limit` was previously applied in Python after `cursor.fetchall()` which pulled all rows from Snowflake before truncating; `LIMIT N` is now appended to the SQL query so Snowflake enforces it at query execution time
+
 ### Performance
 
 - **Semantic cache O(n) → O(1) lookup** — `SemanticCache` now L2-normalises vectors on insertion and stacks them into a matrix that is rebuilt lazily; lookup is a single batched `matrix @ query_vec` BLAS call instead of a Python for-loop over 256 individual dot products; closes #568

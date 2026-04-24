@@ -849,17 +849,15 @@ class TestSitemapLoaderRegression:
         """_collect_urls must use a deque, not a plain list."""
         import inspect
 
-        import synapsekit.loaders.sitemap as sitemap_module
+        from synapsekit.loaders import sitemap as sitemap_module
 
-        source = inspect.getsource(
-            sitemap_module._SitemapLoader__class__ if False else sitemap_module
-        )
+        source = inspect.getsource(sitemap_module)
         # Check deque is imported and used in the source
         assert "deque" in source
         assert "popleft" in source
 
     def test_deque_imported_in_module(self):
-        import synapsekit.loaders.sitemap as mod
+        from synapsekit.loaders import sitemap as mod
 
         # deque must be importable from the module's namespace
         assert "deque" in dir(mod) or hasattr(mod, "deque") or "deque" in mod.__dict__

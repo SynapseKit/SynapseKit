@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "synapsekit"
 version = "1.5.6"
 description = "Async-native Python framework for building LLM applications — RAG pipelines, tool-using agents, and graph workflows. Streaming-first, transparent API, 2 hard deps."
-authors = [{ name = "Amit", email = "de.amit.nautiyal@gmail.com" }]
+authors = [{ name = "Amit.N", email = "research.amit.n@gmail.com" }]
 license = { text = "Apache-2.0" }
 readme = "README.md"
 requires-python = ">=3.10"
@@ -109,6 +109,7 @@ gsheets = ["google-api-python-client>=2.0", "google-auth>=2.0"]
 jira = ["httpx>=0.27"]
 hubspot = ["hubspot-api-client>=8.0"]
 sql = ["sqlalchemy>=2.0"]
+snowflake = ["snowflake-connector-python>=3.0"]
 mongodb = ["pymongo>=4.0"]
 mongodb-vector = ["pymongo>=4.0"]
 salesforce = ["simple-salesforce>=1.12"]
@@ -184,6 +185,7 @@ all = [
     "simple-salesforce>=1.12",
     "azure-storage-blob>=12.0",
     "elasticsearch>=8.0",
+    "snowflake-connector-python>=3.0",
     "pyairtable>=2.0",
     "playwright>=1.40",
     "youtube-transcript-api>=0.6",
@@ -332,6 +334,7 @@ simple-salesforce = "simple_salesforce"
 hubspot-api-client = "hubspot"
 azure-storage-blob = "azure"
 sqlite-vec = "sqlite_vec"
+snowflake-connector-python = "snowflake"
 
 [tool.deptry.per_rule_ignores]
 DEP001 = ["sqlalchemy", "pydantic", "aiohttp", "opentelemetry", "whisper", "botocore", "aiomcache", "nest_asyncio", "huggingface_hub", "serpapi", "weaviate", "uvicorn", "starlette", "tomli", "pyttsx3", "faster_whisper", "sounddevice", "soundfile"]

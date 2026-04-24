@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -171,3 +172,95 @@ class TestRAGPipeline:
         pipeline = RAGPipeline(RAGConfig(llm=llm, retriever=retriever, memory=ConversationMemory()))
         # add should not raise — TextSplitter is pure Python
         await pipeline.add("Hello world. This is a test document.")
+
+    @pytest.mark.asyncio
+    async def test_auto_eval_non_blocking(self):
+        llm = make_mock_llm()
+        retriever = make_mock_retriever(chunks=["Context chunk 1."])
+        memory = ConversationMemory()
+        tracer = TokenTracer(model="gpt-4o-mini")
+        pipeline = RAGPipeline(
+            RAGConfig(
+                llm=llm,
+                retriever=retriever,
+                memory=memory,
+                tracer=tracer,
+                auto_eval=True,
+            )
+        )
+
+        started = asyncio.Event()
+        release = asyncio.Event()
+
+        async def fake_run_auto_eval(*, query, answer, contexts, call_id):
+            started.set()
+            await release.wait()
+
+        pipeline._run_auto_eval = fake_run_auto_eval  # type: ignore[method-assign]
+
+        answer = await asyncio.wait_for(pipeline.ask("What is this?"), timeout=0.5)
+        assert answer == "Hello world"
+
+        await asyncio.sleep(0)
+        assert started.is_set(), "auto_eval task should be scheduled in the background"
+
+        release.set()
+        await pipeline.wait_for_auto_eval()
+
+    @pytest.mark.asyncio
+    async def test_auto_eval_records_quality_scores(self):
+        llm = make_mock_llm()
+        retriever = make_mock_retriever(chunks=["Context chunk 1."])
+        memory = ConversationMemory()
+        tracer = TokenTracer(model="gpt-4o-mini")
+        pipeline = RAGPipeline(
+            RAGConfig(
+                llm=llm,
+                retriever=retriever,
+                memory=memory,
+                tracer=tracer,
+                auto_eval=True,
+            )
+        )
+
+        async def fake_run_auto_eval(*, query, answer, contexts, call_id):
+            tracer.record_quality(faithfulness=0.9, relevancy=0.8, call_id=call_id)
+
+        pipeline._run_auto_eval = fake_run_auto_eval  # type: ignore[method-assign]
+
+        await pipeline.ask("What is this?")
+        await pipeline.wait_for_auto_eval()
+
+        summary = tracer.summary()
+        assert summary["avg_faithfulness"] == 0.9
+        assert summary["avg_relevancy"] == 0.8
+
+    @pytest.mark.asyncio
+    async def test_auto_eval_disabled_by_default(self):
+        llm = make_mock_llm()
+        retriever = make_mock_retriever(chunks=["Context chunk 1."])
+        memory = ConversationMemory()
+        tracer = TokenTracer(model="gpt-4o-mini")
+        pipeline = RAGPipeline(
+            RAGConfig(
+                llm=llm,
+                retriever=retriever,
+                memory=memory,
+                tracer=tracer,
+                auto_eval=False,
+            )
+        )
+
+        called = False
+
+        async def fake_run_auto_eval(*, query, answer, contexts, call_id):
+            nonlocal called
+            called = True
+
+        pipeline._run_auto_eval = fake_run_auto_eval  # type: ignore[method-assign]
+
+        await pipeline.ask("What is this?")
+        await asyncio.sleep(0)
+
+        assert not called
+        assert tracer.summary()["avg_faithfulness"] is None

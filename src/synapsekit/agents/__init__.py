@@ -1,5 +1,6 @@
 from .base import BaseTool, ToolResult
 from .executor import AgentConfig, AgentExecutor
+from .facade import SimpleAgent, agent
 from .function_calling import FunctionCallingAgent
 from .guardrails import (
     ContentFilter,
@@ -55,6 +56,7 @@ from .tools import (
     HTTPRequestTool,
     HumanInputTool,
     ImageAnalysisTool,
+    ImageGenerationTool,
     JiraTool,
     JSONQueryTool,
     LinearTool,
@@ -101,8 +103,10 @@ __all__ = [
     "AgentConfig",
     "CronTrigger",
     "TriggerResult",
+    "SimpleAgent",
     "VoiceAgent",
     "VoiceResult",
+    "agent",
     # Guardrails
     "ContentFilter",
     "Guardrails",
@@ -133,6 +137,7 @@ __all__ = [
     "HTTPRequestTool",
     "HumanInputTool",
     "ImageAnalysisTool",
+    "ImageGenerationTool",
     "JiraTool",
     "JSONQueryTool",
     "LinearTool",

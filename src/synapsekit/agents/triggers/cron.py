@@ -37,7 +37,7 @@ class CronTrigger:
         self,
         agent: Any,
         *,
-        input: str,
+        prompt: str,
         schedule: str | None = None,
         every: str | None = None,
         timezone: str = "UTC",
@@ -56,7 +56,7 @@ class CronTrigger:
             raise ValueError("max_catch_up_runs must be >= 1.")
 
         self.agent = agent
-        self.input = input
+        self.prompt = prompt
         self.schedule = schedule
         self.every = every
         self.timezone = timezone
@@ -178,7 +178,7 @@ class CronTrigger:
         error_text: str | None = None
 
         try:
-            output = await self._invoke_agent(self.input)
+            output = await self._invoke_agent(self.prompt)
         except Exception as exc:  # pragma: no cover - behavior preserved via logging/result sink
             error_text = f"{type(exc).__name__}: {exc}"
 
@@ -187,7 +187,7 @@ class CronTrigger:
             scheduled_for=scheduled_for,
             started_at=started_at,
             finished_at=finished_at,
-            input_text=self.input,
+            input_text=self.prompt,
             output=output,
             error=error_text,
             metadata={
@@ -201,7 +201,7 @@ class CronTrigger:
         if self.audit_log is not None:
             self.audit_log.record(
                 model=self._model_name(),
-                input_text=self.input,
+                input_text=self.prompt,
                 output_text="" if output is None else str(output),
                 latency_ms=(finished_at - started_at).total_seconds() * 1000,
                 user=self._source_name(),
