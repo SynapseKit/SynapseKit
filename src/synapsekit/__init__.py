@@ -92,6 +92,8 @@ from .agents import (
     TriggerResult,
     TwilioTool,
     VectorSearchTool,
+    VoiceAgent,
+    VoiceResult,
     WeatherTool,
     WebScraperTool,
     WebSearchTool,
@@ -101,8 +103,6 @@ from .agents import (
     YouTubeSearchTool,
     agent,
     tool,
-    VoiceAgent,
-    VoiceResult,
 )
 from .embeddings.backend import SynapsekitEmbeddings
 from .evaluation import (

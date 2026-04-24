@@ -85,8 +85,8 @@ from .tools import (
     WolframAlphaTool,
     YouTubeSearchTool,
 )
-from .voice import VoiceAgent, VoiceResult
 from .triggers import CronTrigger, TriggerResult
+from .voice import VoiceAgent, VoiceResult
 
 __all__ = [
     # Core

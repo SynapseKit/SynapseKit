@@ -83,7 +83,7 @@ class WhisperLocalBackend(STTBackend):
                     import soundfile as sf
 
                     with io.BytesIO(audio) as buf:
-                        data, samplerate = sf.read(buf)
+                        data, _samplerate = sf.read(buf)
                     if len(data.shape) > 1:
                         data = data.mean(axis=1)  # to mono
                     segments, _ = model.transcribe(data, **kwargs)
@@ -108,7 +108,7 @@ class WhisperLocalBackend(STTBackend):
                 import soundfile as sf
 
                 with io.BytesIO(audio) as buf:
-                    data, samplerate = sf.read(buf)
+                    data, _samplerate = sf.read(buf)
                 if len(data.shape) > 1:
                     data = data.mean(axis=1)
                 data = data.astype(np.float32)
@@ -153,7 +153,9 @@ class OpenAITTSBackend(TTSBackend):
                 response_format="mp3",
                 **kwargs,
             )
-            return response.read()
+            import typing
+
+            return typing.cast(bytes, response.read())
 
         return await asyncio.to_thread(_synthesize)
 
@@ -194,12 +196,11 @@ class Pyttsx3TTSBackend(TTSBackend):
                 with open(temp_path, "rb") as f2:
                     return f2.read()
             finally:
+                import contextlib
                 import os
 
-                try:
+                with contextlib.suppress(OSError):
                     os.unlink(temp_path)
-                except OSError:
-                    pass
 
         return await asyncio.to_thread(_synthesize)
 

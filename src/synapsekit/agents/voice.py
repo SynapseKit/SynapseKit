@@ -90,6 +90,8 @@ class VoiceAgent:
         output_format: str = "mp3",
     ) -> VoiceResult:
         """Process an audio file, get an agent response, and optionally save audio."""
+        if isinstance(input_path, str):
+            input_path = Path(input_path)
         transcript = await self._stt.transcribe(input_path)
         if not transcript.strip():
             return VoiceResult(
@@ -221,7 +223,8 @@ class VoiceAgent:
                             print("Listening...")
 
                 except queue.Empty:
-                    pass
+                    # Ignore queue.Empty; wait for next loop tick.
+                    continue
                 except KeyboardInterrupt:
                     print("Stopping stream.")
                     break
