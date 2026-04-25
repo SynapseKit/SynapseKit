@@ -12,6 +12,7 @@ ConditionFn = Callable[[dict[str, Any]], str | Awaitable[str]]
 class Edge:
     src: str
     dst: str
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -20,3 +21,4 @@ class ConditionalEdge:
     condition_fn: ConditionFn
     # Maps condition_fn return value → destination node name (or END).
     mapping: dict[str, str] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
