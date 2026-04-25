@@ -48,6 +48,7 @@ class StateGraph:
         self._state_schema = state_schema
         self.version = version
         self.migrations = migrations or {}
+        self.checkpointer_config: Any | None = None
 
     def __repr__(self) -> str:
         return f"StateGraph(nodes={len(self._nodes)}, edges={len(self._edges)})"
@@ -56,7 +57,9 @@ class StateGraph:
     # Builder API
     # ------------------------------------------------------------------ #
 
-    def add_node(self, name: str, fn: NodeFn, *, metadata: dict[str, Any] | None = None) -> StateGraph:
+    def add_node(
+        self, name: str, fn: NodeFn, *, metadata: dict[str, Any] | None = None
+    ) -> StateGraph:
         self._nodes[name] = Node(name=name, fn=fn, metadata=metadata or {})
         return self
 
@@ -72,7 +75,11 @@ class StateGraph:
         *,
         metadata: dict[str, Any] | None = None,
     ) -> StateGraph:
-        self._edges.append(ConditionalEdge(src=src, condition_fn=condition_fn, mapping=mapping, metadata=metadata or {}))
+        self._edges.append(
+            ConditionalEdge(
+                src=src, condition_fn=condition_fn, mapping=mapping, metadata=metadata or {}
+            )
+        )
         return self
 
     def set_entry_point(self, name: str) -> StateGraph:
@@ -93,28 +100,29 @@ class StateGraph:
 
         nodes_list = []
         for name, node in self._nodes.items():
-            nodes_list.append({
-                "id": name,
-                "type": node.metadata.get("type", "custom_node"),
-                "config": node.metadata.get("config", {})
-            })
+            nodes_list.append(
+                {
+                    "id": name,
+                    "type": node.metadata.get("type", "custom_node"),
+                    "config": node.metadata.get("config", {}),
+                }
+            )
 
         edges_list = []
         conditional_edges_list = []
 
         for edge in self._edges:
             if isinstance(edge, Edge):
-                edges_list.append({
-                    "from": edge.src,
-                    "to": edge.dst
-                })
+                edges_list.append({"from": edge.src, "to": edge.dst})
             elif isinstance(edge, ConditionalEdge):
-                conditional_edges_list.append({
-                    "from": edge.src,
-                    "condition": edge.metadata.get("condition_name", "custom_condition"),
-                    "mapping": edge.mapping,
-                    "config": edge.metadata.get("config", {})
-                })
+                conditional_edges_list.append(
+                    {
+                        "from": edge.src,
+                        "condition": edge.metadata.get("condition_name", "custom_condition"),
+                        "mapping": edge.mapping,
+                        "config": edge.metadata.get("config", {}),
+                    }
+                )
 
         payload = {
             "version": self.version,
@@ -131,10 +139,11 @@ class StateGraph:
         cls,
         json_str: str,
         node_factories: dict[str, Callable[..., NodeFn]] | None = None,
-        condition_factories: dict[str, Callable[..., ConditionFn]] | None = None
+        condition_factories: dict[str, Callable[..., ConditionFn]] | None = None,
     ) -> StateGraph:
         """Import graph definition from a JSON string."""
         import json
+
         payload = json.loads(json_str)
         graph = cls(version=payload.get("version", "1"))
 
@@ -151,7 +160,10 @@ class StateGraph:
             if node_type in node_factories:
                 fn = node_factories[node_type](**config)
             else:
-                async def _dummy_fn(state: dict[str, Any]) -> dict[str, Any]: return {}
+
+                async def _dummy_fn(state: dict[str, Any]) -> dict[str, Any]:
+                    return {}
+
                 fn = _dummy_fn
 
             graph.add_node(node_id, fn, metadata={"type": node_type, "config": config})
@@ -167,14 +179,17 @@ class StateGraph:
             if cond_name in condition_factories:
                 cond_fn = condition_factories[cond_name](**c_edge_data.get("config", {}))
             else:
-                async def _dummy_cond(state: dict[str, Any]) -> str: return "END"
+
+                async def _dummy_cond(state: dict[str, Any]) -> str:
+                    return "END"
+
                 cond_fn = _dummy_cond
 
             graph.add_conditional_edge(
                 src,
                 cond_fn,
                 mapping,
-                metadata={"condition_name": cond_name, "config": c_edge_data.get("config", {})}
+                metadata={"condition_name": cond_name, "config": c_edge_data.get("config", {})},
             )
 
         entry_point = payload.get("entry_point")

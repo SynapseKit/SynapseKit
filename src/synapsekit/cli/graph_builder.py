@@ -3,11 +3,10 @@ import json
 import threading
 import time
 import webbrowser
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-import uvicorn
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+if TYPE_CHECKING:
+    from fastapi import FastAPI
 
 from synapsekit.graph import StateGraph
 from synapsekit.graph.mermaid import get_mermaid
@@ -116,13 +115,14 @@ HTML_TEMPLATE = """
 </html>
 """
 
+
 def generate_python_code(payload: dict[str, Any]) -> str:
     lines = [
         "from synapsekit.graph import StateGraph, END",
         "from synapsekit.graph.node import rag_node, llm_node, agent_node",
         "",
         "def create_graph():",
-        "    graph = StateGraph()"
+        "    graph = StateGraph()",
     ]
 
     for node in payload.get("nodes", []):
@@ -160,7 +160,10 @@ def generate_python_code(payload: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def create_app() -> FastAPI:
+def create_app() -> "FastAPI":
+    from fastapi import FastAPI, Request
+    from fastapi.responses import HTMLResponse, JSONResponse
+
     app = FastAPI(title="SynapseKit Graph Builder")
 
     @app.get("/")
@@ -171,7 +174,7 @@ def create_app() -> FastAPI:
     async def api_mermaid(request: Request):
         try:
             body = await request.body()
-            graph = StateGraph.from_json(body.decode('utf-8'))
+            graph = StateGraph.from_json(body.decode("utf-8"))
             if not graph._entry_point and graph._nodes:
                 graph.set_entry_point(next(iter(graph._nodes.keys())))
             mm = get_mermaid(graph)
@@ -191,15 +194,19 @@ def create_app() -> FastAPI:
 
     @app.get("/api/schema")
     def api_schema():
-        return JSONResponse({
-            "node_types": ["rag_node", "llm_node", "agent_node"],
-            "edge_types": ["normal", "conditional"]
-        })
+        return JSONResponse(
+            {
+                "node_types": ["rag_node", "llm_node", "agent_node"],
+                "edge_types": ["normal", "conditional"],
+            }
+        )
 
     return app
 
 
 def run_graph_builder(args: argparse.Namespace) -> None:
+    import uvicorn
+
     app = create_app()
 
     url = f"http://{args.host}:{args.port}"
