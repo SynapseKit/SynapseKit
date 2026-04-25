@@ -11,11 +11,16 @@ def test_json_roundtrip():
     # Build original graph
     graph = StateGraph()
 
-    async def dummy_rag(state): return {"output": "rag"}
-    async def dummy_llm(state): return {"output": "llm"}
+    async def dummy_rag(state):
+        return {"output": "rag"}
+
+    async def dummy_llm(state):
+        return {"output": "llm"}
 
     graph.add_node("retrieve", dummy_rag, metadata={"type": "rag_node", "config": {"top_k": 5}})
-    graph.add_node("generate", dummy_llm, metadata={"type": "llm_node", "config": {"model": "gpt-4"}})
+    graph.add_node(
+        "generate", dummy_llm, metadata={"type": "llm_node", "config": {"model": "gpt-4"}}
+    )
     graph.add_edge("retrieve", "generate")
     graph.add_edge("generate", END)
     graph.set_entry_point("retrieve")
@@ -40,6 +45,7 @@ def test_json_roundtrip():
     assert graph2._nodes["retrieve"].metadata["type"] == "rag_node"
     assert graph2._nodes["retrieve"].metadata["config"]["top_k"] == 5
 
+
 def test_invalid_schema_handling():
     invalid_json = '{"nodes": [{"id": "only_node", "type": "custom_node"}], "edges": [{"from": "only_node", "to": "missing_node"}]}'
     graph = StateGraph.from_json(invalid_json)
@@ -48,21 +54,23 @@ def test_invalid_schema_handling():
     with pytest.raises(GraphConfigError, match="is not a registered node"):
         graph.compile()
 
+
 def test_python_codegen():
     payload = {
         "nodes": [
             {"id": "retrieve", "type": "rag_node", "config": {"top_k": 5}},
             {"id": "generate", "type": "llm_node", "config": {"model": "gpt-4o-mini"}},
-            {"id": "custom", "type": "custom_node", "config": {}}
+            {"id": "custom", "type": "custom_node", "config": {}},
         ],
-        "edges": [
-            {"from": "retrieve", "to": "generate"},
-            {"from": "generate", "to": "custom"}
-        ],
+        "edges": [{"from": "retrieve", "to": "generate"}, {"from": "generate", "to": "custom"}],
         "conditional_edges": [
-            {"from": "custom", "condition": "check_success", "mapping": {"true": "END", "false": "retrieve"}}
+            {
+                "from": "custom",
+                "condition": "check_success",
+                "mapping": {"true": "END", "false": "retrieve"},
+            }
         ],
-        "entry_point": "retrieve"
+        "entry_point": "retrieve",
     }
 
     code = generate_python_code(payload)
@@ -72,5 +80,8 @@ def test_python_codegen():
     assert "# TODO: Define function for custom_node" in code
     assert "graph.add_node('custom', custom_node)" in code
     assert "graph.add_edge('retrieve', 'generate')" in code
-    assert "graph.add_conditional_edge('custom', check_success, {'true': 'END', 'false': 'retrieve'})" in code
+    assert (
+        "graph.add_conditional_edge('custom', check_success, {'true': 'END', 'false': 'retrieve'})"
+        in code
+    )
     assert "graph.set_entry_point('retrieve')" in code
