@@ -38,12 +38,10 @@ class DuckDBVectorStore(VectorStore):
         self._install_vss()
 
     def _install_vss(self) -> None:
-        try:
+        import contextlib
+
+        with contextlib.suppress(Exception):
             self._conn.execute("INSTALL vss; LOAD vss;")
-        except Exception:
-            # VSS may already be loaded or not available; array_cosine_similarity
-            # is available as a built-in in recent DuckDB versions.
-            pass
 
     @staticmethod
     def _q(name: str) -> str:

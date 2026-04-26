@@ -133,7 +133,7 @@ class TestAgenticRAGRetriever:
         retriever = _make_retriever(["doc"])
         llm = _make_llm("SEARCH: more info")
         agent = AgenticRAGRetriever(retriever=retriever, llm=llm, max_iterations=2)
-        results = await agent.retrieve("query", top_k=5)
+        await agent.retrieve("query", top_k=5)
         # LLM called at most max_iterations times
         assert llm.generate.call_count <= 2
 

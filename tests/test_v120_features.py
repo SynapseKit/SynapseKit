@@ -9,7 +9,7 @@ import textwrap
 import time
 from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock
 
 import pytest
 

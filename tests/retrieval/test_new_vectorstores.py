@@ -305,7 +305,7 @@ class TestOpenSearchVectorStore:
             return store, mock_os_client
 
     def test_add_and_search(self):
-        store, mock_os = self._make_store()
+        store, _mock_os = self._make_store()
         _run(store.add(["t"]))
         results = _run(store.search("q"))
         assert results[0]["text"] == "t"
