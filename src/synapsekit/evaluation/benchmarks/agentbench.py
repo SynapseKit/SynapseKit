@@ -23,7 +23,10 @@ class AgentBenchBenchmark(BaseBenchmark):
         return []
 
     def evaluate(
-        self, agent: Callable[[dict[str, Any]], Any], split: str = "test", limit: int | None = None
+        self,
+        agent: Callable[[dict[str, Any]], Any],
+        split: str = "test",
+        limit: int | None = None,
     ) -> BenchmarkResult:
         """Run the AgentBench evaluation."""
         dataset = self.load_dataset(split)
@@ -32,14 +35,14 @@ class AgentBenchBenchmark(BaseBenchmark):
 
         total = len(dataset)
         success = 0
+        errors = []
 
         for task in dataset:
             try:
                 agent(task)
                 # Check result correctness...
-                pass
-            except Exception:
-                pass
+            except Exception as e:
+                errors.append(str(e))
 
         score = success / total if total > 0 else 0.0
 
@@ -48,5 +51,5 @@ class AgentBenchBenchmark(BaseBenchmark):
             total_tasks=total,
             successful_tasks=success,
             score=score,
-            details={"split": split},
+            details={"split": split, "errors": errors},
         )

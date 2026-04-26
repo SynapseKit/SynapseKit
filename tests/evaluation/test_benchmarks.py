@@ -1,5 +1,3 @@
-import pytest
-
 from synapsekit.evaluation.benchmarks.agentbench import AgentBenchBenchmark
 from synapsekit.evaluation.benchmarks.base import BenchmarkResult
 from synapsekit.evaluation.benchmarks.gaia import GAIABenchmark

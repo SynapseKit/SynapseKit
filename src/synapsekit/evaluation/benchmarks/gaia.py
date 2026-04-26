@@ -37,15 +37,16 @@ class GAIABenchmark(BaseBenchmark):
 
         total = len(dataset)
         success = 0
+        errors = []
 
         for task in dataset:
             # Stub: evaluate agent on task
             try:
                 agent(task)
                 # Check result correctness...
-                pass
-            except Exception:
-                pass
+                # success += 1
+            except Exception as e:
+                errors.append(str(e))
 
         score = success / total if total > 0 else 0.0
 
@@ -54,5 +55,5 @@ class GAIABenchmark(BaseBenchmark):
             total_tasks=total,
             successful_tasks=success,
             score=score,
-            details={"split": split},
+            details={"split": split, "errors": errors},
         )

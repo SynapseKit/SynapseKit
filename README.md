@@ -178,7 +178,6 @@ GitHub Action that runs `@eval_case` suites on every PR and blocks merge if qual
 
 **📊 Agent Benchmarking**<br/>
 Evaluate your agents against industry-standard benchmarks like GAIA, SWE-bench, WebArena, and AgentBench directly from the CLI. Generate leaderboards to compare performance across tasks.
-
 </td>
 </tr>
 </table>
