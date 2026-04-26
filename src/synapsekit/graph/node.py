@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 # A node function takes the current state and returns a partial state dict.
@@ -12,6 +12,7 @@ NodeFn = Callable[[dict[str, Any]], dict[str, Any] | Awaitable[dict[str, Any]]]
 class Node:
     name: str
     fn: NodeFn
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 def agent_node(

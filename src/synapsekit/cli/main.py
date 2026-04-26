@@ -105,6 +105,12 @@ def _add_finetune_parser(subparsers: argparse._SubParsersAction) -> None:  # typ
     wait.add_argument("--api-key", default=None, help="Provider API key")
 
 
+def _add_graph_builder_parser(subparsers: argparse._SubParsersAction) -> None:  # type: ignore[type-arg]
+    p = subparsers.add_parser("graph-builder", help="Launch the visual graph workflow builder")
+    p.add_argument("--host", default="127.0.0.1", help="Bind host (default: 127.0.0.1)")
+    p.add_argument("--port", type=int, default=7861, help="Bind port (default: 7861)")
+
+
 def main(argv: list[str] | None = None) -> None:
     """CLI entry point."""
     parser = argparse.ArgumentParser(
@@ -118,6 +124,7 @@ def main(argv: list[str] | None = None) -> None:
     _add_test_parser(subparsers)
     _add_eval_parser(subparsers)
     _add_finetune_parser(subparsers)
+    _add_graph_builder_parser(subparsers)
 
     args = parser.parse_args(argv)
 
@@ -143,6 +150,10 @@ def main(argv: list[str] | None = None) -> None:
         from .finetune import run_finetune
 
         run_finetune(args)
+    elif args.command == "graph-builder":
+        from .graph_builder import run_graph_builder
+
+        run_graph_builder(args)
     else:
         parser.print_help()
         sys.exit(1)

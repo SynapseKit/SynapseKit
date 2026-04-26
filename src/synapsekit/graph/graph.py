@@ -48,6 +48,7 @@ class StateGraph:
         self._state_schema = state_schema
         self.version = version
         self.migrations = migrations or {}
+        self.checkpointer_config: Any | None = None
 
     def __repr__(self) -> str:
         return f"StateGraph(nodes={len(self._nodes)}, edges={len(self._edges)})"
@@ -56,12 +57,14 @@ class StateGraph:
     # Builder API
     # ------------------------------------------------------------------ #
 
-    def add_node(self, name: str, fn: NodeFn) -> StateGraph:
-        self._nodes[name] = Node(name=name, fn=fn)
+    def add_node(
+        self, name: str, fn: NodeFn, *, metadata: dict[str, Any] | None = None
+    ) -> StateGraph:
+        self._nodes[name] = Node(name=name, fn=fn, metadata=metadata or {})
         return self
 
-    def add_edge(self, src: str, dst: str) -> StateGraph:
-        self._edges.append(Edge(src=src, dst=dst))
+    def add_edge(self, src: str, dst: str, *, metadata: dict[str, Any] | None = None) -> StateGraph:
+        self._edges.append(Edge(src=src, dst=dst, metadata=metadata or {}))
         return self
 
     def add_conditional_edge(
@@ -69,8 +72,14 @@ class StateGraph:
         src: str,
         condition_fn: ConditionFn,
         mapping: dict[str, str],
+        *,
+        metadata: dict[str, Any] | None = None,
     ) -> StateGraph:
-        self._edges.append(ConditionalEdge(src=src, condition_fn=condition_fn, mapping=mapping))
+        self._edges.append(
+            ConditionalEdge(
+                src=src, condition_fn=condition_fn, mapping=mapping, metadata=metadata or {}
+            )
+        )
         return self
 
     def set_entry_point(self, name: str) -> StateGraph:
@@ -80,6 +89,114 @@ class StateGraph:
     def set_finish_point(self, name: str) -> StateGraph:
         """Adds Edge(name, END) — shorthand for the final node."""
         return self.add_edge(name, END)
+
+    # ------------------------------------------------------------------ #
+    # Serialization
+    # ------------------------------------------------------------------ #
+
+    def to_json(self) -> str:
+        """Export graph definition to a JSON string."""
+        import json
+
+        nodes_list = []
+        for name, node in self._nodes.items():
+            nodes_list.append(
+                {
+                    "id": name,
+                    "type": node.metadata.get("type", "custom_node"),
+                    "config": node.metadata.get("config", {}),
+                }
+            )
+
+        edges_list = []
+        conditional_edges_list = []
+
+        for edge in self._edges:
+            if isinstance(edge, Edge):
+                edges_list.append({"from": edge.src, "to": edge.dst})
+            elif isinstance(edge, ConditionalEdge):
+                conditional_edges_list.append(
+                    {
+                        "from": edge.src,
+                        "condition": edge.metadata.get("condition_name", "custom_condition"),
+                        "mapping": edge.mapping,
+                        "config": edge.metadata.get("config", {}),
+                    }
+                )
+
+        payload = {
+            "version": self.version,
+            "entry_point": self._entry_point,
+            "nodes": nodes_list,
+            "edges": edges_list,
+            "conditional_edges": conditional_edges_list,
+            "checkpointer": getattr(self, "checkpointer_config", None),
+        }
+        return json.dumps(payload, indent=2)
+
+    @classmethod
+    def from_json(
+        cls,
+        json_str: str,
+        node_factories: dict[str, Callable[..., NodeFn]] | None = None,
+        condition_factories: dict[str, Callable[..., ConditionFn]] | None = None,
+    ) -> StateGraph:
+        """Import graph definition from a JSON string."""
+        import json
+
+        payload = json.loads(json_str)
+        graph = cls(version=payload.get("version", "1"))
+
+        graph.checkpointer_config = payload.get("checkpointer")
+
+        node_factories = node_factories or {}
+        condition_factories = condition_factories or {}
+
+        for node_data in payload.get("nodes", []):
+            node_id = node_data["id"]
+            node_type = node_data["type"]
+            config = node_data.get("config", {})
+
+            if node_type in node_factories:
+                fn = node_factories[node_type](**config)
+            else:
+
+                async def _dummy_fn(state: dict[str, Any]) -> dict[str, Any]:
+                    return {}
+
+                fn = _dummy_fn
+
+            graph.add_node(node_id, fn, metadata={"type": node_type, "config": config})
+
+        for edge_data in payload.get("edges", []):
+            graph.add_edge(edge_data["from"], edge_data["to"])
+
+        for c_edge_data in payload.get("conditional_edges", []):
+            src = c_edge_data["from"]
+            cond_name = c_edge_data.get("condition", "custom_condition")
+            mapping = c_edge_data["mapping"]
+
+            if cond_name in condition_factories:
+                cond_fn = condition_factories[cond_name](**c_edge_data.get("config", {}))
+            else:
+
+                async def _dummy_cond(state: dict[str, Any]) -> str:
+                    return "END"
+
+                cond_fn = _dummy_cond
+
+            graph.add_conditional_edge(
+                src,
+                cond_fn,
+                mapping,
+                metadata={"condition_name": cond_name, "config": c_edge_data.get("config", {})},
+            )
+
+        entry_point = payload.get("entry_point")
+        if entry_point:
+            graph.set_entry_point(entry_point)
+
+        return graph
 
     # ------------------------------------------------------------------ #
     # Compile
