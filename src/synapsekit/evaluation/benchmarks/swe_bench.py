@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, ClassVar
 
 from .base import BaseBenchmark, BenchmarkResult
 
@@ -11,15 +11,14 @@ from .base import BaseBenchmark, BenchmarkResult
 class SWEBenchmark(BaseBenchmark):
     """SWE-bench evaluation suite."""
 
-    @property
-    def name(self) -> str:
-        return "SWE-bench"
+    name: ClassVar[str] = "SWE-bench"
 
     def load_dataset(self, split: str = "test") -> list[dict[str, Any]]:
         """Load the SWE-bench dataset.
 
         Currently a stub implementation.
         """
+        # TODO: load from huggingface datasets — load_dataset("princeton-nlp/SWE-bench", split=split)
         return []
 
     def evaluate(
@@ -40,7 +39,7 @@ class SWEBenchmark(BaseBenchmark):
         for task in dataset:
             try:
                 agent(task)
-                # Check result correctness...
+                # TODO: run patch against test suite and increment success if all tests pass
             except Exception as e:
                 errors.append(str(e))
 

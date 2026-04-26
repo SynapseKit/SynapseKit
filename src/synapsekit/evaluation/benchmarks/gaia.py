@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, ClassVar
 
 from .base import BaseBenchmark, BenchmarkResult
 
@@ -11,17 +11,14 @@ from .base import BaseBenchmark, BenchmarkResult
 class GAIABenchmark(BaseBenchmark):
     """GAIA (General AI Assistant) Benchmark suite."""
 
-    @property
-    def name(self) -> str:
-        return "GAIA"
+    name: ClassVar[str] = "GAIA"
 
     def load_dataset(self, split: str = "validation") -> list[dict[str, Any]]:
         """Load the GAIA dataset.
 
         Currently a stub implementation.
         """
-        # In a real implementation, this would load from huggingface datasets
-        # e.g., load_dataset("gaia-benchmark/GAIA", split=split)
+        # TODO: load from huggingface datasets — load_dataset("gaia-benchmark/GAIA", split=split)
         return []
 
     def evaluate(
@@ -40,11 +37,9 @@ class GAIABenchmark(BaseBenchmark):
         errors = []
 
         for task in dataset:
-            # Stub: evaluate agent on task
             try:
                 agent(task)
-                # Check result correctness...
-                # success += 1
+                # TODO: compare agent output against task["expected_answer"] and increment success
             except Exception as e:
                 errors.append(str(e))
 

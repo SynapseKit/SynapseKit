@@ -27,7 +27,7 @@ def _run_list_benchmarks(args: Any) -> None:
     """List available benchmarks."""
     print("Available Benchmarks:")
     for key, cls in BENCHMARK_REGISTRY.items():
-        print(f"  - {key} ({cls().name})")
+        print(f"  - {key} ({cls.name})")
 
 
 def _run_benchmark_suite(args: Any) -> None:

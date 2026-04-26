@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, ClassVar
 
 from .base import BaseBenchmark, BenchmarkResult
 
@@ -11,15 +11,14 @@ from .base import BaseBenchmark, BenchmarkResult
 class WebArenaBenchmark(BaseBenchmark):
     """WebArena evaluation suite."""
 
-    @property
-    def name(self) -> str:
-        return "WebArena"
+    name: ClassVar[str] = "WebArena"
 
     def load_dataset(self, split: str = "test") -> list[dict[str, Any]]:
         """Load the WebArena dataset.
 
         Currently a stub implementation.
         """
+        # TODO: load tasks from the WebArena task JSON files
         return []
 
     def evaluate(
@@ -40,7 +39,7 @@ class WebArenaBenchmark(BaseBenchmark):
         for task in dataset:
             try:
                 agent(task)
-                # Check result correctness...
+                # TODO: verify task completion via WebArena evaluator and increment success
             except Exception as e:
                 errors.append(str(e))
 

@@ -139,6 +139,8 @@ class VoiceAgent:
         import queue
         import sys
 
+        import numpy as np
+
         q: queue.Queue = queue.Queue()
 
         def callback(indata: Any, frames: int, time_info: Any, status: Any) -> None:
@@ -195,8 +197,6 @@ class VoiceAgent:
                                 channels=1,
                                 subtype="PCM_16",
                             ) as file:
-                                import numpy as np
-
                                 float_data = (
                                     np.frombuffer(audio_buffer, dtype=np.int16).astype(np.float32)
                                     / 32768.0
@@ -293,8 +293,9 @@ class VoiceAgent:
                     if message == "stop":
                         await _process_buffer()
                         break
-        except Exception:
-            # Handle disconnects
-            pass
+        except Exception as exc:
+            import warnings
+
+            warnings.warn(f"ws_handler error: {exc}", stacklevel=2)
         finally:
             await _process_buffer()

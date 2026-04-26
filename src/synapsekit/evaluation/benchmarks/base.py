@@ -5,7 +5,7 @@ from __future__ import annotations
 import abc
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, ClassVar
 
 
 @dataclass
@@ -35,11 +35,8 @@ class BenchmarkResult:
 class BaseBenchmark(abc.ABC):
     """Abstract base class for all agent benchmarks."""
 
-    @property
-    @abc.abstractmethod
-    def name(self) -> str:
-        """Name of the benchmark."""
-        pass
+    #: Human-readable name for the benchmark. Subclasses must set this as a class variable.
+    name: ClassVar[str]
 
     @abc.abstractmethod
     def load_dataset(self, split: str = "test") -> Any:

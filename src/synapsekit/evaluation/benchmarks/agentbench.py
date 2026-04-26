@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, ClassVar
 
 from .base import BaseBenchmark, BenchmarkResult
 
@@ -11,15 +11,14 @@ from .base import BaseBenchmark, BenchmarkResult
 class AgentBenchBenchmark(BaseBenchmark):
     """AgentBench evaluation suite."""
 
-    @property
-    def name(self) -> str:
-        return "AgentBench"
+    name: ClassVar[str] = "AgentBench"
 
     def load_dataset(self, split: str = "test") -> list[dict[str, Any]]:
         """Load the AgentBench dataset.
 
         Currently a stub implementation.
         """
+        # TODO: load from the AgentBench task configs
         return []
 
     def evaluate(
@@ -40,7 +39,7 @@ class AgentBenchBenchmark(BaseBenchmark):
         for task in dataset:
             try:
                 agent(task)
-                # Check result correctness...
+                # TODO: check agent output against expected result and increment success
             except Exception as e:
                 errors.append(str(e))
 

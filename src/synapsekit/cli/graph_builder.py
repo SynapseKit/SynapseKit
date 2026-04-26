@@ -59,7 +59,7 @@ HTML_TEMPLATE = """
         </div>
     </div>
     <script type="module">
-        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.9.3/dist/mermaid.esm.min.mjs';
         mermaid.initialize({ startOnLoad: false });
 
         window.updatePreviews = async function() {
