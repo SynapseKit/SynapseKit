@@ -23,9 +23,7 @@ class DuckDBVectorStore(VectorStore):
         try:
             import duckdb
         except ImportError:
-            raise ImportError(
-                "duckdb required: pip install synapsekit[duckdb-vector]"
-            ) from None
+            raise ImportError("duckdb required: pip install synapsekit[duckdb-vector]") from None
 
         self._embeddings = embedding_backend
         self._table_name = table_name

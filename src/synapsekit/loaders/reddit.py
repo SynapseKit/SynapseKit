@@ -55,10 +55,7 @@ class RedditLoader:
         return await loop.run_in_executor(None, self.load)
 
     def _load_public(self) -> list[Document]:
-        url = (
-            f"https://www.reddit.com/r/{self._subreddit}/{self._sort}.json"
-            f"?limit={self._limit}"
-        )
+        url = f"https://www.reddit.com/r/{self._subreddit}/{self._sort}.json?limit={self._limit}"
         req = urllib.request.Request(url, headers={"User-Agent": self._user_agent})
         with urllib.request.urlopen(req) as resp:
             data: dict[str, Any] = json.loads(resp.read().decode())
@@ -70,9 +67,7 @@ class RedditLoader:
         import urllib.parse
 
         # Obtain bearer token
-        credentials = base64.b64encode(
-            f"{self._client_id}:{self._client_secret}".encode()
-        ).decode()
+        credentials = base64.b64encode(f"{self._client_id}:{self._client_secret}".encode()).decode()
         token_req = urllib.request.Request(
             "https://www.reddit.com/api/v1/access_token",
             data=urllib.parse.urlencode({"grant_type": "client_credentials"}).encode(),
@@ -86,10 +81,7 @@ class RedditLoader:
             token_data: dict[str, Any] = json.loads(resp.read().decode())
         access_token = token_data["access_token"]
 
-        url = (
-            f"https://oauth.reddit.com/r/{self._subreddit}/{self._sort}"
-            f"?limit={self._limit}"
-        )
+        url = f"https://oauth.reddit.com/r/{self._subreddit}/{self._sort}?limit={self._limit}"
         api_req = urllib.request.Request(
             url,
             headers={

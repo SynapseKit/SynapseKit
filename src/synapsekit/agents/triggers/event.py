@@ -103,9 +103,7 @@ class EventTrigger:
             return True
         if not header_value:
             return False
-        expected = hmac.new(
-            self._secret.encode(), body, hashlib.sha256
-        ).hexdigest()
+        expected = hmac.new(self._secret.encode(), body, hashlib.sha256).hexdigest()
         return hmac.compare_digest(expected, header_value)
 
     async def _handle(self, request: Any) -> Any:

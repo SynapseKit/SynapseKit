@@ -151,7 +151,9 @@ class TestReplicateLLMStream:
 
         with patch("synapsekit.llm.replicate.ReplicateLLM._get_replicate", return_value=mock_rep):
             llm = make_llm(max_new_tokens=512, temperature=0.7, top_p=0.9)
-            _ = [t async for t in llm.stream("hello", max_new_tokens=64, temperature=0.1, top_p=0.5)]
+            _ = [
+                t async for t in llm.stream("hello", max_new_tokens=64, temperature=0.1, top_p=0.5)
+            ]
 
         call_kwargs = mock_rep.async_run.call_args
         input_payload = call_kwargs[1]["input"]
@@ -197,7 +199,9 @@ class TestReplicateLLMGetClient:
         monkeypatch.delenv("REPLICATE_API_TOKEN", raising=False)
         mock_rep = MagicMock()
         mock_rep.client = MagicMock()
-        with patch.dict("sys.modules", {"replicate": mock_rep, "replicate.client": mock_rep.client}):
+        with patch.dict(
+            "sys.modules", {"replicate": mock_rep, "replicate.client": mock_rep.client}
+        ):
             llm = ReplicateLLM(api_key=None)
             client = llm._get_replicate()
             # When no api_key, returns the module itself

@@ -13,15 +13,12 @@ import pytest
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_embeddings(dim: int = 4):
     """Return a fake SynapsekitEmbeddings that yields deterministic vectors."""
     emb = MagicMock()
-    emb.embed = AsyncMock(
-        side_effect=lambda texts: np.ones((len(texts), dim), dtype=np.float32)
-    )
-    emb.embed_one = AsyncMock(
-        return_value=np.ones(dim, dtype=np.float32)
-    )
+    emb.embed = AsyncMock(side_effect=lambda texts: np.ones((len(texts), dim), dtype=np.float32))
+    emb.embed_one = AsyncMock(return_value=np.ones(dim, dtype=np.float32))
     return emb
 
 
@@ -32,6 +29,7 @@ def _run(coro):
 # ===========================================================================
 # 1. VespaVectorStore
 # ===========================================================================
+
 
 class TestVespaVectorStore:
     def _make_store(self):
@@ -69,9 +67,7 @@ class TestVespaVectorStore:
         mock_resp.raise_for_status = MagicMock()
         mock_resp.json.return_value = {
             "root": {
-                "children": [
-                    {"relevance": 0.9, "fields": {"text": "hello", "metadata": "{}"}}
-                ]
+                "children": [{"relevance": 0.9, "fields": {"text": "hello", "metadata": "{}"}}]
             }
         }
         mock_requests.post.return_value = mock_resp
@@ -123,6 +119,7 @@ class TestVespaVectorStore:
 # ===========================================================================
 # 2. RedisVectorStore
 # ===========================================================================
+
 
 class TestRedisVectorStore:
     def _make_store(self):
@@ -194,6 +191,7 @@ class TestRedisVectorStore:
 # ===========================================================================
 # 3. ElasticsearchVectorStore
 # ===========================================================================
+
 
 class TestElasticsearchVectorStore:
     def _make_store(self):
@@ -279,6 +277,7 @@ class TestElasticsearchVectorStore:
 # 4. OpenSearchVectorStore
 # ===========================================================================
 
+
 class TestOpenSearchVectorStore:
     def _make_store(self):
         mock_os_mod = MagicMock()
@@ -338,6 +337,7 @@ class TestOpenSearchVectorStore:
 # ===========================================================================
 # 5. SupabaseVectorStore
 # ===========================================================================
+
 
 class TestSupabaseVectorStore:
     def _make_store(self):
@@ -417,6 +417,7 @@ class TestSupabaseVectorStore:
 # 6. TypesenseVectorStore
 # ===========================================================================
 
+
 class TestTypesenseVectorStore:
     def _make_store(self):
         mock_ts_mod = MagicMock()
@@ -495,6 +496,7 @@ class TestTypesenseVectorStore:
 # 7. MarqoVectorStore
 # ===========================================================================
 
+
 class TestMarqoVectorStore:
     def _make_store(self):
         mock_marqo_mod = MagicMock()
@@ -561,6 +563,7 @@ class TestMarqoVectorStore:
 # 8. ZillizVectorStore
 # ===========================================================================
 
+
 class TestZillizVectorStore:
     def _make_store(self):
         mock_pymilvus_mod = MagicMock()
@@ -607,9 +610,7 @@ class TestZillizVectorStore:
                 import importlib as _il
 
                 mod = _il.import_module("synapsekit.retrieval.zilliz_vector")
-                mod.ZillizVectorStore(
-                    embedding_backend=_make_embeddings(), uri="u", token="t"
-                )
+                mod.ZillizVectorStore(embedding_backend=_make_embeddings(), uri="u", token="t")
 
     def test_add_empty(self):
         store, _ = self._make_store()
@@ -624,6 +625,7 @@ class TestZillizVectorStore:
 # ===========================================================================
 # 9. DuckDBVectorStore
 # ===========================================================================
+
 
 class TestDuckDBVectorStore:
     def _make_store(self):
@@ -651,9 +653,7 @@ class TestDuckDBVectorStore:
         _run(store.add(["doc1"], [{"k": "v"}]))
         assert mock_conn.execute.called
 
-        mock_conn.execute.return_value.fetchall.return_value = [
-            ("doc1", '{"k":"v"}', 0.99)
-        ]
+        mock_conn.execute.return_value.fetchall.return_value = [("doc1", '{"k":"v"}', 0.99)]
         store._table_created = True
         results = _run(store.search("q"))
         assert results[0]["text"] == "doc1"
@@ -692,6 +692,7 @@ class TestDuckDBVectorStore:
 # ===========================================================================
 # 10. ClickHouseVectorStore
 # ===========================================================================
+
 
 class TestClickHouseVectorStore:
     def _make_store(self):
@@ -767,6 +768,7 @@ class TestClickHouseVectorStore:
 # 11. CassandraVectorStore (cassandra-driver mode)
 # ===========================================================================
 
+
 class TestCassandraVectorStore:
     def _make_store(self):
         mock_cassandra_mod = MagicMock()
@@ -828,9 +830,7 @@ class TestCassandraVectorStore:
                 import importlib as _il
 
                 mod = _il.import_module("synapsekit.retrieval.cassandra_vector")
-                mod.CassandraVectorStore(
-                    embedding_backend=_make_embeddings(), keyspace="ks"
-                )
+                mod.CassandraVectorStore(embedding_backend=_make_embeddings(), keyspace="ks")
 
     def test_search_with_results(self):
         store, mock_session = self._make_store()
@@ -849,6 +849,7 @@ class TestCassandraVectorStore:
 # ===========================================================================
 # __init__.py exports
 # ===========================================================================
+
 
 class TestInitExports:
     def test_all_new_stores_in_all(self):

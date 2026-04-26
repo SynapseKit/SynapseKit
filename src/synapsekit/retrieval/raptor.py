@@ -77,8 +77,7 @@ class RAPTORRetriever:
         for _ in range(self._levels):
             # Cluster into groups of cluster_size
             clusters = [
-                docs[i : i + self._cluster_size]
-                for i in range(0, len(docs), self._cluster_size)
+                docs[i : i + self._cluster_size] for i in range(0, len(docs), self._cluster_size)
             ]
 
             # Summarise each cluster

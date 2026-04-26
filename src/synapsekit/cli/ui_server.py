@@ -327,9 +327,7 @@ def create_app(tracer: Any | None = None) -> FastAPI:
             r.input_tokens * costs.get("input", 0.0) + r.output_tokens * costs.get("output", 0.0)
             for r in records
         )
-        avg_latency = (
-            sum(r.latency_ms for r in records) / len(records) if records else 0.0
-        )
+        avg_latency = sum(r.latency_ms for r in records) / len(records) if records else 0.0
 
         return JSONResponse(
             {

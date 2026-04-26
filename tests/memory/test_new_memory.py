@@ -18,8 +18,7 @@ class TestVectorConversationMemory:
         """Return a mock SynapsekitEmbeddings that returns unit vectors."""
         emb = AsyncMock()
         emb.embed = AsyncMock(
-            side_effect=lambda texts: np.ones((len(texts), dim), dtype=np.float32)
-            / np.sqrt(dim)
+            side_effect=lambda texts: np.ones((len(texts), dim), dtype=np.float32) / np.sqrt(dim)
         )
         emb.embed_one = AsyncMock(return_value=np.ones(dim, dtype=np.float32) / np.sqrt(dim))
         return emb

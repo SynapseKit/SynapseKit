@@ -35,7 +35,9 @@ def make_mock_llm(generate_responses=None):
 
 def make_swarm(llm=None, tools=None, max_agents=5, spawn_threshold=0.7):
     llm = llm or make_mock_llm()
-    return SwarmAgent(llm=llm, tools=tools or [], max_agents=max_agents, spawn_threshold=spawn_threshold)
+    return SwarmAgent(
+        llm=llm, tools=tools or [], max_agents=max_agents, spawn_threshold=spawn_threshold
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -206,11 +208,13 @@ class TestSwarmAgentRunSwarm:
     @pytest.mark.asyncio
     async def test_run_spawns_subagents_when_high_complexity(self):
         # Use separate generators for scoring/decompose vs synthesize
-        llm_responses = iter([
-            '{"score": 0.9}',           # complexity score
-            '["subtask A", "subtask B"]',  # decompose
-            "Final synthesized answer",  # synthesize
-        ])
+        llm_responses = iter(
+            [
+                '{"score": 0.9}',  # complexity score
+                '["subtask A", "subtask B"]',  # decompose
+                "Final synthesized answer",  # synthesize
+            ]
+        )
 
         async def fake_generate(prompt, **kw):
             return next(llm_responses)
@@ -238,10 +242,12 @@ class TestSwarmAgentRunSwarm:
         """Subtasks should be run concurrently via asyncio.gather."""
         gathered_tasks = []
 
-        responses_iter = iter([
-            '{"score": 0.95}',
-            '["sub1", "sub2", "sub3"]',
-        ])
+        responses_iter = iter(
+            [
+                '{"score": 0.95}',
+                '["sub1", "sub2", "sub3"]',
+            ]
+        )
         subtask_results = {"sub1": "R1", "sub2": "R2", "sub3": "R3"}
 
         async def fake_generate(prompt, **kw):
@@ -273,10 +279,12 @@ class TestSwarmAgentRunSwarm:
 
     @pytest.mark.asyncio
     async def test_run_swarm_handles_subtask_error(self):
-        responses_iter = iter([
-            '{"score": 0.9}',
-            '["good subtask", "failing subtask"]',
-        ])
+        responses_iter = iter(
+            [
+                '{"score": 0.9}',
+                '["good subtask", "failing subtask"]',
+            ]
+        )
 
         async def fake_generate(prompt, **kw):
             try:
@@ -306,10 +314,12 @@ class TestSwarmAgentRunSwarm:
     @pytest.mark.asyncio
     async def test_run_swarm_fallback_empty_subtasks(self):
         """If decompose produces empty list, fall back to original task."""
-        responses_iter = iter([
-            '{"score": 0.9}',
-            '[]',            # empty subtasks
-        ])
+        responses_iter = iter(
+            [
+                '{"score": 0.9}',
+                "[]",  # empty subtasks
+            ]
+        )
 
         async def fake_generate(prompt, **kw):
             try:

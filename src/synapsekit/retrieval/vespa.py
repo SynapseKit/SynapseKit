@@ -42,10 +42,7 @@ class VespaVectorStore(VectorStore):
         return requests
 
     def _doc_url(self, doc_id: str) -> str:
-        return (
-            f"{self._url}/document/v1/{self._application}"
-            f"/{self._schema}/docid/{doc_id}"
-        )
+        return f"{self._url}/document/v1/{self._application}/{self._schema}/docid/{doc_id}"
 
     def _add_sync(self, texts: list[str], metadata: list[dict], vecs: list[list[float]]) -> None:
         requests = self._get_requests()

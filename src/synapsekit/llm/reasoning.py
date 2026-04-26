@@ -120,9 +120,7 @@ class ReasoningLLM(BaseLLM):
 # ------------------------------------------------------------------
 
 
-def _build_openai_reasoning(
-    model: str, api_key: str | None, effort: str
-) -> BaseLLM:
+def _build_openai_reasoning(model: str, api_key: str | None, effort: str) -> BaseLLM:
     """OpenAI o-series reasoning models use ``reasoning_effort`` param."""
 
     import os
@@ -132,9 +130,7 @@ def _build_openai_reasoning(
     try:
         from openai import AsyncOpenAI
     except ImportError:
-        raise ImportError(
-            "openai package required: pip install synapsekit[openai]"
-        ) from None
+        raise ImportError("openai package required: pip install synapsekit[openai]") from None
 
     _key = api_key or os.environ.get("OPENAI_API_KEY", "")
     cfg = LLMConfig(model=model, api_key=_key, provider="openai")
@@ -160,9 +156,7 @@ def _build_openai_reasoning(
     return _OpenAIReasoningLLM()
 
 
-def _build_anthropic_reasoning(
-    model: str, api_key: str | None, budget_tokens: int
-) -> BaseLLM:
+def _build_anthropic_reasoning(model: str, api_key: str | None, budget_tokens: int) -> BaseLLM:
     """Anthropic extended thinking via ``thinking`` param."""
 
     import os
@@ -172,9 +166,7 @@ def _build_anthropic_reasoning(
     try:
         import anthropic
     except ImportError:
-        raise ImportError(
-            "anthropic package required: pip install synapsekit[anthropic]"
-        ) from None
+        raise ImportError("anthropic package required: pip install synapsekit[anthropic]") from None
 
     _key = api_key or os.environ.get("ANTHROPIC_API_KEY", "")
     cfg = LLMConfig(model=model, api_key=_key, provider="anthropic", max_tokens=16000)
@@ -216,9 +208,7 @@ def _build_google_reasoning(model: str, api_key: str | None) -> BaseLLM:
     try:
         import google.generativeai as genai
     except ImportError:
-        raise ImportError(
-            "google-generativeai required: pip install synapsekit[gemini]"
-        ) from None
+        raise ImportError("google-generativeai required: pip install synapsekit[gemini]") from None
 
     _key = api_key or os.environ.get("GOOGLE_API_KEY", "")
     cfg = LLMConfig(model=model, api_key=_key, provider="google")
@@ -254,9 +244,7 @@ def _build_deepseek_reasoning(model: str, api_key: str | None) -> BaseLLM:
     try:
         from openai import AsyncOpenAI
     except ImportError:
-        raise ImportError(
-            "openai package required: pip install synapsekit[openai]"
-        ) from None
+        raise ImportError("openai package required: pip install synapsekit[openai]") from None
 
     _key = api_key or os.environ.get("DEEPSEEK_API_KEY", "")
     cfg = LLMConfig(

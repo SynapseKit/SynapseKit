@@ -271,7 +271,9 @@ class TestLateChunkingRetriever:
 
         emb = self._make_embeddings()
         texts = ["This is a long document with several words that can be chunked."]
-        retriever = LateChunkingRetriever(texts=texts, embedding_backend=emb, chunk_size=20, chunk_overlap=5)
+        retriever = LateChunkingRetriever(
+            texts=texts, embedding_backend=emb, chunk_size=20, chunk_overlap=5
+        )
         results = await retriever.retrieve("query", top_k=3)
         assert isinstance(results, list)
         assert len(results) > 0
@@ -287,15 +289,13 @@ class TestLateChunkingRetriever:
 
         dim = 4
         emb = _AsyncMock()
-        emb.embed = _AsyncMock(
-            return_value=np.ones((2, dim), dtype=np.float32) / np.sqrt(dim)
-        )
-        emb.embed_one = _AsyncMock(
-            return_value=np.ones(dim, dtype=np.float32) / np.sqrt(dim)
-        )
+        emb.embed = _AsyncMock(return_value=np.ones((2, dim), dtype=np.float32) / np.sqrt(dim))
+        emb.embed_one = _AsyncMock(return_value=np.ones(dim, dtype=np.float32) / np.sqrt(dim))
 
         texts = ["document one", "document two"]
-        retriever = LateChunkingRetriever(texts=texts, embedding_backend=emb, chunk_size=5, chunk_overlap=1)
+        retriever = LateChunkingRetriever(
+            texts=texts, embedding_backend=emb, chunk_size=5, chunk_overlap=1
+        )
 
         await retriever.retrieve("query")
         call_count_after_first = emb.embed.call_count
@@ -318,7 +318,9 @@ class TestLateChunkingRetriever:
 
         emb = self._make_embeddings()
         texts = ["a " * 200]  # Long enough to produce many chunks
-        retriever = LateChunkingRetriever(texts=texts, embedding_backend=emb, chunk_size=10, chunk_overlap=2)
+        retriever = LateChunkingRetriever(
+            texts=texts, embedding_backend=emb, chunk_size=10, chunk_overlap=2
+        )
         results = await retriever.retrieve("query", top_k=2)
         assert len(results) <= 2
 
@@ -328,7 +330,9 @@ class TestLateChunkingRetriever:
 
         emb = self._make_embeddings()
         texts = ["hello world"]
-        retriever = LateChunkingRetriever(texts=texts, embedding_backend=emb, chunk_size=5, chunk_overlap=0)
+        retriever = LateChunkingRetriever(
+            texts=texts, embedding_backend=emb, chunk_size=5, chunk_overlap=0
+        )
         results = await retriever.retrieve("hello", top_k=5)
         for r in results:
             assert "doc_idx" in r.metadata

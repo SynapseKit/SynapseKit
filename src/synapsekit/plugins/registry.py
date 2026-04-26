@@ -57,8 +57,7 @@ class PluginRegistry:
         """
         if name not in self._classes:
             raise KeyError(
-                f"No plugin registered under name {name!r}. "
-                f"Available: {list(self._classes)}"
+                f"No plugin registered under name {name!r}. Available: {list(self._classes)}"
             )
         if name in self._instances:
             return self._instances[name]

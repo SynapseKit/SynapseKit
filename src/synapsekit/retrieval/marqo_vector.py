@@ -55,9 +55,7 @@ class MarqoVectorStore(VectorStore):
             docs.append(doc)
         self._mq.index(self._index_name).add_documents(docs, tensor_fields=["text"])
 
-    def _search_sync(
-        self, query: str, top_k: int, metadata_filter: dict | None
-    ) -> list[dict]:
+    def _search_sync(self, query: str, top_k: int, metadata_filter: dict | None) -> list[dict]:
         self._ensure_index()
         resp = self._mq.index(self._index_name).search(q=query, limit=top_k)
         results = []

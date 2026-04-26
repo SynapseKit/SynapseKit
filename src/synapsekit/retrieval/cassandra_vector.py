@@ -39,9 +39,7 @@ class CassandraVectorStore(VectorStore):
             try:
                 from astrapy import DataAPIClient
             except ImportError:
-                raise ImportError(
-                    "astrapy required: pip install synapsekit[cassandra]"
-                ) from None
+                raise ImportError("astrapy required: pip install synapsekit[cassandra]") from None
             self._mode = "astra"
             self._astra_db_id = astra_db_id
             self._astra_token = astra_token or ""
@@ -192,13 +190,9 @@ class CassandraVectorStore(VectorStore):
         vec_lists = [v.tolist() for v in vecs]
         loop = asyncio.get_running_loop()
         if self._mode == "astra":
-            await loop.run_in_executor(
-                None, partial(self._astra_add_sync, texts, meta, vec_lists)
-            )
+            await loop.run_in_executor(None, partial(self._astra_add_sync, texts, meta, vec_lists))
         else:
-            await loop.run_in_executor(
-                None, partial(self._cass_add_sync, texts, meta, vec_lists)
-            )
+            await loop.run_in_executor(None, partial(self._cass_add_sync, texts, meta, vec_lists))
 
     async def search(
         self,

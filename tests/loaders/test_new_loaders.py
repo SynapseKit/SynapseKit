@@ -621,8 +621,22 @@ class TestHackerNewsLoader:
         loader = HackerNewsLoader(story_type="top", limit=2)
         story_ids = [1001, 1002]
         items = {
-            1001: {"id": 1001, "title": "Story One", "url": "https://example.com/1", "score": 100, "by": "alice", "time": 1700000000},
-            1002: {"id": 1002, "title": "Story Two", "text": "Body text", "score": 50, "by": "bob", "time": 1700000001},
+            1001: {
+                "id": 1001,
+                "title": "Story One",
+                "url": "https://example.com/1",
+                "score": 100,
+                "by": "alice",
+                "time": 1700000000,
+            },
+            1002: {
+                "id": 1002,
+                "title": "Story Two",
+                "text": "Body text",
+                "score": 50,
+                "by": "bob",
+                "time": 1700000001,
+            },
         }
 
         def mock_fetch_ids(self_inner: HackerNewsLoader) -> list[int]:
@@ -659,7 +673,14 @@ class TestHackerNewsLoader:
         from synapsekit.loaders.hackernews import HackerNewsLoader
 
         loader = HackerNewsLoader(limit=1)
-        item = {"id": 42, "title": "Async HN", "url": "http://x.com", "score": 5, "by": "u", "time": 0}
+        item = {
+            "id": 42,
+            "title": "Async HN",
+            "url": "http://x.com",
+            "score": 5,
+            "by": "u",
+            "time": 0,
+        }
 
         with patch.object(HackerNewsLoader, "_fetch_story_ids", lambda s: [42]):
             with patch.object(HackerNewsLoader, "_fetch_item", lambda s, i: item):
@@ -697,14 +718,38 @@ class TestRedditLoader:
         from synapsekit.loaders.reddit import RedditLoader
 
         loader = RedditLoader(subreddit="python", limit=2)
-        fake_response_data = json.dumps({
-            "data": {
-                "children": [
-                    {"data": {"id": "p1", "title": "Post One", "selftext": "Body", "subreddit": "python", "score": 100, "url": "https://redd.it/p1", "author": "user1", "created_utc": 0}},
-                    {"data": {"id": "p2", "title": "Post Two", "selftext": "", "subreddit": "python", "score": 50, "url": "https://redd.it/p2", "author": "user2", "created_utc": 0}},
-                ]
+        fake_response_data = json.dumps(
+            {
+                "data": {
+                    "children": [
+                        {
+                            "data": {
+                                "id": "p1",
+                                "title": "Post One",
+                                "selftext": "Body",
+                                "subreddit": "python",
+                                "score": 100,
+                                "url": "https://redd.it/p1",
+                                "author": "user1",
+                                "created_utc": 0,
+                            }
+                        },
+                        {
+                            "data": {
+                                "id": "p2",
+                                "title": "Post Two",
+                                "selftext": "",
+                                "subreddit": "python",
+                                "score": 50,
+                                "url": "https://redd.it/p2",
+                                "author": "user2",
+                                "created_utc": 0,
+                            }
+                        },
+                    ]
+                }
             }
-        }).encode()
+        ).encode()
 
         mock_resp = MagicMock()
         mock_resp.__enter__ = lambda s: s
@@ -724,13 +769,26 @@ class TestRedditLoader:
         from synapsekit.loaders.reddit import RedditLoader
 
         loader = RedditLoader(subreddit="python", limit=1)
-        fake_data = json.dumps({
-            "data": {
-                "children": [
-                    {"data": {"id": "a1", "title": "Async Reddit", "selftext": "", "subreddit": "python", "score": 10, "url": "https://x.com", "author": "u", "created_utc": 0}}
-                ]
+        fake_data = json.dumps(
+            {
+                "data": {
+                    "children": [
+                        {
+                            "data": {
+                                "id": "a1",
+                                "title": "Async Reddit",
+                                "selftext": "",
+                                "subreddit": "python",
+                                "score": 10,
+                                "url": "https://x.com",
+                                "author": "u",
+                                "created_utc": 0,
+                            }
+                        }
+                    ]
+                }
             }
-        }).encode()
+        ).encode()
 
         mock_resp = MagicMock()
         mock_resp.__enter__ = lambda s: s

@@ -102,13 +102,14 @@ class TestEventTriggerHandle:
     def _run_handle(self, t, req, mock_aiohttp, mock_web):
         """Patch aiohttp in sys.modules and run _handle."""
         with patch.dict("sys.modules", {"aiohttp": mock_aiohttp, "aiohttp.web": mock_web}):
-
             import synapsekit.agents.triggers.event as ev_mod
+
             # Patch the module-level reference if present
             original = getattr(ev_mod, "web", None)
             ev_mod.web = mock_web  # type: ignore[attr-defined]
             try:
                 import asyncio
+
                 return asyncio.get_event_loop().run_until_complete(t._handle(req))
             finally:
                 if original is not None:

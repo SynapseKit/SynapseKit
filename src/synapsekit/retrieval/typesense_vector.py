@@ -25,9 +25,7 @@ class TypesenseVectorStore(VectorStore):
         try:
             import typesense
         except ImportError:
-            raise ImportError(
-                "typesense required: pip install synapsekit[typesense]"
-            ) from None
+            raise ImportError("typesense required: pip install synapsekit[typesense]") from None
 
         self._embeddings = embedding_backend
         self._collection_name = collection_name
@@ -86,9 +84,7 @@ class TypesenseVectorStore(VectorStore):
             }
             for text, meta, vec in zip(texts, metadata, vecs, strict=True)
         ]
-        self._ts.collections[self._collection_name].documents.import_(
-            docs, {"action": "create"}
-        )
+        self._ts.collections[self._collection_name].documents.import_(docs, {"action": "create"})
 
     def _search_sync(
         self, q_vec: list[float], top_k: int, metadata_filter: dict | None
