@@ -92,6 +92,8 @@ from .agents import (
     TriggerResult,
     TwilioTool,
     VectorSearchTool,
+    VoiceAgent,
+    VoiceResult,
     WeatherTool,
     WebScraperTool,
     WebSearchTool,
@@ -438,6 +440,8 @@ __all__ = [
     "CronTrigger",
     "TriggerResult",
     "SimpleAgent",
+    "VoiceAgent",
+    "VoiceResult",
     "agent",
     # Tool decorator
     "tool",

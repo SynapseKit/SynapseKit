@@ -86,6 +86,7 @@ from .tools import (
     YouTubeSearchTool,
 )
 from .triggers import CronTrigger, TriggerResult
+from .voice import VoiceAgent, VoiceResult
 
 __all__ = [
     # Core
@@ -103,6 +104,8 @@ __all__ = [
     "CronTrigger",
     "TriggerResult",
     "SimpleAgent",
+    "VoiceAgent",
+    "VoiceResult",
     "agent",
     # Guardrails
     "ContentFilter",
