@@ -9,6 +9,10 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+---
+
+## [1.6.0] — 2026-04-26
+
 ### Added
 
 - **`CronTrigger`** — schedule-based agent execution via cron expressions (`"0 9 * * *"`) or interval shorthand (`"30m"`, `"1h"`, `"2d"`); missed-run policies (`skip` / `catch_up` with configurable `max_catch_up_runs`); injectable `clock` and `sleep_func` for deterministic testing; `AuditLog` integration; `TriggerResult` dataclass with timing and error metadata; optional `result_sink` callback (sync or async); `pip install synapsekit[cron]` for cron expression support; closes #583
