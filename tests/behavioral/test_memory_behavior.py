@@ -129,6 +129,7 @@ class TestConversationMemoryFormat:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 class TestAgentMemory:
     def test_starts_empty(self):
         from synapsekit.agents.memory import AgentMemory

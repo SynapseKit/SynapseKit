@@ -9,6 +9,8 @@ from unittest.mock import AsyncMock
 import numpy as np
 import pytest
 
+pytestmark = pytest.mark.filterwarnings("ignore::RuntimeWarning")
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

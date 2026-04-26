@@ -56,6 +56,13 @@ weaviate = ["weaviate-client>=4.0"]
 milvus = ["pymilvus>=2.4"]
 lancedb = ["lancedb>=0.5"]
 sqlite-vec = ["sqlite-vec>=0.1"]
+cassandra = ["astrapy>=1.0"]
+clickhouse = ["clickhouse-connect>=0.7"]
+duckdb-vector = ["duckdb>=0.10"]
+marqo = ["marqo>=3.0"]
+opensearch = ["opensearch-py>=2.0"]
+vespa = ["requests>=2.31"]
+replicate = ["replicate>=0.25"]
 ollama = ["ollama>=0.2"]
 lmstudio = ["openai>=1.0"]
 vllm = ["openai>=1.0"]
@@ -190,6 +197,20 @@ all = [
     "pyairtable>=2.0",
     "playwright>=1.40",
     "youtube-transcript-api>=0.6",
+    "astrapy>=1.0",
+    "clickhouse-connect>=0.7",
+    "duckdb>=0.10",
+    "marqo>=3.0",
+    "opensearch-py>=2.0",
+    "requests>=2.31",
+    "replicate>=0.25",
+    "slack-sdk>=3.0",
+    "dropbox>=12.0",
+    "atlassian-python-api>=3.0",
+    "pyarrow>=14.0",
+    "striprtf>=0.0.26",
+    "ebooklib>=0.18",
+    "gpt4all>=2.0",
 ]
 
 [dependency-groups]
