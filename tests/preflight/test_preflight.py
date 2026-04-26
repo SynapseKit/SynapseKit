@@ -162,13 +162,18 @@ LOADER_NAMES = [
     "EPUBLoader",
     "ElasticsearchLoader",
     "EmailLoader",
+    "FirestoreLoader",
+    "FreshdeskLoader",
     "GCSLoader",
     "GitHubLoader",
     "GitLoader",
     "GoogleDriveLoader",
     "GoogleSheetsLoader",
+    "GoogleCalendarLoader",
+    "HackerNewsLoader",
     "HTMLLoader",
     "HubSpotLoader",
+    "IntercomLoader",
     "LaTeXLoader",
     "JSONLoader",
     "JiraLoader",
@@ -183,6 +188,7 @@ LOADER_NAMES = [
     "RSSLoader",
     "RTFLoader",
     "RedisLoader",
+    "RedditLoader",
     "S3Loader",
     "SalesforceLoader",
     "SitemapLoader",
@@ -193,13 +199,16 @@ LOADER_NAMES = [
     "SupabaseLoader",
     "TeamsLoader",
     "TextLoader",
+    "TrelloLoader",
     "TSVLoader",
+    "TwitterLoader",
     "VideoLoader",
     "WebLoader",
     "WikipediaLoader",
     "XMLLoader",
     "YAMLLoader",
     "YouTubeLoader",
+    "ZendeskLoader",
 ]
 
 
@@ -211,7 +220,7 @@ def test_all_loaders_in_all_list():
 
 
 def test_loader_count_matches_spec():
-    """We have exactly 54 names in the loaders __all__ (includes Document + StringLoader)."""
+    """We have exactly 64 names in the loaders __all__ (includes Document + StringLoader)."""
     import synapsekit.loaders as loaders_mod
 
     assert len(loaders_mod.__all__) == len(LOADER_NAMES)

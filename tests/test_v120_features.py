@@ -376,64 +376,63 @@ class TestPromptHub:
 
 
 class TestPluginRegistry:
-    def test_discover_with_mock_entry_points(self):
+    def _make_plugin_cls(self, name: str, version: str = "1.0.0", description: str = "test"):
+        from synapsekit.plugins.base import BasePlugin
+
+        class _Plugin(BasePlugin):
+            pass
+
+        _Plugin.name = name
+        _Plugin.version = version
+        _Plugin.description = description
+        return _Plugin
+
+    def test_register_and_list(self):
         from synapsekit.plugins import PluginRegistry
 
-        mock_ep = Mock()
-        mock_ep.name = "test_plugin"
-        mock_ep.load.return_value = lambda: "registered"
+        registry = PluginRegistry()
+        cls = self._make_plugin_cls("my_plugin")
+        registry.register(cls)
+        info = registry.list_plugins()
+        assert any(p["name"] == "my_plugin" for p in info)
 
-        with patch("importlib.metadata.entry_points", return_value=[mock_ep]):
-            registry = PluginRegistry()
-            names = registry.discover()
-            assert "test_plugin" in names
+    def test_load_and_get(self):
+        import asyncio
 
-    def test_load_plugin(self):
         from synapsekit.plugins import PluginRegistry
 
-        mock_ep = Mock()
-        mock_ep.name = "test_plugin"
-        mock_ep.load.return_value = lambda: {"name": "test"}
+        registry = PluginRegistry()
+        cls = self._make_plugin_cls("my_plugin2")
+        registry.register(cls)
 
-        with patch("importlib.metadata.entry_points", return_value=[mock_ep]):
-            registry = PluginRegistry()
-            result = registry.load("test_plugin")
-            assert result == {"name": "test"}
-            # Second load should return cached
-            result2 = registry.load("test_plugin")
-            assert result2 == {"name": "test"}
+        instance = asyncio.run(registry.load("my_plugin2"))
+        assert instance is not None
+        # Second load returns cached instance
+        instance2 = asyncio.run(registry.load("my_plugin2"))
+        assert instance is instance2
 
     def test_load_nonexistent(self):
+        import asyncio
+
         from synapsekit.plugins import PluginRegistry
 
-        with patch("importlib.metadata.entry_points", return_value=[]):
-            registry = PluginRegistry()
-            with pytest.raises(KeyError):
-                registry.load("nonexistent")
+        registry = PluginRegistry()
+        with pytest.raises(KeyError):
+            asyncio.run(registry.load("nonexistent"))
 
-    def test_load_all(self):
+    def test_unload(self):
+        import asyncio
+
         from synapsekit.plugins import PluginRegistry
 
-        mock_ep1 = Mock()
-        mock_ep1.name = "p1"
-        mock_ep1.load.return_value = lambda: "r1"
-
-        mock_ep2 = Mock()
-        mock_ep2.name = "p2"
-        mock_ep2.load.return_value = lambda: "r2"
-
-        all_eps = [mock_ep1, mock_ep2]
-
-        def ep_side_effect(**kwargs: Any) -> list[Mock]:
-            name = kwargs.get("name")
-            if name:
-                return [ep for ep in all_eps if ep.name == name]
-            return all_eps
-
-        with patch("importlib.metadata.entry_points", side_effect=ep_side_effect):
-            registry = PluginRegistry()
-            all_loaded = registry.load_all()
-            assert all_loaded == {"p1": "r1", "p2": "r2"}
+        registry = PluginRegistry()
+        cls = self._make_plugin_cls("my_plugin3")
+        registry.register(cls)
+        asyncio.run(registry.load("my_plugin3"))
+        asyncio.run(registry.unload("my_plugin3"))
+        info = registry.list_plugins()
+        loaded_info = next(p for p in info if p["name"] == "my_plugin3")
+        assert loaded_info["loaded"] is False
 
 
 # ───────────────────────────────────────────────────────────────────────
