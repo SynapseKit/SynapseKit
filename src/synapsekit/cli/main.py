@@ -111,6 +111,19 @@ def _add_graph_builder_parser(subparsers: argparse._SubParsersAction) -> None:  
     p.add_argument("--port", type=int, default=7861, help="Bind port (default: 7861)")
 
 
+def _add_benchmark_parser(subparsers: argparse._SubParsersAction) -> None:  # type: ignore[type-arg]
+    p = subparsers.add_parser("benchmark", help="Run agent benchmarks (GAIA, SWE-bench, etc.)")
+    bench_sub = p.add_subparsers(dest="benchmark_command")
+
+    run_cmd = bench_sub.add_parser("run", help="Run a specific benchmark suite")
+    run_cmd.add_argument("suite", help="Benchmark suite (gaia, swe-bench, webarena, agentbench)")
+    run_cmd.add_argument("agent", help="Import path for the agent, e.g. 'my_agent:run_task'")
+    run_cmd.add_argument("--split", default="test", help="Dataset split to evaluate on")
+    run_cmd.add_argument("--limit", type=int, default=None, help="Max tasks to evaluate")
+
+    bench_sub.add_parser("list", help="List available benchmarks")
+
+
 def main(argv: list[str] | None = None) -> None:
     """CLI entry point."""
     parser = argparse.ArgumentParser(
@@ -125,6 +138,7 @@ def main(argv: list[str] | None = None) -> None:
     _add_eval_parser(subparsers)
     _add_finetune_parser(subparsers)
     _add_graph_builder_parser(subparsers)
+    _add_benchmark_parser(subparsers)
 
     args = parser.parse_args(argv)
 
@@ -154,6 +168,10 @@ def main(argv: list[str] | None = None) -> None:
         from .graph_builder import run_graph_builder
 
         run_graph_builder(args)
+    elif args.command == "benchmark":
+        from .benchmark import run_benchmark
+
+        run_benchmark(args)
     else:
         parser.print_help()
         sys.exit(1)
