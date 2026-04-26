@@ -111,6 +111,25 @@ def _add_graph_builder_parser(subparsers: argparse._SubParsersAction) -> None:  
     p.add_argument("--port", type=int, default=7861, help="Bind port (default: 7861)")
 
 
+def _add_ui_parser(subparsers: argparse._SubParsersAction) -> None:  # type: ignore[type-arg]
+    p = subparsers.add_parser("ui", help="Launch the observability dashboard")
+    p.add_argument("--host", default="127.0.0.1", help="Bind host (default: 127.0.0.1)")
+    p.add_argument("--port", type=int, default=7860, help="Bind port (default: 7860)")
+
+
+def _add_plugin_parser(subparsers: argparse._SubParsersAction) -> None:  # type: ignore[type-arg]
+    p = subparsers.add_parser("plugin", help="Manage SynapseKit plugins")
+    plugin_sub = p.add_subparsers(dest="plugin_command")
+
+    plugin_sub.add_parser("list", help="List all registered plugins")
+
+    load_cmd = plugin_sub.add_parser("load", help="Load a plugin from a Python file")
+    load_cmd.add_argument("path", help="Path to the plugin .py file")
+
+    info_cmd = plugin_sub.add_parser("info", help="Show details about a registered plugin")
+    info_cmd.add_argument("name", help="Plugin name")
+
+
 def _add_benchmark_parser(subparsers: argparse._SubParsersAction) -> None:  # type: ignore[type-arg]
     p = subparsers.add_parser("benchmark", help="Run agent benchmarks (GAIA, SWE-bench, etc.)")
     bench_sub = p.add_subparsers(dest="benchmark_command")
@@ -139,6 +158,8 @@ def main(argv: list[str] | None = None) -> None:
     _add_finetune_parser(subparsers)
     _add_graph_builder_parser(subparsers)
     _add_benchmark_parser(subparsers)
+    _add_ui_parser(subparsers)
+    _add_plugin_parser(subparsers)
 
     args = parser.parse_args(argv)
 
@@ -172,6 +193,14 @@ def main(argv: list[str] | None = None) -> None:
         from .benchmark import run_benchmark
 
         run_benchmark(args)
+    elif args.command == "ui":
+        from .ui import run_ui
+
+        run_ui(args)
+    elif args.command == "plugin":
+        from .plugins import run_plugin
+
+        run_plugin(args)
     else:
         parser.print_help()
         sys.exit(1)

@@ -1,18 +1,22 @@
 from .adaptive import AdaptiveRAGRetriever
+from .agentic_rag import AgenticRAGRetriever
 from .base import VectorStore
 from .cohere_reranker import CohereReranker
 from .contextual_compression import ContextualCompressionRetriever
 from .crag import CRAGRetriever
 from .cross_encoder import CrossEncoderReranker
+from .document_augmentation import DocumentAugmentationRetriever
 from .ensemble import EnsembleRetriever
 from .flare import FLARERetriever
 from .graphrag import GraphRAGRetriever, KnowledgeGraph
 from .hybrid_search import HybridSearchRetriever
 from .hyde import HyDERetriever
+from .late_chunking import LateChunkingRetriever
 from .mongodb_atlas import MongoDBAtlasVectorStore
 from .multi_step import MultiStepRetriever
 from .parent_document import ParentDocumentRetriever
 from .query_decomposition import QueryDecompositionRetriever
+from .raptor import RAPTORRetriever
 from .retriever import Retriever
 from .self_query import SelfQueryRetriever
 from .self_rag import SelfRAGRetriever
@@ -22,48 +26,74 @@ from .vectorstore import InMemoryVectorStore
 
 __all__ = [
     "AdaptiveRAGRetriever",
-    "GraphRAGRetriever",
-    "KnowledgeGraph",
+    "AgenticRAGRetriever",
+    "DocumentAugmentationRetriever",
+    "LateChunkingRetriever",
+    "RAPTORRetriever",
+    "CassandraVectorStore",
     "ChromaVectorStore",
+    "ClickHouseVectorStore",
     "CohereReranker",
+    "ColBERTRetriever",
     "ContextualCompressionRetriever",
     "CRAGRetriever",
     "CrossEncoderReranker",
+    "DuckDBVectorStore",
+    "ElasticsearchVectorStore",
     "EnsembleRetriever",
-    "ColBERTRetriever",
     "FAISSVectorStore",
     "FLARERetriever",
+    "GraphRAGRetriever",
     "HybridSearchRetriever",
     "HyDERetriever",
     "InMemoryVectorStore",
-    "MultiStepRetriever",
-    "ParentDocumentRetriever",
+    "KnowledgeGraph",
     "LanceDBVectorStore",
+    "MarqoVectorStore",
     "MilvusVectorStore",
     "MongoDBAtlasVectorStore",
+    "MultiStepRetriever",
+    "OpenSearchVectorStore",
+    "ParentDocumentRetriever",
     "PGVectorStore",
     "PineconeVectorStore",
     "QdrantVectorStore",
     "QueryDecompositionRetriever",
-    "WeaviateVectorStore",
-    "SQLiteVecStore",
+    "RedisVectorStore",
     "Retriever",
     "SelfQueryRetriever",
     "SelfRAGRetriever",
+    "SQLiteVecStore",
     "StepBackRetriever",
+    "SupabaseVectorStore",
+    "TypesenseVectorStore",
     "VectorStore",
+    "VespaVectorStore",
+    "WeaviateVectorStore",
+    "ZillizVectorStore",
 ]
 
 _BACKENDS = {
+    "CassandraVectorStore": ".cassandra_vector",
     "ChromaVectorStore": ".chroma",
+    "ClickHouseVectorStore": ".clickhouse_vector",
+    "DuckDBVectorStore": ".duckdb_vector",
+    "ElasticsearchVectorStore": ".elasticsearch_vector",
     "FAISSVectorStore": ".faiss",
     "LanceDBVectorStore": ".lancedb",
+    "MarqoVectorStore": ".marqo_vector",
     "MilvusVectorStore": ".milvus",
+    "OpenSearchVectorStore": ".opensearch_vector",
     "PGVectorStore": ".pgvector",
-    "QdrantVectorStore": ".qdrant",
     "PineconeVectorStore": ".pinecone",
-    "WeaviateVectorStore": ".weaviate",
+    "QdrantVectorStore": ".qdrant",
+    "RedisVectorStore": ".redis_vector",
     "SQLiteVecStore": ".sqlite_vec",
+    "SupabaseVectorStore": ".supabase_vector",
+    "TypesenseVectorStore": ".typesense_vector",
+    "VespaVectorStore": ".vespa",
+    "WeaviateVectorStore": ".weaviate",
+    "ZillizVectorStore": ".zilliz_vector",
 }
 
 

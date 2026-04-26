@@ -207,6 +207,7 @@ dev = [
     "pyarrow>=23.0.1",
     "lxml>=6.0.2",
     "beautifulsoup4>=4.14.3",
+    "fastapi>=0.135.1",
 ]
 
 [tool.hatch.build.targets.wheel]

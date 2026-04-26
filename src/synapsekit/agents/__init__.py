@@ -33,6 +33,7 @@ from .step_events import (
     ThoughtEvent,
     TokenEvent,
 )
+from .swarm import SwarmAgent
 from .tool_decorator import tool
 from .tools import (
     APIBuilderTool,
@@ -85,7 +86,7 @@ from .tools import (
     WolframAlphaTool,
     YouTubeSearchTool,
 )
-from .triggers import CronTrigger, TriggerResult
+from .triggers import CronTrigger, EventTrigger, StreamTrigger, TriggerResult
 from .voice import VoiceAgent, VoiceResult
 
 __all__ = [
@@ -102,6 +103,9 @@ __all__ = [
     "AgentExecutor",
     "AgentConfig",
     "CronTrigger",
+    "EventTrigger",
+    "StreamTrigger",
+    "SwarmAgent",
     "TriggerResult",
     "SimpleAgent",
     "VoiceAgent",

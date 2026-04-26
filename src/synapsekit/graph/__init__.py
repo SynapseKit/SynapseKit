@@ -17,6 +17,7 @@ from .node import Node, NodeFn, agent_node, llm_node, rag_node
 from .state import END, GraphState, StateField, TypedState
 from .streaming import EventHooks, GraphEvent, sse_stream, ws_stream
 from .subgraph import subgraph_node
+from .time_resume import TimeBasedAutoResume
 from .trace import ExecutionTrace, TraceEntry
 from .visualization import GraphVisualizer
 
@@ -57,6 +58,7 @@ __all__ = [
     "sse_stream",
     "subgraph_node",
     "get_mermaid_with_trace",
+    "TimeBasedAutoResume",
     "ws_stream",
 ]
 
