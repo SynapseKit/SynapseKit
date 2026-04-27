@@ -174,6 +174,7 @@ class FunctionCallingAgent:
         """Stream step-by-step events for function-calling agent."""
         from .step_events import (
             ActionEvent,
+            CostDowngradeEvent,
             ErrorEvent,
             FinalAnswerEvent,
             ObservationEvent,
@@ -191,7 +192,25 @@ class FunctionCallingAgent:
         tool_schemas = self._registry.schemas()
 
         for _ in range(self._max_iterations):
+            # Check for cost-downgrade events from router (pre-call)
+            if hasattr(self._llm, "consume_events"):
+                for raw_event in self._llm.consume_events():
+                    yield CostDowngradeEvent(
+                        from_model=raw_event["from_model"],
+                        to_model=raw_event["to_model"],
+                        reason=raw_event["reason"],
+                    )
+
             result: dict[str, Any] = await self._llm.call_with_tools(messages, tool_schemas)
+
+            # Check for cost-downgrade events after call
+            if hasattr(self._llm, "consume_events"):
+                for raw_event in self._llm.consume_events():
+                    yield CostDowngradeEvent(
+                        from_model=raw_event["from_model"],
+                        to_model=raw_event["to_model"],
+                        reason=raw_event["reason"],
+                    )
 
             tool_calls = result.get("tool_calls")
             content = result.get("content")
