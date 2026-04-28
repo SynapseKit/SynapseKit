@@ -8,6 +8,13 @@ from typing import Any, cast
 
 from ..llm.base import BaseLLM
 from ..observability.tracer import COST_TABLE
+from .exporters import (
+    ConsoleExporter,
+    HoneycombExporter,
+    JaegerExporter,
+    LangfuseExporter,
+    OTLPExporter,
+)
 from .runtime import (
     clear_exported_spans,
     configure,
@@ -20,13 +27,6 @@ from .runtime import (
     reset,
     start_span,
     trace,
-)
-from .exporters import (
-    ConsoleExporter,
-    HoneycombExporter,
-    JaegerExporter,
-    LangfuseExporter,
-    OTLPExporter,
 )
 from .spans import SpanAttributes, SpanBuilder
 
@@ -208,7 +208,7 @@ def _install_future_llm_instrumentation() -> None:
         _instrument_llm_class(cls)
 
     setattr(observed_init_subclass, _INIT_SUBCLASS_SENTINEL, True)
-    BaseLLM.__init_subclass__ = cast(Any, classmethod(observed_init_subclass))
+    setattr(BaseLLM, "__init_subclass__", classmethod(observed_init_subclass))
 
 
 def _instrument() -> None:
