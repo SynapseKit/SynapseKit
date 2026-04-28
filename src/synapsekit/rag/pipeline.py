@@ -98,9 +98,12 @@ class RAGPipeline:
         results: list[dict] | list[str] = []
         top_score: float | None = None
         try:
+            retriever_state = getattr(self.config.retriever, "__dict__", {})
+            prefer_plain_retrieve = "retrieve" in retriever_state
+
             retrieve_with_scores = getattr(self.config.retriever, "retrieve_with_scores", None)
             score_call = None
-            if callable(retrieve_with_scores):
+            if not prefer_plain_retrieve and callable(retrieve_with_scores):
                 score_call = retrieve_with_scores(query, top_k=k)
             if score_call is not None and inspect.isawaitable(score_call):
                 results = await score_call
