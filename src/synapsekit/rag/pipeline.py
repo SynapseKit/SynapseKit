@@ -77,8 +77,37 @@ class RAGPipeline:
 
     async def stream(self, query: str, top_k: int | None = None) -> AsyncGenerator[str]:
         """Retrieve context, build prompt, stream LLM response, update memory."""
+        from ..observe.runtime import end_span, record_exception, start_span
+
         k = top_k or self.config.retrieval_top_k
-        chunks = await self.config.retriever.retrieve(query, top_k=k)
+        rag_span = start_span(
+            "rag.ask",
+            {
+                "rag.query": query,
+                "rag.top_k": k,
+            },
+        )
+        retrieve_span = start_span(
+            "rag.retrieve",
+            {
+                "rag.query": query,
+                "rag.top_k": k,
+            },
+        )
+        try:
+            chunks = await self.config.retriever.retrieve(query, top_k=k)
+            end_span(
+                retrieve_span,
+                attributes={
+                    "rag.retrieved_chunks": len(chunks),
+                },
+            )
+        except Exception as exc:
+            record_exception(retrieve_span, exc)
+            end_span(retrieve_span, error=exc)
+            record_exception(rag_span, exc)
+            end_span(rag_span, error=exc)
+            raise
 
         if chunks:
             tagged = [f"<document>\n{chunk}\n</document>" for chunk in chunks]
@@ -109,6 +138,9 @@ class RAGPipeline:
             async for token in self.config.llm.stream_with_messages(messages):
                 answer_parts.append(token)
                 yield token
+        except Exception as exc:
+            record_exception(rag_span, exc)
+            raise
         finally:
             # Commit the turn to memory + tracer only if at least one token
             # was delivered to the consumer. This preserves the user query
@@ -137,6 +169,22 @@ class RAGPipeline:
                             contexts=chunks,
                             call_id=call_id,
                         )
+
+                response_span = start_span(
+                    "rag.response",
+                    {
+                        "rag.response_length": len(answer),
+                    },
+                )
+                end_span(response_span)
+
+            end_span(
+                rag_span,
+                attributes={
+                    "rag.retrieved_chunks": len(chunks),
+                    "rag.response_length": len("".join(answer_parts)) if answer_parts else 0,
+                },
+            )
 
     def _schedule_auto_eval(
         self,
