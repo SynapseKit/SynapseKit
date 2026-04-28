@@ -1,0 +1,46 @@
+{
+  "title": "SynapseKit Observability",
+  "description": "Starter dashboard for SynapseKit traces and token-cost telemetry.",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "LLM latency (ms)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(synapsekit_llm_latency_ms_sum[5m])) / sum(rate(synapsekit_llm_latency_ms_count[5m]))"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "LLM cost (USD)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "refId": "B",
+          "expr": "sum(rate(synapsekit_llm_cost_usd_sum[5m]))"
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Recent spans",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "refId": "C",
+          "expr": "traces_spanmetrics_latency_bucket"
+        }
+      ]
+    }
+  ],
+  "templating": { "list": [] },
+  "annotations": { "list": [] },
+  "tags": ["synapsekit", "observability", "otel"]
+}

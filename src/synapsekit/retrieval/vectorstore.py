@@ -121,40 +121,58 @@ class InMemoryVectorStore(VectorStore):
             metadata_filter: If provided, only include documents whose metadata
                 contains all the specified key-value pairs.
         """
-        if not self._texts:
-            return []
+        from ..observe.runtime import end_span, record_exception, start_span
 
-        self._consolidate()
-        assert self._vectors is not None  # guaranteed after consolidate + non-empty texts
-
-        q_vec = await self._embeddings.embed_one(query)  # (D,)
-        scores = self._vectors @ q_vec  # (N,) cosine sim (vecs are L2-normalised)
-
-        candidates = self._filter_candidates(metadata_filter or {})
-
-        if candidates is not None:
-            # metadata_filter was active
-            if not candidates:
-                return []
-            candidate_arr = np.array(candidates, dtype=np.intp)
-            candidate_scores = scores[candidate_arr]
-            k = min(top_k, len(candidates))
-            local_top = np.argpartition(candidate_scores, -k)[-k:]
-            local_top = local_top[np.argsort(candidate_scores[local_top])[::-1]]
-            top_indices = [candidates[j] for j in local_top]
-        else:
-            k = min(top_k, len(self._texts))
-            _top = np.argpartition(scores, -k)[-k:]
-            top_indices = _top[np.argsort(scores[_top])[::-1]].tolist()
-
-        return [
+        search_span = start_span(
+            "vector_store.search",
             {
-                "text": self._texts[i],
-                "score": float(scores[i]),
-                "metadata": self._metadata[i],
-            }
-            for i in top_indices
-        ]
+                "vector_store.type": type(self).__name__,
+                "vector_store.top_k": top_k,
+            },
+        )
+        try:
+            if not self._texts:
+                end_span(search_span, attributes={"vector_store.results": 0})
+                return []
+
+            self._consolidate()
+            assert self._vectors is not None  # guaranteed after consolidate + non-empty texts
+
+            q_vec = await self._embeddings.embed_one(query)  # (D,)
+            scores = self._vectors @ q_vec  # (N,) cosine sim (vecs are L2-normalised)
+
+            candidates = self._filter_candidates(metadata_filter or {})
+
+            if candidates is not None:
+                # metadata_filter was active
+                if not candidates:
+                    end_span(search_span, attributes={"vector_store.results": 0})
+                    return []
+                candidate_arr = np.array(candidates, dtype=np.intp)
+                candidate_scores = scores[candidate_arr]
+                k = min(top_k, len(candidates))
+                local_top = np.argpartition(candidate_scores, -k)[-k:]
+                local_top = local_top[np.argsort(candidate_scores[local_top])[::-1]]
+                top_indices = [candidates[j] for j in local_top]
+            else:
+                k = min(top_k, len(self._texts))
+                _top = np.argpartition(scores, -k)[-k:]
+                top_indices = _top[np.argsort(scores[_top])[::-1]].tolist()
+
+            payload = [
+                {
+                    "text": self._texts[i],
+                    "score": float(scores[i]),
+                    "metadata": self._metadata[i],
+                }
+                for i in top_indices
+            ]
+            end_span(search_span, attributes={"vector_store.results": len(payload)})
+            return payload
+        except Exception as exc:
+            record_exception(search_span, exc)
+            end_span(search_span, error=exc)
+            raise
 
     async def search_mmr(
         self,
@@ -173,82 +191,94 @@ class InMemoryVectorStore(VectorStore):
         with a single BLAS call before the greedy loop, replacing the previous
         O(top_k x fetch_k x selected) Python-level dot-product recomputation.
         """
-        if not self._texts:
-            return []
+        from ..observe.runtime import end_span, record_exception, start_span
 
-        self._consolidate()
-        assert self._vectors is not None
-
-        q_vec = await self._embeddings.embed_one(query)  # (D,)
-        scores = self._vectors @ q_vec  # (N,)
-
-        # Build candidate pool using the inverted index when a filter is set
-        candidates = self._filter_candidates(metadata_filter or {})
-        if candidates is not None:
-            if not candidates:
-                return []
-        else:
-            candidates = list(range(len(self._texts)))
-
-        # Take top fetch_k by relevance
-        candidate_scores = sorted(
-            ((i, float(scores[i])) for i in candidates),
-            key=lambda x: x[1],
-            reverse=True,
-        )
-        pool = candidate_scores[: min(fetch_k, len(candidate_scores))]
-
-        if not pool:
-            return []
-
-        pool_indices = [idx for idx, _ in pool]
-
-        # ── precompute pairwise similarity matrix for the pool (one BLAS call) ──
-        pool_vecs = self._vectors[pool_indices]  # (fetch_k, D)
-        sim_matrix = pool_vecs @ pool_vecs.T  # (fetch_k, fetch_k)
-
-        # Greedy MMR selection
-        selected: list[int] = []  # global indices of selected docs
-        selected_pos: list[int] = []  # corresponding positions in pool
-
-        selected_set: set[int] = set()  # O(1) membership test
-
-        for _ in range(min(top_k, len(pool))):
-            best_global_idx = -1
-            best_score = float("-inf")
-            best_pool_pos = -1
-
-            for pos, (global_idx, rel_score) in enumerate(pool):
-                if global_idx in selected_set:
-                    continue
-
-                if selected_pos:
-                    # Max sim to already-selected docs — single numpy op on a row slice
-                    sim_to_selected = float(np.max(sim_matrix[pos, selected_pos]))
-                else:
-                    sim_to_selected = 0.0
-
-                mmr_score = lambda_mult * rel_score - (1 - lambda_mult) * sim_to_selected
-
-                if mmr_score > best_score:
-                    best_score = mmr_score
-                    best_global_idx = global_idx
-                    best_pool_pos = pos
-
-            if best_global_idx == -1:
-                break
-            selected.append(best_global_idx)
-            selected_pos.append(best_pool_pos)
-            selected_set.add(best_global_idx)
-
-        return [
+        search_span = start_span(
+            "vector_store.search",
             {
-                "text": self._texts[i],
-                "score": float(scores[i]),
-                "metadata": self._metadata[i],
-            }
-            for i in selected
-        ]
+                "vector_store.type": f"{type(self).__name__}.mmr",
+                "vector_store.top_k": top_k,
+            },
+        )
+        try:
+            if not self._texts:
+                end_span(search_span, attributes={"vector_store.results": 0})
+                return []
+
+            self._consolidate()
+            assert self._vectors is not None
+
+            q_vec = await self._embeddings.embed_one(query)  # (D,)
+            scores = self._vectors @ q_vec  # (N,)
+
+            candidates = self._filter_candidates(metadata_filter or {})
+            if candidates is not None:
+                if not candidates:
+                    end_span(search_span, attributes={"vector_store.results": 0})
+                    return []
+            else:
+                candidates = list(range(len(self._texts)))
+
+            candidate_scores = sorted(
+                ((i, float(scores[i])) for i in candidates),
+                key=lambda x: x[1],
+                reverse=True,
+            )
+            pool = candidate_scores[: min(fetch_k, len(candidate_scores))]
+
+            if not pool:
+                end_span(search_span, attributes={"vector_store.results": 0})
+                return []
+
+            pool_indices = [idx for idx, _ in pool]
+            pool_vecs = self._vectors[pool_indices]
+            sim_matrix = pool_vecs @ pool_vecs.T
+
+            selected: list[int] = []
+            selected_pos: list[int] = []
+            selected_set: set[int] = set()
+
+            for _ in range(min(top_k, len(pool))):
+                best_global_idx = -1
+                best_score = float("-inf")
+                best_pool_pos = -1
+
+                for pos, (global_idx, rel_score) in enumerate(pool):
+                    if global_idx in selected_set:
+                        continue
+
+                    if selected_pos:
+                        sim_to_selected = float(np.max(sim_matrix[pos, selected_pos]))
+                    else:
+                        sim_to_selected = 0.0
+
+                    mmr_score = lambda_mult * rel_score - (1 - lambda_mult) * sim_to_selected
+
+                    if mmr_score > best_score:
+                        best_score = mmr_score
+                        best_global_idx = global_idx
+                        best_pool_pos = pos
+
+                if best_global_idx == -1:
+                    break
+                selected.append(best_global_idx)
+                selected_pos.append(best_pool_pos)
+                selected_set.add(best_global_idx)
+
+            payload = [
+                {
+                    "text": self._texts[i],
+                    "score": float(scores[i]),
+                    "metadata": self._metadata[i],
+                }
+                for i in selected
+            ]
+            end_span(search_span, attributes={"vector_store.results": len(payload)})
+            return payload
+        except Exception as exc:
+            record_exception(search_span, exc)
+            end_span(search_span, error=exc)
+            raise
 
     def save(self, path: str) -> None:
         """Persist vectors, texts, and metadata to a .npz file."""

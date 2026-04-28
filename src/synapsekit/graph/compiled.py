@@ -67,11 +67,92 @@ class CompiledGraph:
         hooks: EventHooks | None = None,
     ) -> dict[str, Any]:
         """Run the graph to completion and return the final state."""
+        from ..observe.runtime import end_span, record_exception, start_span
+
+        def _merge_hooks(*hook_sets: EventHooks | None) -> EventHooks | None:
+            merged = EventHooks()
+            found = False
+            for hook_set in hook_sets:
+                if hook_set is None:
+                    continue
+                found = True
+                for event_type, callbacks in hook_set._callbacks.items():
+                    for callback in callbacks:
+                        merged.on(event_type, callback)
+            return merged if found else None
+
         state = dict(state)
-        async for _ in self._execute(
-            state, checkpointer=checkpointer, graph_id=graph_id, hooks=hooks
-        ):
-            pass
+        graph_span = start_span(
+            "graph.run",
+            {
+                "graph.nodes": len(self._graph._nodes),
+                "graph.edges": len(self._graph._edges),
+            },
+        )
+        observe_hooks = EventHooks()
+        node_spans: dict[str, Any] = {}
+        wave_spans: dict[int, Any] = {}
+
+        if graph_span is not None:
+
+            def _on_wave_start(event: GraphEvent) -> None:
+                step = int((event.data or {}).get("step", 0))
+                wave_spans[step] = start_span(
+                    "graph.wave",
+                    {
+                        "graph.step": step,
+                        "graph.wave": (event.data or {}).get("wave", []),
+                    },
+                    parent=graph_span,
+                    set_current=False,
+                )
+
+            def _on_wave_complete(event: GraphEvent) -> None:
+                step = int((event.data or {}).get("step", 0))
+                wave_span = wave_spans.pop(step, None)
+                end_span(wave_span, attributes={"graph.wave_complete": True})
+
+            def _on_node_start(event: GraphEvent) -> None:
+                if event.node is None:
+                    return
+                node_spans[event.node] = start_span(
+                    "graph.node",
+                    {
+                        "graph.node": event.node,
+                    },
+                    parent=graph_span,
+                    set_current=False,
+                )
+
+            def _on_node_complete(event: GraphEvent) -> None:
+                if event.node is None:
+                    return
+                node_span = node_spans.pop(event.node, None)
+                end_span(node_span)
+
+            observe_hooks.on_wave_start(_on_wave_start)
+            observe_hooks.on_wave_complete(_on_wave_complete)
+            observe_hooks.on_node_start(_on_node_start)
+            observe_hooks.on_node_complete(_on_node_complete)
+
+        merged_hooks = _merge_hooks(hooks, observe_hooks if graph_span is not None else None)
+
+        try:
+            async for _ in self._execute(
+                state, checkpointer=checkpointer, graph_id=graph_id, hooks=merged_hooks
+            ):
+                pass
+        except Exception as exc:
+            for node_span in list(node_spans.values()):
+                record_exception(node_span, exc)
+                end_span(node_span, error=exc)
+            for wave_span in list(wave_spans.values()):
+                record_exception(wave_span, exc)
+                end_span(wave_span, error=exc)
+            record_exception(graph_span, exc)
+            raise
+        finally:
+            end_span(graph_span)
         # Strip transient context keys before returning to the caller.
         for k in (_CHECKPOINTER_KEY, _GRAPH_ID_KEY, _STEP_KEY):
             state.pop(k, None)

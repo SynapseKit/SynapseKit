@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import inspect
 from collections.abc import AsyncGenerator
 from dataclasses import dataclass, field
 
@@ -77,8 +78,66 @@ class RAGPipeline:
 
     async def stream(self, query: str, top_k: int | None = None) -> AsyncGenerator[str]:
         """Retrieve context, build prompt, stream LLM response, update memory."""
+        from ..observe.runtime import end_span, record_exception, start_span
+
         k = top_k or self.config.retrieval_top_k
-        chunks = await self.config.retriever.retrieve(query, top_k=k)
+        rag_span = start_span(
+            "rag.ask",
+            {
+                "rag.query": query,
+                "rag.top_k": k,
+            },
+        )
+        retrieve_span = start_span(
+            "rag.retrieve",
+            {
+                "rag.query": query,
+                "rag.top_k": k,
+            },
+        )
+        results: list[dict] | list[str] = []
+        top_score: float | None = None
+        try:
+            retriever_state = getattr(self.config.retriever, "__dict__", {})
+            prefer_plain_retrieve = "retrieve" in retriever_state
+
+            retrieve_with_scores = getattr(self.config.retriever, "retrieve_with_scores", None)
+            score_call = None
+            if not prefer_plain_retrieve and callable(retrieve_with_scores):
+                score_call = retrieve_with_scores(query, top_k=k)
+            if score_call is not None and inspect.isawaitable(score_call):
+                results = await score_call
+                chunks = [item.get("text", "") for item in results if isinstance(item, dict)]
+                if results and isinstance(results[0], dict):
+                    score = results[0].get("score")
+                    if score is None:
+                        score = results[0].get("relevance_score")
+                    if score is None:
+                        score = results[0].get("cross_encoder_score")
+                    top_score = float(score) if score is not None else None
+            else:
+                results = await self.config.retriever.retrieve(query, top_k=k)
+                chunks = list(results)
+
+            end_span(
+                retrieve_span,
+                attributes={
+                    "rag.retrieved_chunks": len(chunks),
+                    "rag.top_score": top_score,
+                    "rag.retrieval_latency_ms": round(
+                        retrieve_span.duration_ms,
+                        3,
+                    )
+                    if retrieve_span is not None
+                    else None,
+                },
+            )
+        except Exception as exc:
+            record_exception(retrieve_span, exc)
+            end_span(retrieve_span, error=exc)
+            record_exception(rag_span, exc)
+            end_span(rag_span, error=exc)
+            raise
 
         if chunks:
             tagged = [f"<document>\n{chunk}\n</document>" for chunk in chunks]
@@ -109,6 +168,9 @@ class RAGPipeline:
             async for token in self.config.llm.stream_with_messages(messages):
                 answer_parts.append(token)
                 yield token
+        except Exception as exc:
+            record_exception(rag_span, exc)
+            raise
         finally:
             # Commit the turn to memory + tracer only if at least one token
             # was delivered to the consumer. This preserves the user query
@@ -137,6 +199,22 @@ class RAGPipeline:
                             contexts=chunks,
                             call_id=call_id,
                         )
+
+                response_span = start_span(
+                    "rag.response",
+                    {
+                        "rag.response_length": len(answer),
+                    },
+                )
+                end_span(response_span)
+
+            end_span(
+                rag_span,
+                attributes={
+                    "rag.retrieved_chunks": len(chunks),
+                    "rag.response_length": len("".join(answer_parts)) if answer_parts else 0,
+                },
+            )
 
     def _schedule_auto_eval(
         self,
