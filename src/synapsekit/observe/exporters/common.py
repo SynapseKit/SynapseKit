@@ -19,7 +19,7 @@ class BufferedSpanExporter:
         self.endpoint = endpoint
         self.spans: list[ObserveSpan] = []
 
-    def export(self, span: "ObserveSpan") -> None:
+    def export(self, span: ObserveSpan) -> None:
         self.spans.append(span)
 
     def clear(self) -> None:

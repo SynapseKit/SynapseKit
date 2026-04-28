@@ -57,12 +57,12 @@ class SpanBuilder:
     name: str
     attributes: dict[str, Any] = field(default_factory=dict)
 
-    def attr(self, key: str, value: Any) -> "SpanBuilder":
+    def attr(self, key: str, value: Any) -> SpanBuilder:
         if value is not None:
             self.attributes[key] = value
         return self
 
-    def extend(self, values: dict[str, Any]) -> "SpanBuilder":
+    def extend(self, values: dict[str, Any]) -> SpanBuilder:
         for key, value in values.items():
             if value is not None:
                 self.attributes[key] = value

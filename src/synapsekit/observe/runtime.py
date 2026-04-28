@@ -22,9 +22,9 @@ class SpanExporter(Protocol):
     service_name: str
     kind: str
     endpoint: str | None
-    spans: list["ObserveSpan"]
+    spans: list[ObserveSpan]
 
-    def export(self, span: "ObserveSpan") -> None: ...
+    def export(self, span: ObserveSpan) -> None: ...
 
     def clear(self) -> None: ...
 
@@ -293,7 +293,7 @@ def trace(name: str):
                     end_span(span)
 
             async_wrapper.__name__ = getattr(func, "__name__", "wrapped")
-            async_wrapper.__doc__ = getattr(func, "__doc__")
+            async_wrapper.__doc__ = func.__doc__
             return async_wrapper
 
         def sync_wrapper(*args: Any, **kwargs: Any):
@@ -307,7 +307,7 @@ def trace(name: str):
                 end_span(span)
 
         sync_wrapper.__name__ = getattr(func, "__name__", "wrapped")
-        sync_wrapper.__doc__ = getattr(func, "__doc__")
+        sync_wrapper.__doc__ = func.__doc__
         return sync_wrapper
 
     return decorator
