@@ -67,7 +67,8 @@ CLAUDE.md
 .qwen/
 
 # Internal docs (not published)
-docs/
+docs/*
+!docs/observability.md
 
 # Saved vectorstores
 *.npz

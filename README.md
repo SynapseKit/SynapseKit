@@ -193,6 +193,7 @@ Evaluate your agents against industry-standard benchmarks like GAIA, SWE-bench, 
 pip install synapsekit[openai]       # OpenAI
 pip install synapsekit[anthropic]    # Anthropic
 pip install synapsekit[ollama]       # Ollama (local)
+pip install synapsekit[observe]      # Observability extras
 pip install synapsekit[all]          # Everything
 ```
 
@@ -209,6 +210,8 @@ poetry add "synapsekit[all]"
 ```
 
 Full installation options → [docs](https://synapsekit.github.io/synapsekit-docs/docs/getting-started/installation)
+
+Observability guide → [docs/observability.md](docs/observability.md)
 
 ---
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import functools
 import inspect
+import time
 from collections.abc import AsyncGenerator
 from typing import Any
 
@@ -20,6 +21,14 @@ from .runtime import (
     start_span,
     trace,
 )
+from .exporters import (
+    ConsoleExporter,
+    HoneycombExporter,
+    JaegerExporter,
+    LangfuseExporter,
+    OTLPExporter,
+)
+from .spans import SpanAttributes, SpanBuilder
 
 _PATCHED_SENTINEL = "__synapsekit_observe_patched__"
 _INIT_SUBCLASS_SENTINEL = "__synapsekit_observe_init_subclass__"
@@ -59,11 +68,11 @@ def _estimate_cost(model: str, prompt_tokens: int, completion_tokens: int) -> fl
 def _llm_start_attributes(llm: Any, payload: Any | None = None) -> dict[str, Any]:
     config = getattr(llm, "config", None)
     attrs = {
-        "llm.model": getattr(config, "model", getattr(llm, "model", "unknown")),
-        "llm.provider": getattr(config, "provider", "unknown"),
+        SpanAttributes.LLM_MODEL: getattr(config, "model", getattr(llm, "model", "unknown")),
+        SpanAttributes.LLM_PROVIDER: getattr(config, "provider", "unknown"),
     }
     if get_config().trace_llm_inputs and payload is not None:
-        attrs["llm.input"] = payload
+        attrs[SpanAttributes.LLM_INPUT] = payload
     return attrs
 
 
@@ -76,17 +85,17 @@ def _llm_end_attributes(
     model = getattr(config, "model", getattr(llm, "model", "unknown"))
     delta = _token_delta(llm, before)
     attrs: dict[str, Any] = {
-        "llm.prompt_tokens": delta["input"],
-        "llm.completion_tokens": delta["output"],
-        "llm.total_tokens": delta["input"] + delta["output"],
+        SpanAttributes.LLM_PROMPT_TOKENS: delta["input"],
+        SpanAttributes.LLM_COMPLETION_TOKENS: delta["output"],
+        SpanAttributes.LLM_TOTAL_TOKENS: delta["input"] + delta["output"],
     }
     if get_config().cost_tracking:
-        attrs["llm.cost_usd"] = round(
+        attrs[SpanAttributes.LLM_COST_USD] = round(
             _estimate_cost(model, delta["input"], delta["output"]),
             6,
         )
     if get_config().trace_llm_outputs and output is not None:
-        attrs["llm.output"] = output
+        attrs[SpanAttributes.LLM_OUTPUT] = output
     return attrs
 
 
@@ -112,6 +121,7 @@ def _patch_async_generator_method(cls: type, method_name: str) -> None:
         payload = _guess_payload(method_name, args, kwargs)
         span = start_span("llm.generate", _llm_start_attributes(self, payload))
         before = _token_snapshot(self)
+        started_at = time.perf_counter()
         chunks: list[str] = []
         try:
             async for chunk in method(self, *args, **kwargs):
@@ -121,10 +131,12 @@ def _patch_async_generator_method(cls: type, method_name: str) -> None:
             record_exception(span, exc)
             raise
         finally:
-            end_span(
-                span,
-                attributes=_llm_end_attributes(self, before, "".join(chunks) if chunks else None),
+            attrs = _llm_end_attributes(self, before, "".join(chunks) if chunks else None)
+            attrs[SpanAttributes.LLM_LATENCY_MS] = round(
+                (time.perf_counter() - started_at) * 1000,
+                3,
             )
+            end_span(span, attributes=attrs)
 
     setattr(wrapped, _PATCHED_SENTINEL, True)
     setattr(cls, method_name, wrapped)
@@ -142,6 +154,7 @@ def _patch_async_method(cls: type, method_name: str) -> None:
         payload = _guess_payload(method_name, args, kwargs)
         span = start_span("llm.generate", _llm_start_attributes(self, payload))
         before = _token_snapshot(self)
+        started_at = time.perf_counter()
         result: Any | None = None
         try:
             result = await method(self, *args, **kwargs)
@@ -153,11 +166,15 @@ def _patch_async_method(cls: type, method_name: str) -> None:
             extra = _llm_end_attributes(self, before)
             if get_config().trace_llm_outputs and result is not None:
                 if isinstance(result, dict):
-                    extra["llm.output"] = result
+                    extra[SpanAttributes.LLM_OUTPUT] = result
                 else:
-                    extra["llm.output"] = str(result)
+                    extra[SpanAttributes.LLM_OUTPUT] = str(result)
             if isinstance(result, dict) and result.get("tool_calls") is not None:
-                extra["llm.tool_calls"] = len(result.get("tool_calls") or [])
+                extra[SpanAttributes.LLM_TOOL_CALLS] = len(result.get("tool_calls") or [])
+            extra[SpanAttributes.LLM_LATENCY_MS] = round(
+                (time.perf_counter() - started_at) * 1000,
+                3,
+            )
             end_span(span, attributes=extra)
 
     setattr(wrapped, _PATCHED_SENTINEL, True)
@@ -204,6 +221,13 @@ _instrument()
 configure()
 
 __all__ = [
+    "ConsoleExporter",
+    "HoneycombExporter",
+    "JaegerExporter",
+    "LangfuseExporter",
+    "OTLPExporter",
+    "SpanAttributes",
+    "SpanBuilder",
     "clear_exported_spans",
     "configure",
     "current_span",

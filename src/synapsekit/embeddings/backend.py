@@ -30,13 +30,29 @@ class SynapsekitEmbeddings:
         """Embed a list of texts, returns (N, D) float32 array."""
         import asyncio
 
-        backend = self._get_backend()
-        loop = asyncio.get_event_loop()
-        vecs = await loop.run_in_executor(None, backend.encode, texts)
-        arr = np.array(vecs, dtype=np.float32)
-        norms = np.linalg.norm(arr, axis=1, keepdims=True)
-        norms = np.where(norms == 0, 1.0, norms)
-        return arr / norms
+        from ..observe.runtime import end_span, record_exception, start_span
+
+        span = start_span(
+            "embedding.encode",
+            {
+                "embedding.model": self.model,
+                "embedding.batch_size": len(texts),
+                "embedding.inputs": list(texts),
+            },
+        )
+        try:
+            backend = self._get_backend()
+            loop = asyncio.get_event_loop()
+            vecs = await loop.run_in_executor(None, backend.encode, texts)
+            arr = np.array(vecs, dtype=np.float32)
+            norms = np.linalg.norm(arr, axis=1, keepdims=True)
+            norms = np.where(norms == 0, 1.0, norms)
+            return arr / norms
+        except Exception as exc:
+            record_exception(span, exc)
+            raise
+        finally:
+            end_span(span)
 
     async def embed_one(self, text: str) -> np.ndarray:
         """Embed a single string, returns (D,) float32 array."""

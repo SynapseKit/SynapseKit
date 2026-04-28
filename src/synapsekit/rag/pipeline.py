@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import inspect
 from collections.abc import AsyncGenerator
 from dataclasses import dataclass, field
 
@@ -94,12 +95,36 @@ class RAGPipeline:
                 "rag.top_k": k,
             },
         )
+        results: list[dict] | list[str] = []
+        top_score: float | None = None
         try:
-            chunks = await self.config.retriever.retrieve(query, top_k=k)
+            retrieve_with_scores = getattr(self.config.retriever, "retrieve_with_scores", None)
+            score_call = None
+            if callable(retrieve_with_scores):
+                score_call = retrieve_with_scores(query, top_k=k)
+            if score_call is not None and inspect.isawaitable(score_call):
+                results = await score_call
+                chunks = [item.get("text", "") for item in results if isinstance(item, dict)]
+                if results and isinstance(results[0], dict):
+                    score = results[0].get("score")
+                    if score is None:
+                        score = results[0].get("relevance_score")
+                    if score is None:
+                        score = results[0].get("cross_encoder_score")
+                    top_score = float(score) if score is not None else None
+            else:
+                results = await self.config.retriever.retrieve(query, top_k=k)
+                chunks = list(results)
+
             end_span(
                 retrieve_span,
                 attributes={
                     "rag.retrieved_chunks": len(chunks),
+                    "rag.top_score": top_score,
+                    "rag.retrieval_latency_ms": round(
+                        retrieve_span.duration_ms,
+                        3,
+                    ) if retrieve_span is not None else None,
                 },
             )
         except Exception as exc:

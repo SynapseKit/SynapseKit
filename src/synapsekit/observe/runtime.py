@@ -7,6 +7,14 @@ from contextvars import ContextVar, Token
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
+from .exporters import (
+    ConsoleExporter,
+    HoneycombExporter,
+    JaegerExporter,
+    LangfuseExporter,
+    OTLPExporter,
+)
+
 REDACTED = "[REDACTED]"
 
 
@@ -19,6 +27,8 @@ class SpanExporter(Protocol):
     def export(self, span: "ObserveSpan") -> None: ...
 
     def clear(self) -> None: ...
+
+    def export_dicts(self) -> list[dict[str, Any]]: ...
 
 
 @dataclass
@@ -115,11 +125,19 @@ def _make_exporter(
         return exporter  # type: ignore[return-value]
 
     kind = str(exporter).lower()
-    if kind not in {"console", "otlp", "jaeger", "langfuse", "honeycomb"}:
-        raise ValueError(
-            "Unsupported exporter. Use one of: console, otlp, jaeger, langfuse, honeycomb."
-        )
-    return InMemoryExporter(service_name=service_name, kind=kind, endpoint=endpoint)
+    if kind == "console":
+        return ConsoleExporter(service_name=service_name, endpoint=endpoint)
+    if kind == "otlp":
+        return OTLPExporter(service_name=service_name, endpoint=endpoint)
+    if kind == "jaeger":
+        return JaegerExporter(service_name=service_name, endpoint=endpoint)
+    if kind == "langfuse":
+        return LangfuseExporter(service_name=service_name, endpoint=endpoint)
+    if kind == "honeycomb":
+        return HoneycombExporter(service_name=service_name, endpoint=endpoint)
+    raise ValueError(
+        "Unsupported exporter. Use one of: console, otlp, jaeger, langfuse, honeycomb."
+    )
 
 
 def configure(
@@ -245,6 +263,7 @@ def end_span(
         span.set_attribute("error", str(error))
 
     span.end_time = time.time()
+    span.set_attribute("observe.duration_ms", round(span.duration_ms, 3))
     if span._context_token is not None:
         _CURRENT_SPAN.reset(span._context_token)
         span._context_token = None
