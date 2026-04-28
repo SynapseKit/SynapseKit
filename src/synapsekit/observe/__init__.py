@@ -4,7 +4,7 @@ import functools
 import inspect
 import time
 from collections.abc import AsyncGenerator
-from typing import Any, cast
+from typing import Any
 
 from ..llm.base import BaseLLM
 from ..observability.tracer import COST_TABLE
@@ -208,7 +208,7 @@ def _install_future_llm_instrumentation() -> None:
         _instrument_llm_class(cls)
 
     setattr(observed_init_subclass, _INIT_SUBCLASS_SENTINEL, True)
-    setattr(BaseLLM, "__init_subclass__", classmethod(observed_init_subclass))
+    setattr(BaseLLM, "__init_subclass__", classmethod(observed_init_subclass))  # noqa: B010
 
 
 def _instrument() -> None:
