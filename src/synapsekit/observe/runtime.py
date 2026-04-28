@@ -52,7 +52,9 @@ class ObserveSpan:
     end_time: float | None = None
     status: str = "ok"
     children: list[ObserveSpan] = field(default_factory=list)
-    _context_token: Token[ObserveSpan | None] | None = field(default=None, repr=False, compare=False)
+    _context_token: Token[ObserveSpan | None] | None = field(
+        default=None, repr=False, compare=False
+    )
 
     def set_attribute(self, key: str, value: Any) -> None:
         self.attributes[key] = sanitize_value(key, value)
@@ -108,7 +110,9 @@ class _ObserveState:
 
 
 _STATE = _ObserveState()
-_CURRENT_SPAN: ContextVar[ObserveSpan | None] = ContextVar("synapsekit_observe_current_span", default=None)
+_CURRENT_SPAN: ContextVar[ObserveSpan | None] = ContextVar(
+    "synapsekit_observe_current_span", default=None
+)
 
 
 def _normalize_sample_rate(sample_rate: float) -> float:
@@ -234,7 +238,9 @@ def start_span(
     span = ObserveSpan(
         name=name,
         attributes={
-            key: sanitize_value(key, value) for key, value in (attributes or {}).items() if value is not None
+            key: sanitize_value(key, value)
+            for key, value in (attributes or {}).items()
+            if value is not None
         },
         parent=resolved_parent,
     )
@@ -281,6 +287,7 @@ def record_exception(span: ObserveSpan | None, exc: Exception) -> None:
 def trace(name: str):
     def decorator(func):
         if inspect.iscoroutinefunction(func):
+
             async def async_wrapper(*args: Any, **kwargs: Any):
                 span = start_span(name)
                 try:

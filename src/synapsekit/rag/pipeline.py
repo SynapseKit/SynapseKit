@@ -127,7 +127,9 @@ class RAGPipeline:
                     "rag.retrieval_latency_ms": round(
                         retrieve_span.duration_ms,
                         3,
-                    ) if retrieve_span is not None else None,
+                    )
+                    if retrieve_span is not None
+                    else None,
                 },
             )
         except Exception as exc:

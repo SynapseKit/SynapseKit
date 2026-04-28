@@ -94,6 +94,7 @@ class CompiledGraph:
         wave_spans: dict[int, Any] = {}
 
         if graph_span is not None:
+
             def _on_wave_start(event: GraphEvent) -> None:
                 step = int((event.data or {}).get("step", 0))
                 wave_spans[step] = start_span(

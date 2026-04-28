@@ -308,9 +308,7 @@ class TestObserveRagAgentGraph:
             [
                 {
                     "content": None,
-                    "tool_calls": [
-                        {"id": "t1", "name": "add", "arguments": {"a": 2, "b": 3}}
-                    ],
+                    "tool_calls": [{"id": "t1", "name": "add", "arguments": {"a": 2, "b": 3}}],
                 },
                 {"content": "The answer is 5.", "tool_calls": None},
             ]
