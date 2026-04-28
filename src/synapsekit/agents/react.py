@@ -153,47 +153,109 @@ class ReActAgent:
 
     async def run(self, query: str) -> str:
         """Run the ReAct loop and return the final answer."""
+        from ..observe.runtime import end_span, record_exception, start_span
+
         self._scratchpad.clear()
-        memory_context = await self._recall_context(query)
+        root_span = start_span(
+            "agent.run",
+            {
+                "agent.type": "react",
+                "agent.max_iterations": self._max_iterations,
+            },
+        )
+        try:
+            memory_context = await self._recall_context(query)
 
-        for _ in range(self._max_iterations):
-            messages = self._build_messages(query, memory_context)
-            response = await self._llm.generate_with_messages(messages)
-
-            final = _parse_final_answer(response)
-            if final is not None:
-                await self._store_episode(query, final)
-                return final
-
-            action_name, action_input = _parse_action(response)
-            thought = _parse_thought(response)
-
-            if not action_name:
-                final_answer = response.strip()
-                await self._store_episode(query, final_answer)
-                return final_answer
-
-            try:
-                tool = self._registry.get(action_name)
-                result = await tool.run(input=action_input)
-                observation = str(result)
-            except KeyError as e:
-                observation = f"Error: {e}"
-            except Exception as e:
-                observation = f"Tool error: {e}"
-
-            self._scratchpad.add_step(
-                AgentStep(
-                    thought=thought,
-                    action=action_name,
-                    action_input=action_input,
-                    observation=observation,
+            for step_index in range(self._max_iterations):
+                step_span = start_span(
+                    "agent.step",
+                    {
+                        "agent.type": "react",
+                        "agent.step": step_index + 1,
+                    },
                 )
-            )
+                try:
+                    messages = self._build_messages(query, memory_context)
+                    response = await self._llm.generate_with_messages(messages)
 
-        fallback = "I was unable to find the answer within the allowed number of steps."
-        await self._store_episode(query, fallback)
-        return fallback
+                    final = _parse_final_answer(response)
+                    if final is not None:
+                        final_span = start_span(
+                            "agent.final_answer",
+                            {
+                                "agent.type": "react",
+                                "agent.answer_length": len(final),
+                            },
+                            parent=root_span,
+                            set_current=False,
+                        )
+                        end_span(final_span)
+                        end_span(step_span, attributes={"agent.tool_calls": 0})
+                        await self._store_episode(query, final)
+                        return final
+
+                    action_name, action_input = _parse_action(response)
+                    thought = _parse_thought(response)
+
+                    if not action_name:
+                        final_answer = response.strip()
+                        final_span = start_span(
+                            "agent.final_answer",
+                            {
+                                "agent.type": "react",
+                                "agent.answer_length": len(final_answer),
+                            },
+                            parent=root_span,
+                            set_current=False,
+                        )
+                        end_span(final_span)
+                        end_span(step_span, attributes={"agent.tool_calls": 0})
+                        await self._store_episode(query, final_answer)
+                        return final_answer
+
+                    tool_span = start_span(
+                        "tool.call",
+                        {
+                            "agent.tool": action_name,
+                            "agent.tool_input": action_input,
+                        },
+                    )
+                    try:
+                        tool = self._registry.get(action_name)
+                        result = await tool.run(input=action_input)
+                        observation = str(result)
+                    except KeyError as e:
+                        observation = f"Error: {e}"
+                        record_exception(tool_span, e)
+                    except Exception as e:
+                        observation = f"Tool error: {e}"
+                        record_exception(tool_span, e)
+
+                    end_span(tool_span, attributes={"agent.tool_output": observation})
+
+                    self._scratchpad.add_step(
+                        AgentStep(
+                            thought=thought,
+                            action=action_name,
+                            action_input=action_input,
+                            observation=observation,
+                        )
+                    )
+
+                    end_span(step_span, attributes={"agent.tool_calls": 1})
+                except Exception as exc:
+                    record_exception(step_span, exc)
+                    end_span(step_span, error=exc)
+                    raise
+
+            fallback = "I was unable to find the answer within the allowed number of steps."
+            await self._store_episode(query, fallback)
+            return fallback
+        except Exception as exc:
+            record_exception(root_span, exc)
+            raise
+        finally:
+            end_span(root_span)
 
     async def stream(self, query: str) -> AsyncGenerator[str]:
         answer = await self.run(query)

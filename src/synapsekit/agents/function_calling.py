@@ -95,75 +95,126 @@ class FunctionCallingAgent:
         )
 
     async def run(self, query: str) -> str:
+        from ..observe.runtime import end_span, record_exception, start_span
+
         self._check_support()
         self._scratchpad.clear()
 
-        messages: list[dict] = [
-            {"role": "system", "content": await self._build_system_prompt(query)},
-            {"role": "user", "content": query},
-        ]
+        root_span = start_span(
+            "agent.run",
+            {
+                "agent.type": "function_calling",
+                "agent.max_iterations": self._max_iterations,
+            },
+        )
+        try:
+            messages: list[dict] = [
+                {"role": "system", "content": await self._build_system_prompt(query)},
+                {"role": "user", "content": query},
+            ]
 
-        tool_schemas = self._registry.schemas()
+            tool_schemas = self._registry.schemas()
 
-        for _ in range(self._max_iterations):
-            result: dict[str, Any] = await self._llm.call_with_tools(messages, tool_schemas)
-
-            tool_calls = result.get("tool_calls")
-            content = result.get("content")
-
-            if not tool_calls:
-                final_answer = content or ""
-                await self._store_episode(query, final_answer)
-                return final_answer
-
-            messages.append(
-                {
-                    "role": "assistant",
-                    "content": None,
-                    "tool_calls": [
-                        {
-                            "id": tc["id"],
-                            "type": "function",
-                            "function": {
-                                "name": tc["name"],
-                                "arguments": json.dumps(tc["arguments"]),
-                            },
-                        }
-                        for tc in tool_calls
-                    ],
-                }
-            )
-
-            for tc in tool_calls:
-                try:
-                    tool = self._registry.get(tc["name"])
-                    tool_result = await tool.run(**tc["arguments"])
-                    observation = str(tool_result)
-                except KeyError as e:
-                    observation = f"Error: {e}"
-                except Exception as e:
-                    observation = f"Tool error: {e}"
-
-                messages.append(
+            for step_index in range(self._max_iterations):
+                step_span = start_span(
+                    "agent.step",
                     {
-                        "role": "tool",
-                        "tool_call_id": tc["id"],
-                        "content": observation,
-                    }
+                        "agent.type": "function_calling",
+                        "agent.step": step_index + 1,
+                    },
                 )
+                try:
+                    result: dict[str, Any] = await self._llm.call_with_tools(messages, tool_schemas)
 
-                self._scratchpad.add_step(
-                    AgentStep(
-                        thought="",
-                        action=tc["name"],
-                        action_input=json.dumps(tc["arguments"]),
-                        observation=observation,
+                    tool_calls = result.get("tool_calls")
+                    content = result.get("content")
+
+                    if not tool_calls:
+                        final_answer = content or ""
+                        final_span = start_span(
+                            "agent.final_answer",
+                            {
+                                "agent.type": "function_calling",
+                                "agent.answer_length": len(final_answer),
+                            },
+                            parent=root_span,
+                            set_current=False,
+                        )
+                        end_span(final_span)
+                        end_span(step_span, attributes={"agent.tool_calls": 0})
+                        await self._store_episode(query, final_answer)
+                        return final_answer
+
+                    messages.append(
+                        {
+                            "role": "assistant",
+                            "content": None,
+                            "tool_calls": [
+                                {
+                                    "id": tc["id"],
+                                    "type": "function",
+                                    "function": {
+                                        "name": tc["name"],
+                                        "arguments": json.dumps(tc["arguments"]),
+                                    },
+                                }
+                                for tc in tool_calls
+                            ],
+                        }
                     )
-                )
 
-        fallback = "I was unable to complete the task within the allowed number of steps."
-        await self._store_episode(query, fallback)
-        return fallback
+                    for tc in tool_calls:
+                        tool_span = start_span(
+                            "tool.call",
+                            {
+                                "agent.tool": tc["name"],
+                                "agent.tool_input": tc["arguments"],
+                            },
+                        )
+                        try:
+                            tool = self._registry.get(tc["name"])
+                            tool_result = await tool.run(**tc["arguments"])
+                            observation = str(tool_result)
+                        except KeyError as e:
+                            observation = f"Error: {e}"
+                            record_exception(tool_span, e)
+                        except Exception as e:
+                            observation = f"Tool error: {e}"
+                            record_exception(tool_span, e)
+
+                        end_span(tool_span, attributes={"agent.tool_output": observation})
+
+                        messages.append(
+                            {
+                                "role": "tool",
+                                "tool_call_id": tc["id"],
+                                "content": observation,
+                            }
+                        )
+
+                        self._scratchpad.add_step(
+                            AgentStep(
+                                thought="",
+                                action=tc["name"],
+                                action_input=json.dumps(tc["arguments"]),
+                                observation=observation,
+                            )
+                        )
+
+                    end_span(step_span, attributes={"agent.tool_calls": len(tool_calls)})
+                except Exception as exc:
+                    record_exception(step_span, exc)
+                    end_span(step_span, error=exc)
+                    raise
+
+            fallback = "I was unable to complete the task within the allowed number of steps."
+            await self._store_episode(query, fallback)
+            return fallback
+        except Exception as exc:
+            record_exception(root_span, exc)
+            raise
+        finally:
+            end_span(root_span)
 
     async def stream(self, query: str) -> AsyncGenerator[str]:
         answer = await self.run(query)
