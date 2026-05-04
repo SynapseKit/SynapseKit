@@ -50,7 +50,9 @@ class FederatedRetriever:
         top_k: int | None = None,
         metadata_filter: dict | None = None,
     ) -> list[str]:
-        results = await self.retrieve_with_scores(query, top_k=top_k, metadata_filter=metadata_filter)
+        results = await self.retrieve_with_scores(
+            query, top_k=top_k, metadata_filter=metadata_filter
+        )
         return [r["text"] for r in results]
 
     async def retrieve_with_scores(
@@ -61,15 +63,12 @@ class FederatedRetriever:
     ) -> list[dict]:
         k = top_k or self._top_k
 
-        tasks = [
-            self._fetch_source(source, query, k, metadata_filter)
-            for source in self._sources
-        ]
+        tasks = [self._fetch_source(source, query, k, metadata_filter) for source in self._sources]
         gathered = await asyncio.gather(*tasks, return_exceptions=True)
 
         all_results: list[list[_Result]] = []
         for out in gathered:
-            if isinstance(out, Exception):
+            if isinstance(out, BaseException):
                 continue
             all_results.append(out)
 
@@ -137,10 +136,7 @@ class FederatedRetriever:
             ]
 
         raw = await retriever.retrieve(query, top_k=top_k, metadata_filter=metadata_filter)
-        return [
-            _Result(text=t, score=None, metadata={}, source=name)
-            for t in raw
-        ]
+        return [_Result(text=t, score=None, metadata={}, source=name) for t in raw]
 
     async def _fetch_remote(
         self,
@@ -213,8 +209,7 @@ class FederatedRetriever:
 
         for group in results:
             raw_scores = [
-                (r.score if r.score is not None else 1.0 / (idx + 1))
-                for idx, r in enumerate(group)
+                (r.score if r.score is not None else 1.0 / (idx + 1)) for idx, r in enumerate(group)
             ]
             if not raw_scores:
                 continue
