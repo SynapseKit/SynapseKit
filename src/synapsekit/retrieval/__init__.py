@@ -5,6 +5,7 @@ from .contextual_compression import ContextualCompressionRetriever
 from .crag import CRAGRetriever
 from .cross_encoder import CrossEncoderReranker
 from .ensemble import EnsembleRetriever
+from .federated import FederatedRetriever
 from .flare import FLARERetriever
 from .graphrag import GraphRAGRetriever, KnowledgeGraph
 from .hybrid_search import HybridSearchRetriever
@@ -30,6 +31,7 @@ __all__ = [
     "CRAGRetriever",
     "CrossEncoderReranker",
     "EnsembleRetriever",
+    "FederatedRetriever",
     "ColBERTRetriever",
     "FAISSVectorStore",
     "FLARERetriever",
