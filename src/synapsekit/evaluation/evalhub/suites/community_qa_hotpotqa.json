@@ -1,0 +1,257 @@
+{
+  "name": "community/qa-hotpotqa",
+  "description": "Multi-hop Q&A from HotpotQA-style tasks",
+  "baseline_score": 0.69,
+  "cases": [
+    {
+      "id": "hp-001",
+      "input": "Multi-Hop Question Answering case 1: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 1."
+    },
+    {
+      "id": "hp-002",
+      "input": "Multi-Hop Question Answering case 2: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 2."
+    },
+    {
+      "id": "hp-003",
+      "input": "Multi-Hop Question Answering case 3: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 3."
+    },
+    {
+      "id": "hp-004",
+      "input": "Multi-Hop Question Answering case 4: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 4."
+    },
+    {
+      "id": "hp-005",
+      "input": "Multi-Hop Question Answering case 5: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 5."
+    },
+    {
+      "id": "hp-006",
+      "input": "Multi-Hop Question Answering case 6: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 6."
+    },
+    {
+      "id": "hp-007",
+      "input": "Multi-Hop Question Answering case 7: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 7."
+    },
+    {
+      "id": "hp-008",
+      "input": "Multi-Hop Question Answering case 8: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 8."
+    },
+    {
+      "id": "hp-009",
+      "input": "Multi-Hop Question Answering case 9: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 9."
+    },
+    {
+      "id": "hp-010",
+      "input": "Multi-Hop Question Answering case 10: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 10."
+    },
+    {
+      "id": "hp-011",
+      "input": "Multi-Hop Question Answering case 11: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 11."
+    },
+    {
+      "id": "hp-012",
+      "input": "Multi-Hop Question Answering case 12: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 12."
+    },
+    {
+      "id": "hp-013",
+      "input": "Multi-Hop Question Answering case 13: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 13."
+    },
+    {
+      "id": "hp-014",
+      "input": "Multi-Hop Question Answering case 14: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 14."
+    },
+    {
+      "id": "hp-015",
+      "input": "Multi-Hop Question Answering case 15: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 15."
+    },
+    {
+      "id": "hp-016",
+      "input": "Multi-Hop Question Answering case 16: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 16."
+    },
+    {
+      "id": "hp-017",
+      "input": "Multi-Hop Question Answering case 17: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 17."
+    },
+    {
+      "id": "hp-018",
+      "input": "Multi-Hop Question Answering case 18: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 18."
+    },
+    {
+      "id": "hp-019",
+      "input": "Multi-Hop Question Answering case 19: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 19."
+    },
+    {
+      "id": "hp-020",
+      "input": "Multi-Hop Question Answering case 20: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 20."
+    },
+    {
+      "id": "hp-021",
+      "input": "Multi-Hop Question Answering case 21: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 21."
+    },
+    {
+      "id": "hp-022",
+      "input": "Multi-Hop Question Answering case 22: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 22."
+    },
+    {
+      "id": "hp-023",
+      "input": "Multi-Hop Question Answering case 23: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 23."
+    },
+    {
+      "id": "hp-024",
+      "input": "Multi-Hop Question Answering case 24: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 24."
+    },
+    {
+      "id": "hp-025",
+      "input": "Multi-Hop Question Answering case 25: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 25."
+    },
+    {
+      "id": "hp-026",
+      "input": "Multi-Hop Question Answering case 26: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 26."
+    },
+    {
+      "id": "hp-027",
+      "input": "Multi-Hop Question Answering case 27: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 27."
+    },
+    {
+      "id": "hp-028",
+      "input": "Multi-Hop Question Answering case 28: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 28."
+    },
+    {
+      "id": "hp-029",
+      "input": "Multi-Hop Question Answering case 29: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 29."
+    },
+    {
+      "id": "hp-030",
+      "input": "Multi-Hop Question Answering case 30: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 30."
+    },
+    {
+      "id": "hp-031",
+      "input": "Multi-Hop Question Answering case 31: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 31."
+    },
+    {
+      "id": "hp-032",
+      "input": "Multi-Hop Question Answering case 32: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 32."
+    },
+    {
+      "id": "hp-033",
+      "input": "Multi-Hop Question Answering case 33: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 33."
+    },
+    {
+      "id": "hp-034",
+      "input": "Multi-Hop Question Answering case 34: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 34."
+    },
+    {
+      "id": "hp-035",
+      "input": "Multi-Hop Question Answering case 35: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 35."
+    },
+    {
+      "id": "hp-036",
+      "input": "Multi-Hop Question Answering case 36: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 36."
+    },
+    {
+      "id": "hp-037",
+      "input": "Multi-Hop Question Answering case 37: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 37."
+    },
+    {
+      "id": "hp-038",
+      "input": "Multi-Hop Question Answering case 38: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 38."
+    },
+    {
+      "id": "hp-039",
+      "input": "Multi-Hop Question Answering case 39: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 39."
+    },
+    {
+      "id": "hp-040",
+      "input": "Multi-Hop Question Answering case 40: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 40."
+    },
+    {
+      "id": "hp-041",
+      "input": "Multi-Hop Question Answering case 41: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 41."
+    },
+    {
+      "id": "hp-042",
+      "input": "Multi-Hop Question Answering case 42: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 42."
+    },
+    {
+      "id": "hp-043",
+      "input": "Multi-Hop Question Answering case 43: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 43."
+    },
+    {
+      "id": "hp-044",
+      "input": "Multi-Hop Question Answering case 44: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 44."
+    },
+    {
+      "id": "hp-045",
+      "input": "Multi-Hop Question Answering case 45: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 45."
+    },
+    {
+      "id": "hp-046",
+      "input": "Multi-Hop Question Answering case 46: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 46."
+    },
+    {
+      "id": "hp-047",
+      "input": "Multi-Hop Question Answering case 47: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 47."
+    },
+    {
+      "id": "hp-048",
+      "input": "Multi-Hop Question Answering case 48: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 48."
+    },
+    {
+      "id": "hp-049",
+      "input": "Multi-Hop Question Answering case 49: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 49."
+    },
+    {
+      "id": "hp-050",
+      "input": "Multi-Hop Question Answering case 50: provide the best possible response for this scenario.",
+      "ideal": "A high-quality multi-hop question answering response that is accurate, concise, and follows best practices for case 50."
+    }
+  ]
+}

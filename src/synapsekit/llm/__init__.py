@@ -6,6 +6,8 @@ from .structured import generate_structured
 
 __all__ = [
     "AI21LLM",
+    "ReasoningLLM",
+    "ReplicateLLM",
     "AlephAlphaLLM",
     "MemcachedCacheBackend",
     "AnthropicLLM",
@@ -88,6 +90,8 @@ _PROVIDERS = {
     "DatabricksLLM": ".databricks",
     "ErnieLLM": ".ernie",
     "DynamoDBCacheBackend": "._cache_dynamodb",
+    "ReasoningLLM": ".reasoning",
+    "ReplicateLLM": ".replicate",
 }
 
 

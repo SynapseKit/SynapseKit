@@ -1,5 +1,6 @@
 from .base import BaseTool, ToolResult
 from .executor import AgentConfig, AgentExecutor
+from .facade import SimpleAgent, agent
 from .function_calling import FunctionCallingAgent
 from .guardrails import (
     ContentFilter,
@@ -32,6 +33,7 @@ from .step_events import (
     ThoughtEvent,
     TokenEvent,
 )
+from .swarm import SwarmAgent
 from .tool_decorator import tool
 from .tools import (
     APIBuilderTool,
@@ -55,6 +57,7 @@ from .tools import (
     HTTPRequestTool,
     HumanInputTool,
     ImageAnalysisTool,
+    ImageGenerationTool,
     JiraTool,
     JSONQueryTool,
     LinearTool,
@@ -83,6 +86,8 @@ from .tools import (
     WolframAlphaTool,
     YouTubeSearchTool,
 )
+from .triggers import CronTrigger, EventTrigger, StreamTrigger, TriggerResult
+from .voice import VoiceAgent, VoiceResult
 
 __all__ = [
     # Core
@@ -97,6 +102,15 @@ __all__ = [
     "FunctionCallingAgent",
     "AgentExecutor",
     "AgentConfig",
+    "CronTrigger",
+    "EventTrigger",
+    "StreamTrigger",
+    "SwarmAgent",
+    "TriggerResult",
+    "SimpleAgent",
+    "VoiceAgent",
+    "VoiceResult",
+    "agent",
     # Guardrails
     "ContentFilter",
     "Guardrails",
@@ -127,6 +141,7 @@ __all__ = [
     "HTTPRequestTool",
     "HumanInputTool",
     "ImageAnalysisTool",
+    "ImageGenerationTool",
     "JiraTool",
     "JSONQueryTool",
     "LinearTool",

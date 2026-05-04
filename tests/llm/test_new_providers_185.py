@@ -365,30 +365,30 @@ class TestCloudflareLLM:
 
 class TestFacadeAutoDetection:
     def test_moonshot_detection(self):
-        from synapsekit.rag.facade import _make_llm
+        from synapsekit.llm._factory import make_llm
 
         mock_openai = MagicMock()
         with patch.dict("sys.modules", {"openai": mock_openai}):
             from synapsekit.llm.moonshot import MoonshotLLM
 
-            llm = _make_llm("moonshot-v1-8k", "key", None, "sys", 0.2, 100)
+            llm = make_llm("moonshot-v1-8k", "key", None, "sys", 0.2, 100)
             assert isinstance(llm, MoonshotLLM)
 
     def test_zhipu_detection(self):
-        from synapsekit.rag.facade import _make_llm
+        from synapsekit.llm._factory import make_llm
 
         mock_openai = MagicMock()
         with patch.dict("sys.modules", {"openai": mock_openai}):
             from synapsekit.llm.zhipu import ZhipuLLM
 
-            llm = _make_llm("glm-4", "key", None, "sys", 0.2, 100)
+            llm = make_llm("glm-4", "key", None, "sys", 0.2, 100)
             assert isinstance(llm, ZhipuLLM)
 
     def test_cloudflare_detection(self):
-        from synapsekit.rag.facade import _make_llm
+        from synapsekit.llm._factory import make_llm
 
         with patch.dict("os.environ", {"CLOUDFLARE_ACCOUNT_ID": "abc123"}):
             from synapsekit.llm.cloudflare import CloudflareLLM
 
-            llm = _make_llm("@cf/meta/llama-3-8b-instruct", "key", None, "sys", 0.2, 100)
+            llm = make_llm("@cf/meta/llama-3-8b-instruct", "key", None, "sys", 0.2, 100)
             assert isinstance(llm, CloudflareLLM)

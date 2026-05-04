@@ -67,7 +67,9 @@ CLAUDE.md
 .qwen/
 
 # Internal docs (not published)
-docs/
+docs/*
+!docs/observability.md
+!docs/evalhub.md
 
 # Saved vectorstores
 *.npz

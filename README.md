@@ -7,7 +7,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/synapsekit?color=22c55e&label=pypi&logo=pypi&logoColor=white)](https://pypi.org/project/synapsekit/)
 [![Python](https://img.shields.io/badge/python-3.10%2B-22c55e?logo=python&logoColor=white)](https://www.python.org/)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-22c55e)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-2041%20passing-22c55e?logo=pytest&logoColor=white)]()
+[![Tests](https://img.shields.io/badge/tests-3195%20passing-22c55e?logo=pytest&logoColor=white)]()
 [![Downloads](https://img.shields.io/pypi/dm/synapsekit?color=22c55e&logo=pypi&logoColor=white)](https://pypistats.org/packages/synapsekit)
 [![PyPI Downloads](https://static.pepy.tech/personalized-badge/synapsekit?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/synapsekit)
 [![Docs](https://img.shields.io/badge/docs-online-22c55e?logo=readthedocs&logoColor=white)](https://synapsekit.github.io/synapsekit-docs/)
@@ -24,7 +24,7 @@ Async-native RAG, Agents, and Graph workflows — no magic, no SaaS, no bloat.
 
 > *"LangChain for people who hate LangChain."*
 
-SynapseKit is the minimal, async-first Python framework for LLM applications. 33 providers · 48 tools · 46 loaders · 10 vector stores. Every abstraction is plain Python you can read, debug, and extend. No hidden chains. No global state. No lock-in.
+SynapseKit is the minimal, async-first Python framework for LLM applications. 34 providers · 48+ tools · 64 loaders · 22 vector stores. Every abstraction is plain Python you can read, debug, and extend. No hidden chains. No global state. No lock-in.
 
 ---
 
@@ -48,7 +48,7 @@ Token-level streaming is the default,<br/>not an afterthought.<br/>Works across 
 <tr>
 <td align="center" width="33%">
 <h3>🔌 One interface</h3>
-33 LLM providers and 10 vector stores<br/>behind the same API.<br/>Swap without rewriting.
+34 LLM providers and 22 vector stores<br/>behind the same API.<br/>Swap without rewriting.
 </td>
 <td align="center" width="33%">
 <h3>🧩 Composable</h3>
@@ -65,6 +65,27 @@ No hidden chains.<br/>Every step is plain Python<br/>you can read and override.
 
 ---
 
+## 10-Line Agent Example
+
+```python
+from synapsekit import agent, tool
+
+@tool
+def get_weather(city: str) -> str:
+    """Get current weather for a city."""
+    return f"Sunny, 22°C in {city}"
+
+my_agent = agent(
+    model="gpt-4o-mini",
+    api_key="sk-...",
+    tools=[get_weather],
+)
+
+print(my_agent.run("What's the weather in Tokyo?"))
+```
+
+---
+
 ## SynapseKit vs LangChain vs LlamaIndex
 
 <div align="center">
@@ -77,7 +98,7 @@ No hidden chains.<br/>Every step is plain Python<br/>you can read and override.
 | Cost tracking | **✅ Built-in** | ❌ LangSmith (SaaS) | ❌ No |
 | Evaluation | **✅ CLI + GitHub Action** | ❌ LangSmith (SaaS) | ✅ Built-in |
 | Graph workflows | **✅ Built-in** | ✅ LangGraph (separate pkg) | ❌ No |
-| LLM providers | **33** | 38+ | 20+ |
+| LLM providers | **34** | 38+ | 20+ |
 | Stack traces | **Your code** | Framework internals | Framework internals |
 
 </div>
@@ -152,9 +173,29 @@ GitHub Action that runs `@eval_case` suites on every PR and blocks merge if qual
 
 </td>
 </tr>
+<tr>
+<td width="50%" colspan="2">
+
+**📊 Agent Benchmarking**<br/>
+Evaluate your agents against industry-standard benchmarks like GAIA, SWE-bench, WebArena, and AgentBench directly from the CLI. Generate leaderboards to compare performance across tasks.
+
+**🧪 EvalHub Community Suites**<br/>
+Run shared community eval suites with `synapsekit bench` and compare aggregate score against baseline.
+</td>
+</tr>
 </table>
 
 </div>
+
+### EvalHub quick usage
+
+```bash
+synapsekit bench --list
+synapsekit bench --suite community/customer-support --model gpt-4o-mini
+synapsekit bench --publish my_evals/ --name myorg/rag-finance
+```
+
+Docs: [docs/evalhub.md](docs/evalhub.md)
 
 ---
 
@@ -165,6 +206,7 @@ GitHub Action that runs `@eval_case` suites on every PR and blocks merge if qual
 pip install synapsekit[openai]       # OpenAI
 pip install synapsekit[anthropic]    # Anthropic
 pip install synapsekit[ollama]       # Ollama (local)
+pip install synapsekit[observe]      # Observability extras
 pip install synapsekit[all]          # Everything
 ```
 
@@ -182,6 +224,8 @@ poetry add "synapsekit[all]"
 
 Full installation options → [docs](https://synapsekit.github.io/synapsekit-docs/docs/getting-started/installation)
 
+Observability guide → [docs/observability.md](docs/observability.md)
+
 ---
 
 ## Documentation
@@ -194,7 +238,7 @@ Everything you need to get started and go deep is in the docs.
 | 🗂 [RAG](https://synapsekit.github.io/synapsekit-docs/docs/rag/pipeline) | Pipelines, loaders, retrieval, vector stores |
 | 🤖 [Agents](https://synapsekit.github.io/synapsekit-docs/docs/agents/overview) | ReAct, function calling, tools, executor |
 | 🔀 [Graph Workflows](https://synapsekit.github.io/synapsekit-docs/docs/graph/overview) | DAG pipelines, conditional routing, parallel execution |
-| 🧠 [LLM Providers](https://synapsekit.github.io/synapsekit-docs/docs/llms/overview) | All 33 providers with examples |
+| 🧠 [LLM Providers](https://synapsekit.github.io/synapsekit-docs/docs/llms/overview) | All 34 providers with examples |
 | 🧪 [EvalCI](https://synapsekit.github.io/synapsekit-docs/docs/evalci/overview) | LLM quality gates on every PR — GitHub Action |
 | 📖 [API Reference](https://synapsekit.github.io/synapsekit-docs/docs/api/llm) | Full class and method reference |
 

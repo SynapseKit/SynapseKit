@@ -105,6 +105,50 @@ def _add_finetune_parser(subparsers: argparse._SubParsersAction) -> None:  # typ
     wait.add_argument("--api-key", default=None, help="Provider API key")
 
 
+def _add_graph_builder_parser(subparsers: argparse._SubParsersAction) -> None:  # type: ignore[type-arg]
+    p = subparsers.add_parser("graph-builder", help="Launch the visual graph workflow builder")
+    p.add_argument("--host", default="127.0.0.1", help="Bind host (default: 127.0.0.1)")
+    p.add_argument("--port", type=int, default=7861, help="Bind port (default: 7861)")
+
+
+def _add_ui_parser(subparsers: argparse._SubParsersAction) -> None:  # type: ignore[type-arg]
+    p = subparsers.add_parser("ui", help="Launch the observability dashboard")
+    p.add_argument("--host", default="127.0.0.1", help="Bind host (default: 127.0.0.1)")
+    p.add_argument("--port", type=int, default=7860, help="Bind port (default: 7860)")
+
+
+def _add_plugin_parser(subparsers: argparse._SubParsersAction) -> None:  # type: ignore[type-arg]
+    p = subparsers.add_parser("plugin", help="Manage SynapseKit plugins")
+    plugin_sub = p.add_subparsers(dest="plugin_command")
+
+    plugin_sub.add_parser("list", help="List all registered plugins")
+
+    load_cmd = plugin_sub.add_parser("load", help="Load a plugin from a Python file")
+    load_cmd.add_argument("path", help="Path to the plugin .py file")
+
+    info_cmd = plugin_sub.add_parser("info", help="Show details about a registered plugin")
+    info_cmd.add_argument("name", help="Plugin name")
+
+
+def _add_benchmark_parser(subparsers: argparse._SubParsersAction) -> None:  # type: ignore[type-arg]
+    p = subparsers.add_parser("benchmark", help="Run agent benchmarks (GAIA, SWE-bench, etc.)")
+    bench_sub = p.add_subparsers(dest="benchmark_command")
+
+    run_cmd = bench_sub.add_parser("run", help="Run a specific benchmark suite")
+    run_cmd.add_argument("suite", help="Benchmark suite (gaia, swe-bench, webarena, agentbench)")
+    run_cmd.add_argument("agent", help="Import path for the agent, e.g. 'my_agent:run_task'")
+    run_cmd.add_argument("--split", default="test", help="Dataset split to evaluate on")
+    run_cmd.add_argument("--limit", type=int, default=None, help="Max tasks to evaluate")
+
+    bench_sub.add_parser("list", help="List available benchmarks")
+
+
+def _add_bench_parser(subparsers: argparse._SubParsersAction) -> None:  # type: ignore[type-arg]
+    from .bench import build_bench_parser
+
+    build_bench_parser(subparsers)
+
+
 def main(argv: list[str] | None = None) -> None:
     """CLI entry point."""
     parser = argparse.ArgumentParser(
@@ -118,6 +162,11 @@ def main(argv: list[str] | None = None) -> None:
     _add_test_parser(subparsers)
     _add_eval_parser(subparsers)
     _add_finetune_parser(subparsers)
+    _add_graph_builder_parser(subparsers)
+    _add_benchmark_parser(subparsers)
+    _add_bench_parser(subparsers)
+    _add_ui_parser(subparsers)
+    _add_plugin_parser(subparsers)
 
     args = parser.parse_args(argv)
 
@@ -143,6 +192,26 @@ def main(argv: list[str] | None = None) -> None:
         from .finetune import run_finetune
 
         run_finetune(args)
+    elif args.command == "graph-builder":
+        from .graph_builder import run_graph_builder
+
+        run_graph_builder(args)
+    elif args.command == "benchmark":
+        from .benchmark import run_benchmark
+
+        run_benchmark(args)
+    elif args.command == "bench":
+        from .bench import run_bench
+
+        run_bench(args)
+    elif args.command == "ui":
+        from .ui import run_ui
+
+        run_ui(args)
+    elif args.command == "plugin":
+        from .plugins import run_plugin
+
+        run_plugin(args)
     else:
         parser.print_help()
         sys.exit(1)

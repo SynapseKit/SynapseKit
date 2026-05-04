@@ -19,6 +19,7 @@ from .graphql import GraphQLTool
 from .http_request import HTTPRequestTool
 from .human_input import HumanInputTool
 from .image_analysis import ImageAnalysisTool
+from .image_gen import ImageGenerationTool
 from .jira import JiraTool
 from .json_query import JSONQueryTool
 from .linear import LinearTool
@@ -98,4 +99,5 @@ __all__ = [
     "WolframAlphaTool",
     "WikipediaTool",
     "YouTubeSearchTool",
+    "ImageGenerationTool",
 ]

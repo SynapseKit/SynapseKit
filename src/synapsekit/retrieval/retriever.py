@@ -43,6 +43,8 @@ class Retriever:
         metadata_filter: dict | None = None,
     ) -> list[str]:
         """Return top_k relevant text chunks for query."""
+        from ..observe.runtime import end_span, record_exception, start_span
+
         fetch_k = top_k * 3 if self._rerank else top_k
         results = await self._store.search(query, top_k=fetch_k, metadata_filter=metadata_filter)
 
@@ -52,7 +54,22 @@ class Retriever:
         texts = [r["text"] for r in results]
 
         if self._rerank and len(texts) > 1:
-            return self._bm25_rerank(query, texts, top_k)
+            rerank_span = start_span(
+                "reranker.rerank",
+                {
+                    "reranker.type": "bm25",
+                    "reranker.top_k": top_k,
+                    "reranker.candidates": len(texts),
+                },
+            )
+            try:
+                reranked = self._bm25_rerank(query, texts, top_k)
+                end_span(rerank_span, attributes={"rag.retrieved_chunks": len(reranked)})
+                return reranked
+            except Exception as exc:
+                record_exception(rerank_span, exc)
+                end_span(rerank_span, error=exc)
+                raise
 
         return texts[:top_k]
 
@@ -63,6 +80,8 @@ class Retriever:
         metadata_filter: dict | None = None,
     ) -> list[dict]:
         """Return top_k results with scores and metadata."""
+        from ..observe.runtime import end_span, record_exception, start_span
+
         fetch_k = top_k * 3 if self._rerank else top_k
         results = await self._store.search(query, top_k=fetch_k, metadata_filter=metadata_filter)
 
@@ -70,9 +89,24 @@ class Retriever:
             return results[:top_k]
 
         texts = [r["text"] for r in results]
-        reranked = self._bm25_rerank(query, texts, top_k)
-        text_to_result = {r["text"]: r for r in results}
-        return [text_to_result[t] for t in reranked if t in text_to_result]
+        rerank_span = start_span(
+            "reranker.rerank",
+            {
+                "reranker.type": "bm25",
+                "reranker.top_k": top_k,
+                "reranker.candidates": len(texts),
+            },
+        )
+        try:
+            reranked = self._bm25_rerank(query, texts, top_k)
+            text_to_result = {r["text"]: r for r in results}
+            resolved = [text_to_result[t] for t in reranked if t in text_to_result]
+            end_span(rerank_span, attributes={"rag.retrieved_chunks": len(resolved)})
+            return resolved
+        except Exception as exc:
+            record_exception(rerank_span, exc)
+            end_span(rerank_span, error=exc)
+            raise
 
     async def retrieve_mmr(
         self,

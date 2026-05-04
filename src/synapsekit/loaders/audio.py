@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import mimetypes
 from pathlib import Path
 from typing import Any
 
 from ..text_splitters.sentence import SentenceTextSplitter
+from ._media_utils import format_locator, format_seconds
 from .base import Document
 
 SUPPORTED_EXTENSIONS = {".mp3", ".wav", ".m4a", ".ogg", ".flac", ".webm"}
@@ -137,10 +139,13 @@ class AudioLoader:
             return None
 
     def _to_documents(self, transcription: dict[str, Any]) -> list[Document]:
+        media_type, _ = mimetypes.guess_type(str(self._path))
         base_metadata = {
             "source": str(self._path),
             "file": str(self._path),
             "source_type": "audio",
+            "chunk_type": "transcript",
+            "media_type": media_type or "audio/mpeg",
             "loader": "AudioLoader",
             "backend": self._backend,
         }
@@ -152,13 +157,17 @@ class AudioLoader:
                 continue
             chunks = self._splitter.split(segment_text) or [segment_text]
             for chunk in chunks:
+                start_time = seg.get("start")
+                end_time = seg.get("end")
                 docs.append(
                     Document(
                         text=chunk,
                         metadata={
                             **base_metadata,
-                            "start_time": seg.get("start"),
-                            "end_time": seg.get("end"),
+                            "start_time": start_time,
+                            "end_time": end_time,
+                            "timestamp": start_time,
+                            "locator": format_locator(start_time, end_time),
                         },
                     )
                 )
@@ -172,3 +181,7 @@ class AudioLoader:
 
         chunks = self._splitter.split(text) or [text]
         return [Document(text=chunk, metadata=dict(base_metadata)) for chunk in chunks]
+
+    # Kept for backwards-compat in case tests call these directly.
+    _format_locator = staticmethod(format_locator)
+    _format_seconds = staticmethod(format_seconds)

@@ -76,9 +76,11 @@ class ImageLoader:
             "source": str(self._path),
             "file": str(self._path),
             "source_type": "image",
+            "chunk_type": "image_caption",
             "media_type": mime,
             "file_size": os.path.getsize(self._path),
             "loader": "ImageLoader",
+            "locator": self._path.name,
         }
 
     def _placeholder_document(self) -> Document:

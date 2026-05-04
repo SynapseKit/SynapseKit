@@ -1,0 +1,132 @@
+{
+  "name": "community/rag-general",
+  "description": "Faithfulness, relevancy, groundedness",
+  "baseline_score": 0.76,
+  "cases": [
+    {
+      "id": "rag-001",
+      "input": "Retrieval-Augmented Generation case 1: provide the best possible response for this scenario.",
+      "ideal": "A high-quality retrieval-augmented generation response that is accurate, concise, and follows best practices for case 1."
+    },
+    {
+      "id": "rag-002",
+      "input": "Retrieval-Augmented Generation case 2: provide the best possible response for this scenario.",
+      "ideal": "A high-quality retrieval-augmented generation response that is accurate, concise, and follows best practices for case 2."
+    },
+    {
+      "id": "rag-003",
+      "input": "Retrieval-Augmented Generation case 3: provide the best possible response for this scenario.",
+      "ideal": "A high-quality retrieval-augmented generation response that is accurate, concise, and follows best practices for case 3."
+    },
+    {
+      "id": "rag-004",
+      "input": "Retrieval-Augmented Generation case 4: provide the best possible response for this scenario.",
+      "ideal": "A high-quality retrieval-augmented generation response that is accurate, concise, and follows best practices for case 4."
+    },
+    {
+      "id": "rag-005",
+      "input": "Retrieval-Augmented Generation case 5: provide the best possible response for this scenario.",
+      "ideal": "A high-quality retrieval-augmented generation response that is accurate, concise, and follows best practices for case 5."
+    },
+    {
+      "id": "rag-006",
+      "input": "Retrieval-Augmented Generation case 6: provide the best possible response for this scenario.",
+      "ideal": "A high-quality retrieval-augmented generation response that is accurate, concise, and follows best practices for case 6."
+    },
+    {
+      "id": "rag-007",
+      "input": "Retrieval-Augmented Generation case 7: provide the best possible response for this scenario.",
+      "ideal": "A high-quality retrieval-augmented generation response that is accurate, concise, and follows best practices for case 7."
+    },
+    {
+      "id": "rag-008",
+      "input": "Retrieval-Augmented Generation case 8: provide the best possible response for this scenario.",
+      "ideal": "A high-quality retrieval-augmented generation response that is accurate, concise, and follows best practices for case 8."
+    },
+    {
+      "id": "rag-009",
+      "input": "Retrieval-Augmented Generation case 9: provide the best possible response for this scenario.",
+      "ideal": "A high-quality retrieval-augmented generation response that is accurate, concise, and follows best practices for case 9."
+    },
+    {
+      "id": "rag-010",
+      "input": "Retrieval-Augmented Generation case 10: provide the best possible response for this scenario.",
+      "ideal": "A high-quality retrieval-augmented generation response that is accurate, concise, and follows best practices for case 10."
+    },
+    {
+      "id": "rag-011",
+      "input": "Retrieval-Augmented Generation case 11: provide the best possible response for this scenario.",
+      "ideal": "A high-quality retrieval-augmented generation response that is accurate, concise, and follows best practices for case 11."
+    },
+    {
+      "id": "rag-012",
+      "input": "Retrieval-Augmented Generation case 12: provide the best possible response for this scenario.",
+      "ideal": "A high-quality retrieval-augmented generation response that is accurate, concise, and follows best practices for case 12."
+    },
+    {
+      "id": "rag-013",
+      "input": "Retrieval-Augmented Generation case 13: provide the best possible response for this scenario.",
+      "ideal": "A high-quality retrieval-augmented generation response that is accurate, concise, and follows best practices for case 13."
+    },
+    {
+      "id": "rag-014",
+      "input": "Retrieval-Augmented Generation case 14: provide the best possible response for this scenario.",
+      "ideal": "A high-quality retrieval-augmented generation response that is accurate, concise, and follows best practices for case 14."
+    },
+    {
+      "id": "rag-015",
+      "input": "Retrieval-Augmented Generation case 15: provide the best possible response for this scenario.",
+      "ideal": "A high-quality retrieval-augmented generation response that is accurate, concise, and follows best practices for case 15."
+    },
+    {
+      "id": "rag-016",
+      "input": "Retrieval-Augmented Generation case 16: provide the best possible response for this scenario.",
+      "ideal": "A high-quality retrieval-augmented generation response that is accurate, concise, and follows best practices for case 16."
+    },
+    {
+      "id": "rag-017",
+      "input": "Retrieval-Augmented Generation case 17: provide the best possible response for this scenario.",
+      "ideal": "A high-quality retrieval-augmented generation response that is accurate, concise, and follows best practices for case 17."
+    },
+    {
+      "id": "rag-018",
+      "input": "Retrieval-Augmented Generation case 18: provide the best possible response for this scenario.",
+      "ideal": "A high-quality retrieval-augmented generation response that is accurate, concise, and follows best practices for case 18."
+    },
+    {
+      "id": "rag-019",
+      "input": "Retrieval-Augmented Generation case 19: provide the best possible response for this scenario.",
+      "ideal": "A high-quality retrieval-augmented generation response that is accurate, concise, and follows best practices for case 19."
+    },
+    {
+      "id": "rag-020",
+      "input": "Retrieval-Augmented Generation case 20: provide the best possible response for this scenario.",
+      "ideal": "A high-quality retrieval-augmented generation response that is accurate, concise, and follows best practices for case 20."
+    },
+    {
+      "id": "rag-021",
+      "input": "Retrieval-Augmented Generation case 21: provide the best possible response for this scenario.",
+      "ideal": "A high-quality retrieval-augmented generation response that is accurate, concise, and follows best practices for case 21."
+    },
+    {
+      "id": "rag-022",
+      "input": "Retrieval-Augmented Generation case 22: provide the best possible response for this scenario.",
+      "ideal": "A high-quality retrieval-augmented generation response that is accurate, concise, and follows best practices for case 22."
+    },
+    {
+      "id": "rag-023",
+      "input": "Retrieval-Augmented Generation case 23: provide the best possible response for this scenario.",
+      "ideal": "A high-quality retrieval-augmented generation response that is accurate, concise, and follows best practices for case 23."
+    },
+    {
+      "id": "rag-024",
+      "input": "Retrieval-Augmented Generation case 24: provide the best possible response for this scenario.",
+      "ideal": "A high-quality retrieval-augmented generation response that is accurate, concise, and follows best practices for case 24."
+    },
+    {
+      "id": "rag-025",
+      "input": "Retrieval-Augmented Generation case 25: provide the best possible response for this scenario.",
+      "ideal": "A high-quality retrieval-augmented generation response that is accurate, concise, and follows best practices for case 25."
+    }
+  ]
+}

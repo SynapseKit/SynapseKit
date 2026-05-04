@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import asyncio
+import mimetypes
 import tempfile
 from contextlib import suppress
 from pathlib import Path
 from typing import Any
 
 from .._compat import run_sync
+from ._media_utils import format_locator, format_seconds
 from .audio import AudioLoader
 from .base import Document
 from .image import ImageLoader
@@ -102,14 +104,17 @@ class VideoLoader:
 
     def _decorate_transcript_doc(self, doc: Document) -> Document:
         timestamp = doc.metadata.get("start_time")
+        media_type, _ = mimetypes.guess_type(str(self._path))
         doc.metadata = {
             **doc.metadata,
             "source": str(self._path),
             "file": str(self._path),
             "source_type": "video",
+            "media_type": media_type or "video/mp4",
             "loader": "VideoLoader",
             "chunk_type": "transcript",
             "timestamp": self._to_float(timestamp),
+            "locator": format_locator(timestamp, doc.metadata.get("end_time")),
         }
         return doc
 
@@ -136,17 +141,20 @@ class VideoLoader:
         frame_index: int,
     ) -> list[Document]:
         timestamp = self._frame_timestamp(frame_index)
+        media_type, _ = mimetypes.guess_type(str(self._path))
         for doc in docs:
             doc.metadata = {
                 **doc.metadata,
                 "source": str(self._path),
                 "file": str(self._path),
                 "source_type": "video",
+                "media_type": media_type or "video/mp4",
                 "loader": "VideoLoader",
                 "chunk_type": "frame_caption",
                 "timestamp": timestamp,
                 "frame_path": str(frame_path),
                 "frame_index": frame_index,
+                "locator": format_locator(timestamp),
             }
         return docs
 
@@ -292,3 +300,7 @@ class VideoLoader:
             return float(value)
         except (TypeError, ValueError):
             return None
+
+    # Kept for backwards-compat in case tests call these directly.
+    _format_locator = staticmethod(format_locator)
+    _format_seconds = staticmethod(format_seconds)

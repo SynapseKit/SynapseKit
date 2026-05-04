@@ -15,6 +15,15 @@ from synapsekit.observability.tracer import TokenTracer
 def _patch_rag(rag: RAG, tokens=("Answer", " here")):
     """Replace the pipeline's LLM and retriever with mocks."""
     rag._pipeline.config.retriever.retrieve = AsyncMock(return_value=["context"])
+    rag._pipeline.config.retriever.retrieve_with_scores = AsyncMock(
+        return_value=[
+            {
+                "text": "context",
+                "score": 0.9,
+                "metadata": {"source_type": "text", "locator": "context"},
+            }
+        ]
+    )
     rag._pipeline.config.retriever._store.add = AsyncMock()
 
     async def mock_stream(messages, **kw):
@@ -94,6 +103,49 @@ class TestRAGFacade:
         rag._pipeline._splitter.split.assert_called_once()
 
     @pytest.mark.asyncio
+    async def test_add_async_autodetects_pdf_file(self, tmp_path):
+        pdf_file = tmp_path / "report.pdf"
+        pdf_file.write_bytes(b"%PDF-1.4")
+
+        rag = RAG(model="gpt-4o-mini", api_key="sk-test")
+        _patch_rag(rag)
+
+        with patch(
+            "synapsekit.loaders.pdf.PDFLoader.aload",
+            new=AsyncMock(
+                return_value=[
+                    Document(text="page text", metadata={"page": 2, "source_type": "pdf"})
+                ]
+            ),
+        ):
+            await rag.add_async(str(pdf_file))
+
+        rag._pipeline._splitter.split.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_add_async_uses_mime_type_for_webm_video(self, tmp_path):
+        video_file = tmp_path / "demo.webm"
+        video_file.write_bytes(b"video")
+
+        rag = RAG(model="gpt-4o-mini", api_key="sk-test")
+        _patch_rag(rag)
+
+        with (
+            patch("synapsekit.rag.facade.mimetypes.guess_type", return_value=("video/webm", None)),
+            patch(
+                "synapsekit.loaders.video.VideoLoader.aload",
+                new=AsyncMock(
+                    return_value=[Document(text="frame text", metadata={"timestamp": 12.0})]
+                ),
+            ) as video_aload,
+            patch("synapsekit.loaders.audio.AudioLoader.aload", new=AsyncMock()) as audio_aload,
+        ):
+            await rag.add_async(str(video_file))
+
+        assert video_aload.await_count == 1
+        assert audio_aload.await_count == 0
+
+    @pytest.mark.asyncio
     async def test_add_async_existing_non_multimodal_path_falls_back_to_text(self, tmp_path):
         text_file = tmp_path / "notes.txt"
         text_file.write_text("hello", encoding="utf-8")
@@ -104,6 +156,27 @@ class TestRAGFacade:
         await rag.add_async(str(text_file))
 
         rag._pipeline.add.assert_awaited_once_with(str(text_file), None)
+
+    @pytest.mark.asyncio
+    async def test_add_async_normalizes_routed_document_metadata(self, tmp_path):
+        pdf_file = tmp_path / "report.pdf"
+        pdf_file.write_bytes(b"%PDF-1.4")
+
+        rag = RAG(model="gpt-4o-mini", api_key="sk-test")
+        rag._pipeline.add_documents = AsyncMock()
+
+        with patch(
+            "synapsekit.loaders.pdf.PDFLoader.aload",
+            new=AsyncMock(return_value=[Document(text="page text", metadata={"page": 3})]),
+        ):
+            await rag.add_async(str(pdf_file), metadata={"topic": "roadmap"})
+
+        docs = rag._pipeline.add_documents.await_args.args[0]
+        assert len(docs) == 1
+        assert docs[0].metadata["source_type"] == "pdf"
+        assert docs[0].metadata["chunk_type"] == "page"
+        assert docs[0].metadata["locator"] == "report.pdf page 3"
+        assert docs[0].metadata["topic"] == "roadmap"
 
     def test_add_image_caption_kw_passed_to_loader(self, tmp_path):
         image_file = tmp_path / "diagram.png"

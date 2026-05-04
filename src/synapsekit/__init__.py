@@ -34,6 +34,7 @@ from .agents import (
     Crew,
     CrewAgent,
     CrewResult,
+    CronTrigger,
     DateTimeTool,
     DuckDuckGoSearchTool,
     EmailTool,
@@ -54,6 +55,7 @@ from .agents import (
     HTTPRequestTool,
     HumanInputTool,
     ImageAnalysisTool,
+    ImageGenerationTool,
     JiraTool,
     JSONQueryTool,
     LinearTool,
@@ -69,6 +71,7 @@ from .agents import (
     RegexTool,
     SentimentAnalysisTool,
     ShellTool,
+    SimpleAgent,
     SlackTool,
     SpeechToTextTool,
     SQLQueryTool,
@@ -86,8 +89,11 @@ from .agents import (
     ToolResult,
     TopicRestrictor,
     TranslationTool,
+    TriggerResult,
     TwilioTool,
     VectorSearchTool,
+    VoiceAgent,
+    VoiceResult,
     WeatherTool,
     WebScraperTool,
     WebSearchTool,
@@ -95,6 +101,7 @@ from .agents import (
     WolframAlphaTool,
     WorkerAgent,
     YouTubeSearchTool,
+    agent,
     tool,
 )
 from .embeddings.backend import SynapsekitEmbeddings
@@ -180,10 +187,12 @@ from .loaders.mongodb import MongoDBLoader
 from .loaders.obsidian import ObsidianLoader
 from .loaders.onedrive import OneDriveLoader
 from .loaders.pdf import PDFLoader
+from .loaders.pubmed import PubMedLoader
 from .loaders.rss import RSSLoader
 from .loaders.rtf import RTFLoader
 from .loaders.s3 import S3Loader
 from .loaders.salesforce import SalesforceLoader
+from .loaders.snowflake import SnowflakeLoader
 from .loaders.sql import SQLLoader
 from .loaders.teams import TeamsLoader
 from .loaders.text import StringLoader, TextLoader
@@ -225,6 +234,7 @@ from .prompts.hub import PromptHub
 from .prompts.template import ChatPromptTemplate, FewShotPromptTemplate, PromptTemplate
 from .rag.facade import RAG
 from .rag.pipeline import RAGConfig, RAGPipeline
+from .rag.self_healing import SelfHealingRAG
 from .retrieval.adaptive import AdaptiveRAGRetriever
 from .retrieval.base import VectorStore
 from .retrieval.cohere_reranker import CohereReranker
@@ -262,10 +272,11 @@ from .text_splitters import (
     TokenAwareSplitter,
 )
 
-__version__ = "1.5.6"
+__version__ = "1.6.0"
 __all__ = [
     # Facade
     "RAG",
+    "SelfHealingRAG",
     # Pipeline
     "RAGPipeline",
     "RAGConfig",
@@ -400,10 +411,12 @@ __all__ = [
     "S3Loader",
     "SalesforceLoader",
     "SitemapLoader",
+    "SnowflakeLoader",
     "WikipediaLoader",
     "ExcelLoader",
     "PowerPointLoader",
     "ParquetLoader",
+    "PubMedLoader",
     "SitemapLoader",
     "YouTubeLoader",
     # Parsers
@@ -426,6 +439,12 @@ __all__ = [
     "FunctionCallingAgent",
     "AgentExecutor",
     "AgentConfig",
+    "CronTrigger",
+    "TriggerResult",
+    "SimpleAgent",
+    "VoiceAgent",
+    "VoiceResult",
+    "agent",
     # Tool decorator
     "tool",
     # Multi-agent
@@ -458,6 +477,7 @@ __all__ = [
     "HTTPRequestTool",
     "HumanInputTool",
     "ImageAnalysisTool",
+    "ImageGenerationTool",
     "JiraTool",
     "JSONQueryTool",
     "LinearTool",
@@ -667,8 +687,10 @@ _LAZY_IMPORTS = {
     "BigQueryLoader": "loaders.bigquery",
     "S3Loader": "loaders.s3",
     "SalesforceLoader": "loaders.salesforce",
+    "SnowflakeLoader": "loaders.snowflake",
     "DropboxLoader": "loaders.dropbox",
     "ParquetLoader": "loaders.parquet",
+    "PubMedLoader": "loaders.pubmed",
     "RedisLoader": "loaders.redis_loader",
     "ElasticsearchLoader": "loaders.elasticsearch",
     "SitemapLoader": "loaders.sitemap",

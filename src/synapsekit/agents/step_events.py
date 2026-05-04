@@ -56,6 +56,22 @@ class ErrorEvent:
     type: str = "error"
 
 
+@dataclass
+class CostDowngradeEvent:
+    """Agent downgraded the model due to cost constraints."""
+
+    from_model: str
+    to_model: str
+    reason: str
+    type: str = "cost_downgrade"
+
+
 StepEvent = (
-    ThoughtEvent | ActionEvent | ObservationEvent | TokenEvent | FinalAnswerEvent | ErrorEvent
+    ThoughtEvent
+    | ActionEvent
+    | ObservationEvent
+    | TokenEvent
+    | FinalAnswerEvent
+    | ErrorEvent
+    | CostDowngradeEvent
 )

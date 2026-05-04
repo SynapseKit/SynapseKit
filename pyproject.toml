@@ -4,9 +4,9 @@ build-backend = "hatchling.build"
 
 [project]
 name = "synapsekit"
-version = "1.5.6"
+version = "1.6.0"
 description = "Async-native Python framework for building LLM applications — RAG pipelines, tool-using agents, and graph workflows. Streaming-first, transparent API, 2 hard deps."
-authors = [{ name = "Amit", email = "de.amit.nautiyal@gmail.com" }]
+authors = [{ name = "Amit.N", email = "research.amit.n@gmail.com" }]
 license = { text = "Apache-2.0" }
 readme = "README.md"
 requires-python = ">=3.10"
@@ -27,6 +27,9 @@ classifiers = [
 dependencies = [
     "numpy>=1.26",
     "rank-bm25>=0.2.2",
+    # Pin to patched versions for high-severity advisories
+    "pillow>=12.2.0",
+    "pyasn1>=0.6.3",
 ]
 
 [project.urls]
@@ -46,7 +49,7 @@ colbert = ["ragatouille"]
 pdf = ["pypdf>=4.0"]
 wikipedia = ["wikipedia-api>=0.6"]
 arxiv = ["arxiv>=2.0"]
-html = ["beautifulsoup4>=4.12", "lxml>=5.0"]
+html = ["beautifulsoup4>=4.12", "lxml>=6.1.0"]
 web = ["httpx>=0.27", "beautifulsoup4>=4.12"]
 chroma = ["chromadb>=0.5"]
 faiss = ["faiss-cpu>=1.7"]
@@ -56,6 +59,13 @@ weaviate = ["weaviate-client>=4.0"]
 milvus = ["pymilvus>=2.4"]
 lancedb = ["lancedb>=0.5"]
 sqlite-vec = ["sqlite-vec>=0.1"]
+cassandra = ["cassandra-driver>=3.28"]
+clickhouse = ["clickhouse-connect>=0.7"]
+duckdb-vector = ["duckdb>=0.10"]
+marqo = ["marqo>=3.0"]
+opensearch = ["opensearch-py>=2.0"]
+vespa = ["requests>=2.31"]
+replicate = ["replicate>=0.25"]
 ollama = ["ollama>=0.2"]
 lmstudio = ["openai>=1.0"]
 vllm = ["openai>=1.0"]
@@ -70,6 +80,10 @@ rss = ["feedparser>=6.0"]
 groq = ["groq>=0.9"]
 audio = ["openai>=1.0"]
 video = ["openai>=1.0"]
+voice = ["openai>=1.0"]
+voice-local = ["pyttsx3>=2.90", "faster-whisper>=1.0"]
+voice-stream = ["sounddevice>=0.4", "soundfile>=0.12"]
+cron = ["croniter>=2.0"]
 excel = ["openpyxl>=3.1"]
 pptx = ["python-pptx>=0.6"]
 docx = ["python-docx>=1.0"]
@@ -78,6 +92,8 @@ teams = ["httpx>=0.27"]
 http = ["aiohttp>=3.9"]
 search = ["duckduckgo-search>=6.0"]
 huggingface = ["huggingface-hub>=0.20"]
+transformers = ["transformers>=4.0"]
+tiktoken = ["tiktoken>=0.12"]
 google-search = ["google-search-results>=2.4"]
 tavily = ["tavily-python>=0.3"]
 youtube = ["youtube-search-python>=1.6"]
@@ -92,6 +108,8 @@ gpt4all = ["gpt4all>=2.0"]
 ernie = ["erniebot>=0.5"]
 minimax = ["httpx>=0.27"]
 serve = ["fastapi>=0.110", "uvicorn[standard]>=0.29"]
+graph-ui = ["fastapi>=0.110", "uvicorn[standard]>=0.29"]
+observe = []
 postgres = ["psycopg[binary]>=3.1", "asyncpg>=0.29"]
 pgvector = ["psycopg[binary]>=3.1", "pgvector>=0.2"]
 wolfram = ["wolframalpha>=5.0"]
@@ -100,11 +118,12 @@ discord = ["discord.py>=2.0"]
 gcs = ["google-cloud-storage>=2.0"]
 bigquery = ["google-cloud-bigquery>=3.0"]
 gdrive = ["google-api-python-client>=2.0", "google-auth>=2.0"]
-git = ["gitpython>=3.1"]
+git = ["gitpython>=3.1.47"]
 gsheets = ["google-api-python-client>=2.0", "google-auth>=2.0"]
 jira = ["httpx>=0.27"]
 hubspot = ["hubspot-api-client>=8.0"]
 sql = ["sqlalchemy>=2.0"]
+snowflake = ["snowflake-connector-python>=3.0"]
 mongodb = ["pymongo>=4.0"]
 mongodb-vector = ["pymongo>=4.0"]
 salesforce = ["simple-salesforce>=1.12"]
@@ -132,7 +151,7 @@ all = [
     "wikipedia-api>=0.6",
     "arxiv>=2.0",
     "beautifulsoup4>=4.12",
-    "lxml>=5.0",
+    "lxml>=6.1.0",
     "httpx>=0.27",
     "chromadb>=0.5",
     "faiss-cpu>=1.7",
@@ -164,6 +183,7 @@ all = [
     "psycopg[binary]>=3.1",
     "asyncpg>=0.29",
     "groq>=0.9",
+    "croniter>=2.0",
     "llama-cpp-python>=0.2",
     "erniebot>=0.5",
     "wolframalpha>=5.0",
@@ -172,16 +192,31 @@ all = [
     "google-auth>=2.0",
     "google-cloud-bigquery>=3.0",
     "feedparser>=6.0",
-    "gitpython>=3.1",
+    "gitpython>=3.1.47",
     "hubspot-api-client>=8.0",
     "supabase>=2.0",
     "pymongo>=4.0",
     "simple-salesforce>=1.12",
     "azure-storage-blob>=12.0",
     "elasticsearch>=8.0",
+    "snowflake-connector-python>=3.0",
     "pyairtable>=2.0",
     "playwright>=1.40",
     "youtube-transcript-api>=0.6",
+    "astrapy>=1.0",
+    "clickhouse-connect>=0.7",
+    "duckdb>=0.10",
+    "marqo>=3.0",
+    "opensearch-py>=2.0",
+    "requests>=2.31",
+    "replicate>=0.25",
+    "slack-sdk>=3.0",
+    "dropbox>=12.0",
+    "atlassian-python-api>=3.0",
+    "pyarrow>=14.0",
+    "striprtf>=0.0.26",
+    "ebooklib>=0.18",
+    "gpt4all>=2.0",
 ]
 
 [dependency-groups]
@@ -197,8 +232,9 @@ dev = [
     "pydantic>=2.12.5",
     "httpx>=0.27",
     "pyarrow>=23.0.1",
-    "lxml>=6.0.2",
+    "lxml>=6.1.0",
     "beautifulsoup4>=4.14.3",
+    "fastapi>=0.135.1",
 ]
 
 [tool.hatch.build.targets.wheel]
@@ -294,11 +330,23 @@ module = [
     "synapsekit.graph.streaming",
     "synapsekit._api",
     "synapsekit.observability.otel",
+    "synapsekit.loaders.zendesk",
+    "synapsekit.loaders.twitter",
+    "synapsekit.loaders.trello",
+    "synapsekit.loaders.intercom",
+    "synapsekit.loaders.freshdesk",
+    "synapsekit.loaders.hackernews",
+    "synapsekit.memory.readonly_shared_memory",
+    "synapsekit.retrieval.vespa",
+    "synapsekit.retrieval.raptor",
+    "synapsekit.retrieval.document_augmentation",
+    "synapsekit.retrieval.agentic_rag",
+    "synapsekit.llm.replicate",
 ]
 warn_return_any = false
 # from __future__ import annotations causes mypy to misinterpret
 # async generator return types as Coroutine[..., AsyncGenerator]
-disable_error_code = ["override", "operator", "arg-type", "misc", "attr-defined", "no-any-return"]
+disable_error_code = ["override", "operator", "arg-type", "misc", "attr-defined", "no-any-return", "import-untyped"]
 
 [tool.deptry]
 pep621_dev_dependency_groups = ["dev"]
@@ -327,9 +375,12 @@ simple-salesforce = "simple_salesforce"
 hubspot-api-client = "hubspot"
 azure-storage-blob = "azure"
 sqlite-vec = "sqlite_vec"
+snowflake-connector-python = "snowflake"
+"cassandra-driver" = "cassandra"
+"opensearch-py" = "opensearchpy"
 
 [tool.deptry.per_rule_ignores]
-DEP001 = ["sqlalchemy", "pydantic", "aiohttp", "opentelemetry", "whisper", "botocore", "aiomcache", "nest_asyncio", "huggingface_hub", "serpapi", "weaviate", "uvicorn", "starlette", "tomli"]
-DEP002 = ["numpy", "rank-bm25", "beautifulsoup4", "lxml", "faiss-cpu", "google-generativeai", "tavily-python", "youtube-search-python", "psycopg", "google-search-results", "discord.py", "google-auth", "weaviate-client", "pymilvus", "lancedb", "pgvector", "slack-sdk", "supabase", "pymongo", "azure-storage-blob", "elasticsearch"]
+DEP001 = ["sqlalchemy", "pydantic", "aiohttp", "opentelemetry", "whisper", "botocore", "aiomcache", "nest_asyncio", "huggingface_hub", "serpapi", "weaviate", "uvicorn", "starlette", "tomli", "pyttsx3", "faster_whisper", "sounddevice", "soundfile", "aiokafka", "typesense"]
+DEP002 = ["numpy", "rank-bm25", "beautifulsoup4", "lxml", "pillow", "pyasn1", "faiss-cpu", "google-generativeai", "tavily-python", "youtube-search-python", "psycopg", "google-search-results", "discord.py", "google-auth", "weaviate-client", "pymilvus", "lancedb", "pgvector", "slack-sdk", "supabase", "pymongo", "azure-storage-blob", "elasticsearch"]
 DEP003 = ["sqlalchemy", "botocore", "nest_asyncio", "opentelemetry", "starlette", "uvicorn"]
 DEP004 = ["pydantic"]

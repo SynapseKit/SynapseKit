@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "suites": [
+    {
+      "name": "community/customer-support",
+      "description": "Ticket resolution, tone, escalation",
+      "baseline_score": 0.74,
+      "cases": 20,
+      "path": "suites/community_customer_support.json"
+    },
+    {
+      "name": "community/code-generation",
+      "description": "Python, JS, SQL correctness",
+      "baseline_score": 0.71,
+      "cases": 30,
+      "path": "suites/community_code_generation.json"
+    },
+    {
+      "name": "community/rag-general",
+      "description": "Faithfulness, relevancy, groundedness",
+      "baseline_score": 0.76,
+      "cases": 25,
+      "path": "suites/community_rag_general.json"
+    },
+    {
+      "name": "community/summarization",
+      "description": "ROUGE-like, length, coverage",
+      "baseline_score": 0.73,
+      "cases": 15,
+      "path": "suites/community_summarization.json"
+    },
+    {
+      "name": "community/qa-hotpotqa",
+      "description": "Multi-hop Q&A from HotpotQA-style tasks",
+      "baseline_score": 0.69,
+      "cases": 50,
+      "path": "suites/community_qa_hotpotqa.json"
+    }
+  ]
+}

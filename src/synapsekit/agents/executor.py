@@ -84,6 +84,11 @@ class AgentExecutor:
         async for token in self._agent.stream(query):
             yield token
 
+    async def stream_steps(self, query: str) -> AsyncGenerator:
+        """Async: stream step-by-step events including thoughts and actions."""
+        async for event in self._agent.stream_steps(query):
+            yield event
+
     def run_sync(self, query: str) -> str:
         """Sync: run agent (for scripts / notebooks)."""
         return run_sync(self.run(query))

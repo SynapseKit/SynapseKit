@@ -10,10 +10,13 @@ from .buffer import BufferMemory
 from .conversation import ConversationMemory
 from .entity import EntityMemory
 from .hybrid import HybridMemory
+from .knowledge_graph_memory import KnowledgeGraphMemory
+from .readonly_shared_memory import ReadOnlySharedMemory
 from .redis import RedisConversationMemory
 from .sqlite import SQLiteConversationMemory
 from .summary_buffer import SummaryBufferMemory
 from .token_buffer import TokenBufferMemory
+from .vector_memory import VectorConversationMemory
 
 __all__ = [
     "AgentMemory",
@@ -27,8 +30,11 @@ __all__ = [
     "ConversationMemory",
     "EntityMemory",
     "HybridMemory",
+    "KnowledgeGraphMemory",
+    "ReadOnlySharedMemory",
     "RedisConversationMemory",
     "SQLiteConversationMemory",
     "SummaryBufferMemory",
     "TokenBufferMemory",
+    "VectorConversationMemory",
 ]

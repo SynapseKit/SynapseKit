@@ -1,0 +1,82 @@
+{
+  "name": "community/summarization",
+  "description": "ROUGE-like, length, coverage",
+  "baseline_score": 0.73,
+  "cases": [
+    {
+      "id": "sum-001",
+      "input": "Summarization case 1: provide the best possible response for this scenario.",
+      "ideal": "A high-quality summarization response that is accurate, concise, and follows best practices for case 1."
+    },
+    {
+      "id": "sum-002",
+      "input": "Summarization case 2: provide the best possible response for this scenario.",
+      "ideal": "A high-quality summarization response that is accurate, concise, and follows best practices for case 2."
+    },
+    {
+      "id": "sum-003",
+      "input": "Summarization case 3: provide the best possible response for this scenario.",
+      "ideal": "A high-quality summarization response that is accurate, concise, and follows best practices for case 3."
+    },
+    {
+      "id": "sum-004",
+      "input": "Summarization case 4: provide the best possible response for this scenario.",
+      "ideal": "A high-quality summarization response that is accurate, concise, and follows best practices for case 4."
+    },
+    {
+      "id": "sum-005",
+      "input": "Summarization case 5: provide the best possible response for this scenario.",
+      "ideal": "A high-quality summarization response that is accurate, concise, and follows best practices for case 5."
+    },
+    {
+      "id": "sum-006",
+      "input": "Summarization case 6: provide the best possible response for this scenario.",
+      "ideal": "A high-quality summarization response that is accurate, concise, and follows best practices for case 6."
+    },
+    {
+      "id": "sum-007",
+      "input": "Summarization case 7: provide the best possible response for this scenario.",
+      "ideal": "A high-quality summarization response that is accurate, concise, and follows best practices for case 7."
+    },
+    {
+      "id": "sum-008",
+      "input": "Summarization case 8: provide the best possible response for this scenario.",
+      "ideal": "A high-quality summarization response that is accurate, concise, and follows best practices for case 8."
+    },
+    {
+      "id": "sum-009",
+      "input": "Summarization case 9: provide the best possible response for this scenario.",
+      "ideal": "A high-quality summarization response that is accurate, concise, and follows best practices for case 9."
+    },
+    {
+      "id": "sum-010",
+      "input": "Summarization case 10: provide the best possible response for this scenario.",
+      "ideal": "A high-quality summarization response that is accurate, concise, and follows best practices for case 10."
+    },
+    {
+      "id": "sum-011",
+      "input": "Summarization case 11: provide the best possible response for this scenario.",
+      "ideal": "A high-quality summarization response that is accurate, concise, and follows best practices for case 11."
+    },
+    {
+      "id": "sum-012",
+      "input": "Summarization case 12: provide the best possible response for this scenario.",
+      "ideal": "A high-quality summarization response that is accurate, concise, and follows best practices for case 12."
+    },
+    {
+      "id": "sum-013",
+      "input": "Summarization case 13: provide the best possible response for this scenario.",
+      "ideal": "A high-quality summarization response that is accurate, concise, and follows best practices for case 13."
+    },
+    {
+      "id": "sum-014",
+      "input": "Summarization case 14: provide the best possible response for this scenario.",
+      "ideal": "A high-quality summarization response that is accurate, concise, and follows best practices for case 14."
+    },
+    {
+      "id": "sum-015",
+      "input": "Summarization case 15: provide the best possible response for this scenario.",
+      "ideal": "A high-quality summarization response that is accurate, concise, and follows best practices for case 15."
+    }
+  ]
+}

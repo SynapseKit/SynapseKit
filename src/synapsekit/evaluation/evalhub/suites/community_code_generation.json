@@ -1,0 +1,157 @@
+{
+  "name": "community/code-generation",
+  "description": "Python, JS, SQL correctness",
+  "baseline_score": 0.71,
+  "cases": [
+    {
+      "id": "cg-001",
+      "input": "Code Generation case 1: provide the best possible response for this scenario.",
+      "ideal": "A high-quality code generation response that is accurate, concise, and follows best practices for case 1."
+    },
+    {
+      "id": "cg-002",
+      "input": "Code Generation case 2: provide the best possible response for this scenario.",
+      "ideal": "A high-quality code generation response that is accurate, concise, and follows best practices for case 2."
+    },
+    {
+      "id": "cg-003",
+      "input": "Code Generation case 3: provide the best possible response for this scenario.",
+      "ideal": "A high-quality code generation response that is accurate, concise, and follows best practices for case 3."
+    },
+    {
+      "id": "cg-004",
+      "input": "Code Generation case 4: provide the best possible response for this scenario.",
+      "ideal": "A high-quality code generation response that is accurate, concise, and follows best practices for case 4."
+    },
+    {
+      "id": "cg-005",
+      "input": "Code Generation case 5: provide the best possible response for this scenario.",
+      "ideal": "A high-quality code generation response that is accurate, concise, and follows best practices for case 5."
+    },
+    {
+      "id": "cg-006",
+      "input": "Code Generation case 6: provide the best possible response for this scenario.",
+      "ideal": "A high-quality code generation response that is accurate, concise, and follows best practices for case 6."
+    },
+    {
+      "id": "cg-007",
+      "input": "Code Generation case 7: provide the best possible response for this scenario.",
+      "ideal": "A high-quality code generation response that is accurate, concise, and follows best practices for case 7."
+    },
+    {
+      "id": "cg-008",
+      "input": "Code Generation case 8: provide the best possible response for this scenario.",
+      "ideal": "A high-quality code generation response that is accurate, concise, and follows best practices for case 8."
+    },
+    {
+      "id": "cg-009",
+      "input": "Code Generation case 9: provide the best possible response for this scenario.",
+      "ideal": "A high-quality code generation response that is accurate, concise, and follows best practices for case 9."
+    },
+    {
+      "id": "cg-010",
+      "input": "Code Generation case 10: provide the best possible response for this scenario.",
+      "ideal": "A high-quality code generation response that is accurate, concise, and follows best practices for case 10."
+    },
+    {
+      "id": "cg-011",
+      "input": "Code Generation case 11: provide the best possible response for this scenario.",
+      "ideal": "A high-quality code generation response that is accurate, concise, and follows best practices for case 11."
+    },
+    {
+      "id": "cg-012",
+      "input": "Code Generation case 12: provide the best possible response for this scenario.",
+      "ideal": "A high-quality code generation response that is accurate, concise, and follows best practices for case 12."
+    },
+    {
+      "id": "cg-013",
+      "input": "Code Generation case 13: provide the best possible response for this scenario.",
+      "ideal": "A high-quality code generation response that is accurate, concise, and follows best practices for case 13."
+    },
+    {
+      "id": "cg-014",
+      "input": "Code Generation case 14: provide the best possible response for this scenario.",
+      "ideal": "A high-quality code generation response that is accurate, concise, and follows best practices for case 14."
+    },
+    {
+      "id": "cg-015",
+      "input": "Code Generation case 15: provide the best possible response for this scenario.",
+      "ideal": "A high-quality code generation response that is accurate, concise, and follows best practices for case 15."
+    },
+    {
+      "id": "cg-016",
+      "input": "Code Generation case 16: provide the best possible response for this scenario.",
+      "ideal": "A high-quality code generation response that is accurate, concise, and follows best practices for case 16."
+    },
+    {
+      "id": "cg-017",
+      "input": "Code Generation case 17: provide the best possible response for this scenario.",
+      "ideal": "A high-quality code generation response that is accurate, concise, and follows best practices for case 17."
+    },
+    {
+      "id": "cg-018",
+      "input": "Code Generation case 18: provide the best possible response for this scenario.",
+      "ideal": "A high-quality code generation response that is accurate, concise, and follows best practices for case 18."
+    },
+    {
+      "id": "cg-019",
+      "input": "Code Generation case 19: provide the best possible response for this scenario.",
+      "ideal": "A high-quality code generation response that is accurate, concise, and follows best practices for case 19."
+    },
+    {
+      "id": "cg-020",
+      "input": "Code Generation case 20: provide the best possible response for this scenario.",
+      "ideal": "A high-quality code generation response that is accurate, concise, and follows best practices for case 20."
+    },
+    {
+      "id": "cg-021",
+      "input": "Code Generation case 21: provide the best possible response for this scenario.",
+      "ideal": "A high-quality code generation response that is accurate, concise, and follows best practices for case 21."
+    },
+    {
+      "id": "cg-022",
+      "input": "Code Generation case 22: provide the best possible response for this scenario.",
+      "ideal": "A high-quality code generation response that is accurate, concise, and follows best practices for case 22."
+    },
+    {
+      "id": "cg-023",
+      "input": "Code Generation case 23: provide the best possible response for this scenario.",
+      "ideal": "A high-quality code generation response that is accurate, concise, and follows best practices for case 23."
+    },
+    {
+      "id": "cg-024",
+      "input": "Code Generation case 24: provide the best possible response for this scenario.",
+      "ideal": "A high-quality code generation response that is accurate, concise, and follows best practices for case 24."
+    },
+    {
+      "id": "cg-025",
+      "input": "Code Generation case 25: provide the best possible response for this scenario.",
+      "ideal": "A high-quality code generation response that is accurate, concise, and follows best practices for case 25."
+    },
+    {
+      "id": "cg-026",
+      "input": "Code Generation case 26: provide the best possible response for this scenario.",
+      "ideal": "A high-quality code generation response that is accurate, concise, and follows best practices for case 26."
+    },
+    {
+      "id": "cg-027",
+      "input": "Code Generation case 27: provide the best possible response for this scenario.",
+      "ideal": "A high-quality code generation response that is accurate, concise, and follows best practices for case 27."
+    },
+    {
+      "id": "cg-028",
+      "input": "Code Generation case 28: provide the best possible response for this scenario.",
+      "ideal": "A high-quality code generation response that is accurate, concise, and follows best practices for case 28."
+    },
+    {
+      "id": "cg-029",
+      "input": "Code Generation case 29: provide the best possible response for this scenario.",
+      "ideal": "A high-quality code generation response that is accurate, concise, and follows best practices for case 29."
+    },
+    {
+      "id": "cg-030",
+      "input": "Code Generation case 30: provide the best possible response for this scenario.",
+      "ideal": "A high-quality code generation response that is accurate, concise, and follows best practices for case 30."
+    }
+  ]
+}

@@ -1,0 +1,107 @@
+{
+  "name": "community/customer-support",
+  "description": "Ticket resolution, tone, escalation",
+  "baseline_score": 0.74,
+  "cases": [
+    {
+      "id": "cs-001",
+      "input": "Customer Support case 1: provide the best possible response for this scenario.",
+      "ideal": "A high-quality customer support response that is accurate, concise, and follows best practices for case 1."
+    },
+    {
+      "id": "cs-002",
+      "input": "Customer Support case 2: provide the best possible response for this scenario.",
+      "ideal": "A high-quality customer support response that is accurate, concise, and follows best practices for case 2."
+    },
+    {
+      "id": "cs-003",
+      "input": "Customer Support case 3: provide the best possible response for this scenario.",
+      "ideal": "A high-quality customer support response that is accurate, concise, and follows best practices for case 3."
+    },
+    {
+      "id": "cs-004",
+      "input": "Customer Support case 4: provide the best possible response for this scenario.",
+      "ideal": "A high-quality customer support response that is accurate, concise, and follows best practices for case 4."
+    },
+    {
+      "id": "cs-005",
+      "input": "Customer Support case 5: provide the best possible response for this scenario.",
+      "ideal": "A high-quality customer support response that is accurate, concise, and follows best practices for case 5."
+    },
+    {
+      "id": "cs-006",
+      "input": "Customer Support case 6: provide the best possible response for this scenario.",
+      "ideal": "A high-quality customer support response that is accurate, concise, and follows best practices for case 6."
+    },
+    {
+      "id": "cs-007",
+      "input": "Customer Support case 7: provide the best possible response for this scenario.",
+      "ideal": "A high-quality customer support response that is accurate, concise, and follows best practices for case 7."
+    },
+    {
+      "id": "cs-008",
+      "input": "Customer Support case 8: provide the best possible response for this scenario.",
+      "ideal": "A high-quality customer support response that is accurate, concise, and follows best practices for case 8."
+    },
+    {
+      "id": "cs-009",
+      "input": "Customer Support case 9: provide the best possible response for this scenario.",
+      "ideal": "A high-quality customer support response that is accurate, concise, and follows best practices for case 9."
+    },
+    {
+      "id": "cs-010",
+      "input": "Customer Support case 10: provide the best possible response for this scenario.",
+      "ideal": "A high-quality customer support response that is accurate, concise, and follows best practices for case 10."
+    },
+    {
+      "id": "cs-011",
+      "input": "Customer Support case 11: provide the best possible response for this scenario.",
+      "ideal": "A high-quality customer support response that is accurate, concise, and follows best practices for case 11."
+    },
+    {
+      "id": "cs-012",
+      "input": "Customer Support case 12: provide the best possible response for this scenario.",
+      "ideal": "A high-quality customer support response that is accurate, concise, and follows best practices for case 12."
+    },
+    {
+      "id": "cs-013",
+      "input": "Customer Support case 13: provide the best possible response for this scenario.",
+      "ideal": "A high-quality customer support response that is accurate, concise, and follows best practices for case 13."
+    },
+    {
+      "id": "cs-014",
+      "input": "Customer Support case 14: provide the best possible response for this scenario.",
+      "ideal": "A high-quality customer support response that is accurate, concise, and follows best practices for case 14."
+    },
+    {
+      "id": "cs-015",
+      "input": "Customer Support case 15: provide the best possible response for this scenario.",
+      "ideal": "A high-quality customer support response that is accurate, concise, and follows best practices for case 15."
+    },
+    {
+      "id": "cs-016",
+      "input": "Customer Support case 16: provide the best possible response for this scenario.",
+      "ideal": "A high-quality customer support response that is accurate, concise, and follows best practices for case 16."
+    },
+    {
+      "id": "cs-017",
+      "input": "Customer Support case 17: provide the best possible response for this scenario.",
+      "ideal": "A high-quality customer support response that is accurate, concise, and follows best practices for case 17."
+    },
+    {
+      "id": "cs-018",
+      "input": "Customer Support case 18: provide the best possible response for this scenario.",
+      "ideal": "A high-quality customer support response that is accurate, concise, and follows best practices for case 18."
+    },
+    {
+      "id": "cs-019",
+      "input": "Customer Support case 19: provide the best possible response for this scenario.",
+      "ideal": "A high-quality customer support response that is accurate, concise, and follows best practices for case 19."
+    },
+    {
+      "id": "cs-020",
+      "input": "Customer Support case 20: provide the best possible response for this scenario.",
+      "ideal": "A high-quality customer support response that is accurate, concise, and follows best practices for case 20."
+    }
+  ]
+}

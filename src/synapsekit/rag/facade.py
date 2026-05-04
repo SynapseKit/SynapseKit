@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import mimetypes
 from collections.abc import AsyncGenerator
+from contextlib import suppress
 from pathlib import Path
+from typing import Any
 
 from .._compat import run_sync
 from ..embeddings.backend import SynapsekitEmbeddings
-from ..llm.base import BaseLLM, LLMConfig
+from ..llm._factory import make_llm
 from ..loaders.base import Document
 from ..memory.conversation import ConversationMemory
 from ..observability.tracer import TokenTracer
@@ -28,171 +31,7 @@ IMAGE_EXTENSIONS = {
     ".heif",
     ".svg",
 }
-
-
-def _make_llm(
-    model: str,
-    api_key: str,
-    provider: str | None,
-    system_prompt: str,
-    temperature: float,
-    max_tokens: int,
-) -> BaseLLM:
-    """Auto-detect provider from model name, or use explicit provider."""
-    if provider is None:
-        if model.startswith("claude"):
-            provider = "anthropic"
-        elif model.startswith("gemini"):
-            provider = "gemini"
-        elif model.startswith("command"):
-            provider = "cohere"
-        elif model.startswith("mistral") or model.startswith("open-mistral"):
-            provider = "mistral"
-        elif model.startswith("deepseek"):
-            provider = "deepseek"
-        elif model.startswith("moonshot"):
-            provider = "moonshot"
-        elif model.startswith("abab") or model.startswith("minimax"):
-            provider = "minimax"
-        elif model.startswith("glm"):
-            provider = "zhipu"
-        elif model.startswith("jamba"):
-            provider = "ai21"
-        elif model.startswith("luminous") or model.startswith("pharia"):
-            provider = "aleph-alpha"
-        elif model.startswith("@cf/") or model.startswith("@hf/"):
-            provider = "cloudflare"
-        elif model.startswith("dbrx") or model.startswith("databricks"):
-            provider = "databricks"
-        elif model.startswith("ernie"):
-            provider = "ernie"
-        elif model.startswith("sambanova"):
-            provider = "sambanova"
-        elif model.startswith("llama") or model.startswith("mixtral") or model.startswith("gemma"):
-            provider = "groq"
-        elif "/" in model:
-            # Slash in model name suggests OpenRouter (e.g. "openai/gpt-4o")
-            provider = "openrouter"
-        else:
-            provider = "openai"
-
-    config = LLMConfig(
-        model=model,
-        api_key=api_key,
-        provider=provider,
-        system_prompt=system_prompt,
-        temperature=temperature,
-        max_tokens=max_tokens,
-    )
-
-    if provider == "openai":
-        from ..llm.openai import OpenAILLM
-
-        return OpenAILLM(config)
-    elif provider == "anthropic":
-        from ..llm.anthropic import AnthropicLLM
-
-        return AnthropicLLM(config)
-    elif provider == "ollama":
-        from ..llm.ollama import OllamaLLM
-
-        return OllamaLLM(config)
-    elif provider == "ai21":
-        from ..llm.ai21 import AI21LLM
-
-        return AI21LLM(config)
-    elif provider == "cohere":
-        from ..llm.cohere import CohereLLM
-
-        return CohereLLM(config)
-    elif provider == "mistral":
-        from ..llm.mistral import MistralLLM
-
-        return MistralLLM(config)
-    elif provider == "gemini":
-        from ..llm.gemini import GeminiLLM
-
-        return GeminiLLM(config)
-    elif provider == "bedrock":
-        from ..llm.bedrock import BedrockLLM
-
-        return BedrockLLM(config)
-    elif provider == "groq":
-        from ..llm.groq import GroqLLM
-
-        return GroqLLM(config)
-    elif provider == "deepseek":
-        from ..llm.deepseek import DeepSeekLLM
-
-        return DeepSeekLLM(config)
-    elif provider == "openrouter":
-        from ..llm.openrouter import OpenRouterLLM
-
-        return OpenRouterLLM(config)
-    elif provider == "together":
-        from ..llm.together import TogetherLLM
-
-        return TogetherLLM(config)
-    elif provider == "fireworks":
-        from ..llm.fireworks import FireworksLLM
-
-        return FireworksLLM(config)
-    elif provider == "moonshot":
-        from ..llm.moonshot import MoonshotLLM
-
-        return MoonshotLLM(config)
-    elif provider == "minimax":
-        from ..llm.minimax import MinimaxLLM
-
-        return MinimaxLLM(config)
-    elif provider == "zhipu":
-        from ..llm.zhipu import ZhipuLLM
-
-        return ZhipuLLM(config)
-    elif provider == "cloudflare":
-        import os
-
-        from ..llm.cloudflare import CloudflareLLM
-
-        return CloudflareLLM(config, account_id=os.environ.get("CLOUDFLARE_ACCOUNT_ID"))
-    elif provider == "databricks":
-        import os
-
-        from ..llm.databricks import DatabricksLLM
-
-        return DatabricksLLM(config, workspace_url=os.environ.get("DATABRICKS_HOST"))
-    elif provider == "ernie":
-        from ..llm.ernie import ErnieLLM
-
-        return ErnieLLM(config)
-    elif provider == "sambanova":
-        from ..llm.sambanova import SambaNovaLLM
-
-        return SambaNovaLLM(config)
-    elif provider == "aleph-alpha":
-        from ..llm.aleph_alpha import AlephAlphaLLM
-
-        return AlephAlphaLLM(config)
-    elif provider == "llamacpp":
-        from ..llm.llamacpp import LlamaCppLLM
-
-        return LlamaCppLLM(config, model_path=config.model)
-    elif provider == "vllm":
-        from ..llm.vllm import VLLMLLM
-
-        return VLLMLLM(config)
-    elif provider == "gpt4all":
-        from ..llm.gpt4all import GPT4AllLLM
-
-        return GPT4AllLLM(config)
-    else:
-        raise ValueError(
-            f"Unknown provider: {provider!r}. "
-            "Use 'openai', 'anthropic', 'ollama', 'ai21', 'cohere', 'mistral', 'gemini', "
-            "'bedrock', 'groq', 'deepseek', 'openrouter', 'together', 'fireworks', "
-            "'moonshot', 'minimax', 'zhipu', 'cloudflare', 'databricks', 'ernie', 'sambanova', "
-            "'aleph-alpha', 'llamacpp', 'vllm', or 'gpt4all'."
-        )
+PDF_EXTENSIONS = {".pdf"}
 
 
 class RAG:
@@ -220,8 +59,9 @@ class RAG:
         max_tokens: int = 1024,
         trace: bool = True,
         auto_eval: bool = False,
+        context_packer: Any | None = None,
     ) -> None:
-        llm = _make_llm(model, api_key, provider, system_prompt, temperature, max_tokens)
+        llm = make_llm(model, api_key, provider, system_prompt, temperature, max_tokens)
         embeddings = SynapsekitEmbeddings(model=embedding_model)
         vectorstore = InMemoryVectorStore(embeddings)
         retriever = Retriever(vectorstore, rerank=rerank)
@@ -237,6 +77,7 @@ class RAG:
                 retrieval_top_k=retrieval_top_k,
                 system_prompt=system_prompt,
                 auto_eval=auto_eval,
+                context_packer=context_packer,
             )
         )
         self._embeddings = embeddings
@@ -279,13 +120,18 @@ class RAG:
         from ..loaders.audio import SUPPORTED_EXTENSIONS as AUDIO_EXTENSIONS
         from ..loaders.audio import AudioLoader
         from ..loaders.image import ImageLoader
+        from ..loaders.pdf import PDFLoader
         from ..loaders.video import SUPPORTED_EXTENSIONS as VIDEO_EXTENSIONS
         from ..loaders.video import VideoLoader
 
-        suffix = path.suffix.lower()
+        media_kind = self._detect_media_kind(
+            path,
+            audio_extensions=AUDIO_EXTENSIONS,
+            video_extensions=VIDEO_EXTENSIONS,
+        )
         llm = self._pipeline.config.llm
 
-        if suffix in IMAGE_EXTENSIONS:
+        if media_kind == "image":
             prompt = kwargs.get("caption") or kwargs.get("prompt")
             image_loader = ImageLoader(
                 path=path,
@@ -293,7 +139,7 @@ class RAG:
                 prompt=prompt or "Describe this image in detail for retrieval.",
             )
             docs = await image_loader.aload()
-        elif suffix in AUDIO_EXTENSIONS:
+        elif media_kind == "audio":
             audio_loader = AudioLoader(
                 path=str(path),
                 api_key=kwargs.get("audio_api_key", llm.config.api_key),
@@ -302,7 +148,7 @@ class RAG:
                 model=kwargs.get("audio_model", "whisper-1"),
             )
             docs = await audio_loader.aload()
-        elif suffix in VIDEO_EXTENSIONS:
+        elif media_kind == "video":
             video_loader = VideoLoader(
                 path=str(path),
                 api_key=kwargs.get("audio_api_key", llm.config.api_key),
@@ -318,13 +164,121 @@ class RAG:
                 keep_frames=bool(kwargs.get("keep_frames", False)),
             )
             docs = await video_loader.aload()
+        elif media_kind == "pdf":
+            pdf_loader = PDFLoader(path=str(path))
+            docs = await pdf_loader.aload()
         else:
             return None
 
-        if metadata:
-            for doc in docs:
-                doc.metadata = {**doc.metadata, **metadata}
+        for doc in docs:
+            merged_metadata = {**doc.metadata, **(metadata or {})}
+            doc.metadata = self._normalize_document_metadata(
+                path=path,
+                source_type=media_kind,
+                metadata=merged_metadata,
+            )
         return docs
+
+    @staticmethod
+    def _detect_media_kind(
+        path: Path,
+        *,
+        audio_extensions: set[str],
+        video_extensions: set[str],
+    ) -> str | None:
+        suffix = path.suffix.lower()
+        mime_type, _ = mimetypes.guess_type(str(path))
+
+        if mime_type:
+            if mime_type.startswith("image/"):
+                return "image"
+            if mime_type.startswith("audio/"):
+                return "audio"
+            if mime_type.startswith("video/"):
+                return "video"
+            if mime_type == "application/pdf":
+                return "pdf"
+
+        if suffix in IMAGE_EXTENSIONS:
+            return "image"
+        if suffix in PDF_EXTENSIONS:
+            return "pdf"
+        if suffix in audio_extensions:
+            return "audio"
+        if suffix in video_extensions:
+            return "video"
+        return None
+
+    @staticmethod
+    def _normalize_document_metadata(
+        path: Path, source_type: str, metadata: dict[str, Any]
+    ) -> dict[str, Any]:
+        normalized = dict(metadata)
+        mime_type, _ = mimetypes.guess_type(str(path))
+
+        normalized.setdefault("source", str(path))
+        normalized.setdefault("file", str(path))
+        normalized.setdefault("source_type", source_type)
+        if mime_type:
+            normalized.setdefault("media_type", mime_type)
+        normalized.setdefault("chunk_type", RAG._default_chunk_type(source_type))
+
+        if normalized.get("page") is not None:
+            with suppress(TypeError, ValueError):
+                normalized["page"] = int(normalized["page"])
+
+        if normalized.get("locator") is None:
+            normalized["locator"] = RAG._build_locator(path, normalized)
+        return normalized
+
+    @staticmethod
+    def _default_chunk_type(source_type: str) -> str:
+        return {
+            "audio": "transcript",
+            "image": "image_caption",
+            "pdf": "page",
+            "video": "transcript",
+        }.get(source_type, "text")
+
+    @staticmethod
+    def _build_locator(path: Path, metadata: dict[str, Any]) -> str | None:
+        page = metadata.get("page")
+        if page is not None:
+            return f"{path.name} page {page}"
+
+        start_time = RAG._to_float(metadata.get("start_time"))
+        end_time = RAG._to_float(metadata.get("end_time"))
+        timestamp = RAG._to_float(metadata.get("timestamp"))
+        if start_time is not None:
+            if end_time is not None and end_time != start_time:
+                return f"{RAG._format_seconds(start_time)}-{RAG._format_seconds(end_time)}"
+            return RAG._format_seconds(start_time)
+        if timestamp is not None:
+            return RAG._format_seconds(timestamp)
+
+        frame_index = metadata.get("frame_index")
+        if frame_index is not None:
+            return f"{path.name} frame {frame_index}"
+
+        return path.name
+
+    @staticmethod
+    def _to_float(value: Any) -> float | None:
+        if value is None:
+            return None
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return None
+
+    @staticmethod
+    def _format_seconds(value: float) -> str:
+        total_seconds = max(0, int(value))
+        hours, rem = divmod(total_seconds, 3600)
+        minutes, seconds = divmod(rem, 60)
+        if hours:
+            return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+        return f"{minutes:02d}:{seconds:02d}"
 
     # ------------------------------------------------------------------ #
     # Querying

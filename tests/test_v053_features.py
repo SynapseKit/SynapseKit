@@ -107,7 +107,6 @@ class TestDeepSeekLLM:
 
 class TestRAGFacadeProviders:
     def test_auto_detect_deepseek(self):
-
         # Should not crash (will fail on import since deepseek uses openai SDK)
         # Just test that the detection logic picks the right provider
 
