@@ -8,6 +8,7 @@ from .crag import CRAGRetriever
 from .cross_encoder import CrossEncoderReranker
 from .document_augmentation import DocumentAugmentationRetriever
 from .ensemble import EnsembleRetriever
+from .federated import FederatedRetriever
 from .flare import FLARERetriever
 from .full_context import FullContextRetriever
 from .graphrag import GraphRAGRetriever, KnowledgeGraph
@@ -45,6 +46,7 @@ __all__ = [
     "DuckDBVectorStore",
     "ElasticsearchVectorStore",
     "EnsembleRetriever",
+    "FederatedRetriever",
     "FAISSVectorStore",
     "FLARERetriever",
     "FullContextRetriever",

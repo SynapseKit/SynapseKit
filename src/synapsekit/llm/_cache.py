@@ -13,7 +13,7 @@ except ImportError:
 try:
     from xxhash import xxh3_128_hexdigest as _xxh3_hex
 except ImportError:
-    _xxh3_hex = None
+    _xxh3_hex = None  # type: ignore[assignment]
 
 
 class AsyncLRUCache:
@@ -39,7 +39,7 @@ class AsyncLRUCache:
         Uses Rust BLAKE3 → xxhash → sha256 fallback chain (fastest available).
         """
         if _rust_cache_key is not None:
-            return _rust_cache_key(model, prompt_or_messages, temperature, max_tokens)
+            return _rust_cache_key(model, prompt_or_messages, temperature, max_tokens)  # type: ignore[no-any-return]
         payload = _json_dumps_bytes(
             {
                 "model": model,
@@ -49,7 +49,7 @@ class AsyncLRUCache:
             },
         )
         if _xxh3_hex is not None:
-            return _xxh3_hex(payload)
+            return _xxh3_hex(payload)  # type: ignore[no-any-return]
         import hashlib
 
         return hashlib.sha256(payload).hexdigest()

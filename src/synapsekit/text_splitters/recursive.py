@@ -30,7 +30,7 @@ class RecursiveCharacterTextSplitter(BaseSplitter):
 
     def split(self, text: str) -> list[str]:
         if _rust_split is not None:
-            return _rust_split(text, self.chunk_size, self.chunk_overlap, self.separators)
+            return _rust_split(text, self.chunk_size, self.chunk_overlap, self.separators)  # type: ignore[no-any-return]
         text = text.strip()
         if not text:
             return []

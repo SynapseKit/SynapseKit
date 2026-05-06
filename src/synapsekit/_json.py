@@ -8,10 +8,10 @@ try:
     import orjson
 
     def dumps(obj: Any) -> str:
-        return orjson.dumps(obj).decode()
+        return orjson.dumps(obj).decode()  # type: ignore[no-any-return]
 
     def dumps_bytes(obj: Any) -> bytes:
-        return orjson.dumps(obj)
+        return orjson.dumps(obj)  # type: ignore[no-any-return]
 
     def loads(s: str | bytes) -> Any:
         return orjson.loads(s)

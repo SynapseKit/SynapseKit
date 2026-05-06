@@ -152,8 +152,8 @@ class TestFastCacheKey:
     def test_matches_python_xxhash(self):
         """Rust cache key must match Python xxhash path."""
         pytest.importorskip("xxhash")
-        from synapsekit.llm._cache import AsyncLRUCache
         import synapsekit.llm._cache as mod
+        from synapsekit.llm._cache import AsyncLRUCache
 
         # Force Python path
         old_rust = mod._rust_cache_key
