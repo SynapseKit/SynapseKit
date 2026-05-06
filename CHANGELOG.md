@@ -9,6 +9,18 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Performance
+
+- **`orjson` fast JSON serialization** — `_json.py` wrapper tries `orjson`, falls back to stdlib `json`; wired into all hot paths: LLM cache key generation, filesystem cache read/write, vector store save/load, all graph checkpointers (SQLite, JSON file, Redis, Postgres), and JSON output parser
+- **`uvloop` fast event loop** — `_loop.py` installs `uvloop` if available; called at module load (`_compat.py`) and CLI entry (`cli/main.py`)
+- **`xxhash` fast cache key hashing** — cache key generation uses Rust BLAKE3 → xxhash → sha256 fallback chain (5-10x faster than sha256-only); `dumps_bytes()` avoids redundant encode step
+- **Pre-allocated vector buffer** — `InMemoryVectorStore` uses a doubling buffer strategy instead of `np.vstack` on every consolidation, eliminating O(n) array copies per search
+- **Vectorised MMR** — `search_mmr()` greedy selection loop fully vectorised with numpy masked arrays; replaces Python-level inner `for` loop with single `np.argmax` + `np.maximum` per selection round
+- **`__slots__`** on hot classes — `AsyncLRUCache`, `FilesystemLLMCache`, `RecursiveCharacterTextSplitter`, `CharacterTextSplitter`, `JSONParser` (~30% less per-instance memory)
+- **Lazy imports in `_compat.py`** — `asyncio` and `collections.abc` imported inside `run_sync()` instead of at module level for faster import time
+- **`performance` optional extra** — `pip install synapsekit[performance]` installs `orjson`, `uvloop` (non-Windows), and `xxhash`
+- **Rust extension module** (`_rust/`) — optional PyO3 crate with text chunking (`recursive_split`, `character_split` with recursive sub-splitting and UTF-8 char boundary safety), cache key hashing (`fast_cache_key` using canonical JSON via `_json.dumps_bytes` + xxh3_128 — keys match Python xxhash path exactly), and batch metadata serialization (`serialize_metadata_list`/`deserialize_metadata_list` via native serde_json ↔ Python object conversion); pure-Python fallback for all functions; 15 Rust unit tests + 11 Python parity tests; build with `maturin develop`
+
 ### Added
 
 - **`SelfHealingRAG`** — retry-on-low-faithfulness RAG wrapper; cycles through a list of `RetrievalStrategy` implementations until the `FaithfulnessMetric` score meets `quality_threshold`; exposes `last_report` (`SelfHealingReport`) with attempt count, retry count, per-attempt scores, and winning strategy name; `ask_sync()` for synchronous callers; `max_retries` bounds total attempts; gracefully falls back to best answer when all strategies are exhausted

@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-import json
 import os
 from typing import Any
 
+from ..._json import dumps as _json_dumps
+from ..._json import loads as _json_loads
 from .base import BaseCheckpointer
 
 
@@ -24,14 +25,14 @@ class JSONFileCheckpointer(BaseCheckpointer):
     def save(self, graph_id: str, step: int, state: dict[str, Any]) -> None:
         path = self._path_for(graph_id)
         with open(path, "w", encoding="utf-8") as f:
-            json.dump({"step": step, "state": state}, f)
+            f.write(_json_dumps({"step": step, "state": state}))
 
     def load(self, graph_id: str) -> tuple[int, dict[str, Any]] | None:
         path = self._path_for(graph_id)
         if not os.path.exists(path):
             return None
         with open(path, encoding="utf-8") as f:
-            data = json.load(f)
+            data = _json_loads(f.read())
         return data["step"], data["state"]
 
     def delete(self, graph_id: str) -> None:

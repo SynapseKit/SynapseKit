@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-import json
 from typing import Any
 
+from ..._json import dumps as _json_dumps
+from ..._json import loads as _json_loads
 from .base import BaseCheckpointer
 
 _KEY_PREFIX = "synapsekit:checkpoint:"
@@ -38,7 +39,7 @@ class RedisCheckpointer(BaseCheckpointer):
 
     def save(self, graph_id: str, step: int, state: dict[str, Any]) -> None:
         """Persist the state at the given step."""
-        data = json.dumps({"step": step, "state": state})
+        data = _json_dumps({"step": step, "state": state})
         key = self._key(graph_id)
         if self._ttl is not None:
             self._client.setex(key, self._ttl, data)
@@ -50,7 +51,7 @@ class RedisCheckpointer(BaseCheckpointer):
         raw = self._client.get(self._key(graph_id))
         if raw is None:
             return None
-        data = json.loads(raw)
+        data = _json_loads(raw)
         return data["step"], data["state"]
 
     def delete(self, graph_id: str) -> None:

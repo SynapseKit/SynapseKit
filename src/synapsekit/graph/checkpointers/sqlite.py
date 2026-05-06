@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-import json
 import sqlite3
 from typing import Any
 
+from ..._json import dumps as _json_dumps
+from ..._json import loads as _json_loads
 from .base import BaseCheckpointer
 
 
@@ -27,7 +28,7 @@ class SQLiteCheckpointer(BaseCheckpointer):
     def save(self, graph_id: str, step: int, state: dict[str, Any]) -> None:
         self._conn.execute(
             "INSERT OR REPLACE INTO checkpoints (graph_id, step, state) VALUES (?, ?, ?)",
-            (graph_id, step, json.dumps(state)),
+            (graph_id, step, _json_dumps(state)),
         )
         self._conn.commit()
 
@@ -37,7 +38,7 @@ class SQLiteCheckpointer(BaseCheckpointer):
         ).fetchone()
         if row is None:
             return None
-        return row[0], json.loads(row[1])
+        return row[0], _json_loads(row[1])
 
     def delete(self, graph_id: str) -> None:
         self._conn.execute("DELETE FROM checkpoints WHERE graph_id = ?", (graph_id,))

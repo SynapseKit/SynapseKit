@@ -2,9 +2,16 @@ from __future__ import annotations
 
 from .base import BaseSplitter
 
+try:
+    from .._rust_core import character_split as _rust_split
+except ImportError:
+    _rust_split = None
+
 
 class CharacterTextSplitter(BaseSplitter):
     """Split text on a single separator string."""
+
+    __slots__ = ("chunk_overlap", "chunk_size", "separator")
 
     def __init__(
         self,
@@ -17,6 +24,8 @@ class CharacterTextSplitter(BaseSplitter):
         self.chunk_overlap = chunk_overlap
 
     def split(self, text: str) -> list[str]:
+        if _rust_split is not None:
+            return _rust_split(text, self.separator, self.chunk_size, self.chunk_overlap)
         text = text.strip()
         if not text:
             return []

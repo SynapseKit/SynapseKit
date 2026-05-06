@@ -1,13 +1,25 @@
 from __future__ import annotations
 
-import hashlib
-import json
 from collections import OrderedDict
 from typing import Any
+
+from .._json import dumps_bytes as _json_dumps_bytes
+
+try:
+    from .._rust_core import fast_cache_key as _rust_cache_key
+except ImportError:
+    _rust_cache_key = None
+
+try:
+    from xxhash import xxh3_128_hexdigest as _xxh3_hex
+except ImportError:
+    _xxh3_hex = None
 
 
 class AsyncLRUCache:
     """Simple LRU cache backed by an ``OrderedDict``."""
+
+    __slots__ = ("_cache", "_maxsize", "hits", "misses")
 
     def __init__(self, maxsize: int = 128) -> None:
         self._maxsize = maxsize
@@ -24,11 +36,11 @@ class AsyncLRUCache:
     ) -> str:
         """Deterministic cache key from request parameters.
 
-        ``sort_keys`` is intentionally omitted: Python 3.7+ guarantees dict
-        insertion order, so the literal key order is already stable and
-        sorting is redundant overhead.
+        Uses Rust BLAKE3 → xxhash → sha256 fallback chain (fastest available).
         """
-        payload = json.dumps(
+        if _rust_cache_key is not None:
+            return _rust_cache_key(model, prompt_or_messages, temperature, max_tokens)
+        payload = _json_dumps_bytes(
             {
                 "model": model,
                 "input": prompt_or_messages,
@@ -36,7 +48,11 @@ class AsyncLRUCache:
                 "max_tokens": max_tokens,
             },
         )
-        return hashlib.sha256(payload.encode()).hexdigest()
+        if _xxh3_hex is not None:
+            return _xxh3_hex(payload)
+        import hashlib
+
+        return hashlib.sha256(payload).hexdigest()
 
     def get(self, key: str) -> Any | None:
         if key in self._cache:

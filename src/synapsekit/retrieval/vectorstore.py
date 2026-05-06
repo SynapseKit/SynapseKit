@@ -1,12 +1,23 @@
 from __future__ import annotations
 
-import json
 from typing import Any
 
 import numpy as np
 
+from .._json import dumps as _json_dumps
+from .._json import loads as _json_loads
 from ..embeddings.backend import SynapsekitEmbeddings
 from .base import VectorStore
+
+try:
+    from .._rust_core import deserialize_metadata_list as _rust_deser
+    from .._rust_core import serialize_metadata_list as _rust_ser
+except ImportError:
+    _rust_ser = None
+    _rust_deser = None
+
+# Growth factor for pre-allocated vector buffer
+_GROWTH_FACTOR = 2
 
 
 class InMemoryVectorStore(VectorStore):
@@ -17,24 +28,24 @@ class InMemoryVectorStore(VectorStore):
     Performance design
     ------------------
     * **O(1) amortised inserts** — newly embedded batches are queued in
-      ``_pending`` and merged into the consolidated matrix only when a search
-      is issued (lazy consolidation).  The old ``np.concatenate`` on every
-      ``add()`` caused O(n²) total copies for n documents.
+      ``_pending`` and merged into a pre-allocated buffer (doubling strategy)
+      only when a search is issued, avoiding per-search ``np.vstack`` copies.
 
     * **O(result) metadata filtering** — an inverted index maps each
       ``field → value → set[doc_idx]`` so that filter queries intersect small
       sets instead of scanning all documents.
 
-    * **O(fetch_k²) MMR precomputation** - the pairwise similarity matrix for
-      the candidate pool is computed once with a single BLAS call before the
-      greedy selection loop, replacing O(top_k x fetch_k x selected) Python-
-      level dot products.
+    * **Vectorised MMR** — the greedy selection loop uses numpy masked arrays
+      to compute MMR scores for all candidates at once, replacing the inner
+      Python ``for`` loop with a single vectorised pass per selection round.
     """
 
     def __init__(self, embedding_backend: SynapsekitEmbeddings) -> None:
         self._embeddings = embedding_backend
-        # Consolidated matrix — updated lazily before every search
-        self._vectors: np.ndarray | None = None  # (N, D)
+        # Pre-allocated buffer with doubling strategy
+        self._buf: np.ndarray | None = None  # (capacity, D)
+        self._consolidated: int = 0  # rows in _buf that are consolidated
+        self._vectors: np.ndarray | None = None  # view of _buf[:_consolidated]
         # Newly added batches waiting to be merged
         self._pending: list[np.ndarray] = []
         self._texts: list[str] = []
@@ -44,27 +55,43 @@ class InMemoryVectorStore(VectorStore):
 
     # ── internal helpers ────────────────────────────────────────────────────
 
+    def _ensure_buf_capacity(self, total_needed: int, dim: int) -> None:
+        """Ensure _buf can hold at least ``total_needed`` rows."""
+        if self._buf is not None and self._buf.shape[0] >= total_needed:
+            return
+        new_cap = max(256, total_needed)
+        if self._buf is not None:
+            cap = self._buf.shape[0]
+            while cap < total_needed:
+                cap *= _GROWTH_FACTOR
+            new_cap = cap
+            new_buf = np.empty((new_cap, dim), dtype=np.float32)
+            new_buf[: self._consolidated] = self._buf[: self._consolidated]
+        else:
+            new_buf = np.empty((new_cap, dim), dtype=np.float32)
+        self._buf = new_buf
+
     def _consolidate(self) -> None:
-        """Merge pending batches into the consolidated matrix.
+        """Merge pending batches into the pre-allocated buffer.
 
         Called lazily before any search so that ``add()`` itself is O(chunk).
+        Uses a doubling buffer to avoid O(n) copies on every consolidation.
         """
         if not self._pending:
             return
-        if self._vectors is None:
-            self._vectors = np.vstack(self._pending)
-        else:
-            self._vectors = np.vstack([self._vectors, *self._pending])
+        total_new = sum(p.shape[0] for p in self._pending)
+        dim = self._pending[0].shape[1]
+        self._ensure_buf_capacity(self._consolidated + total_new, dim)
+        assert self._buf is not None
+        for batch in self._pending:
+            n = batch.shape[0]
+            self._buf[self._consolidated : self._consolidated + n] = batch
+            self._consolidated += n
         self._pending.clear()
+        self._vectors = self._buf[: self._consolidated]
 
     def _update_index(self, meta: list[dict], base: int) -> None:
-        """Add ``len(meta)`` new documents to the inverted index.
-
-        Args:
-            meta: Metadata dicts for the new documents.
-            base: Global index of the first new document (``len(self._texts)``
-                  before the new texts were appended).
-        """
+        """Add ``len(meta)`` new documents to the inverted index."""
         for j, m in enumerate(meta):
             global_idx = base + j
             for k, v in m.items():
@@ -115,12 +142,7 @@ class InMemoryVectorStore(VectorStore):
         top_k: int = 5,
         metadata_filter: dict | None = None,
     ) -> list[dict]:
-        """Returns top_k results sorted by cosine similarity (desc).
-
-        Args:
-            metadata_filter: If provided, only include documents whose metadata
-                contains all the specified key-value pairs.
-        """
+        """Returns top_k results sorted by cosine similarity (desc)."""
         from ..observe.runtime import end_span, record_exception, start_span
 
         search_span = start_span(
@@ -182,14 +204,13 @@ class InMemoryVectorStore(VectorStore):
         fetch_k: int = 20,
         metadata_filter: dict | None = None,
     ) -> list[dict]:
-        """Maximal Marginal Relevance search.
+        """Maximal Marginal Relevance search (vectorised greedy loop).
 
         Greedily selects documents that maximize:
         ``lambda * sim(query, doc) - (1-lambda) * max(sim(doc, selected))``
 
-        The pairwise similarity matrix for the candidate pool is precomputed
-        with a single BLAS call before the greedy loop, replacing the previous
-        O(top_k x fetch_k x selected) Python-level dot-product recomputation.
+        The inner candidate scoring is fully vectorised with numpy —
+        no Python-level inner loop over candidates.
         """
         from ..observe.runtime import end_span, record_exception, start_span
 
@@ -232,38 +253,29 @@ class InMemoryVectorStore(VectorStore):
 
             pool_indices = [idx for idx, _ in pool]
             pool_vecs = self._vectors[pool_indices]
-            sim_matrix = pool_vecs @ pool_vecs.T
+            sim_matrix = pool_vecs @ pool_vecs.T  # (P, P)
+            rel_scores = np.array([s for _, s in pool], dtype=np.float64)  # (P,)
+
+            n_pool = len(pool)
+            n_select = min(top_k, n_pool)
+            alive = np.ones(n_pool, dtype=bool)
+            max_sim_to_selected = np.full(n_pool, 0.0, dtype=np.float64)
 
             selected: list[int] = []
-            selected_pos: list[int] = []
-            selected_set: set[int] = set()
 
-            for _ in range(min(top_k, len(pool))):
-                best_global_idx = -1
-                best_score = float("-inf")
-                best_pool_pos = -1
-
-                for pos, (global_idx, rel_score) in enumerate(pool):
-                    if global_idx in selected_set:
-                        continue
-
-                    if selected_pos:
-                        sim_to_selected = float(np.max(sim_matrix[pos, selected_pos]))
-                    else:
-                        sim_to_selected = 0.0
-
-                    mmr_score = lambda_mult * rel_score - (1 - lambda_mult) * sim_to_selected
-
-                    if mmr_score > best_score:
-                        best_score = mmr_score
-                        best_global_idx = global_idx
-                        best_pool_pos = pos
-
-                if best_global_idx == -1:
+            for _ in range(n_select):
+                # Vectorised MMR score for all alive candidates
+                mmr = lambda_mult * rel_scores - (1 - lambda_mult) * max_sim_to_selected
+                mmr[~alive] = -np.inf
+                best_pos = int(np.argmax(mmr))
+                if mmr[best_pos] == -np.inf:
                     break
-                selected.append(best_global_idx)
-                selected_pos.append(best_pool_pos)
-                selected_set.add(best_global_idx)
+
+                selected.append(pool_indices[best_pos])
+                alive[best_pos] = False
+
+                # Update max similarity to selected set
+                np.maximum(max_sim_to_selected, sim_matrix[best_pos], out=max_sim_to_selected)
 
             payload = [
                 {
@@ -290,15 +302,30 @@ class InMemoryVectorStore(VectorStore):
             path,
             vectors=self._vectors,
             texts=np.array(self._texts, dtype=object),
-            metadata=np.array([json.dumps(m) for m in self._metadata], dtype=object),
+            metadata=np.array(
+                _rust_ser(self._metadata)
+                if _rust_ser is not None
+                else [_json_dumps(m) for m in self._metadata],
+                dtype=object,
+            ),
         )
 
     def load(self, path: str) -> None:
         """Load vectors, texts, and metadata from a .npz file."""
         data = np.load(path, allow_pickle=True)
-        self._vectors = data["vectors"].astype(np.float32)
+        loaded_vecs = data["vectors"].astype(np.float32)
+        n, dim = loaded_vecs.shape
+        cap = max(256, n)
+        self._buf = np.empty((cap, dim), dtype=np.float32)
+        self._buf[:n] = loaded_vecs
+        self._consolidated = n
+        self._vectors = self._buf[:n]
         self._texts = list(data["texts"])
-        self._metadata = [json.loads(s) for s in data["metadata"]]
+        raw_meta = list(data["metadata"])
+        self._metadata = (
+            _rust_deser(raw_meta) if _rust_deser is not None
+            else [_json_loads(s) for s in raw_meta]
+        )
         self._pending.clear()
 
         # Rebuild inverted index from loaded metadata

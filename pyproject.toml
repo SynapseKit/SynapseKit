@@ -142,6 +142,7 @@ elasticsearch = ["elasticsearch>=8.0"]
 browser = ["playwright>=1.40"]
 youtube_transcript = ["youtube-transcript-api>=0.6"]
 airtable = ["pyairtable>=2.0"]
+performance = ["orjson>=3.9", "uvloop>=0.19; sys_platform != 'win32'", "xxhash>=3.4"]
 all = [
     "openai>=1.0",
     "anthropic>=0.25",
@@ -239,6 +240,16 @@ dev = [
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/synapsekit"]
+
+# Rust extension (optional — built separately with maturin)
+# To build: cd src/synapsekit/_rust && maturin develop
+# The pure-Python wheel uses hatchling above; the Rust-accelerated wheel
+# is published separately using maturin as the build backend.
+[tool.maturin]
+module-name = "synapsekit._rust_core"
+manifest-path = "src/synapsekit/_rust/Cargo.toml"
+features = ["pyo3/extension-module"]
+python-source = "src"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-import json
 from typing import Any
 
+from ..._json import dumps as _json_dumps
+from ..._json import loads as _json_loads
 from .base import BaseCheckpointer
 
 _CREATE_TABLE_SQL = """
@@ -58,7 +59,7 @@ class PostgresCheckpointer(BaseCheckpointer):
 
     def save(self, graph_id: str, step: int, state: dict[str, Any]) -> None:
         """Persist the state at the given step using UPSERT."""
-        state_json = json.dumps(state)
+        state_json = _json_dumps(state)
         with self._conn.cursor() as cur:
             cur.execute(_UPSERT_SQL, (graph_id, step, state_json))
         if self._autocommit:
@@ -74,7 +75,7 @@ class PostgresCheckpointer(BaseCheckpointer):
         step, state = row
         # psycopg auto-deserializes JSONB, but handle string case too
         if isinstance(state, str):
-            state = json.loads(state)
+            state = _json_loads(state)
         return step, state
 
     def delete(self, graph_id: str) -> None:

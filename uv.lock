@@ -11714,6 +11714,11 @@ parquet = [
 pdf = [
     { name = "pypdf" },
 ]
+performance = [
+    { name = "orjson" },
+    { name = "uvloop", marker = "sys_platform != 'win32'" },
+    { name = "xxhash" },
+]
 pgvector = [
     { name = "pgvector" },
     { name = "psycopg", extra = ["binary"] },
@@ -11967,6 +11972,7 @@ requires-dist = [
     { name = "openpyxl", marker = "extra == 'excel'", specifier = ">=3.1" },
     { name = "opensearch-py", marker = "extra == 'all'", specifier = ">=2.0" },
     { name = "opensearch-py", marker = "extra == 'opensearch'", specifier = ">=2.0" },
+    { name = "orjson", marker = "extra == 'performance'", specifier = ">=3.9" },
     { name = "pgvector", marker = "extra == 'all'", specifier = ">=0.2" },
     { name = "pgvector", marker = "extra == 'pgvector'", specifier = ">=0.2" },
     { name = "pillow", specifier = ">=12.2.0" },
@@ -12029,18 +12035,20 @@ requires-dist = [
     { name = "uvicorn", extras = ["standard"], marker = "extra == 'all'", specifier = ">=0.29" },
     { name = "uvicorn", extras = ["standard"], marker = "extra == 'graph-ui'", specifier = ">=0.29" },
     { name = "uvicorn", extras = ["standard"], marker = "extra == 'serve'", specifier = ">=0.29" },
+    { name = "uvloop", marker = "sys_platform != 'win32' and extra == 'performance'", specifier = ">=0.19" },
     { name = "weaviate-client", marker = "extra == 'all'", specifier = ">=4.0" },
     { name = "weaviate-client", marker = "extra == 'weaviate'", specifier = ">=4.0" },
     { name = "wikipedia-api", marker = "extra == 'all'", specifier = ">=0.6" },
     { name = "wikipedia-api", marker = "extra == 'wikipedia'", specifier = ">=0.6" },
     { name = "wolframalpha", marker = "extra == 'all'", specifier = ">=5.0" },
     { name = "wolframalpha", marker = "extra == 'wolfram'", specifier = ">=5.0" },
+    { name = "xxhash", marker = "extra == 'performance'", specifier = ">=3.4" },
     { name = "youtube-search-python", marker = "extra == 'all'", specifier = ">=1.6" },
     { name = "youtube-search-python", marker = "extra == 'youtube'", specifier = ">=1.6" },
     { name = "youtube-transcript-api", marker = "extra == 'all'", specifier = ">=0.6" },
     { name = "youtube-transcript-api", marker = "extra == 'youtube-transcript'", specifier = ">=0.6" },
 ]
-provides-extras = ["openai", "anthropic", "semantic", "colbert", "pdf", "wikipedia", "arxiv", "html", "web", "chroma", "faiss", "qdrant", "pinecone", "weaviate", "milvus", "lancedb", "sqlite-vec", "cassandra", "clickhouse", "duckdb-vector", "marqo", "opensearch", "vespa", "replicate", "ollama", "lmstudio", "vllm", "ai21", "cohere", "mistral", "gemini", "bedrock", "gcal-tool", "aws-lambda", "rss", "groq", "audio", "video", "voice", "voice-local", "voice-stream", "cron", "excel", "pptx", "docx", "yaml", "teams", "http", "search", "huggingface", "transformers", "tiktoken", "google-search", "tavily", "youtube", "mcp", "redis", "memcached", "vertex", "cloudflare", "aleph-alpha", "llamacpp", "gpt4all", "ernie", "minimax", "serve", "graph-ui", "observe", "postgres", "pgvector", "wolfram", "dynamodb", "discord", "gcs", "bigquery", "gdrive", "git", "gsheets", "jira", "hubspot", "sql", "snowflake", "mongodb", "mongodb-vector", "salesforce", "azure", "s3", "onedrive", "slack", "supabase", "notion", "confluence", "dropbox", "rtf", "epub", "parquet", "elasticsearch", "browser", "youtube-transcript", "airtable", "all"]
+provides-extras = ["openai", "anthropic", "semantic", "colbert", "pdf", "wikipedia", "arxiv", "html", "web", "chroma", "faiss", "qdrant", "pinecone", "weaviate", "milvus", "lancedb", "sqlite-vec", "cassandra", "clickhouse", "duckdb-vector", "marqo", "opensearch", "vespa", "replicate", "ollama", "lmstudio", "vllm", "ai21", "cohere", "mistral", "gemini", "bedrock", "gcal-tool", "aws-lambda", "rss", "groq", "audio", "video", "voice", "voice-local", "voice-stream", "cron", "excel", "pptx", "docx", "yaml", "teams", "http", "search", "huggingface", "transformers", "tiktoken", "google-search", "tavily", "youtube", "mcp", "redis", "memcached", "vertex", "cloudflare", "aleph-alpha", "llamacpp", "gpt4all", "ernie", "minimax", "serve", "graph-ui", "observe", "postgres", "pgvector", "wolfram", "dynamodb", "discord", "gcs", "bigquery", "gdrive", "git", "gsheets", "jira", "hubspot", "sql", "snowflake", "mongodb", "mongodb-vector", "salesforce", "azure", "s3", "onedrive", "slack", "supabase", "notion", "confluence", "dropbox", "rtf", "epub", "parquet", "elasticsearch", "browser", "youtube-transcript", "airtable", "performance", "all"]
 
 [package.metadata.requires-dev]
 dev = [

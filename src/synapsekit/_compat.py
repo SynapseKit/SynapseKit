@@ -1,10 +1,15 @@
 from __future__ import annotations
 
-import asyncio
-from collections.abc import Coroutine
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
+
+from ._loop import install_fast_loop
+
+if TYPE_CHECKING:
+    from collections.abc import Coroutine
 
 T = TypeVar("T")
+
+install_fast_loop()
 
 
 def run_sync(coro: Coroutine[Any, Any, T]) -> T:
@@ -12,6 +17,8 @@ def run_sync(coro: Coroutine[Any, Any, T]) -> T:
     Run an async coroutine synchronously.
     Works both inside and outside a running event loop.
     """
+    import asyncio
+
     try:
         loop = asyncio.get_running_loop()
     except RuntimeError:

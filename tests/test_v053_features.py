@@ -209,7 +209,7 @@ class TestSQLiteLLMCache:
 
         key = SQLiteLLMCache.make_key("model", "prompt", 0.5, 100)
         assert isinstance(key, str)
-        assert len(key) == 64  # SHA-256 hex
+        assert len(key) in (32, 64)  # xxh3_128 (32) or SHA-256 (64)
 
 
 # ------------------------------------------------------------------ #

@@ -151,6 +151,10 @@ def _add_bench_parser(subparsers: argparse._SubParsersAction) -> None:  # type: 
 
 def main(argv: list[str] | None = None) -> None:
     """CLI entry point."""
+    from .._loop import install_fast_loop
+
+    install_fast_loop()
+
     parser = argparse.ArgumentParser(
         prog="synapsekit",
         description="SynapseKit CLI — serve apps and run evaluations",
