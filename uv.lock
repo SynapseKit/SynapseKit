@@ -871,6 +871,23 @@ wheels = [
 ]
 
 [[package]]
+name = "cartesia"
+version = "3.0.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anyio" },
+    { name = "distro" },
+    { name = "httpx" },
+    { name = "pydantic" },
+    { name = "sniffio" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/41/65/5c2085821842b334a43025becbb70c52d02a458c0b24f9c1a0912d7e7e13/cartesia-3.0.2.tar.gz", hash = "sha256:beeff16cd5a36d30d908984e84591e6e7c20429e54c5822fca5c16bf26dd805a", size = 584593, upload-time = "2026-02-26T01:34:46.41Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/48/db/4e7ddf0a31c4c94fa5badd6b1b4fc52733f8bb8b98e4c53293a467b95149/cartesia-3.0.2-py3-none-any.whl", hash = "sha256:ec19decf77cac350a1e38872d50213daecd51839afb522011d68a49dcae6f1b5", size = 170183, upload-time = "2026-02-26T01:34:45.011Z" },
+]
+
+[[package]]
 name = "cassandra-driver"
 version = "3.30.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1683,6 +1700,22 @@ wheels = [
 ]
 
 [[package]]
+name = "deepgram-sdk"
+version = "7.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "httpx" },
+    { name = "pydantic" },
+    { name = "pydantic-core" },
+    { name = "typing-extensions" },
+    { name = "websockets" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/9e/b3/448f365c2c845202cfe3815e3d11a4303532401200271ebda66a6ecf5c5c/deepgram_sdk-7.1.0.tar.gz", hash = "sha256:896fb9aeed914d5bbe20a832c81d5c1a074643ea451456e24df10c3b1384c4a0", size = 207229, upload-time = "2026-05-06T12:41:19.823Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/97/6a/62741433dfd77fe7a3884da53966fbc088717b83d36fe9afd5a98a4de8fb/deepgram_sdk-7.1.0-py3-none-any.whl", hash = "sha256:a55503ddbb975d3a22099200851d158348aaada767f42e2655f7642b6df4e9db", size = 557571, upload-time = "2026-05-06T12:41:18.165Z" },
+]
+
+[[package]]
 name = "defusedxml"
 version = "0.7.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1941,6 +1974,23 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/0d/15/283459c9299d412ffa2aaab69b082857631c519233f5491d6c567e3320ca/elasticsearch-9.3.0.tar.gz", hash = "sha256:f76e149c0a22d5ccbba58bdc30c9f51cf894231b359ef4fd7e839b558b59f856", size = 893538, upload-time = "2026-02-03T20:26:38.914Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/05/37/3a196f8918743f2104cb66b1f56218079ecac6e128c061de7df7f4faef02/elasticsearch-9.3.0-py3-none-any.whl", hash = "sha256:67bd2bb4f0800f58c2847d29cd57d6e7bf5bc273483b4f17421f93e75ba09f39", size = 979405, upload-time = "2026-02-03T20:26:34.552Z" },
+]
+
+[[package]]
+name = "elevenlabs"
+version = "2.46.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "httpx" },
+    { name = "pydantic" },
+    { name = "pydantic-core" },
+    { name = "requests" },
+    { name = "typing-extensions" },
+    { name = "websockets" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/1b/71/62b97757dd3ad34d62d3c1cdbf8f66a5052585213d63ba436bd656f68f81/elevenlabs-2.46.0.tar.gz", hash = "sha256:63f5403ca094ca6a06812216ad89a7299aaac4422973581cfd31187e8c57cf33", size = 572607, upload-time = "2026-05-07T11:28:49.661Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/71/79/e5457ebd3e78093960399f819c51c49f52d3bcea04977f9847725aae9e83/elevenlabs-2.46.0-py3-none-any.whl", hash = "sha256:cc9e8b06c3e2adf2ec075bbe3042e18c7e29e3d42b017556af33e7155ff5b004", size = 1567634, upload-time = "2026-05-07T11:28:47.312Z" },
 ]
 
 [[package]]
@@ -11439,7 +11489,7 @@ wheels = [
 
 [[package]]
 name = "synapsekit"
-version = "1.6.0"
+version = "1.7.0"
 source = { editable = "." }
 dependencies = [
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
@@ -11583,6 +11633,7 @@ confluence = [
 ]
 cron = [
     { name = "croniter" },
+    { name = "tzdata", marker = "sys_platform == 'win32'" },
 ]
 discord = [
     { name = "discord-py" },
@@ -11805,10 +11856,27 @@ vllm = [
 ]
 voice = [
     { name = "openai" },
+    { name = "sounddevice" },
+    { name = "soundfile" },
+]
+voice-cartesia = [
+    { name = "cartesia" },
+]
+voice-deepgram = [
+    { name = "deepgram-sdk" },
+]
+voice-elevenlabs = [
+    { name = "elevenlabs" },
 ]
 voice-local = [
     { name = "faster-whisper" },
     { name = "pyttsx3" },
+    { name = "sounddevice" },
+    { name = "soundfile" },
+]
+voice-silero = [
+    { name = "torch" },
+    { name = "torchaudio" },
 ]
 voice-stream = [
     { name = "sounddevice" },
@@ -11853,6 +11921,7 @@ dev = [
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
     { name = "ruff" },
+    { name = "tzdata" },
 ]
 
 [package.metadata]
@@ -11883,6 +11952,7 @@ requires-dist = [
     { name = "boto3", marker = "extra == 'bedrock'", specifier = ">=1.34" },
     { name = "boto3", marker = "extra == 'dynamodb'", specifier = ">=1.34" },
     { name = "boto3", marker = "extra == 's3'", specifier = ">=1.34" },
+    { name = "cartesia", marker = "extra == 'voice-cartesia'", specifier = ">=0.1" },
     { name = "cassandra-driver", marker = "extra == 'cassandra'", specifier = ">=3.28" },
     { name = "chromadb", marker = "extra == 'all'", specifier = ">=0.5" },
     { name = "chromadb", marker = "extra == 'chroma'", specifier = ">=0.5" },
@@ -11892,6 +11962,7 @@ requires-dist = [
     { name = "cohere", marker = "extra == 'cohere'", specifier = ">=5.0" },
     { name = "croniter", marker = "extra == 'all'", specifier = ">=2.0" },
     { name = "croniter", marker = "extra == 'cron'", specifier = ">=2.0" },
+    { name = "deepgram-sdk", marker = "extra == 'voice-deepgram'", specifier = ">=3.0" },
     { name = "discord-py", marker = "extra == 'all'", specifier = ">=2.0" },
     { name = "discord-py", marker = "extra == 'discord'", specifier = ">=2.0" },
     { name = "dropbox", marker = "extra == 'all'", specifier = ">=12.0" },
@@ -11904,6 +11975,7 @@ requires-dist = [
     { name = "ebooklib", marker = "extra == 'epub'", specifier = ">=0.18" },
     { name = "elasticsearch", marker = "extra == 'all'", specifier = ">=8.0" },
     { name = "elasticsearch", marker = "extra == 'elasticsearch'", specifier = ">=8.0" },
+    { name = "elevenlabs", marker = "extra == 'voice-elevenlabs'", specifier = ">=1.0" },
     { name = "erniebot", marker = "extra == 'all'", specifier = ">=0.5" },
     { name = "erniebot", marker = "extra == 'ernie'", specifier = ">=0.5" },
     { name = "faiss-cpu", marker = "extra == 'all'", specifier = ">=1.7" },
@@ -12019,7 +12091,11 @@ requires-dist = [
     { name = "slack-sdk", marker = "extra == 'slack'", specifier = ">=3.0" },
     { name = "snowflake-connector-python", marker = "extra == 'all'", specifier = ">=3.0" },
     { name = "snowflake-connector-python", marker = "extra == 'snowflake'", specifier = ">=3.0" },
+    { name = "sounddevice", marker = "extra == 'voice'", specifier = ">=0.4" },
+    { name = "sounddevice", marker = "extra == 'voice-local'", specifier = ">=0.4" },
     { name = "sounddevice", marker = "extra == 'voice-stream'", specifier = ">=0.4" },
+    { name = "soundfile", marker = "extra == 'voice'", specifier = ">=0.12" },
+    { name = "soundfile", marker = "extra == 'voice-local'", specifier = ">=0.12" },
     { name = "soundfile", marker = "extra == 'voice-stream'", specifier = ">=0.12" },
     { name = "sqlalchemy", marker = "extra == 'sql'", specifier = ">=2.0" },
     { name = "sqlite-vec", marker = "extra == 'all'", specifier = ">=0.1" },
@@ -12031,7 +12107,10 @@ requires-dist = [
     { name = "tavily-python", marker = "extra == 'all'", specifier = ">=0.3" },
     { name = "tavily-python", marker = "extra == 'tavily'", specifier = ">=0.3" },
     { name = "tiktoken", marker = "extra == 'tiktoken'", specifier = ">=0.12" },
+    { name = "torch", marker = "extra == 'voice-silero'", specifier = ">=2.0" },
+    { name = "torchaudio", marker = "extra == 'voice-silero'", specifier = ">=2.0" },
     { name = "transformers", marker = "extra == 'transformers'", specifier = ">=4.0" },
+    { name = "tzdata", marker = "sys_platform == 'win32' and extra == 'cron'", specifier = ">=2024.1" },
     { name = "uvicorn", extras = ["standard"], marker = "extra == 'all'", specifier = ">=0.29" },
     { name = "uvicorn", extras = ["standard"], marker = "extra == 'graph-ui'", specifier = ">=0.29" },
     { name = "uvicorn", extras = ["standard"], marker = "extra == 'serve'", specifier = ">=0.29" },
@@ -12048,7 +12127,7 @@ requires-dist = [
     { name = "youtube-transcript-api", marker = "extra == 'all'", specifier = ">=0.6" },
     { name = "youtube-transcript-api", marker = "extra == 'youtube-transcript'", specifier = ">=0.6" },
 ]
-provides-extras = ["openai", "anthropic", "semantic", "colbert", "pdf", "wikipedia", "arxiv", "html", "web", "chroma", "faiss", "qdrant", "pinecone", "weaviate", "milvus", "lancedb", "sqlite-vec", "cassandra", "clickhouse", "duckdb-vector", "marqo", "opensearch", "vespa", "replicate", "ollama", "lmstudio", "vllm", "ai21", "cohere", "mistral", "gemini", "bedrock", "gcal-tool", "aws-lambda", "rss", "groq", "audio", "video", "voice", "voice-local", "voice-stream", "cron", "excel", "pptx", "docx", "yaml", "teams", "http", "search", "huggingface", "transformers", "tiktoken", "google-search", "tavily", "youtube", "mcp", "redis", "memcached", "vertex", "cloudflare", "aleph-alpha", "llamacpp", "gpt4all", "ernie", "minimax", "serve", "graph-ui", "observe", "postgres", "pgvector", "wolfram", "dynamodb", "discord", "gcs", "bigquery", "gdrive", "git", "gsheets", "jira", "hubspot", "sql", "snowflake", "mongodb", "mongodb-vector", "salesforce", "azure", "s3", "onedrive", "slack", "supabase", "notion", "confluence", "dropbox", "rtf", "epub", "parquet", "elasticsearch", "browser", "youtube-transcript", "airtable", "performance", "all"]
+provides-extras = ["openai", "anthropic", "semantic", "colbert", "pdf", "wikipedia", "arxiv", "html", "web", "chroma", "faiss", "qdrant", "pinecone", "weaviate", "milvus", "lancedb", "sqlite-vec", "cassandra", "clickhouse", "duckdb-vector", "marqo", "opensearch", "vespa", "replicate", "ollama", "lmstudio", "vllm", "ai21", "cohere", "mistral", "gemini", "bedrock", "gcal-tool", "aws-lambda", "rss", "groq", "audio", "video", "voice", "voice-local", "voice-stream", "voice-cartesia", "voice-elevenlabs", "voice-deepgram", "voice-silero", "cron", "excel", "pptx", "docx", "yaml", "teams", "http", "search", "huggingface", "transformers", "tiktoken", "google-search", "tavily", "youtube", "mcp", "redis", "memcached", "vertex", "cloudflare", "aleph-alpha", "llamacpp", "gpt4all", "ernie", "minimax", "serve", "graph-ui", "observe", "postgres", "pgvector", "wolfram", "dynamodb", "discord", "gcs", "bigquery", "gdrive", "git", "gsheets", "jira", "hubspot", "sql", "snowflake", "mongodb", "mongodb-vector", "salesforce", "azure", "s3", "onedrive", "slack", "supabase", "notion", "confluence", "dropbox", "rtf", "epub", "parquet", "elasticsearch", "browser", "youtube-transcript", "airtable", "performance", "all"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -12066,6 +12145,7 @@ dev = [
     { name = "pytest-asyncio", specifier = ">=0.23" },
     { name = "pytest-cov", specifier = ">=5.0" },
     { name = "ruff", specifier = ">=0.9" },
+    { name = "tzdata", specifier = ">=2024.1" },
 ]
 
 [[package]]
@@ -12343,6 +12423,41 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/e2/65/1a05346b418ea8ccd10360eef4b3e0ce688fba544e76edec26913a8d0ee0/torch-2.10.0-cp314-cp314t-manylinux_2_28_aarch64.whl", hash = "sha256:716b01a176c2a5659c98f6b01bf868244abdd896526f1c692712ab36dbaf9b63", size = 146006482, upload-time = "2026-01-21T16:22:18.42Z" },
     { url = "https://files.pythonhosted.org/packages/1d/b9/5f6f9d9e859fc3235f60578fa64f52c9c6e9b4327f0fe0defb6de5c0de31/torch-2.10.0-cp314-cp314t-manylinux_2_28_x86_64.whl", hash = "sha256:d8f5912ba938233f86361e891789595ff35ca4b4e2ac8fe3670895e5976731d6", size = 915613050, upload-time = "2026-01-21T16:20:49.035Z" },
     { url = "https://files.pythonhosted.org/packages/66/4d/35352043ee0eaffdeff154fad67cd4a31dbed7ff8e3be1cc4549717d6d51/torch-2.10.0-cp314-cp314t-win_amd64.whl", hash = "sha256:71283a373f0ee2c89e0f0d5f446039bdabe8dbc3c9ccf35f0f784908b0acd185", size = 113995816, upload-time = "2026-01-21T16:22:05.312Z" },
+]
+
+[[package]]
+name = "torchaudio"
+version = "2.11.0"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8c/d9/357eb5fe4e19a861e6fa1af4d9f535e8fa8692336e6cf436e8a21262e054/torchaudio-2.11.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:6ebb59c694909eccb5d61b7cc199d297692012c43286e36d92983aa7bad7586d", size = 684145, upload-time = "2026-03-23T18:13:46.671Z" },
+    { url = "https://files.pythonhosted.org/packages/2a/79/90de77e73f395bba2fe477f8e82e4ae1d14d6452a706838765e850a5e80c/torchaudio-2.11.0-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:be7ad472acb16d16e98c005f0219b0db06a47dfe8f7b4d177062e1638f871e3b", size = 1626521, upload-time = "2026-03-23T18:13:40.98Z" },
+    { url = "https://files.pythonhosted.org/packages/66/dc/5757ed7d8d11a6c14336bcb54e63980979f00005555fec80fb4aa4de5eff/torchaudio-2.11.0-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:5847fe2022b17c6580aeb39c8797a443411cc09edfd9183cd50ac1a3b8ccf97c", size = 1771929, upload-time = "2026-03-23T18:13:43.432Z" },
+    { url = "https://files.pythonhosted.org/packages/cf/f4/8ce2417eac66296e45b7aaa69858403fb6a52b1323f8635ec37b4b0f1fa3/torchaudio-2.11.0-cp310-cp310-win_amd64.whl", hash = "sha256:7e2da1df4f6fe885c46db350a0dc90a0dff4b54541dff8846faa904d255e2bfe", size = 328661, upload-time = "2026-03-23T18:13:45.77Z" },
+    { url = "https://files.pythonhosted.org/packages/94/77/0eec7f175d88f312296bd5b11c23bd58da37c1021f53da3db4df449ce3ee/torchaudio-2.11.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:492dd64645e9d0bb843e94f1d9a4d1e31426262ffc594fafecc1697df9df5eb9", size = 684142, upload-time = "2026-03-23T18:13:36.805Z" },
+    { url = "https://files.pythonhosted.org/packages/b3/f9/6f7ebe071b44592c85269762b55b63ab0a091b5f479f73544738f7564a1e/torchaudio-2.11.0-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:73dab4841f94d888bc7c2aed7b5547c643edc974306919fe1adfb65d57cccf4b", size = 1626527, upload-time = "2026-03-23T18:13:39.011Z" },
+    { url = "https://files.pythonhosted.org/packages/ac/70/17408e0d154d0c894537a88dcbadc48e8ad3b6e1ef4a1dabda5d40245ee0/torchaudio-2.11.0-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:1a07ec72fd6f26a588c39b5f029e0130d16bb40bc4221635580bf8fb18fcbc80", size = 1771930, upload-time = "2026-03-23T18:13:37.963Z" },
+    { url = "https://files.pythonhosted.org/packages/c9/75/b6d03fc75b409bdaec597274d1bdd4213db716ed16f6801386b31d59c551/torchaudio-2.11.0-cp311-cp311-win_amd64.whl", hash = "sha256:bb59ba4452bbbe95d75ad3ef18df9824955625f36698ce9a5998a4a9f3c1ba1d", size = 328658, upload-time = "2026-03-23T18:13:44.545Z" },
+    { url = "https://files.pythonhosted.org/packages/f1/b1/77658817acacd01a72b714440c62f419efc4d90170e704e8e7a2c0918988/torchaudio-2.11.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:a1cf1acc883bee9cb906a933572fed6a8a933f86ef34e9ea7d803f72317e8c1b", size = 684226, upload-time = "2026-03-23T18:13:40.023Z" },
+    { url = "https://files.pythonhosted.org/packages/78/28/c7adc053039f286c2aca0038b766cbe3294e66fec6b29a820e95128f9ede/torchaudio-2.11.0-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:bc653defca1c16154398517a1adc98d0fb7f1dd08e58ced217558d213c2c6e29", size = 1626670, upload-time = "2026-03-23T18:13:42.162Z" },
+    { url = "https://files.pythonhosted.org/packages/88/d8/d6d0f896e064aa67377484efef4911cdcc07bce2929474e1417cc0af18c2/torchaudio-2.11.0-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:6503c0bdb29daf2e6281bb70ea2dfe2c3553b782b619eb5d73bdadd8a3f7cecf", size = 1771992, upload-time = "2026-03-23T18:13:33.188Z" },
+    { url = "https://files.pythonhosted.org/packages/23/a8/941277ecc39f7a0a169d554302a1f1afd87c1d94a8aec828891916cea59a/torchaudio-2.11.0-cp312-cp312-win_amd64.whl", hash = "sha256:478110f981e5d40a8d82221732c57a56c85a1d5895fb8fe646e86ee15eded3bd", size = 328663, upload-time = "2026-03-23T18:13:19.218Z" },
+    { url = "https://files.pythonhosted.org/packages/fb/9e/f76fcd9877c8c78f258ee34e0fb8291fdb91e6218d582d9ca66b1e4bd4ae/torchaudio-2.11.0-cp313-cp313-macosx_12_0_arm64.whl", hash = "sha256:e3f9696a9ef1d49acc452159b052370c636406d072e9d8f10895fda87b591ea9", size = 679904, upload-time = "2026-03-23T18:13:28.329Z" },
+    { url = "https://files.pythonhosted.org/packages/85/70/249c1498ebdad3e7752866635ec0855fc0dcf898beccda5a9d2b9df8e4d0/torchaudio-2.11.0-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:b034d7672f1c415434f48ef17807f2cce47f29e8795338c751d4e596c9fbe8b5", size = 1618523, upload-time = "2026-03-23T18:13:15.703Z" },
+    { url = "https://files.pythonhosted.org/packages/4f/98/be13fe35d9aa5c26381c0e453c828a789d15c007f8f7d08c95341d19974d/torchaudio-2.11.0-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:1c1101c1243ef0e4063ec63298977e2d3655c15cf88d9eb0a1bd4fe2db9f47ea", size = 1771992, upload-time = "2026-03-23T18:13:35.343Z" },
+    { url = "https://files.pythonhosted.org/packages/e2/8b/2bbb3dca6ff28cba0de250874d5ef4fc2822c47a934b59b3974cff3219ef/torchaudio-2.11.0-cp313-cp313-win_amd64.whl", hash = "sha256:986f4df5ed17b003dc52489468601720090e65f964f8bebccf90eb45bba75744", size = 328662, upload-time = "2026-03-23T18:13:18.308Z" },
+    { url = "https://files.pythonhosted.org/packages/fe/ce/52c652d30af7d6e96c8f1735d26131e94708e3f38d852b8fa97958804dd8/torchaudio-2.11.0-cp313-cp313t-macosx_12_0_arm64.whl", hash = "sha256:bda09ea630ae7207384fb0f28c35e4f8c0d82dd6eba020b6b335ad0caa9fed49", size = 680814, upload-time = "2026-03-23T18:13:17.08Z" },
+    { url = "https://files.pythonhosted.org/packages/06/95/1ad1507482e7263e556709a3f5f87fecd375a0742cdaf238806c8e72eaad/torchaudio-2.11.0-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:9fe3083c62e035646483a14e180d33561bdc2eed436c9ab1259c137fb7120b4a", size = 1618546, upload-time = "2026-03-23T18:13:29.686Z" },
+    { url = "https://files.pythonhosted.org/packages/98/4c/480328ba07487eb9890406720304d0d460dd7a6a64098614f5aa53b662ca/torchaudio-2.11.0-cp313-cp313t-manylinux_2_28_x86_64.whl", hash = "sha256:13cff988697ccbad539987599f9dc672f40c417bed67570b365e4e5002bbd096", size = 1771991, upload-time = "2026-03-23T18:13:30.843Z" },
+    { url = "https://files.pythonhosted.org/packages/3e/98/5d4790e2d6548768999acd34999d5aeefce8bcc23a07afaa5f03e723f557/torchaudio-2.11.0-cp313-cp313t-win_amd64.whl", hash = "sha256:ed404c4399ad7f172c86a47c1b25293d322d1d58e26b10b0456a86cf67d37d84", size = 328661, upload-time = "2026-03-23T18:13:34.359Z" },
+    { url = "https://files.pythonhosted.org/packages/39/fe/ffa618b4f0d9732d7df7a2fa2bd48657d896599bc224e5af3c70d46c546b/torchaudio-2.11.0-cp314-cp314-macosx_12_0_arm64.whl", hash = "sha256:cc09cd1f6015b8549e7fe255fb1be5346b57e7fee06541d3f3dbb012d8c4715f", size = 679901, upload-time = "2026-03-23T18:13:25.472Z" },
+    { url = "https://files.pythonhosted.org/packages/5c/54/f414d7b92dd0b3094a2409c95a97bd6c49aa0620da722a0e55462f9bd9cb/torchaudio-2.11.0-cp314-cp314-manylinux_2_28_aarch64.whl", hash = "sha256:79fb3cb99169fd41bd9719647261402a164da0d105a4d81f42a3260844ec5e79", size = 1618527, upload-time = "2026-03-23T18:13:26.68Z" },
+    { url = "https://files.pythonhosted.org/packages/a8/a8/bf2e1f6ce24c990192400ae49b4acc1a0d0295b6c6a06bceecdc46ce08de/torchaudio-2.11.0-cp314-cp314-manylinux_2_28_x86_64.whl", hash = "sha256:00e9f71ab9c656f0abdb40c515bd65d4658ab0ad380dee27a2efd7d51dabd3d6", size = 1771995, upload-time = "2026-03-23T18:13:23.373Z" },
+    { url = "https://files.pythonhosted.org/packages/83/6f/b0efb44e0bfe8dd4d78d76ae3be280354e1fb5c8631c782785d74cd8a7b1/torchaudio-2.11.0-cp314-cp314-win_amd64.whl", hash = "sha256:1424638adb8bb40087bc7b6eb103e8e4fe398210f09076f33b7b5e61501b5d66", size = 328662, upload-time = "2026-03-23T18:13:32.243Z" },
+    { url = "https://files.pythonhosted.org/packages/60/84/1c792b0b700eac9a96772cfd9f96c097b17bca3234a2fde3c64b8063660d/torchaudio-2.11.0-cp314-cp314t-macosx_12_0_arm64.whl", hash = "sha256:da2725e250866da42a12934c9a6552f65a18b7187fd7a6221387f0e605fb3b96", size = 679926, upload-time = "2026-03-23T18:13:24.452Z" },
+    { url = "https://files.pythonhosted.org/packages/9a/a0/62a5842062f739239691f2e57523e0570dd06704ad987755f7644a3afa23/torchaudio-2.11.0-cp314-cp314t-manylinux_2_28_aarch64.whl", hash = "sha256:1be3767064364ae82705bdf2b15c1e8b41fea82c4cd04d47428a8684b634b6ed", size = 1618552, upload-time = "2026-03-23T18:13:21.09Z" },
+    { url = "https://files.pythonhosted.org/packages/6d/89/c293d818f9f899db93bf291b42401c05ae29acfb2e53d5341c30ea703e62/torchaudio-2.11.0-cp314-cp314t-manylinux_2_28_x86_64.whl", hash = "sha256:67f6edac29ed004652c11db5c19d9debb5d835695930574f564efc8bdd061bba", size = 1771986, upload-time = "2026-03-23T18:13:22.153Z" },
+    { url = "https://files.pythonhosted.org/packages/93/f7/ee5da8c03f1a3c7662c6c6a119f24a4b3e646da94be56dce3201e3a6ee9b/torchaudio-2.11.0-cp314-cp314t-win_amd64.whl", hash = "sha256:88fb5e29f670a33d9bac6aabb1d2734460cf6e461bde5cdc352826035851b16d", size = 328661, upload-time = "2026-03-23T18:13:20.1Z" },
 ]
 
 [[package]]

@@ -240,6 +240,19 @@ from .parsers.json_parser import JSONParser
 from .parsers.list_parser import ListParser
 from .parsers.pydantic_parser import PydanticParser
 from .plugins import PluginRegistry
+from .voice import (
+    CartesiaTTS,
+    DeepgramSTT,
+    ElevenLabsTTS,
+    EnergyVAD,
+    LocalWhisperSTT,
+    OpenAITTS,
+    OpenAIWhisperSTT,
+    PiperTTS,
+    SileroVAD,
+    VoicePipeline,
+)
+from .voice.types import PipelineEvent, PipelineState
 from .prompts.hub import PromptHub
 from .prompts.template import ChatPromptTemplate, FewShotPromptTemplate, PromptTemplate
 from .rag.facade import RAG
@@ -638,6 +651,19 @@ __all__ = [
     "GoogleDriveLoader",
     # Plugins
     "PluginRegistry",
+    # Voice pipeline
+    "VoicePipeline",
+    "EnergyVAD",
+    "SileroVAD",
+    "LocalWhisperSTT",
+    "OpenAIWhisperSTT",
+    "DeepgramSTT",
+    "OpenAITTS",
+    "ElevenLabsTTS",
+    "CartesiaTTS",
+    "PiperTTS",
+    "PipelineEvent",
+    "PipelineState",
     # API stability markers
     "deprecated",
     "experimental",
