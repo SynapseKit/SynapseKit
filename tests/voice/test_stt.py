@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import struct
 from collections.abc import AsyncIterator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -81,7 +81,10 @@ class TestLocalWhisperSTT:
         mock_model = MagicMock()
         mock_model.transcribe.return_value = ([mock_segment], MagicMock())
 
-        with patch.dict("sys.modules", {"faster_whisper": MagicMock(WhisperModel=MagicMock(return_value=mock_model))}):
+        with patch.dict(
+            "sys.modules",
+            {"faster_whisper": MagicMock(WhisperModel=MagicMock(return_value=mock_model))},
+        ):
             import faster_whisper  # noqa: F401 — ensure module mock is active
 
             with patch("numpy.frombuffer") as mock_frombuffer:
@@ -126,6 +129,7 @@ class TestOpenAIWhisperSTT:
             return "buffered result"
 
         with patch.object(stt, "_transcribe_api", side_effect=_fake_api):
+
             async def _source() -> AsyncIterator[bytes]:
                 yield b"\x01" * 100
                 yield b"\x02" * 100

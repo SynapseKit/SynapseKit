@@ -240,24 +240,6 @@ from .parsers.json_parser import JSONParser
 from .parsers.list_parser import ListParser
 from .parsers.pydantic_parser import PydanticParser
 from .plugins import PluginRegistry
-from .voice import (
-    AudioFrame,
-    BaseSTT,
-    BaseTTS,
-    BaseVAD,
-    CartesiaTTS,
-    DeepgramSTT,
-    ElevenLabsTTS,
-    EnergyVAD,
-    LocalWhisperSTT,
-    OpenAITTS,
-    OpenAIWhisperSTT,
-    PiperTTS,
-    SileroVAD,
-    TranscriptChunk,
-    VoicePipeline,
-)
-from .voice.types import PipelineEvent, PipelineState
 from .prompts.hub import PromptHub
 from .prompts.template import ChatPromptTemplate, FewShotPromptTemplate, PromptTemplate
 from .rag.facade import RAG
@@ -299,6 +281,24 @@ from .text_splitters import (
     SentenceWindowSplitter,
     TokenAwareSplitter,
 )
+from .voice import (
+    AudioFrame,
+    BaseSTT,
+    BaseTTS,
+    BaseVAD,
+    CartesiaTTS,
+    DeepgramSTT,
+    ElevenLabsTTS,
+    EnergyVAD,
+    LocalWhisperSTT,
+    OpenAITTS,
+    OpenAIWhisperSTT,
+    PiperTTS,
+    SileroVAD,
+    TranscriptChunk,
+    VoicePipeline,
+)
+from .voice.types import PipelineEvent, PipelineState
 
 __version__ = "1.7.0"
 __all__ = [

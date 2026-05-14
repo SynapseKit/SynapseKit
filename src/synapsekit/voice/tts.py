@@ -166,8 +166,7 @@ class ElevenLabsTTS(BaseTTS):
                 from elevenlabs.client import AsyncElevenLabs
             except ImportError:
                 raise ImportError(
-                    "elevenlabs is required for ElevenLabsTTS. "
-                    "Install with: pip install elevenlabs"
+                    "elevenlabs is required for ElevenLabsTTS. Install with: pip install elevenlabs"
                 ) from None
             self._client = AsyncElevenLabs(api_key=self.api_key)
         return self._client
@@ -211,7 +210,7 @@ class CartesiaTTS(BaseTTS):
     Cartesia streaming TTS.
 
     Streams PCM audio chunks as they are generated using Cartesia's SSE API,
-    enabling very low first-chunk latency (~80–150 ms typical on Sonic models).
+    enabling very low first-chunk latency (~80-150 ms typical on Sonic models).
     Each sentence is synthesised independently so playback starts before the
     full LLM response is ready.
 

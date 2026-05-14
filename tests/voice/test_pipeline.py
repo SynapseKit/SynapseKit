@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 import io
 import struct
-import wave
 from collections.abc import AsyncIterator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -15,8 +14,8 @@ import pytest
 from synapsekit.voice.pipeline import VoicePipeline, _AudioPlayer
 from synapsekit.voice.types import PipelineEvent, PipelineState
 
-
 # ── Helpers ────────────────────────────────────────────────────────────────────
+
 
 def _silence_frame(num_samples: int = 480) -> bytes:
     return struct.pack(f"<{num_samples}h", *([0] * num_samples))
@@ -110,6 +109,7 @@ async def _finite_source(frames: list[bytes]) -> AsyncIterator[bytes]:
 
 # ── VAD gating ────────────────────────────────────────────────────────────────
 
+
 class TestVADGating:
     @pytest.mark.asyncio
     async def test_silence_never_triggers_stt(self) -> None:
@@ -162,6 +162,7 @@ class TestVADGating:
 
 
 # ── Streaming order ───────────────────────────────────────────────────────────
+
 
 class TestStreamingOrder:
     @pytest.mark.asyncio
@@ -217,6 +218,7 @@ class TestStreamingOrder:
 
 # ── Sentence-level streaming ──────────────────────────────────────────────────
 
+
 class TestSentenceStreaming:
     @pytest.mark.asyncio
     async def test_first_sentence_synthesised_before_full_response(self) -> None:
@@ -225,7 +227,9 @@ class TestSentenceStreaming:
         all_tokens: list[str] = []
 
         class _TrackingTTS:
-            async def synthesize_stream(self, text_stream: AsyncIterator[str]) -> AsyncIterator[bytes]:
+            async def synthesize_stream(
+                self, text_stream: AsyncIterator[str]
+            ) -> AsyncIterator[bytes]:
                 from synapsekit.voice.tts import _split_sentences
 
                 buffer = ""
@@ -244,21 +248,35 @@ class TestSentenceStreaming:
 
         class _SlowLLM:
             async def stream_with_messages(self, messages: Any, **kw: Any) -> AsyncIterator[str]:
+                # sleep(0) yields to the event loop between tokens, giving the TTS task
+                # opportunities to process each sentence boundary incrementally.
                 tokens = ["First sentence. ", "Second ", "sentence. ", "Third."]
                 for t in tokens:
-                    await asyncio.sleep(0.01)
+                    await asyncio.sleep(0)
                     yield t
 
         speech_idxs = set(range(5))
         vad = _MockVAD(speech_frames=speech_idxs)
-        frames = [_speech_frame() for _ in range(5)] + [_silence_frame() for _ in range(55)]
+        # 5 speech + 50 silence (utterance end) + 200 trailing silence frames.
+        # The extra trailing frames keep the pipeline loop alive long enough for
+        # the background LLM/TTS tasks to complete before cleanup cancels them.
+        frames = [_speech_frame() for _ in range(5)] + [_silence_frame() for _ in range(250)]
 
         pipeline = _make_pipeline(vad=vad, llm=_SlowLLM(), tts=_TrackingTTS())
-        await pipeline.run(
-            _finite_source(frames),
-            chunk_duration_ms=30,
-            silence_duration_ms=1500,
-        )
+
+        with patch("synapsekit.voice.pipeline._AudioPlayer") as mock_player:
+            instance = MagicMock()
+            instance.put = AsyncMock()
+            instance.drain = AsyncMock()
+            instance.start = MagicMock()
+            instance.interrupt = AsyncMock()
+            mock_player.return_value = instance
+
+            await pipeline.run(
+                _finite_source(frames),
+                chunk_duration_ms=30,
+                silence_duration_ms=1500,
+            )
 
         # First synthesis must have happened before all tokens arrived
         assert len(synthesis_calls) >= 1
@@ -267,6 +285,7 @@ class TestSentenceStreaming:
 
 
 # ── Interruption handling ─────────────────────────────────────────────────────
+
 
 class TestInterruptionHandling:
     @pytest.mark.asyncio
@@ -352,13 +371,13 @@ class TestInterruptionHandling:
             interrupt_threshold_ms=300,
         )
 
-        with patch("synapsekit.voice.pipeline._AudioPlayer") as MockPlayer:
+        with patch("synapsekit.voice.pipeline._AudioPlayer") as mock_player:
             instance = MagicMock()
             instance.interrupt = AsyncMock()
             instance.put = AsyncMock()
             instance.drain = AsyncMock()
             instance.start = MagicMock()
-            MockPlayer.return_value = instance
+            mock_player.return_value = instance
 
             await asyncio.wait_for(
                 pipeline.run(
@@ -394,13 +413,13 @@ class TestInterruptionHandling:
             allow_interruption=False,
         )
 
-        with patch("synapsekit.voice.pipeline._AudioPlayer") as MockPlayer:
+        with patch("synapsekit.voice.pipeline._AudioPlayer") as mock_player:
             instance = MagicMock()
             instance.interrupt = AsyncMock()
             instance.put = AsyncMock()
             instance.drain = AsyncMock()
             instance.start = MagicMock()
-            MockPlayer.return_value = instance
+            mock_player.return_value = instance
 
             await asyncio.wait_for(
                 pipeline.run(
@@ -416,6 +435,7 @@ class TestInterruptionHandling:
 
 
 # ── Cancellation / cleanup ────────────────────────────────────────────────────
+
 
 class TestCancellationAndCleanup:
     @pytest.mark.asyncio
@@ -469,13 +489,13 @@ class TestCancellationAndCleanup:
 
         pipeline = _make_pipeline(vad=vad, tts=_FailingTTS())
 
-        with patch("synapsekit.voice.pipeline._AudioPlayer") as MockPlayer:
+        with patch("synapsekit.voice.pipeline._AudioPlayer") as mock_player:
             instance = MagicMock()
             instance.put = AsyncMock()
             instance.drain = AsyncMock()
             instance.start = MagicMock()
             instance.interrupt = AsyncMock()
-            MockPlayer.return_value = instance
+            mock_player.return_value = instance
 
             await asyncio.wait_for(
                 pipeline.run(
@@ -492,6 +512,7 @@ class TestCancellationAndCleanup:
 
 
 # ── Audio player unit tests ───────────────────────────────────────────────────
+
 
 class TestAudioPlayer:
     @pytest.mark.asyncio
@@ -541,6 +562,7 @@ class TestAudioPlayer:
 
 # ── AgentMemory integration ───────────────────────────────────────────────────
 
+
 class TestAgentMemoryIntegration:
     """Memory recall augments LLM context; exchanges are stored after each turn."""
 
@@ -562,13 +584,13 @@ class TestAgentMemoryIntegration:
         pipeline._memory = memory
         pipeline._agent_id = "test-agent"
 
-        with patch("synapsekit.voice.pipeline._AudioPlayer") as MockPlayer:
+        with patch("synapsekit.voice.pipeline._AudioPlayer") as mock_player:
             instance = MagicMock()
             instance.put = AsyncMock()
             instance.drain = AsyncMock()
             instance.start = MagicMock()
             instance.interrupt = AsyncMock()
-            MockPlayer.return_value = instance
+            mock_player.return_value = instance
 
             await asyncio.wait_for(
                 pipeline.run(
@@ -597,13 +619,13 @@ class TestAgentMemoryIntegration:
         pipeline._memory = memory
         pipeline._agent_id = "test-agent"
 
-        with patch("synapsekit.voice.pipeline._AudioPlayer") as MockPlayer:
+        with patch("synapsekit.voice.pipeline._AudioPlayer") as mock_player:
             instance = MagicMock()
             instance.put = AsyncMock()
             instance.drain = AsyncMock()
             instance.start = MagicMock()
             instance.interrupt = AsyncMock()
-            MockPlayer.return_value = instance
+            mock_player.return_value = instance
 
             await asyncio.wait_for(
                 pipeline.run(
@@ -623,8 +645,9 @@ class TestAgentMemoryIntegration:
     @pytest.mark.asyncio
     async def test_memory_records_injected_into_context(self) -> None:
         """When recall returns records, they appear in the messages sent to LLM."""
-        from synapsekit.memory.base import MemoryRecord, MemoryType
         from datetime import datetime, timezone
+
+        from synapsekit.memory.base import MemoryRecord
 
         record = MemoryRecord(
             id="r1",
@@ -644,9 +667,7 @@ class TestAgentMemoryIntegration:
         captured_messages: list[list[dict]] = []
 
         class _CapturingLLM:
-            async def stream_with_messages(
-                self, messages: Any, **kw: Any
-            ) -> AsyncIterator[str]:
+            async def stream_with_messages(self, messages: Any, **kw: Any) -> AsyncIterator[str]:
                 captured_messages.append(list(messages))
                 yield "OK."
 
@@ -658,13 +679,13 @@ class TestAgentMemoryIntegration:
         pipeline._memory = memory
         pipeline._agent_id = "test"
 
-        with patch("synapsekit.voice.pipeline._AudioPlayer") as MockPlayer:
+        with patch("synapsekit.voice.pipeline._AudioPlayer") as mock_player:
             instance = MagicMock()
             instance.put = AsyncMock()
             instance.drain = AsyncMock()
             instance.start = MagicMock()
             instance.interrupt = AsyncMock()
-            MockPlayer.return_value = instance
+            mock_player.return_value = instance
 
             await asyncio.wait_for(
                 pipeline.run(
@@ -678,7 +699,9 @@ class TestAgentMemoryIntegration:
         assert captured_messages, "LLM was not called"
         msgs = captured_messages[0]
         # A system message containing the memory record must be present
-        memory_msgs = [m for m in msgs if m["role"] == "system" and "memory" in m["content"].lower()]
+        memory_msgs = [
+            m for m in msgs if m["role"] == "system" and "memory" in m["content"].lower()
+        ]
         assert memory_msgs, "Memory context not injected into LLM messages"
         assert "User prefers concise answers." in memory_msgs[0]["content"]
 
@@ -696,13 +719,13 @@ class TestAgentMemoryIntegration:
         pipeline = _make_pipeline(vad=vad)
         pipeline._memory = memory
 
-        with patch("synapsekit.voice.pipeline._AudioPlayer") as MockPlayer:
+        with patch("synapsekit.voice.pipeline._AudioPlayer") as mock_player:
             instance = MagicMock()
             instance.put = AsyncMock()
             instance.drain = AsyncMock()
             instance.start = MagicMock()
             instance.interrupt = AsyncMock()
-            MockPlayer.return_value = instance
+            mock_player.return_value = instance
 
             # Must complete without raising
             await asyncio.wait_for(
@@ -716,6 +739,7 @@ class TestAgentMemoryIntegration:
 
 
 # ── Interruption debounce false-positive ─────────────────────────────────────
+
 
 class TestInterruptionDebounce:
     @pytest.mark.asyncio
@@ -736,13 +760,13 @@ class TestInterruptionDebounce:
             interrupt_threshold_ms=300,
         )
 
-        with patch("synapsekit.voice.pipeline._AudioPlayer") as MockPlayer:
+        with patch("synapsekit.voice.pipeline._AudioPlayer") as mock_player:
             instance = MagicMock()
             instance.interrupt = AsyncMock()
             instance.put = AsyncMock()
             instance.drain = AsyncMock()
             instance.start = MagicMock()
-            MockPlayer.return_value = instance
+            mock_player.return_value = instance
 
             await asyncio.wait_for(
                 pipeline.run(
@@ -753,7 +777,7 @@ class TestInterruptionDebounce:
                 timeout=5.0,
             )
 
-        # interrupt() must NOT have been called — 9 frames × 30 ms = 270 ms < 300 ms
+        # interrupt() must NOT have been called -- 9 frames x 30 ms = 270 ms < 300 ms
         instance.interrupt.assert_not_called()
 
     @pytest.mark.asyncio
@@ -771,13 +795,13 @@ class TestInterruptionDebounce:
             interrupt_threshold_ms=300,
         )
 
-        with patch("synapsekit.voice.pipeline._AudioPlayer") as MockPlayer:
+        with patch("synapsekit.voice.pipeline._AudioPlayer") as mock_player:
             instance = MagicMock()
             instance.interrupt = AsyncMock()
             instance.put = AsyncMock()
             instance.drain = AsyncMock()
             instance.start = MagicMock()
-            MockPlayer.return_value = instance
+            mock_player.return_value = instance
 
             await asyncio.wait_for(
                 pipeline.run(
@@ -793,13 +817,16 @@ class TestInterruptionDebounce:
 
 # ── STT exception recovery ────────────────────────────────────────────────────
 
+
 class TestSTTExceptionRecovery:
     @pytest.mark.asyncio
     async def test_stt_exception_emits_error_and_returns_to_idle(self) -> None:
         """An STT provider exception must emit an error event and not crash run()."""
 
         class _FailingSTT:
-            async def transcribe_stream(self, audio_stream: AsyncIterator[bytes]) -> AsyncIterator[str]:
+            async def transcribe_stream(
+                self, audio_stream: AsyncIterator[bytes]
+            ) -> AsyncIterator[str]:
                 async for _ in audio_stream:
                     pass
                 raise RuntimeError("STT backend unavailable")
@@ -839,7 +866,9 @@ class TestSTTExceptionRecovery:
         """When STT fails, TTS must never be invoked."""
 
         class _FailingSTT:
-            async def transcribe_stream(self, audio_stream: AsyncIterator[bytes]) -> AsyncIterator[str]:
+            async def transcribe_stream(
+                self, audio_stream: AsyncIterator[bytes]
+            ) -> AsyncIterator[str]:
                 async for _ in audio_stream:
                     pass
                 raise RuntimeError("STT down")
@@ -866,6 +895,7 @@ class TestSTTExceptionRecovery:
 
 # ── Model / client caching ────────────────────────────────────────────────────
 
+
 class TestModelAndClientCaching:
     @pytest.mark.asyncio
     async def test_whisper_model_loaded_once_across_utterances(self) -> None:
@@ -884,13 +914,17 @@ class TestModelAndClientCaching:
             load_count += 1
             original_load()
 
-        with _patch.object(stt, "_load_model", side_effect=_counting_load), \
-             _patch.object(stt, "_transcribe_pcm", return_value="hello"):
+        with (
+            _patch.object(stt, "_load_model", side_effect=_counting_load),
+            _patch.object(stt, "_transcribe_pcm", return_value="hello"),
+        ):
+
             async def _src() -> AsyncIterator[bytes]:
                 yield b"\x00" * 3200
 
             # Simulate three separate utterances
             for _ in range(3):
+
                 async def _s() -> AsyncIterator[bytes]:
                     yield b"\x00" * 3200
 
@@ -919,10 +953,12 @@ class TestModelAndClientCaching:
             return tts._voice
 
         with patch.object(tts, "_get_voice", side_effect=_fake_get_voice):
+
             def _fake_synth(text: str) -> bytes:
                 tts._get_voice()  # mimics what _synthesize_text does
                 buf = io.BytesIO()
                 import wave as _wave
+
                 with _wave.open(buf, "wb") as wf:
                     wf.setnchannels(1)
                     wf.setsampwidth(2)
@@ -931,6 +967,7 @@ class TestModelAndClientCaching:
                 return buf.getvalue()
 
             with patch.object(tts, "_synthesize_text", side_effect=_fake_synth):
+
                 async def _stream() -> AsyncIterator[str]:
                     yield "First. Second. Third."
 

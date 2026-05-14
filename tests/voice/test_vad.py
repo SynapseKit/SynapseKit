@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import math
 import struct
 
 import pytest
@@ -80,7 +79,6 @@ class TestSileroVADImport:
 
     def test_import_error_without_torch(self, monkeypatch: pytest.MonkeyPatch) -> None:
         import builtins
-        import importlib
 
         real_import = builtins.__import__
 

@@ -88,8 +88,7 @@ class SileroVAD(BaseVAD):
             import torch
         except ImportError:
             raise ImportError(
-                "torch is required for SileroVAD. "
-                "Install with: pip install torch torchaudio"
+                "torch is required for SileroVAD. Install with: pip install torch torchaudio"
             ) from None
         model, _ = torch.hub.load(
             repo_or_dir="snakers4/silero-vad",

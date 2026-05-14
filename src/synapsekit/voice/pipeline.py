@@ -102,8 +102,8 @@ class _AudioPlayer:
             try:
                 samples = np.frombuffer(chunk, dtype=np.int16).astype(np.float32) / 32768.0
 
-                def _play() -> None:
-                    sd.play(samples, self._sample_rate)
+                def _play(s: np.ndarray = samples) -> None:
+                    sd.play(s, self._sample_rate)
                     sd.wait()
 
                 await asyncio.to_thread(_play)
@@ -380,14 +380,12 @@ class VoicePipeline:
         """Persist a user/assistant exchange as an episodic memory record."""
         if self._memory is None or not transcript or not response:
             return
-        try:
+        with contextlib.suppress(Exception):
             await self._memory.store(
                 agent_id=self._agent_id,
                 content=f"User: {transcript}\nAssistant: {response}",
                 memory_type="episodic",
             )
-        except Exception:
-            pass  # memory failures must not disrupt the conversation
 
     # ------------------------------------------------------------------ #
     # Internal pipeline machinery                                          #
@@ -439,9 +437,7 @@ class VoicePipeline:
                         interrupt_speech_ms += chunk_duration_ms
                         if interrupt_speech_ms >= self._interrupt_threshold_ms:
                             # Cancel both tasks concurrently to avoid serialised awaits
-                            _to_cancel = [
-                                t for t in (llm_task, tts_task) if t and not t.done()
-                            ]
+                            _to_cancel = [t for t in (llm_task, tts_task) if t and not t.done()]
                             for _t in _to_cancel:
                                 _t.cancel()
                             if _to_cancel:

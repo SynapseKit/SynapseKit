@@ -59,6 +59,7 @@ class TestOpenAITTS:
             return b"\x00" * 100
 
         with patch.object(tts, "_synthesize_text", side_effect=_fake_synth):
+
             async def _text_stream() -> AsyncIterator[str]:
                 yield "Hello world. "
                 yield "How are you? "
@@ -89,7 +90,7 @@ class TestOpenAITTS:
             yield "Second"
 
         with patch.object(tts, "_synthesize_text", side_effect=_fake_synth):
-            async for chunk in tts.synthesize_stream(_slow_stream()):
+            async for _chunk in tts.synthesize_stream(_slow_stream()):
                 yield_order.append("chunk")
 
         # First sentence synthesised before "Second" is buffered
@@ -119,6 +120,7 @@ class TestOpenAITTS:
             return b"\x00"
 
         with patch.object(tts, "_synthesize_text", side_effect=_fake):
+
             async def _stream() -> AsyncIterator[str]:
                 yield "   "
 
@@ -156,6 +158,7 @@ class TestCartesiaTTS:
             yield b"\x00" * 100
 
         with patch.object(tts, "_stream_sentence", side_effect=_fake_stream_sentence):
+
             async def _stream() -> AsyncIterator[str]:
                 yield "Hello world. "
                 yield "How are you? "

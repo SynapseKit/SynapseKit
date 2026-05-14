@@ -28,7 +28,7 @@ class LocalWhisperSTT(BaseSTT):
 
     Runs fully on-device with no network round-trips, enabling low-latency
     interactions typical of desktop voice agents.  Typical transcription time
-    is 100–300 ms for short utterances on modern CPUs.
+    is 100-300 ms for short utterances on modern CPUs.
 
     Supported backends (tried in order):
 
@@ -136,7 +136,7 @@ class OpenAIWhisperSTT(BaseSTT):
     """
     OpenAI Whisper API STT.
 
-    High quality but incurs a network round-trip (typically 500 ms–1 s).
+    High quality but incurs a network round-trip (typically 500 ms-1 s).
     For latency-sensitive desktop pipelines, prefer LocalWhisperSTT.
 
     Parameters
@@ -261,8 +261,7 @@ class DeepgramSTT(BaseSTT):
             from deepgram import LiveOptions, LiveTranscriptionEvents
         except ImportError:
             raise ImportError(
-                "deepgram-sdk is required for DeepgramSTT. "
-                "Install with: pip install deepgram-sdk"
+                "deepgram-sdk is required for DeepgramSTT. Install with: pip install deepgram-sdk"
             ) from None
 
         client = self._get_client()

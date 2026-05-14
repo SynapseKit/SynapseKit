@@ -80,9 +80,9 @@ rss = ["feedparser>=6.0"]
 groq = ["groq>=0.9"]
 audio = ["openai>=1.0"]
 video = ["openai>=1.0"]
-voice = ["openai>=1.0", "sounddevice>=0.4"]
-voice-local = ["faster-whisper>=1.0", "sounddevice>=0.4"]
-voice-stream = ["sounddevice>=0.4"]
+voice = ["openai>=1.0", "sounddevice>=0.4", "soundfile>=0.12"]
+voice-local = ["faster-whisper>=1.0", "pyttsx3>=2.90", "sounddevice>=0.4", "soundfile>=0.12"]
+voice-stream = ["sounddevice>=0.4", "soundfile>=0.12"]
 voice-piper = ["piper-tts>=1.2"]
 voice-cartesia = ["cartesia>=0.1"]
 voice-elevenlabs = ["elevenlabs>=1.0"]
@@ -401,9 +401,11 @@ sqlite-vec = "sqlite_vec"
 snowflake-connector-python = "snowflake"
 "cassandra-driver" = "cassandra"
 "opensearch-py" = "opensearchpy"
+"deepgram-sdk" = "deepgram"
+"piper-tts" = "piper"
 
 [tool.deptry.per_rule_ignores]
 DEP001 = ["sqlalchemy", "pydantic", "aiohttp", "opentelemetry", "whisper", "botocore", "aiomcache", "nest_asyncio", "huggingface_hub", "serpapi", "weaviate", "uvicorn", "starlette", "tomli", "pyttsx3", "faster_whisper", "sounddevice", "soundfile", "aiokafka", "typesense"]
-DEP002 = ["numpy", "rank-bm25", "beautifulsoup4", "lxml", "pillow", "pyasn1", "faiss-cpu", "google-generativeai", "tavily-python", "youtube-search-python", "psycopg", "google-search-results", "discord.py", "google-auth", "weaviate-client", "pymilvus", "lancedb", "pgvector", "slack-sdk", "supabase", "pymongo", "azure-storage-blob", "elasticsearch", "tzdata"]
+DEP002 = ["numpy", "rank-bm25", "beautifulsoup4", "lxml", "pillow", "pyasn1", "faiss-cpu", "google-generativeai", "tavily-python", "youtube-search-python", "psycopg", "google-search-results", "discord.py", "google-auth", "weaviate-client", "pymilvus", "lancedb", "pgvector", "slack-sdk", "supabase", "pymongo", "azure-storage-blob", "elasticsearch", "tzdata", "torchaudio"]
 DEP003 = ["sqlalchemy", "botocore", "nest_asyncio", "opentelemetry", "starlette", "uvicorn"]
 DEP004 = ["pydantic"]
