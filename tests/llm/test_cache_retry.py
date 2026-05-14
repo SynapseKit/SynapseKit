@@ -223,3 +223,46 @@ def test_llmconfig_defaults():
     assert config.cache_maxsize == 128
     assert config.max_retries == 0
     assert config.retry_delay == 1.0
+
+
+# ------------------------------------------------------------------ #
+# FallbackChain empty response handling
+# ------------------------------------------------------------------ #
+
+
+class _FixedResponseLLM(BaseLLM):
+    def __init__(self, response: str, model: str):
+        super().__init__(LLMConfig(model=model, api_key="", provider="test"))
+        self.response = response
+        self.call_count = 0
+
+    async def stream(self, prompt: str, **kw):
+        self.call_count += 1
+        if self.response:
+            yield self.response
+
+
+class TestFallbackChainEmptyResponses:
+    async def test_empty_response_falls_back_by_default(self):
+        from synapsekit.llm.fallback_chain import FallbackChain, FallbackChainConfig
+
+        empty = _FixedResponseLLM("", "empty")
+        backup = _FixedResponseLLM("backup", "backup")
+        chain = FallbackChain(FallbackChainConfig(models=[empty, backup]))
+
+        assert await chain.generate("prompt") == "backup"
+        assert chain.used_model is backup
+        assert empty.call_count == 1
+        assert backup.call_count == 1
+
+    async def test_empty_response_can_be_accepted(self):
+        from synapsekit.llm.fallback_chain import FallbackChain, FallbackChainConfig
+
+        empty = _FixedResponseLLM("", "empty")
+        backup = _FixedResponseLLM("backup", "backup")
+        chain = FallbackChain(FallbackChainConfig(models=[empty, backup], fallback_on_empty=False))
+
+        assert await chain.generate("prompt") == ""
+        assert chain.used_model is empty
+        assert empty.call_count == 1
+        assert backup.call_count == 0

@@ -15,6 +15,7 @@ class FallbackChainConfig:
 
     models: list[BaseLLM]
     min_response_length: int = 1
+    fallback_on_empty: bool = True
 
 
 class FallbackChain(BaseLLM):
@@ -49,7 +50,10 @@ class FallbackChain(BaseLLM):
                     tokens.append(token)
                 full = "".join(tokens)
                 if len(full.strip()) < min_len:
-                    continue
+                    if self._chain_config.fallback_on_empty:
+                        continue
+                    self._used_model = llm
+                    return
                 self._used_model = llm
                 for token in tokens:
                     yield token
@@ -70,7 +74,10 @@ class FallbackChain(BaseLLM):
             try:
                 result = await llm.generate(prompt, **kw)
                 if len(result.strip()) < min_len:
-                    continue
+                    if self._chain_config.fallback_on_empty:
+                        continue
+                    self._used_model = llm
+                    return result
                 self._used_model = llm
                 return result
             except Exception as exc:
