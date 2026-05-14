@@ -96,7 +96,8 @@ async def main() -> None:
 
     # ── LLM ───────────────────────────────────────────────────────────────────
     try:
-        from synapsekit.llm import LLMConfig, OpenAILLM
+        from synapsekit.llm.base import LLMConfig
+        from synapsekit.llm.openai import OpenAILLM
 
         llm = OpenAILLM(LLMConfig(model="gpt-4o-mini", api_key=api_key or "", provider="openai"))
     except ImportError:

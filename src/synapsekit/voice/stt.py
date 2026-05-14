@@ -32,9 +32,9 @@ class LocalWhisperSTT(BaseSTT):
 
     Supported backends (tried in order):
 
-    1. **faster-whisper** — GGML-quantised model via CTranslate2.
-       Compatible with whisper.cpp model files and Apple-Silicon-accelerated
-       WhisperKit binaries when using Metal backend.
+    1. **faster-whisper** — quantised model via CTranslate2 (int8/float16).
+       Uses CTranslate2 model format; not compatible with whisper.cpp GGML
+       files or WhisperKit binaries.
        Install: ``pip install faster-whisper``
 
     2. **openai-whisper** — reference PyTorch implementation.
@@ -239,20 +239,33 @@ class DeepgramSTT(BaseSTT):
         self.model = model
         self.language = language
         self.sample_rate = sample_rate
+        self._client: Any = None
+
+    def _get_client(self) -> Any:
+        if self._client is None:
+            try:
+                from deepgram import DeepgramClient
+            except ImportError:
+                raise ImportError(
+                    "deepgram-sdk is required for DeepgramSTT. "
+                    "Install with: pip install deepgram-sdk"
+                ) from None
+            self._client = DeepgramClient(self.api_key)
+        return self._client
 
     async def transcribe_stream(
         self,
         audio_stream: AsyncIterator[bytes],
     ) -> AsyncIterator[str]:
         try:
-            from deepgram import DeepgramClient, LiveOptions, LiveTranscriptionEvents
+            from deepgram import LiveOptions, LiveTranscriptionEvents
         except ImportError:
             raise ImportError(
                 "deepgram-sdk is required for DeepgramSTT. "
                 "Install with: pip install deepgram-sdk"
             ) from None
 
-        client = DeepgramClient(self.api_key)
+        client = self._get_client()
         transcript_queue: asyncio.Queue[str | None] = asyncio.Queue()
 
         connection = await client.listen.asynclive.v("1")

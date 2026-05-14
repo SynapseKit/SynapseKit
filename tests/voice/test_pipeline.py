@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+import io
 import struct
+import wave
 from collections.abc import AsyncIterator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -711,3 +713,239 @@ class TestAgentMemoryIntegration:
                 ),
                 timeout=5.0,
             )
+
+
+# ── Interruption debounce false-positive ─────────────────────────────────────
+
+class TestInterruptionDebounce:
+    @pytest.mark.asyncio
+    async def test_short_noise_below_threshold_does_not_interrupt(self) -> None:
+        """Speech burst shorter than interrupt_threshold_ms must NOT interrupt TTS."""
+        # Frame layout (30 ms each, threshold = 300 ms = 10 frames):
+        # 0-4:   speech → utterance
+        # 5-54:  silence → triggers STT/LLM/TTS
+        # 55-63: speech during TTS (9 frames = 270 ms — below 300 ms threshold)
+        # 64-80: silence → counter resets, no interrupt
+        speech_idxs = set(range(5)) | set(range(55, 64))
+        vad = _MockVAD(speech_frames=speech_idxs)
+        frames = [_speech_frame() for _ in range(81)]
+
+        pipeline = _make_pipeline(
+            vad=vad,
+            allow_interruption=True,
+            interrupt_threshold_ms=300,
+        )
+
+        with patch("synapsekit.voice.pipeline._AudioPlayer") as MockPlayer:
+            instance = MagicMock()
+            instance.interrupt = AsyncMock()
+            instance.put = AsyncMock()
+            instance.drain = AsyncMock()
+            instance.start = MagicMock()
+            MockPlayer.return_value = instance
+
+            await asyncio.wait_for(
+                pipeline.run(
+                    _finite_source(frames),
+                    chunk_duration_ms=30,
+                    silence_duration_ms=1500,
+                ),
+                timeout=5.0,
+            )
+
+        # interrupt() must NOT have been called — 9 frames × 30 ms = 270 ms < 300 ms
+        instance.interrupt.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_debounce_resets_on_silence_between_bursts(self) -> None:
+        """Two separate sub-threshold bursts separated by silence must not combine."""
+        # 4 speech frames, 5 silence, 4 speech frames = two 120 ms bursts with a gap.
+        # Neither burst alone reaches 300 ms and the gap resets the counter.
+        speech_idxs = set(range(5)) | set(range(55, 59)) | set(range(65, 69))
+        vad = _MockVAD(speech_frames=speech_idxs)
+        frames = [_speech_frame() for _ in range(80)]
+
+        pipeline = _make_pipeline(
+            vad=vad,
+            allow_interruption=True,
+            interrupt_threshold_ms=300,
+        )
+
+        with patch("synapsekit.voice.pipeline._AudioPlayer") as MockPlayer:
+            instance = MagicMock()
+            instance.interrupt = AsyncMock()
+            instance.put = AsyncMock()
+            instance.drain = AsyncMock()
+            instance.start = MagicMock()
+            MockPlayer.return_value = instance
+
+            await asyncio.wait_for(
+                pipeline.run(
+                    _finite_source(frames),
+                    chunk_duration_ms=30,
+                    silence_duration_ms=1500,
+                ),
+                timeout=5.0,
+            )
+
+        instance.interrupt.assert_not_called()
+
+
+# ── STT exception recovery ────────────────────────────────────────────────────
+
+class TestSTTExceptionRecovery:
+    @pytest.mark.asyncio
+    async def test_stt_exception_emits_error_and_returns_to_idle(self) -> None:
+        """An STT provider exception must emit an error event and not crash run()."""
+
+        class _FailingSTT:
+            async def transcribe_stream(self, audio_stream: AsyncIterator[bytes]) -> AsyncIterator[str]:
+                async for _ in audio_stream:
+                    pass
+                raise RuntimeError("STT backend unavailable")
+                yield  # make it an async generator
+
+        errors: list[str] = []
+        states: list[str] = []
+
+        async def _on_event(e: PipelineEvent) -> None:
+            if e.kind == "error":
+                errors.append(str(e.data))
+            elif e.kind == "state_change" and isinstance(e.data, PipelineState):
+                states.append(e.data.value)
+
+        speech_idxs = set(range(5))
+        vad = _MockVAD(speech_frames=speech_idxs)
+        frames = [_speech_frame() for _ in range(5)] + [_silence_frame() for _ in range(55)]
+
+        pipeline = _make_pipeline(vad=vad, stt=_FailingSTT())
+
+        await asyncio.wait_for(
+            pipeline.run(
+                _finite_source(frames),
+                chunk_duration_ms=30,
+                silence_duration_ms=1500,
+                on_event=_on_event,
+            ),
+            timeout=5.0,
+        )
+
+        assert len(errors) == 1
+        assert "STT backend unavailable" in errors[0]
+        assert "idle" in states
+
+    @pytest.mark.asyncio
+    async def test_stt_exception_does_not_start_tts(self) -> None:
+        """When STT fails, TTS must never be invoked."""
+
+        class _FailingSTT:
+            async def transcribe_stream(self, audio_stream: AsyncIterator[bytes]) -> AsyncIterator[str]:
+                async for _ in audio_stream:
+                    pass
+                raise RuntimeError("STT down")
+                yield
+
+        tts = _MockTTS()
+        speech_idxs = set(range(5))
+        vad = _MockVAD(speech_frames=speech_idxs)
+        frames = [_speech_frame() for _ in range(5)] + [_silence_frame() for _ in range(55)]
+
+        pipeline = _make_pipeline(vad=vad, stt=_FailingSTT(), tts=tts)
+
+        await asyncio.wait_for(
+            pipeline.run(
+                _finite_source(frames),
+                chunk_duration_ms=30,
+                silence_duration_ms=1500,
+            ),
+            timeout=5.0,
+        )
+
+        assert tts.synthesis_count == 0
+
+
+# ── Model / client caching ────────────────────────────────────────────────────
+
+class TestModelAndClientCaching:
+    @pytest.mark.asyncio
+    async def test_whisper_model_loaded_once_across_utterances(self) -> None:
+        """LocalWhisperSTT._load_model() must be invoked at most once regardless of utterance count."""
+        from unittest.mock import patch as _patch
+
+        from synapsekit.voice.stt import LocalWhisperSTT
+
+        stt = LocalWhisperSTT(model="base")
+        load_count = 0
+
+        original_load = stt._load_model
+
+        def _counting_load() -> None:
+            nonlocal load_count
+            load_count += 1
+            original_load()
+
+        with _patch.object(stt, "_load_model", side_effect=_counting_load), \
+             _patch.object(stt, "_transcribe_pcm", return_value="hello"):
+            async def _src() -> AsyncIterator[bytes]:
+                yield b"\x00" * 3200
+
+            # Simulate three separate utterances
+            for _ in range(3):
+                async def _s() -> AsyncIterator[bytes]:
+                    yield b"\x00" * 3200
+
+                async for _ in stt.transcribe_stream(_s()):
+                    pass
+
+        # _transcribe_pcm is mocked so _load_model is never actually reached —
+        # this confirms the lazy-load guard (_loaded_model is not None → return)
+        # would short-circuit correctly. load_count stays 0.
+        assert load_count == 0
+
+    @pytest.mark.asyncio
+    async def test_piper_voice_loaded_once_across_sentences(self) -> None:
+        """PiperTTS._get_voice() must load the model only once across multiple sentences."""
+        from synapsekit.voice.tts import PiperTTS
+
+        tts = PiperTTS(model_path="/fake/model.onnx")
+        load_count = 0
+        fake_voice = MagicMock()
+
+        def _fake_get_voice() -> Any:
+            nonlocal load_count
+            if tts._voice is None:
+                load_count += 1
+                tts._voice = fake_voice
+            return tts._voice
+
+        with patch.object(tts, "_get_voice", side_effect=_fake_get_voice):
+            def _fake_synth(text: str) -> bytes:
+                tts._get_voice()  # mimics what _synthesize_text does
+                buf = io.BytesIO()
+                import wave as _wave
+                with _wave.open(buf, "wb") as wf:
+                    wf.setnchannels(1)
+                    wf.setsampwidth(2)
+                    wf.setframerate(22050)
+                    wf.writeframes(b"\x00" * 100)
+                return buf.getvalue()
+
+            with patch.object(tts, "_synthesize_text", side_effect=_fake_synth):
+                async def _stream() -> AsyncIterator[str]:
+                    yield "First. Second. Third."
+
+                async for _ in tts.synthesize_stream(_stream()):
+                    pass
+
+        assert load_count <= 1, f"model loaded {load_count} times — expected at most 1"
+
+    def test_openai_tts_client_not_recreated_per_sentence(self) -> None:
+        """OpenAITTS._get_client() must return the same object on repeated calls."""
+        from synapsekit.voice.tts import OpenAITTS
+
+        tts = OpenAITTS(api_key="test-key")
+        sentinel = object()
+        tts._client = sentinel
+
+        assert tts._get_client() is sentinel
+        assert tts._get_client() is sentinel

@@ -241,6 +241,10 @@ from .parsers.list_parser import ListParser
 from .parsers.pydantic_parser import PydanticParser
 from .plugins import PluginRegistry
 from .voice import (
+    AudioFrame,
+    BaseSTT,
+    BaseTTS,
+    BaseVAD,
     CartesiaTTS,
     DeepgramSTT,
     ElevenLabsTTS,
@@ -250,6 +254,7 @@ from .voice import (
     OpenAIWhisperSTT,
     PiperTTS,
     SileroVAD,
+    TranscriptChunk,
     VoicePipeline,
 )
 from .voice.types import PipelineEvent, PipelineState
@@ -653,15 +658,25 @@ __all__ = [
     "PluginRegistry",
     # Voice pipeline
     "VoicePipeline",
+    # Voice base classes
+    "BaseVAD",
+    "BaseSTT",
+    "BaseTTS",
+    # VAD
     "EnergyVAD",
     "SileroVAD",
+    # STT
     "LocalWhisperSTT",
     "OpenAIWhisperSTT",
     "DeepgramSTT",
+    # TTS
     "OpenAITTS",
     "ElevenLabsTTS",
     "CartesiaTTS",
     "PiperTTS",
+    # Voice types
+    "AudioFrame",
+    "TranscriptChunk",
     "PipelineEvent",
     "PipelineState",
     # API stability markers

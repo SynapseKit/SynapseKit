@@ -334,6 +334,19 @@ class PiperTTS(BaseTTS):
         self.config_path = config_path
         self.speaker = speaker
         self.sample_rate = sample_rate
+        self._voice: Any = None
+
+    def _get_voice(self) -> Any:
+        if self._voice is None:
+            try:
+                from piper import PiperVoice
+            except ImportError:
+                raise ImportError(
+                    "piper-tts is required for PiperTTS. "
+                    "Install with: pip install 'synapsekit[voice-piper]'"
+                ) from None
+            self._voice = PiperVoice.load(self.model_path, config_path=self.config_path)
+        return self._voice
 
     async def synthesize_stream(
         self,
@@ -356,15 +369,7 @@ class PiperTTS(BaseTTS):
                 yield audio
 
     def _synthesize_text(self, text: str) -> bytes:
-        try:
-            from piper import PiperVoice
-        except ImportError:
-            raise ImportError(
-                "piper-tts is required for PiperTTS. "
-                "Install with: pip install piper-tts"
-            ) from None
-
-        voice = PiperVoice.load(self.model_path, config_path=self.config_path)
+        voice = self._get_voice()
         wav_io = io.BytesIO()
         with wave.open(wav_io, "wb") as wf:
             voice.synthesize(text, wf, speaker_id=self.speaker)
