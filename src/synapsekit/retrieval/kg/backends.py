@@ -16,7 +16,9 @@ class BaseGraphStore(Protocol):
         """Link an entity to a document ID."""
         ...
 
-    def get_neighbors(self, entity: str, max_hops: int = 1, min_confidence: float = 0.0) -> set[str]:
+    def get_neighbors(
+        self, entity: str, max_hops: int = 1, min_confidence: float = 0.0
+    ) -> set[str]:
         """Return connected entities within max_hops using depth-first traversal."""
         ...
 
@@ -36,7 +38,7 @@ class NetworkXStore:
                 "networkx is required for NetworkXStore. "
                 "Install it with `pip install networkx` or `pip install synapsekit[graph]`."
             ) from None
-        
+
         self.graph = nx.DiGraph()
         self._entity_to_docs: dict[str, set[str]] = {}
 
@@ -50,7 +52,9 @@ class NetworkXStore:
         """Link an entity to a document ID."""
         self._entity_to_docs.setdefault(entity, set()).add(doc_id)
 
-    def get_neighbors(self, entity: str, max_hops: int = 1, min_confidence: float = 0.0) -> set[str]:
+    def get_neighbors(
+        self, entity: str, max_hops: int = 1, min_confidence: float = 0.0
+    ) -> set[str]:
         """Return connected entities within max_hops using depth-first traversal."""
         if entity not in self.graph:
             return set()
@@ -122,15 +126,17 @@ class Neo4jStore:
         with self._driver.session() as session:
             session.run(query, entity=entity, doc_id=doc_id)
 
-    def get_neighbors(self, entity: str, max_hops: int = 1, min_confidence: float = 0.0) -> set[str]:
+    def get_neighbors(
+        self, entity: str, max_hops: int = 1, min_confidence: float = 0.0
+    ) -> set[str]:
         """Return connected entities within max_hops using graph traversal."""
         # Using Cypher variable-length path to find neighbors up to max_hops
         query = (
-            "MATCH (e:Entity {name: $entity})-[r:RELATIONSHIP*1..%d]-(neighbor:Entity) "
+            f"MATCH (e:Entity {{name: $entity}})-[r:RELATIONSHIP*1..{max_hops}]-(neighbor:Entity) "
             "WHERE all(rel IN r WHERE rel.confidence >= $min_confidence) "
             "RETURN DISTINCT neighbor.name AS name"
-        ) % max_hops
-        
+        )
+
         with self._driver.session() as session:
             result = session.run(query, entity=entity, min_confidence=min_confidence)
             return {record["name"] for record in result}
@@ -138,8 +144,7 @@ class Neo4jStore:
     def get_related_documents(self, entity: str) -> list[str]:
         """Return document IDs linked to the entity."""
         query = (
-            "MATCH (e:Entity {name: $entity})-[:MENTIONED_IN]->(d:Document) "
-            "RETURN d.id AS doc_id"
+            "MATCH (e:Entity {name: $entity})-[:MENTIONED_IN]->(d:Document) RETURN d.id AS doc_id"
         )
         with self._driver.session() as session:
             result = session.run(query, entity=entity)

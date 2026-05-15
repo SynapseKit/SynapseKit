@@ -47,13 +47,17 @@ class KnowledgeGraphBuilder:
                 cleaned = cleaned[3:]
             if cleaned.endswith("```"):
                 cleaned = cleaned[:-3]
-            
+
             entities = json.loads(cleaned.strip())
             if isinstance(entities, list):
                 return [str(e) for e in entities]
         except json.JSONDecodeError:
             # Fallback if the LLM doesn't return valid JSON
-            return [e.strip() for e in response.replace("[", "").replace("]", "").split(",") if e.strip()]
+            return [
+                e.strip()
+                for e in response.replace("[", "").replace("]", "").split(",")
+                if e.strip()
+            ]
         return []
 
     async def extract_triples(self, text: str) -> list[dict]:
@@ -68,7 +72,7 @@ class KnowledgeGraphBuilder:
                 cleaned = cleaned[3:]
             if cleaned.endswith("```"):
                 cleaned = cleaned[:-3]
-                
+
             triples = json.loads(cleaned.strip())
             if isinstance(triples, list):
                 return triples
@@ -84,7 +88,7 @@ class KnowledgeGraphBuilder:
         if len(docs) != len(doc_ids):
             raise ValueError("Length of docs and doc_ids must match.")
 
-        for text, doc_id in zip(docs, doc_ids):
+        for text, doc_id in zip(docs, doc_ids, strict=True):
             triples = await self.extract_triples(text)
             for triple in triples:
                 subject = triple.get("subject")

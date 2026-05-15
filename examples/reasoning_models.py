@@ -32,7 +32,9 @@ async def main():
         openai_key = os.environ.get("OPENAI_API_KEY")
         if openai_key:
             llm = ReasoningLLM(model="o3", api_key=openai_key)
-            result = await llm.agenerate("Explain what happens in a transformer when computing attention")
+            result = await llm.agenerate(
+                "Explain what happens in a transformer when computing attention"
+            )
 
             print(f"Model: {result.model}")
             print(f"Provider: {result.provider}")

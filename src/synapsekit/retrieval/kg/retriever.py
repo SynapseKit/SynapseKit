@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ...llm.base import BaseLLM
     from ..retriever import Retriever
     from .backends import BaseGraphStore
     from .builder import KnowledgeGraphBuilder
@@ -68,14 +67,14 @@ class HybridKGRetriever:
         # Note: Since the KG store stores doc_ids but our vector retriever returns raw texts
         # by default, we need to map them or assume they store texts if the backend was
         # configured that way. In standard GraphRAG, the vector store stores the texts,
-        # and the doc IDs are matching metadata. 
+        # and the doc IDs are matching metadata.
         # For simplicity in this implementation, if the store uses texts as doc IDs, it merges them.
         graph_results = await self._kg_retriever.retrieve(query)
 
         # 3. Merge and deduplicate
         seen: set[str] = set()
         merged: list[str] = []
-        
+
         for doc in vector_results + graph_results:
             if doc not in seen:
                 seen.add(doc)
