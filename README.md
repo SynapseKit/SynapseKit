@@ -487,10 +487,18 @@ Every integration is `pip install synapsekit[name]` — nothing else. Swap provi
   </tr>
 </table>
 
+### Multi-Hop Knowledge Graph RAG
+
+SynapseKit provides advanced retrieval modules, including vector search and multi-hop Knowledge Graph (KG) retrieval.
+
+**When to use which?**
+- **Vector Search (Semantic):** Best for broad conceptual queries, finding similar passages, or answering questions whose answers are contained within a single chunk of text.
+- **Knowledge Graph (KG):** Best for specific, multi-hop reasoning questions where the relationship spans across multiple documents (e.g., finding out who owns the parent company of a subsidiary).
+- **Hybrid (Vector + KG):** Combining both strategies guarantees that you capture deep semantic context while also exploring explicitly extracted entity relationships. Initialize the `RAG` facade with `graph_store=NetworkXStore()` or `Neo4jStore(...)` to enable this out-of-the-box.
+
 <div align="center">
 
 ---
-
 **Don't see your stack?**
 Every integration is built the same way — most take under an hour.
 [Browse `good first issue` →](https://github.com/SynapseKit/SynapseKit/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) · [Contributing guide →](CONTRIBUTING.md) · [Discord →](https://discord.gg/PSuAXHRywJ)
