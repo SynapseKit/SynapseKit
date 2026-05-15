@@ -42,6 +42,7 @@ Discord = "https://discord.gg/PSuAXHRywJ"
 synapsekit = "synapsekit.cli.main:main"
 
 [project.optional-dependencies]
+graph = ["networkx>=3.0", "neo4j>=5.0"]
 openai = ["openai>=1.0"]
 anthropic = ["anthropic>=0.25"]
 semantic = ["sentence-transformers>=2.7"]
