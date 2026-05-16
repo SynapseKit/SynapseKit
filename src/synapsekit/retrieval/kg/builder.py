@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import csv
 import json
 from typing import TYPE_CHECKING
 
@@ -53,11 +54,11 @@ class KnowledgeGraphBuilder:
                 return [str(e) for e in entities]
         except json.JSONDecodeError:
             # Fallback if the LLM doesn't return valid JSON
-            return [
-                e.strip()
-                for e in response.replace("[", "").replace("]", "").split(",")
-                if e.strip()
-            ]
+            raw = response.replace("[", "").replace("]", "").replace("\n", ",")
+            rows = list(csv.reader([raw], skipinitialspace=True))
+            if rows:
+                return [e.strip() for e in rows[0] if e.strip()]
+            return []
         return []
 
     async def extract_triples(self, text: str) -> list[dict]:
@@ -91,6 +92,8 @@ class KnowledgeGraphBuilder:
         for text, doc_id in zip(docs, doc_ids, strict=True):
             triples = await self.extract_triples(text)
             for triple in triples:
+                if not isinstance(triple, dict):
+                    continue
                 subject = triple.get("subject")
                 predicate = triple.get("predicate")
                 obj = triple.get("object")

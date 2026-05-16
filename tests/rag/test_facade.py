@@ -14,8 +14,9 @@ from synapsekit.observability.tracer import TokenTracer
 
 def _patch_rag(rag: RAG, tokens=("Answer", " here")):
     """Replace the pipeline's LLM and retriever with mocks."""
-    rag._pipeline.config.retriever.retrieve = AsyncMock(return_value=["context"])
-    rag._pipeline.config.retriever.retrieve_with_scores = AsyncMock(
+    retriever = rag._pipeline.config.retriever
+    retriever.retrieve = AsyncMock(return_value=["context"])
+    retriever.retrieve_with_scores = AsyncMock(
         return_value=[
             {
                 "text": "context",
@@ -24,7 +25,12 @@ def _patch_rag(rag: RAG, tokens=("Answer", " here")):
             }
         ]
     )
-    rag._pipeline.config.retriever._store.add = AsyncMock()
+
+    # HybridKGRetriever wraps the standard retriever in _vector_retriever
+    if hasattr(retriever, "_vector_retriever"):
+        retriever._vector_retriever._store.add = AsyncMock()
+    elif hasattr(retriever, "_store"):
+        retriever._store.add = AsyncMock()
 
     async def mock_stream(messages, **kw):
         for t in tokens:
@@ -238,3 +244,34 @@ class TestRAGFacade:
     def test_auto_eval_flag_propagates_to_pipeline(self):
         rag = RAG(model="gpt-4o-mini", api_key="sk-test", auto_eval=True)
         assert rag._pipeline.config.auto_eval is True
+
+    @pytest.mark.asyncio
+    async def test_graph_store_triggers_builder_on_add(self):
+        pytest.importorskip("networkx")
+        from synapsekit.retrieval.kg.backends import NetworkXStore
+
+        store = NetworkXStore()
+        rag = RAG(model="gpt-4o-mini", api_key="sk-test", graph_store=store)
+        rag._pipeline.add = AsyncMock()
+        assert rag._kg_builder is not None
+        rag._kg_builder.build_from_documents = AsyncMock()
+
+        await rag.add_async("Graph doc", metadata={"source": "doc-99"})
+
+        rag._pipeline.add.assert_awaited_once_with("Graph doc", {"source": "doc-99"})
+        rag._kg_builder.build_from_documents.assert_awaited_once_with(["Graph doc"], ["doc-99"])
+
+    @pytest.mark.asyncio
+    async def test_graph_retrieval_integration_on_ask(self):
+        pytest.importorskip("networkx")
+        from synapsekit.retrieval.kg.backends import NetworkXStore
+        from synapsekit.retrieval.kg.retriever import HybridKGRetriever
+
+        store = NetworkXStore()
+        rag = RAG(model="gpt-4o-mini", api_key="sk-test", graph_store=store)
+        _patch_rag(rag)
+        rag._pipeline.run = AsyncMock(return_value={"answer": "Graph Answer"})
+
+        await rag.ask("test query")
+
+        assert isinstance(rag._pipeline.config.retriever, HybridKGRetriever)
