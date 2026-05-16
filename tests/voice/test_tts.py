@@ -251,8 +251,10 @@ class TestPiperTTSCaching:
                 load_calls.append(1)
                 return fake_voice
 
-        with patch.dict("sys.modules", {"piper": MagicMock(PiperVoice=_FakePiperVoice)}), \
-             patch("synapsekit.voice.tts.wave.open"):
+        with (
+            patch.dict("sys.modules", {"piper": MagicMock(PiperVoice=_FakePiperVoice)}),
+            patch("synapsekit.voice.tts.wave.open"),
+        ):
             for _ in range(4):
                 tts._synthesize_text("Sentence.")
 
