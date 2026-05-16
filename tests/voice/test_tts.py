@@ -208,3 +208,52 @@ class TestCartesiaTTS:
         async for chunk in tts.synthesize_stream(_empty()):
             chunks.append(chunk)
         assert chunks == []
+
+
+class TestPiperTTSCaching:
+    def test_voice_instance_is_same_object_across_calls(self) -> None:
+        """_get_voice() must return the identical object on every call — no reload."""
+
+        from unittest.mock import MagicMock, patch
+
+        from synapsekit.voice.tts import PiperTTS
+
+        tts = PiperTTS(model_path="/fake/model.onnx")
+        fake_voice = MagicMock()
+        fake_voice.synthesize = MagicMock()
+
+        # Seed the cache — simulates what _get_voice does on the first real call.
+        tts._voice = fake_voice
+
+        with patch("synapsekit.voice.tts.wave.open"):
+            for _ in range(5):
+                tts._synthesize_text("Hello.")
+
+        # The cached instance must be the exact same object throughout.
+        assert tts._voice is fake_voice
+        # synthesize was called 5 times on the same instance — never recreated.
+        assert fake_voice.synthesize.call_count == 5
+
+    def test_piper_voice_load_called_only_once(self) -> None:
+        """PiperVoice.load must be called exactly once even after many sentences."""
+        from unittest.mock import MagicMock, patch
+
+        from synapsekit.voice.tts import PiperTTS
+
+        tts = PiperTTS(model_path="/fake/model.onnx")
+        fake_voice = MagicMock()
+        fake_voice.synthesize = MagicMock()
+        load_calls: list[int] = []
+
+        class _FakePiperVoice:
+            @staticmethod
+            def load(path, config_path=None):
+                load_calls.append(1)
+                return fake_voice
+
+        with patch.dict("sys.modules", {"piper": MagicMock(PiperVoice=_FakePiperVoice)}), \
+             patch("synapsekit.voice.tts.wave.open"):
+            for _ in range(4):
+                tts._synthesize_text("Sentence.")
+
+        assert len(load_calls) == 1, f"PiperVoice.load called {len(load_calls)} times, expected 1"

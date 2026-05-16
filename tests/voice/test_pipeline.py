@@ -986,3 +986,55 @@ class TestModelAndClientCaching:
 
         assert tts._get_client() is sentinel
         assert tts._get_client() is sentinel
+
+
+# ── Top-level package export smoke tests ─────────────────────────────────────
+
+
+class TestTopLevelExports:
+    def test_base_classes_importable_from_synapsekit(self) -> None:
+        """BaseVAD, BaseSTT, BaseTTS must be importable directly from synapsekit."""
+        import synapsekit
+
+        assert hasattr(synapsekit, "BaseVAD"), "BaseVAD missing from synapsekit"
+        assert hasattr(synapsekit, "BaseSTT"), "BaseSTT missing from synapsekit"
+        assert hasattr(synapsekit, "BaseTTS"), "BaseTTS missing from synapsekit"
+
+    def test_base_classes_are_correct_types(self) -> None:
+        """The exported base classes must be the ABC types from synapsekit.voice.base."""
+        from synapsekit import BaseSTT, BaseTTS, BaseVAD
+        from synapsekit.voice.base import BaseSTT as _BaseSTT
+        from synapsekit.voice.base import BaseTTS as _BaseTTS
+        from synapsekit.voice.base import BaseVAD as _BaseVAD
+
+        assert BaseVAD is _BaseVAD
+        assert BaseSTT is _BaseSTT
+        assert BaseTTS is _BaseTTS
+
+    def test_voice_types_importable_from_synapsekit(self) -> None:
+        """AudioFrame, TranscriptChunk, PipelineEvent, PipelineState must be top-level."""
+        import synapsekit
+
+        for name in ("AudioFrame", "TranscriptChunk", "PipelineEvent", "PipelineState"):
+            assert hasattr(synapsekit, name), f"{name} missing from synapsekit"
+
+    def test_custom_provider_can_subclass_base_classes(self) -> None:
+        """A custom provider built against the top-level exports must be usable."""
+        from synapsekit import BaseSTT, BaseTTS, BaseVAD
+
+        class _MyVAD(BaseVAD):
+            async def is_speech(self, frame: bytes) -> bool:
+                return True
+
+        class _MySTT(BaseSTT):
+            async def transcribe_stream(self, audio_stream):
+                yield "ok"
+
+        class _MyTTS(BaseTTS):
+            async def synthesize_stream(self, text_stream):
+                yield b"\x00"
+
+        # Instantiation must succeed — confirms ABCs are satisfied
+        assert isinstance(_MyVAD(), BaseVAD)
+        assert isinstance(_MySTT(), BaseSTT)
+        assert isinstance(_MyTTS(), BaseTTS)
