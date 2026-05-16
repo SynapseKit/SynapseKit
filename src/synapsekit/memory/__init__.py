@@ -13,6 +13,7 @@ from .hybrid import HybridMemory
 from .knowledge_graph_memory import KnowledgeGraphMemory
 from .readonly_shared_memory import ReadOnlySharedMemory
 from .redis import RedisConversationMemory
+from .smart_context import SmartContextManager
 from .sqlite import SQLiteConversationMemory
 from .summary_buffer import SummaryBufferMemory
 from .token_buffer import TokenBufferMemory
@@ -33,6 +34,7 @@ __all__ = [
     "KnowledgeGraphMemory",
     "ReadOnlySharedMemory",
     "RedisConversationMemory",
+    "SmartContextManager",
     "SQLiteConversationMemory",
     "SummaryBufferMemory",
     "TokenBufferMemory",
