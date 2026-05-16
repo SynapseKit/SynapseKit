@@ -46,11 +46,16 @@ class OpenAILLM(BaseLLM):
             if chunk.choices and chunk.choices[0].delta.content:
                 yield chunk.choices[0].delta.content
 
+    def _prepare_messages(self, messages: list[dict]) -> list[dict]:
+        """Strip provider-specific keys like cache_control for OpenAI compatibility."""
+        return [{k: v for k, v in m.items() if k != "cache_control"} for m in messages]
+
     async def stream_with_messages(self, messages: list[dict], **kw) -> AsyncGenerator[str]:
         client = self._get_client()
+        clean_messages = self._prepare_messages(messages)
         stream = await client.chat.completions.create(
             model=self.config.model,
-            messages=messages,
+            messages=clean_messages,
             temperature=kw.get("temperature", self.config.temperature),
             max_tokens=kw.get("max_tokens", self.config.max_tokens),
             stream=True,
@@ -70,9 +75,10 @@ class OpenAILLM(BaseLLM):
     ) -> dict[str, Any]:
         """Native function-calling. Returns {"content": str|None, "tool_calls": list|None}."""
         client = self._get_client()
+        clean_messages = self._prepare_messages(messages)
         response = await client.chat.completions.create(
             model=self.config.model,
-            messages=messages,
+            messages=clean_messages,
             tools=tools,
             tool_choice="auto",
         )

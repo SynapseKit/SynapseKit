@@ -40,16 +40,51 @@ class AnthropicLLM(BaseLLM):
             self._input_tokens += message.usage.input_tokens or 0
             self._output_tokens += message.usage.output_tokens or 0
 
-    async def stream_with_messages(self, messages: list[dict], **kw) -> AsyncGenerator[str]:
-        client = self._get_client()
-        # Filter out system messages — Anthropic takes system separately
-        system = self.config.system_prompt
+    def _prepare_messages(self, messages: list[dict]) -> tuple[Any, list[dict]]:
+        system_blocks = []
+        
+        has_system = any(m.get("role") == "system" for m in messages)
+        if self.config.system_prompt and not has_system:
+            system_blocks.append({"type": "text", "text": self.config.system_prompt})
+
         user_messages = []
         for m in messages:
             if m.get("role") == "system":
-                system = m["content"]
+                block = {"type": "text", "text": m["content"]}
+                if "cache_control" in m:
+                    block["cache_control"] = m["cache_control"]
+                system_blocks.append(block)
+            elif m.get("role") == "tool":
+                user_messages.append(
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "tool_result",
+                                "tool_use_id": m["tool_call_id"],
+                                "content": m["content"],
+                            }
+                        ],
+                    }
+                )
             else:
-                user_messages.append(m)
+                content = m["content"]
+                if "cache_control" in m:
+                    content = [{"type": "text", "text": m["content"], "cache_control": m["cache_control"]}]
+                user_messages.append({"role": m["role"], "content": content})
+
+        if not system_blocks:
+            system_param = ""
+        elif len(system_blocks) == 1 and "cache_control" not in system_blocks[0]:
+            system_param = system_blocks[0]["text"]
+        else:
+            system_param = system_blocks
+
+        return system_param, user_messages
+
+    async def stream_with_messages(self, messages: list[dict], **kw) -> AsyncGenerator[str]:
+        client = self._get_client()
+        system, user_messages = self._prepare_messages(messages)
 
         async with client.messages.stream(
             model=self.config.model,
@@ -71,27 +106,7 @@ class AnthropicLLM(BaseLLM):
     ) -> dict[str, Any]:
         """Native tool use. Returns {"content": str|None, "tool_calls": list|None}."""
         client = self._get_client()
-        system = self.config.system_prompt
-        user_messages = []
-        for m in messages:
-            if m.get("role") == "system":
-                system = m["content"]
-            elif m.get("role") == "tool":
-                # Convert OpenAI tool-result format to Anthropic
-                user_messages.append(
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "tool_result",
-                                "tool_use_id": m["tool_call_id"],
-                                "content": m["content"],
-                            }
-                        ],
-                    }
-                )
-            else:
-                user_messages.append(m)
+        system, user_messages = self._prepare_messages(messages)
 
         # Convert OpenAI tool schema → Anthropic tool schema
         anthropic_tools = [
