@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: install lint format format-check typecheck test deptry check help
+.PHONY: install lint format format-check typecheck test deptry check bench bench-compare help
 
 install: ## Install dependencies (dev group)
 	uv sync --group dev
@@ -22,5 +22,12 @@ test: ## Run test suite
 
 deptry: ## Check for dependency issues
 	deptry src/
+
+bench: ## Run micro-benchmarks
+	PYTHONHASHSEED=0 uv run pytest benchmarks/ -c benchmarks/pytest.ini
+	uv run python benchmarks/report.py benchmarks/benchmark.json
+
+bench-compare: ## Compare against saved baseline (fail >10% regression)
+	PYTHONHASHSEED=0 uv run pytest benchmarks/ -c benchmarks/pytest.ini --benchmark-compare --benchmark-compare-fail=10%
 
 check: lint format-check typecheck test deptry ## Run all checks
