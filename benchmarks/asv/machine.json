@@ -1,0 +1,8 @@
+{
+  "machine": "DhruvGarg",
+  "os": "Linux 6.6.87.2-microsoft-standard-WSL2",
+  "arch": "x86_64",
+  "cpu": "11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz",
+  "num_cpu": "8",
+  "ram": "3868896"
+}
