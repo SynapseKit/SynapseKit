@@ -239,6 +239,12 @@ dev = [
     "tzdata>=2024.1",
 ]
 
+bench = [
+    "pytest-benchmark[histogram]>=4.0",
+    "asv>=0.6",
+    "psutil>=5.9",
+]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/synapsekit"]
 
