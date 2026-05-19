@@ -1,0 +1,40 @@
+name: Benchmarks
+
+on:
+  push:
+    tags: ["v*"]
+  schedule:
+    - cron: "0 2 * * *"
+
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --group dev --group bench
+
+      - name: Cache benchmark baselines
+        uses: actions/cache@v4
+        with:
+          path: .benchmarks
+          key: benchmarks-${{ runner.os }}-${{ github.ref_name }}
+          restore-keys: |
+            benchmarks-${{ runner.os }}-
+
+      - name: Run benchmarks
+        run: make bench
+
+      - name: Compare (fail on >10% regression)
+        run: |
+          if [ -d ".benchmarks" ]; then
+            make bench-compare
+          else
+            echo "No baseline cache found; skipping compare."
+          fi
+
+      - name: Upload JSON artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-json
+          path: benchmarks/benchmark.json
