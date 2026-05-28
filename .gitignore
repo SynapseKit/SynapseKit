@@ -70,6 +70,8 @@ CLAUDE.md
 docs/*
 !docs/observability.md
 !docs/evalhub.md
+!docs/production-checklist.md
+!docs/comparison-matrix.md
 
 # Saved vectorstores
 *.npz
