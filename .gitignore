@@ -71,6 +71,7 @@ docs/*
 !docs/observability.md
 !docs/evalhub.md
 !docs/architecture/
+!docs/production-checklist.md
 
 # Saved vectorstores
 *.npz
