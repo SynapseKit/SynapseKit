@@ -285,7 +285,7 @@ class VoiceAgent:
                     audio_buffer.extend(message)
 
                     if self._vad and len(audio_buffer) > 16000:
-                        chunk = audio_buffer[-16000:]
+                        chunk = bytes(audio_buffer[-16000:])
                         if not self._vad.is_speech(chunk):
                             await _process_buffer()
 
