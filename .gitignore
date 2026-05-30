@@ -70,6 +70,7 @@ CLAUDE.md
 docs/*
 !docs/observability.md
 !docs/evalhub.md
+!docs/architecture/
 
 # Saved vectorstores
 *.npz

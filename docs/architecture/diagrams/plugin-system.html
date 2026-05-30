@@ -1,0 +1,80 @@
+<!doctype html>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Plugin Loading Flow</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f8fafc;
+    --fg: #172033;
+    --muted: #5b6475;
+    --line: #64748b;
+    --neutral: #e2e8f0;
+    --input: #bfdbfe;
+    --process: #c7d2fe;
+    --storage: #99f6e4;
+    --external: #fde68a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f172a;
+      --fg: #e5e7eb;
+      --muted: #a3adbd;
+      --line: #94a3b8;
+      --neutral: #334155;
+      --input: #1d4ed8;
+      --process: #4338ca;
+      --storage: #0f766e;
+      --external: #92400e;
+    }
+  }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.4 ui-sans-serif, system-ui, sans-serif; }
+  main { max-width: 980px; margin: 32px auto; padding: 0 20px; }
+  svg { width: 100%; height: auto; display: block; }
+  .title { font-size: 20px; font-weight: 650; fill: var(--fg); }
+  .label { font-size: 14px; font-weight: 600; fill: var(--fg); }
+  .small { font-size: 12px; fill: var(--muted); }
+  .node { stroke: var(--line); stroke-width: 1.5; }
+  .input { fill: var(--input); }
+  .process { fill: var(--process); }
+  .storage { fill: var(--storage); }
+  .external { fill: var(--external); }
+  .edge { stroke: var(--line); stroke-width: 1.5; fill: none; }
+</style>
+<main>
+<svg viewBox="0 0 920 420" xmlns="http://www.w3.org/2000/svg">
+  <text x="460" y="30" class="title" text-anchor="middle">Plugin Loading Flow</text>
+
+  <rect x="60" y="80" width="160" height="70" rx="10" class="node input" />
+  <text x="140" y="110" class="label" text-anchor="middle">Plugin File</text>
+  <text x="140" y="130" class="small" text-anchor="middle">my_plugin.py</text>
+
+  <rect x="260" y="80" width="170" height="70" rx="10" class="node process" />
+  <text x="345" y="110" class="label" text-anchor="middle">loader.py</text>
+  <text x="345" y="130" class="small" text-anchor="middle">load_plugin_from_path</text>
+
+  <rect x="480" y="80" width="170" height="70" rx="10" class="node process" />
+  <text x="565" y="110" class="label" text-anchor="middle">importlib.util</text>
+  <text x="565" y="130" class="small" text-anchor="middle">exec_module</text>
+
+  <rect x="700" y="80" width="170" height="70" rx="10" class="node storage" />
+  <text x="785" y="110" class="label" text-anchor="middle">Registry</text>
+  <text x="785" y="130" class="small" text-anchor="middle">plugins/registry.py</text>
+
+  <rect x="300" y="220" width="300" height="90" rx="12" class="node external" />
+  <text x="450" y="250" class="label" text-anchor="middle">BasePlugin subclasses</text>
+  <text x="450" y="270" class="small" text-anchor="middle">on_load / on_unload</text>
+
+  <path d="M 220 115 L 260 115" class="edge" marker-end="url(#arrow)" />
+  <path d="M 430 115 L 480 115" class="edge" marker-end="url(#arrow)" />
+  <path d="M 650 115 L 700 115" class="edge" marker-end="url(#arrow)" />
+  <path d="M 430 150 L 430 220" class="edge" marker-end="url(#arrow)" />
+  <path d="M 600 220 L 700 150" class="edge" marker-end="url(#arrow)" />
+
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#64748b" />
+    </marker>
+  </defs>
+</svg>
+</main>
