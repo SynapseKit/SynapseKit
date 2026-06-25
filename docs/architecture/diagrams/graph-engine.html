@@ -1,0 +1,148 @@
+<!doctype html>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Graph Engine Architecture</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f8fafc;
+    --fg: #172033;
+    --muted: #5b6475;
+    --line: #64748b;
+    --neutral: #e2e8f0;
+    --input: #bfdbfe;
+    --process: #c7d2fe;
+    --storage: #99f6e4;
+    --external: #fde68a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f172a;
+      --fg: #e5e7eb;
+      --muted: #a3adbd;
+      --line: #94a3b8;
+      --neutral: #334155;
+      --input: #1d4ed8;
+      --process: #4338ca;
+      --storage: #0f766e;
+      --external: #92400e;
+    }
+  }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 14px/1.4 ui-sans-serif, system-ui, sans-serif;
+  }
+  main {
+    max-width: 1100px;
+    margin: 32px auto;
+    padding: 0 20px;
+  }
+  svg {
+    width: 100%;
+    height: auto;
+    display: block;
+    background: var(--bg);
+  }
+  .title {
+    font-size: 22px;
+    font-weight: 700;
+    fill: var(--fg);
+  }
+  .label {
+    font-size: 14px;
+    font-weight: 600;
+    fill: var(--fg);
+  }
+  .small {
+    font-size: 11px;
+    fill: var(--muted);
+  }
+  .node {
+    stroke: var(--line);
+    stroke-width: 2;
+  }
+  .neutral { fill: var(--neutral); }
+  .input { fill: var(--input); }
+  .process { fill: var(--process); }
+  .storage { fill: var(--storage); }
+  .external { fill: var(--external); }
+  .edge {
+    stroke: var(--line);
+    stroke-width: 2;
+    fill: none;
+  }
+</style>
+<main>
+<svg viewBox="0 0 900 520" xmlns="http://www.w3.org/2000/svg">
+  <!-- Title -->
+  <text x="450" y="35" class="title" text-anchor="middle">SynapseKit Graph Engine Architecture</text>
+
+  <!-- User Request -->
+  <rect x="50" y="80" width="140" height="70" rx="12" class="node input" />
+  <text x="120" y="115" class="label" text-anchor="middle">User Request</text>
+
+  <!-- Entry Point -->
+  <rect x="260" y="80" width="110" height="70" rx="12" class="node neutral" />
+  <text x="315" y="105" class="label" text-anchor="middle">StateGraph</text>
+  <text x="315" y="125" class="small" text-anchor="middle">.compile()</text>
+
+  <!-- Compiled Graph -->
+  <rect x="440" y="80" width="130" height="70" rx="12" class="node process" />
+  <text x="505" y="105" class="label" text-anchor="middle">CompiledGraph</text>
+  <text x="505" y="125" class="small" text-anchor="middle">run() / ainvoke()</text>
+
+  <!-- Checkpointing -->
+  <rect x="640" y="60" width="110" height="110" rx="12" class="node storage" />
+  <text x="695" y="95" class="label" text-anchor="middle">Checkpointer</text>
+  <text x="695" y="115" class="small" text-anchor="middle">(SQLite, Redis, etc.)</text>
+
+  <!-- Nodes -->
+  <rect x="280" y="220" width="100" height="65" rx="10" class="node neutral" />
+  <text x="330" y="250" class="label" text-anchor="middle">Node A</text>
+
+  <rect x="480" y="180" width="100" height="65" rx="10" class="node process" />
+  <text x="530" y="210" class="label" text-anchor="middle">Node B</text>
+
+  <rect x="480" y="280" width="100" height="65" rx="10" class="node neutral" />
+  <text x="530" y="310" class="label" text-anchor="middle">Node C</text>
+
+  <!-- Conditional Edge -->
+  <rect x="650" y="240" width="110" height="65" rx="10" class="node external" />
+  <text x="705" y="265" class="label" text-anchor="middle">Conditional</text>
+  <text x="705" y="285" class="small" text-anchor="middle">Routing</text>
+
+  <!-- Edges -->
+  <path d="M 190 115 L 255 115" class="edge" marker-end="url(#arrow)" />
+  <path d="M 370 115 L 435 115" class="edge" marker-end="url(#arrow)" />
+  <path d="M 570 115 L 635 115" class="edge" marker-end="url(#arrow)" />
+
+  <!-- Node connections -->
+  <path d="M 330 150 L 330 210" class="edge" marker-end="url(#arrow)" />
+  <path d="M 430 245 L 475 215" class="edge" marker-end="url(#arrow)" />
+  <path d="M 430 285 L 475 315" class="edge" marker-end="url(#arrow)" />
+  <path d="M 580 245 L 645 265" class="edge" marker-end="url(#arrow)" />
+
+  <!-- Legend -->
+  <rect x="50" y="400" width="800" height="85" rx="8" fill="#f1f5f9" stroke="#64748b" stroke-width="1" />
+  <text x="70" y="425" class="label">Legend</text>
+  <rect x="70" y="440" width="22" height="22" rx="4" fill="#bfdbfe" />
+  <text x="105" y="455" class="small">Input / Request</text>
+  
+  <rect x="220" y="440" width="22" height="22" rx="4" fill="#e2e8f0" />
+  <text x="255" y="455" class="small">Graph Builder</text>
+  
+  <rect x="370" y="440" width="22" height="22" rx="4" fill="#c7d2fe" />
+  <text x="405" y="455" class="small">Execution Engine</text>
+  
+  <rect x="540" y="440" width="22" height="22" rx="4" fill="#99f6e4" />
+  <text x="575" y="455" class="small">Persistence</text>
+
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#64748b" />
+    </marker>
+  </defs>
+</svg>
+</main>

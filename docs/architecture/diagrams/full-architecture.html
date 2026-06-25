@@ -1,0 +1,110 @@
+<!doctype html>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SynapseKit Full Architecture</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f8fafc;
+    --fg: #172033;
+    --muted: #5b6475;
+    --line: #64748b;
+    --neutral: #e2e8f0;
+    --input: #bfdbfe;
+    --process: #c7d2fe;
+    --storage: #99f6e4;
+    --external: #fde68a;
+    --risk: #fecaca;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f172a;
+      --fg: #e5e7eb;
+      --muted: #a3adbd;
+      --line: #94a3b8;
+      --neutral: #334155;
+      --input: #1d4ed8;
+      --process: #4338ca;
+      --storage: #0f766e;
+      --external: #92400e;
+      --risk: #991b1b;
+    }
+  }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.4 ui-sans-serif, system-ui, sans-serif; }
+  main { max-width: 1100px; margin: 32px auto; padding: 0 20px; }
+  svg { width: 100%; height: auto; display: block; }
+  .title { font-size: 20px; font-weight: 650; fill: var(--fg); }
+  .label { font-size: 13px; font-weight: 600; fill: var(--fg); }
+  .small { font-size: 11px; fill: var(--muted); }
+  .node { stroke: var(--line); stroke-width: 1.5; }
+  .neutral { fill: var(--neutral); }
+  .input { fill: var(--input); }
+  .process { fill: var(--process); }
+  .storage { fill: var(--storage); }
+  .external { fill: var(--external); }
+  .edge { stroke: var(--line); stroke-width: 1.5; fill: none; }
+</style>
+<main>
+<svg viewBox="0 0 1000 600" xmlns="http://www.w3.org/2000/svg">
+  <text x="500" y="30" class="title" text-anchor="middle">SynapseKit Full Architecture</text>
+
+  <rect x="60" y="70" width="160" height="70" rx="10" class="node input" />
+  <text x="140" y="100" class="label" text-anchor="middle">User Request</text>
+  <text x="140" y="120" class="small" text-anchor="middle">SDK / API</text>
+
+  <rect x="260" y="70" width="170" height="70" rx="10" class="node process" />
+  <text x="345" y="100" class="label" text-anchor="middle">Facade Layer</text>
+  <text x="345" y="120" class="small" text-anchor="middle">RAG / Agents / Graph</text>
+
+  <rect x="470" y="60" width="170" height="90" rx="10" class="node neutral" />
+  <text x="555" y="95" class="label" text-anchor="middle">Graph Engine</text>
+  <text x="555" y="115" class="small" text-anchor="middle">StateGraph / CompiledGraph</text>
+
+  <rect x="700" y="60" width="170" height="90" rx="10" class="node storage" />
+  <text x="785" y="95" class="label" text-anchor="middle">Checkpointers</text>
+  <text x="785" y="115" class="small" text-anchor="middle">SQLite / Redis / Postgres</text>
+
+  <rect x="260" y="200" width="170" height="70" rx="10" class="node process" />
+  <text x="345" y="230" class="label" text-anchor="middle">LLM Layer</text>
+  <text x="345" y="250" class="small" text-anchor="middle">Providers + Routing</text>
+
+  <rect x="470" y="200" width="170" height="70" rx="10" class="node storage" />
+  <text x="555" y="230" class="label" text-anchor="middle">Retriever</text>
+  <text x="555" y="250" class="small" text-anchor="middle">Vector Stores</text>
+
+  <rect x="700" y="200" width="170" height="70" rx="10" class="node storage" />
+  <text x="785" y="230" class="label" text-anchor="middle">Memory</text>
+  <text x="785" y="250" class="small" text-anchor="middle">Conversation / Vector</text>
+
+  <rect x="260" y="320" width="170" height="70" rx="10" class="node process" />
+  <text x="345" y="350" class="label" text-anchor="middle">Observability</text>
+  <text x="345" y="370" class="small" text-anchor="middle">Tracing / Metrics</text>
+
+  <rect x="470" y="320" width="170" height="70" rx="10" class="node external" />
+  <text x="555" y="350" class="label" text-anchor="middle">Plugin System</text>
+  <text x="555" y="370" class="small" text-anchor="middle">Dynamic Extensions</text>
+
+  <rect x="700" y="320" width="170" height="70" rx="10" class="node neutral" />
+  <text x="785" y="350" class="label" text-anchor="middle">Async Runtime</text>
+  <text x="785" y="370" class="small" text-anchor="middle">uvloop / asyncio</text>
+
+  <!-- Edges -->
+  <path d="M 220 105 L 260 105" class="edge" marker-end="url(#arrow)" />
+  <path d="M 430 105 L 470 105" class="edge" marker-end="url(#arrow)" />
+  <path d="M 640 105 L 700 105" class="edge" marker-end="url(#arrow)" />
+
+  <path d="M 345 140 L 345 200" class="edge" marker-end="url(#arrow)" />
+  <path d="M 555 150 L 555 200" class="edge" marker-end="url(#arrow)" />
+  <path d="M 785 150 L 785 200" class="edge" marker-end="url(#arrow)" />
+
+  <path d="M 345 270 L 345 320" class="edge" marker-end="url(#arrow)" />
+  <path d="M 555 270 L 555 320" class="edge" marker-end="url(#arrow)" />
+  <path d="M 785 270 L 785 320" class="edge" marker-end="url(#arrow)" />
+
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#64748b" />
+    </marker>
+  </defs>
+</svg>
+</main>

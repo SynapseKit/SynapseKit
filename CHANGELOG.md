@@ -9,6 +9,14 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Docs
+
+- **Architecture deep dive** — long-form internals doc covering async runtime model, RAG flow, graph engine, agent loop, plugin system, and extension points; aimed at contributors and power users; contributed by [@DhruvGarg111](https://github.com/DhruvGarg111); closes #673
+
+### Fixes
+
+- **Welcome workflow** — fixed `TypeError: github.rest[...].listForRepo is not a function` in the CI welcome bot; removed LinkedIn ask from welcome messages
+
 ---
 
 ## [1.9.1] — 2026-05-27
