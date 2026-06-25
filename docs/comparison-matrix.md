@@ -20,7 +20,7 @@
 | Cost tracking | ✅ | 🚧 | 🚧 | 🚧 | SK2 |
 | Evaluation tooling | ✅ (EvalCI) | 🧩 (LangSmith evals) | ✅ | ✅ | SK3, LC1, LI5, HS1 |
 | Observability / tracing | ✅ (OTel + metrics) | 🧩 (LangSmith) | 🧩 (Workflows + OTel) | 🧩 (Enterprise platform) | SK4, LC1, LI6, HS1 |
-| Integrations ecosystem | 33 LLMs · 22 vector stores · 64 loaders · 48+ tools | Many integrations (see overview) | 300+ integration packages | Vendor-agnostic providers & components | SK1, LC1, LI1, HS1 |
+| Integrations ecosystem | 33 LLMs · 11 vector stores · 53 loaders · 47+ tools | Many integrations (see overview) | 300+ integration packages | Vendor-agnostic providers & components | SK1, LC1, LI1, HS1 |
 
 ---
 
