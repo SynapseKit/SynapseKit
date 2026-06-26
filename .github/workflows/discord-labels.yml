@@ -1,0 +1,156 @@
+name: Discord — route issues/PRs by label
+
+# Mirrors the existing per-channel webhook pattern (see discord-notify.yml,
+# discord-issues.yml). Posts to a per-label Discord channel whenever an issue
+# or PR is opened with — or later labeled with — one of the routed labels.
+#
+# Each label maps to its own secret. Missing secrets are skipped gracefully so
+# new channels can be rolled out one at a time.
+
+on:
+  issues:
+    types: [opened, labeled, reopened]
+  pull_request:
+    types: [opened, labeled, reopened, ready_for_review]
+
+permissions:
+  issues: read
+  pull-requests: read
+
+jobs:
+  route:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve event payload
+        id: payload
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          ACTION: ${{ github.event.action }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_AUTHOR: ${{ github.event.issue.user.login }}
+          ISSUE_LABELS: ${{ toJSON(github.event.issue.labels.*.name) }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+          LABEL_NAME: ${{ github.event.label.name }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" = "issues" ]; then
+            kind="Issue"
+            title="$ISSUE_TITLE"
+            url="$ISSUE_URL"
+            number="$ISSUE_NUMBER"
+            author="$ISSUE_AUTHOR"
+            labels_json="$ISSUE_LABELS"
+          else
+            kind="PR"
+            title="$PR_TITLE"
+            url="$PR_URL"
+            number="$PR_NUMBER"
+            author="$PR_AUTHOR"
+            labels_json="$PR_LABELS"
+          fi
+          # On a labeled event, route only on the newly added label.
+          # On opened/reopened, route on every label present at creation.
+          if [ "$ACTION" = "labeled" ]; then
+            labels="$LABEL_NAME"
+          else
+            labels=$(echo "$labels_json" | jq -r '.[]')
+          fi
+          {
+            echo "kind=$kind"
+            echo "title=$title"
+            echo "url=$url"
+            echo "number=$number"
+            echo "author=$author"
+          } >> "$GITHUB_OUTPUT"
+          # Multi-line labels output
+          {
+            echo "labels<<__EOF__"
+            echo "$labels"
+            echo "__EOF__"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Fan out to per-label channels
+        env:
+          KIND: ${{ steps.payload.outputs.kind }}
+          TITLE: ${{ steps.payload.outputs.title }}
+          URL: ${{ steps.payload.outputs.url }}
+          NUMBER: ${{ steps.payload.outputs.number }}
+          AUTHOR: ${{ steps.payload.outputs.author }}
+          LABELS: ${{ steps.payload.outputs.labels }}
+          # Release-tag channels
+          WH_V18: ${{ secrets.DISCORD_WEBHOOK_V18 }}
+          WH_V20: ${{ secrets.DISCORD_WEBHOOK_V20 }}
+          WH_V21: ${{ secrets.DISCORD_WEBHOOK_V21 }}
+          WH_POST_V20: ${{ secrets.DISCORD_WEBHOOK_POST_V20 }}
+          # Topic channels
+          WH_RESEARCH: ${{ secrets.DISCORD_WEBHOOK_RESEARCH }}
+          WH_BENCHMARK: ${{ secrets.DISCORD_WEBHOOK_BENCHMARK }}
+          WH_AGENTS: ${{ secrets.DISCORD_WEBHOOK_AGENTS }}
+          WH_RETRIEVAL: ${{ secrets.DISCORD_WEBHOOK_RETRIEVAL }}
+          WH_OBSERVABILITY: ${{ secrets.DISCORD_WEBHOOK_OBSERVABILITY }}
+          WH_SECURITY: ${{ secrets.DISCORD_WEBHOOK_SECURITY }}
+          WH_PERFORMANCE: ${{ secrets.DISCORD_WEBHOOK_PERFORMANCE }}
+          WH_UI: ${{ secrets.DISCORD_WEBHOOK_UI }}
+          WH_BOOK: ${{ secrets.DISCORD_WEBHOOK_BOOK }}
+          WH_PAPER: ${{ secrets.DISCORD_WEBHOOK_PAPER }}
+          WH_DOCUMENTATION: ${{ secrets.DISCORD_WEBHOOK_DOCUMENTATION }}
+          WH_AMBIENT: ${{ secrets.DISCORD_WEBHOOK_AMBIENT }}
+          WH_PROTOCOL: ${{ secrets.DISCORD_WEBHOOK_PROTOCOL }}
+          WH_COMMUNITY: ${{ secrets.DISCORD_WEBHOOK_COMMUNITY }}
+        run: |
+          set -euo pipefail
+
+          post() {
+            local webhook="$1"
+            local label="$2"
+            local emoji="$3"
+            local color="$4"
+            if [ -z "$webhook" ]; then
+              echo "  ⊘ no webhook configured for '$label'; skipping"
+              return 0
+            fi
+            local payload
+            payload=$(jq -nc \
+              --arg title "$emoji $KIND #$NUMBER — $label" \
+              --arg desc "**$TITLE**"$'\n\n'"[View on GitHub]($URL)" \
+              --arg footer "by $AUTHOR" \
+              --argjson color "$color" \
+              '{embeds:[{title:$title, description:$desc, color:$color, footer:{text:$footer}}]}')
+            curl -sS -X POST "$webhook" \
+              -H "Content-Type: application/json" \
+              -d "$payload" >/dev/null || echo "  ⚠ post to '$label' failed"
+            echo "  ✓ posted to '$label'"
+          }
+
+          while IFS= read -r label; do
+            [ -z "$label" ] && continue
+            case "$label" in
+              # Release-tag channels
+              "v1.8")        post "$WH_V18"           "v1.8"          "🛠"  3447003 ;;
+              "v2.0")        post "$WH_V20"           "v2.0"          "🚀"  10038562 ;;
+              "v2.1")        post "$WH_V21"           "v2.1"          "🧠"  5793266 ;;
+              "post-v2.0")   post "$WH_POST_V20"      "post-v2.0"     "📚"  15105570 ;;
+              # Topic channels
+              "research")        post "$WH_RESEARCH"        "research"        "🔬"  10181046 ;;
+              "benchmark")       post "$WH_BENCHMARK"       "benchmark"       "📊"  3066993 ;;
+              "agents")          post "$WH_AGENTS"          "agents"          "🤖"  15844367 ;;
+              "retrieval")       post "$WH_RETRIEVAL"       "retrieval"       "🔍"  1752220 ;;
+              "observability")   post "$WH_OBSERVABILITY"   "observability"   "📈"  2123412 ;;
+              "security")        post "$WH_SECURITY"        "security"        "🔒"  15158332 ;;
+              "performance")     post "$WH_PERFORMANCE"     "performance"     "⚡"  16776960 ;;
+              "ui")              post "$WH_UI"              "ui"              "🎨"  15418782 ;;
+              "book")            post "$WH_BOOK"            "book"            "📖"  8421504 ;;
+              "paper")           post "$WH_PAPER"           "paper"           "📝"  9807270 ;;
+              "documentation")   post "$WH_DOCUMENTATION"   "documentation"   "📘"  3447003 ;;
+              "ambient")         post "$WH_AMBIENT"         "ambient"         "🌌"  7506394 ;;
+              "protocol")        post "$WH_PROTOCOL"        "protocol"        "🔗"  1942002 ;;
+              "community")       post "$WH_COMMUNITY"       "community"       "👥"  5763719 ;;
+              *) ;;
+            esac
+          done <<< "$LABELS"
