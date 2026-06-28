@@ -62,8 +62,7 @@ class FallbackPolicy:
             return FallbackDecision(
                 False,
                 blocked_reason=(
-                    "local model does not support tools and "
-                    "if_tool_unsupported_locally is disabled"
+                    "local model does not support tools and if_tool_unsupported_locally is disabled"
                 ),
             )
 
@@ -185,10 +184,14 @@ class EdgeRuntime(BaseLLM):
             local_error=local_error,
         )
         if decision.allowed and self.cloud_llm is None:
-            raise EdgeFallbackBlockedError("cloud fallback was allowed but no cloud_llm is configured")
+            raise EdgeFallbackBlockedError(
+                "cloud fallback was allowed but no cloud_llm is configured"
+            )
         return decision
 
-    def _select_for_prompt(self, prompt: str, kw: dict[str, Any]) -> tuple[BaseLLM, FallbackDecision]:
+    def _select_for_prompt(
+        self, prompt: str, kw: dict[str, Any]
+    ) -> tuple[BaseLLM, FallbackDecision]:
         estimated = self._estimate_tokens(prompt)
         user_opted_in = bool(kw.pop("allow_cloud_fallback", False))
         decision = self._evaluate_fallback(
@@ -216,7 +219,9 @@ class EdgeRuntime(BaseLLM):
 
     def _require_cloud(self, decision: FallbackDecision, estimated: int) -> BaseLLM:
         if self.cloud_llm is None:
-            raise EdgeFallbackBlockedError("cloud fallback requested but cloud_llm is not configured")
+            raise EdgeFallbackBlockedError(
+                "cloud fallback requested but cloud_llm is not configured"
+            )
         self._last_metadata = EdgeRouteMetadata(
             route="cloud",
             fallback_reason=decision.reason,

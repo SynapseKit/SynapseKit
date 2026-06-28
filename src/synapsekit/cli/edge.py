@@ -159,7 +159,12 @@ def _quantize(args: Any) -> None:
     except subprocess.CalledProcessError as exc:
         raise SystemExit(f"Quantization failed with exit code {exc.returncode}") from exc
 
-    print(json.dumps({"input": str(input_path), "output": str(output_path), "quantization": quantization}, indent=2))
+    print(
+        json.dumps(
+            {"input": str(input_path), "output": str(output_path), "quantization": quantization},
+            indent=2,
+        )
+    )
 
 
 def run_edge(args: Any) -> None:
@@ -201,7 +206,9 @@ def build_edge_parser(subparsers: Any) -> None:
     quantize_cmd = edge_sub.add_parser("quantize", help="Quantize a GGUF model with llama.cpp")
     quantize_cmd.add_argument("input_model", help="Input GGUF/F16 model path")
     quantize_cmd.add_argument("output", help="Output GGUF model path")
-    quantize_cmd.add_argument("--quantization", default="Q4_K_M", help="llama.cpp quantization type")
+    quantize_cmd.add_argument(
+        "--quantization", default="Q4_K_M", help="llama.cpp quantization type"
+    )
     quantize_cmd.add_argument(
         "--llama-quantize",
         default=None,
