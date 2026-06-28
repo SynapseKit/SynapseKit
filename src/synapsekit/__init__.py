@@ -183,6 +183,7 @@ from .graph import (
 from .llm.base import BaseLLM, LLMConfig
 from .llm.cost_quality_router import CostQualityRouter
 from .llm.cost_router import QUALITY_TABLE, CostRouter, CostRouterConfig, RouterModelSpec
+from .llm.edge import EdgeFallbackBlockedError, EdgeRuntime, EdgeRouteMetadata, FallbackPolicy
 from .llm.fallback_chain import FallbackChain, FallbackChainConfig
 from .llm.multimodal import AudioContent, ImageContent, MultimodalMessage
 from .llm.reasoning import (
@@ -362,6 +363,10 @@ __all__ = [
     "CostRouterConfig",
     "RouterModelSpec",
     "QUALITY_TABLE",
+    "EdgeFallbackBlockedError",
+    "EdgeRouteMetadata",
+    "EdgeRuntime",
+    "FallbackPolicy",
     "FallbackChain",
     "FallbackChainConfig",
     "BaseReasoningProvider",
@@ -389,9 +394,11 @@ __all__ = [
     "WriterLLM",
     "ZhipuLLM",
     "LMStudioLLM",
+    "MLXLLM",
     "VLLMLLM",
     # Embeddings
     "SynapsekitEmbeddings",
+    "ONNXEmbeddings",
     # Vector stores
     "VectorStore",
     "InMemoryVectorStore",
@@ -798,6 +805,7 @@ _LAZY_IMPORTS = {
     "PineconeVectorStore": "retrieval.pinecone",
     "WeaviateVectorStore": "retrieval.weaviate",
     "SQLiteVecStore": "retrieval.sqlite_vec",
+    "ONNXEmbeddings": "embeddings.onnx",
     # LLM providers
     "AsyncLRUCache": "llm._cache",
     "DynamoDBCacheBackend": "llm._cache_dynamodb",
@@ -822,6 +830,7 @@ _LAZY_IMPORTS = {
     "WriterLLM": "llm.writer",
     "ZhipuLLM": "llm.zhipu",
     "LMStudioLLM": "llm.lmstudio",
+    "MLXLLM": "llm.mlx",
     "VLLMLLM": "llm.vllm",
     "CloudflareLLM": "llm.cloudflare",
     "BaseReasoningProvider": "llm.reasoning",

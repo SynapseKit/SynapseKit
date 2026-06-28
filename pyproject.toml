@@ -115,6 +115,13 @@ cloudflare = ["httpx>=0.27"]
 aleph-alpha = ["aleph-alpha-client>=7.0"]
 llamacpp = ["llama-cpp-python>=0.2"]
 gpt4all = ["gpt4all>=2.0"]
+onnx = ["onnxruntime>=1.17"]
+mlx = ["mlx-lm>=0.20; platform_system == 'Darwin' and platform_machine == 'arm64'"]
+edge = [
+    "llama-cpp-python>=0.2",
+    "onnxruntime>=1.17",
+    "sqlite-vec>=0.1",
+]
 ernie = ["erniebot>=0.5"]
 minimax = ["httpx>=0.27"]
 serve = ["fastapi>=0.110", "uvicorn[standard]>=0.29"]
