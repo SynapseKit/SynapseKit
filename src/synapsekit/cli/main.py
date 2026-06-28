@@ -149,6 +149,12 @@ def _add_bench_parser(subparsers: argparse._SubParsersAction) -> None:  # type: 
     build_bench_parser(subparsers)
 
 
+def _add_edge_parser(subparsers: argparse._SubParsersAction) -> None:  # type: ignore[type-arg]
+    from .edge import build_edge_parser
+
+    build_edge_parser(subparsers)
+
+
 def main(argv: list[str] | None = None) -> None:
     """CLI entry point."""
     from .._loop import install_fast_loop
@@ -169,6 +175,7 @@ def main(argv: list[str] | None = None) -> None:
     _add_graph_builder_parser(subparsers)
     _add_benchmark_parser(subparsers)
     _add_bench_parser(subparsers)
+    _add_edge_parser(subparsers)
     _add_ui_parser(subparsers)
     _add_plugin_parser(subparsers)
 
@@ -208,6 +215,10 @@ def main(argv: list[str] | None = None) -> None:
         from .bench import run_bench
 
         run_bench(args)
+    elif args.command == "edge":
+        from .edge import run_edge
+
+        run_edge(args)
     elif args.command == "ui":
         from .ui import run_ui
 
