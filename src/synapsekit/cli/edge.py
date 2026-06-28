@@ -9,7 +9,6 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
-
 DEFAULT_EDGE_CACHE = Path.home() / ".cache" / "synapsekit" / "edge"
 
 
