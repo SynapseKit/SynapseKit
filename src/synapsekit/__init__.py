@@ -183,7 +183,7 @@ from .graph import (
 from .llm.base import BaseLLM, LLMConfig
 from .llm.cost_quality_router import CostQualityRouter
 from .llm.cost_router import QUALITY_TABLE, CostRouter, CostRouterConfig, RouterModelSpec
-from .llm.edge import EdgeFallbackBlockedError, EdgeRuntime, EdgeRouteMetadata, FallbackPolicy
+from .llm.edge import EdgeFallbackBlockedError, EdgeRouteMetadata, EdgeRuntime, FallbackPolicy
 from .llm.fallback_chain import FallbackChain, FallbackChainConfig
 from .llm.multimodal import AudioContent, ImageContent, MultimodalMessage
 from .llm.reasoning import (

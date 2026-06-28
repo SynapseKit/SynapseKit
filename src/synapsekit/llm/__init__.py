@@ -2,7 +2,7 @@ from ._cache import AsyncLRUCache
 from .base import BaseLLM, LLMConfig
 from .cost_quality_router import CostQualityRouter
 from .cost_router import QUALITY_TABLE, CostRouter, CostRouterConfig, RouterModelSpec
-from .edge import EdgeFallbackBlockedError, EdgeRuntime, EdgeRouteMetadata, FallbackPolicy
+from .edge import EdgeFallbackBlockedError, EdgeRouteMetadata, EdgeRuntime, FallbackPolicy
 from .fallback_chain import FallbackChain, FallbackChainConfig
 from .structured import generate_structured
 

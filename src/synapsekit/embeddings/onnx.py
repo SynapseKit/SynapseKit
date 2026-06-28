@@ -85,11 +85,11 @@ class ONNXEmbeddings:
 
         values = arr.astype(np.float32)
         if attention_mask is None:
-            return values.mean(axis=1)
+            return np.asarray(values.mean(axis=1), dtype=np.float32)
 
         mask = attention_mask.astype(np.float32)[..., None]
         denom = np.maximum(mask.sum(axis=1), 1.0)
-        return (values * mask).sum(axis=1) / denom
+        return np.asarray((values * mask).sum(axis=1) / denom, dtype=np.float32)
 
     def _normalize_vectors(self, arr: np.ndarray) -> np.ndarray:
         arr = np.asarray(arr, dtype=np.float32)
@@ -119,4 +119,4 @@ class ONNXEmbeddings:
         """Embed a single string, returning a one-dimensional vector."""
 
         vectors = await self.embed([text])
-        return vectors[0]
+        return np.asarray(vectors[0], dtype=np.float32)
