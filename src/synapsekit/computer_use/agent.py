@@ -36,6 +36,7 @@ class ComputerUseAgent:
         self.max_steps = max_steps
         self.confirm = confirm
         self.close_screen = close_screen
+        self.recorder: SessionRecorder | None
         if isinstance(recorder, (str, Path)):
             self.recorder = SessionRecorder(recorder)
         else:

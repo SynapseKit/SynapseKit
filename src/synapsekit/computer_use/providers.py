@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Mapping, Sequence
-from typing import Any
+from typing import Any, cast
 
 from .types import ComputerAction, ComputerActionType, ComputerObservation, ComputerStep
 
@@ -34,7 +34,7 @@ def normalize_action(payload: Mapping[str, Any] | str) -> ComputerAction:
 
     if isinstance(payload, str):
         payload = json.loads(payload)
-    raw = dict(payload)
+    raw = dict(cast(Mapping[str, Any], payload))
     action_name = str(
         raw.get("type")
         or raw.get("action")
@@ -166,12 +166,12 @@ def _extract_action_payload(response: Any) -> Mapping[str, Any] | str:
         for key in ("action", "computer_call", "output", "content"):
             value = response.get(key)
             if value:
-                return value
+                return cast(Mapping[str, Any] | str, value)
         return response
     for attr in ("action", "computer_call", "output_text", "content"):
         value = getattr(response, attr, None)
         if value:
-            return value
+            return cast(Mapping[str, Any] | str, value)
     raise ValueError("Could not extract a computer action from provider response.")
 
 

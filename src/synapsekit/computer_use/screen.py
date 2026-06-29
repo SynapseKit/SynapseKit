@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-from typing import Any
+from typing import Any, cast
 
 from .types import ComputerAction, ComputerActionType, ComputerObservation, ScreenProvider
 
@@ -67,12 +67,13 @@ class LocalScreenProvider:
     def __init__(self, pyautogui_module: Any | None = None) -> None:
         if pyautogui_module is None:
             try:
-                import pyautogui as pyautogui_module
+                import pyautogui as imported_pyautogui
             except ImportError:
                 raise ImportError(
                     "pyautogui is required for LocalScreenProvider: "
                     "pip install synapsekit[computer-use]"
                 ) from None
+            pyautogui_module = imported_pyautogui
         self._pyautogui = pyautogui_module
 
     async def observe(self) -> ComputerObservation:
@@ -146,7 +147,7 @@ class VNCScreenProvider:
 
 async def _maybe_await(value: Any) -> Any:
     if hasattr(value, "__await__"):
-        return await value
+        return await cast(Any, value)
     return value
 
 

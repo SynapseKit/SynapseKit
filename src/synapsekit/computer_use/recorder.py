@@ -94,7 +94,16 @@ class SessionRecorder:
 
 
 def _observation_to_record(observation: ComputerObservation) -> dict[str, Any]:
-    data = _safe_asdict(observation)
+    data: dict[str, Any] = {
+        "screenshot": None,
+        "text": observation.text,
+        "app": observation.app,
+        "window_title": observation.window_title,
+        "url": observation.url,
+        "width": observation.width,
+        "height": observation.height,
+        "metadata": observation.metadata,
+    }
     screenshot = observation.screenshot
     data["screenshot"] = base64.b64encode(screenshot).decode("ascii") if screenshot else None
     data["screenshot_encoding"] = "base64" if screenshot else None
