@@ -1,5 +1,24 @@
 from .agent_registry import AgentMetadata, AgentRegistry, InMemoryAgentRegistry, RedisAgentRegistry
 from .base import BaseTool, ToolResult
+from ..computer_use import (
+    AnthropicComputerUseProvider,
+    BrowserScreenProvider,
+    ComputerAction,
+    ComputerActionType,
+    ComputerObservation,
+    ComputerStep,
+    ComputerUseAgent,
+    ComputerUseProvider,
+    ComputerUseResult,
+    LocalScreenProvider,
+    OpenAIComputerUseProvider,
+    OpenSourceComputerUseProvider,
+    SafetyPolicy,
+    ScreenProvider,
+    SessionRecorder,
+    VNCScreenProvider,
+    requires_human_confirmation,
+)
 from .executor import AgentConfig, AgentExecutor
 from .facade import SimpleAgent, agent
 from .federation import (
@@ -115,6 +134,23 @@ __all__ = [
     "AgentMemory",
     "AgentScratchpad",
     "AgentStep",
+    "AnthropicComputerUseProvider",
+    "BrowserScreenProvider",
+    "ComputerAction",
+    "ComputerActionType",
+    "ComputerObservation",
+    "ComputerStep",
+    "ComputerUseAgent",
+    "ComputerUseProvider",
+    "ComputerUseResult",
+    "LocalScreenProvider",
+    "OpenAIComputerUseProvider",
+    "OpenSourceComputerUseProvider",
+    "SafetyPolicy",
+    "ScreenProvider",
+    "SessionRecorder",
+    "VNCScreenProvider",
+    "requires_human_confirmation",
     # Agents
     "ReActAgent",
     "ReasoningAgent",
