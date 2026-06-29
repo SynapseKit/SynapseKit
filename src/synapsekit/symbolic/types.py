@@ -67,7 +67,9 @@ class SymbolicBackend(Protocol):
     name: str
     language: ConstraintLanguage
 
-    async def solve(self, constraints: ConstraintSet, *, timeout_seconds: float | None = None) -> ProofTrace:
+    async def solve(
+        self, constraints: ConstraintSet, *, timeout_seconds: float | None = None
+    ) -> ProofTrace:
         """Solve or verify a formal constraint set."""
         ...
 
@@ -89,7 +91,9 @@ class BaseSymbolicBackend:
     name = "base"
     language: ConstraintLanguage = "text"
 
-    async def solve(self, constraints: ConstraintSet, *, timeout_seconds: float | None = None) -> ProofTrace:
+    async def solve(
+        self, constraints: ConstraintSet, *, timeout_seconds: float | None = None
+    ) -> ProofTrace:
         raise NotImplementedError
 
     async def verify(

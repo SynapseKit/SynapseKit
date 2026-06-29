@@ -162,7 +162,9 @@ async def test_agent_reject_policy_raises_on_unverified_result() -> None:
 
 @pytest.mark.asyncio
 async def test_verified_tool_returns_proof_metadata() -> None:
-    backend = FakeBackend([ProofTrace(status="sat", model={"ok": True}, backend="fake", verified=True)])
+    backend = FakeBackend(
+        [ProofTrace(status="sat", model={"ok": True}, backend="fake", verified=True)]
+    )
 
     def build_constraints(kwargs: dict, output: str) -> ConstraintSet:
         return ConstraintSet(

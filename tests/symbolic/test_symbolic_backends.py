@@ -8,7 +8,9 @@ from synapsekit.symbolic import ConstraintSet, PrologBackend, SympyBackend, Z3Ba
 
 
 @pytest.mark.asyncio
-async def test_z3_backend_reports_missing_optional_dependency(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_z3_backend_reports_missing_optional_dependency(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     real_import = builtins.__import__
 
     def fake_import(name: str, *args, **kwargs):
