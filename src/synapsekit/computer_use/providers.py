@@ -98,7 +98,9 @@ class OpenSourceComputerUseProvider:
         elif hasattr(self.model, "generate"):
             result = await self.model.generate(prompt)
         else:
-            raise TypeError("OpenSourceComputerUseProvider model must expose generate() or next_action().")
+            raise TypeError(
+                "OpenSourceComputerUseProvider model must expose generate() or next_action()."
+            )
         return normalize_action(result)
 
 
@@ -126,7 +128,9 @@ class AnthropicComputerUseProvider:
             raise TypeError("Anthropic client must expose next_action() or messages.create().")
         response = await self.client.messages.create(
             model=self.model,
-            messages=[{"role": "user", "content": _build_json_action_prompt(task, observation, history)}],
+            messages=[
+                {"role": "user", "content": _build_json_action_prompt(task, observation, history)}
+            ],
             tools=[{"type": "computer_20241022", "name": "computer"}],
         )
         return normalize_action(_extract_action_payload(response))

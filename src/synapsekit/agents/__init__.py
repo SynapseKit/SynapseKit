@@ -1,5 +1,3 @@
-from .agent_registry import AgentMetadata, AgentRegistry, InMemoryAgentRegistry, RedisAgentRegistry
-from .base import BaseTool, ToolResult
 from ..computer_use import (
     AnthropicComputerUseProvider,
     BrowserScreenProvider,
@@ -19,6 +17,8 @@ from ..computer_use import (
     VNCScreenProvider,
     requires_human_confirmation,
 )
+from .agent_registry import AgentMetadata, AgentRegistry, InMemoryAgentRegistry, RedisAgentRegistry
+from .base import BaseTool, ToolResult
 from .executor import AgentConfig, AgentExecutor
 from .facade import SimpleAgent, agent
 from .federation import (

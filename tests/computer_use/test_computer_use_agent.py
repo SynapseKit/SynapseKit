@@ -89,10 +89,14 @@ async def test_safety_blocks_forbidden_apps() -> None:
 @pytest.mark.asyncio
 async def test_confirmation_denial_stops_sensitive_action() -> None:
     screen = FakeScreen()
-    provider = FakeProvider([ComputerAction(type=ComputerActionType.TYPE_TEXT, text="send invoice")])
+    provider = FakeProvider(
+        [ComputerAction(type=ComputerActionType.TYPE_TEXT, text="send invoice")]
+    )
     safety = SafetyPolicy(confirm_before=("send",))
 
-    result = await ComputerUseAgent(provider=provider, screen=screen, safety=safety).run("send invoice")
+    result = await ComputerUseAgent(provider=provider, screen=screen, safety=safety).run(
+        "send invoice"
+    )
 
     assert result.error == "Human confirmation denied."
     assert screen.executed == []
@@ -102,7 +106,9 @@ async def test_confirmation_denial_stops_sensitive_action() -> None:
 @pytest.mark.asyncio
 async def test_confirmation_approval_executes_action() -> None:
     screen = FakeScreen()
-    provider = FakeProvider([ComputerAction(type=ComputerActionType.TYPE_TEXT, text="send invoice")])
+    provider = FakeProvider(
+        [ComputerAction(type=ComputerActionType.TYPE_TEXT, text="send invoice")]
+    )
     safety = SafetyPolicy(confirm_before=("send",))
 
     result = await ComputerUseAgent(
@@ -185,7 +191,9 @@ async def test_openai_provider_uses_fake_next_action() -> None:
         async def next_action(self, task, observation, history):
             return {"type": "navigate", "url": "https://example.com"}
 
-    action = await OpenAIComputerUseProvider(Client()).next_action("task", ComputerObservation(), [])
+    action = await OpenAIComputerUseProvider(Client()).next_action(
+        "task", ComputerObservation(), []
+    )
 
     assert action.action_type == ComputerActionType.NAVIGATE
     assert action.url == "https://example.com"

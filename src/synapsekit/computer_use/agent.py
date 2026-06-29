@@ -6,11 +6,11 @@ from pathlib import Path
 from .recorder import SessionRecorder
 from .safety import SafetyPolicy
 from .types import (
-    ConfirmationCallback,
     ComputerActionType,
     ComputerStep,
     ComputerUseProvider,
     ComputerUseResult,
+    ConfirmationCallback,
     SafetyDecision,
     ScreenProvider,
 )
@@ -64,7 +64,9 @@ class ComputerUseAgent:
 
                 if safety.decision == SafetyDecision.BLOCKED:
                     error = safety.reason
-                    step = ComputerStep(observation=observation, action=action, safety=safety, error=error)
+                    step = ComputerStep(
+                        observation=observation, action=action, safety=safety, error=error
+                    )
                     steps.append(step)
                     if self.recorder is not None:
                         self.recorder.record_step(step)
@@ -88,7 +90,9 @@ class ComputerUseAgent:
                 if action.action_type == ComputerActionType.DONE:
                     completed = True
                     output = action.reason or "done"
-                    step = ComputerStep(observation=observation, action=action, safety=safety, output=output)
+                    step = ComputerStep(
+                        observation=observation, action=action, safety=safety, output=output
+                    )
                     steps.append(step)
                     if self.recorder is not None:
                         self.recorder.record_step(step)

@@ -98,14 +98,17 @@ class SafetyPolicy:
                 observation,
             )
 
-        if self.allowed_apps is not None and app_name:
-            if not self._matches_any(app_name, self.allowed_apps):
-                return self._record(
-                    SafetyDecision.BLOCKED,
-                    "Current app is outside SafetyPolicy.allowed_apps.",
-                    action,
-                    observation,
-                )
+        if (
+            self.allowed_apps is not None
+            and app_name
+            and not self._matches_any(app_name, self.allowed_apps)
+        ):
+            return self._record(
+                SafetyDecision.BLOCKED,
+                "Current app is outside SafetyPolicy.allowed_apps.",
+                action,
+                observation,
+            )
 
         if action_type == ComputerActionType.NAVIGATE:
             domain_check = self._check_domain(action.url)
@@ -155,7 +158,9 @@ class SafetyPolicy:
             return (SafetyDecision.BLOCKED, "Navigation URL must be http(s) with a hostname.")
         if self._matches_domain(host, self.blocked_domains):
             return (SafetyDecision.BLOCKED, "Navigation domain is blocked by SafetyPolicy.")
-        if self.allowed_domains is not None and not self._matches_domain(host, self.allowed_domains):
+        if self.allowed_domains is not None and not self._matches_domain(
+            host, self.allowed_domains
+        ):
             return (
                 SafetyDecision.NEEDS_CONFIRMATION,
                 "Navigation domain is outside SafetyPolicy.allowed_domains.",
@@ -169,7 +174,9 @@ class SafetyPolicy:
         action: ComputerAction,
         observation: ComputerObservation,
     ) -> SafetyCheck:
-        check = SafetyCheck(decision=decision, reason=reason, action=action, observation=observation)
+        check = SafetyCheck(
+            decision=decision, reason=reason, action=action, observation=observation
+        )
         self.audit_log.append(
             AuditEntry(
                 decision=decision,

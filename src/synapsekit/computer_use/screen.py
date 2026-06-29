@@ -42,7 +42,9 @@ class BrowserScreenProvider:
             selector = action.raw.get("selector")
             if not selector:
                 raise ValueError("Browser type_text actions require raw['selector'].")
-            result = await self.browser.run(action="fill", selector=selector, value=action.text or "")
+            result = await self.browser.run(
+                action="fill", selector=selector, value=action.text or ""
+            )
         elif action_type == ComputerActionType.SCREENSHOT:
             result = await self.browser.run(action="screenshot")
         elif action_type == ComputerActionType.WAIT:
@@ -88,7 +90,9 @@ class LocalScreenProvider:
         elif action_type == ComputerActionType.RIGHT_CLICK:
             await asyncio.to_thread(self._pyautogui.rightClick, action.x, action.y)
         elif action_type == ComputerActionType.MOVE:
-            await asyncio.to_thread(self._pyautogui.moveTo, action.x, action.y, duration=action.duration or 0)
+            await asyncio.to_thread(
+                self._pyautogui.moveTo, action.x, action.y, duration=action.duration or 0
+            )
         elif action_type == ComputerActionType.DRAG:
             await asyncio.to_thread(
                 self._pyautogui.dragTo,
