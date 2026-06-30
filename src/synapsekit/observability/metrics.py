@@ -27,6 +27,16 @@ except Exception:  # pragma: no cover - optional dependency
     prom_start_http_server = None  # type: ignore[assignment,misc]
     _PROMETHEUS_AVAILABLE = False
 
+_EVOLUTION_STATUSES = {
+    "proposed": 0.0,
+    "blocked": 1.0,
+    "approved": 2.0,
+    "canary": 3.0,
+    "promoted": 4.0,
+    "rolled_back": 5.0,
+    "rejected": 6.0,
+}
+
 
 class PrometheusMetrics:
     """Prometheus metrics for LLM cost, tokens, and latency.
@@ -56,6 +66,11 @@ class PrometheusMetrics:
         self._cost_counter: Any | None = None
         self._token_counter: Any | None = None
         self._latency_hist: Any | None = None
+        self._agent_evolution_cycles: Any | None = None
+        self._agent_evolution_patches: Any | None = None
+        self._agent_evolution_eval_score: Any | None = None
+        self._agent_evolution_rollout_pct: Any | None = None
+        self._agent_evolution_status: Any | None = None
 
         if self.enabled:
             self._cost_counter = PromCounter(
@@ -79,6 +94,44 @@ class PrometheusMetrics:
                 namespace=self._namespace,
                 registry=self._registry,
                 buckets=(0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10),
+            )
+            self._agent_evolution_cycles = PromCounter(
+                "agent_evolution_cycles_total",
+                "Total self-improvement cycles executed.",
+                ["agent_id"],
+                namespace=self._namespace,
+                registry=self._registry,
+            )
+            self._agent_evolution_patches = PromCounter(
+                "agent_evolution_patches_total",
+                "Total self-improvement patches by type and status.",
+                ["agent_id", "patch_type", "status"],
+                namespace=self._namespace,
+                registry=self._registry,
+            )
+            self._agent_evolution_eval_score = PromHistogram(
+                "agent_evolution_eval_score",
+                "Eval score for agent evolution patches.",
+                ["agent_id", "patch_type", "status"],
+                namespace=self._namespace,
+                registry=self._registry,
+                buckets=(0.0, 0.1, 0.25, 0.5, 0.7, 0.85, 0.9, 0.95, 1.0),
+            )
+            self._agent_evolution_rollout_pct = PromHistogram(
+                "agent_evolution_rollout_pct",
+                "Rollout percentage assigned to agent evolution patches.",
+                ["agent_id", "patch_type", "status"],
+                namespace=self._namespace,
+                registry=self._registry,
+                buckets=(0, 1, 5, 10, 25, 50, 75, 100),
+            )
+            self._agent_evolution_status = PromHistogram(
+                "agent_evolution_status",
+                "Numeric status code for agent evolution patches.",
+                ["agent_id", "patch_type"],
+                namespace=self._namespace,
+                registry=self._registry,
+                buckets=(0, 1, 2, 3, 4, 5, 6),
             )
 
         if start_server and self.enabled:
@@ -146,3 +199,45 @@ class PrometheusMetrics:
             total_tokens=int(total_tokens) if total_tokens is not None else None,
             latency_ms=float(latency_ms) if latency_ms is not None else None,
         )
+
+    def record_agent_evolution_cycle(self, *, agent_id: str, proposals: int | None = None) -> None:
+        """Record one self-improvement cycle."""
+        del proposals
+        if not self.enabled or self._agent_evolution_cycles is None:
+            return
+        with suppress(Exception):
+            self._agent_evolution_cycles.labels(agent_id=str(agent_id)).inc()
+
+    def record_agent_evolution_patch(
+        self,
+        *,
+        agent_id: str,
+        patch_type: str,
+        status: str,
+        eval_score: float | None = None,
+        rollout_pct: float | None = None,
+    ) -> None:
+        """Record a proposed, blocked, canaried, promoted, or rolled-back patch."""
+        if not self.enabled:
+            return
+        labels = {
+            "agent_id": str(agent_id),
+            "patch_type": str(patch_type),
+            "status": str(status),
+        }
+        if self._agent_evolution_patches is not None:
+            with suppress(Exception):
+                self._agent_evolution_patches.labels(**labels).inc()
+        if eval_score is not None and self._agent_evolution_eval_score is not None:
+            with suppress(Exception):
+                self._agent_evolution_eval_score.labels(**labels).observe(float(eval_score))
+        if rollout_pct is not None and self._agent_evolution_rollout_pct is not None:
+            with suppress(Exception):
+                self._agent_evolution_rollout_pct.labels(**labels).observe(float(rollout_pct))
+        if self._agent_evolution_status is not None:
+            with suppress(Exception):
+                status_code = _EVOLUTION_STATUSES.get(str(status), -1.0)
+                self._agent_evolution_status.labels(
+                    agent_id=str(agent_id),
+                    patch_type=str(patch_type),
+                ).observe(status_code)
