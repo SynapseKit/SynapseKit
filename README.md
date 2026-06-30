@@ -222,6 +222,26 @@ Output parsers (JSON, Pydantic, List), prompt templates (standard, chat, few-sho
 **🕸 Agent Federation** *(new)*<br/>
 `AgentFederation` routes prompts across a registry of agents using round-robin, capacity-aware, or cost-aware strategies. `InMemoryAgentRegistry` and `RedisAgentRegistry` track agents with heartbeat-based health checks and stale pruning. Tag and tool-based discovery filters. `LocalAgentClient` for in-process agents, custom `AgentClient` for remote. `pip install synapsekit[redis]` for Redis registry.
 
+`AgentSwarm` adds market-based routing on top of the same registry. Agents bid with estimated cost, quality, and confidence; `MarketPolicy` supports sealed-bid, Vickrey, English, multi-winner, and coalition auctions; `Reputation` tracks per-agent, per-task-category outcomes. Deterministic tests and demos can set `seed=42`. See `examples/agent_swarm_market.py`.
+
+```python
+from synapsekit import AgentSwarm, BidStrategy, MarketPolicy
+
+swarm = AgentSwarm(
+    agents=[researcher, coder, critic, planner, summarizer],
+    market=MarketPolicy(
+        bid_strategy=BidStrategy.cost_quality_pareto(),
+        auction_type="sealed_bid",
+        budget_per_task=10_000,
+        seed=42,
+    ),
+)
+
+result = await swarm.execute("Write a market analysis on quantum compute startups")
+print(result.winners)
+print(swarm.trace_to_mermaid())
+```
+
 </td>
 <td width="50%">
 
