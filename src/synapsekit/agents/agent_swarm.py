@@ -156,10 +156,13 @@ class BidStrategy:
             return base + self.exploration_weight * exploration
 
         if self.name == "thompson_sampling":
-            sampled = sum(
-                rng.betavariate(reputation.quality_alpha, reputation.quality_beta)
-                for _ in range(self.samples)
-            ) / self.samples
+            sampled = (
+                sum(
+                    rng.betavariate(reputation.quality_alpha, reputation.quality_beta)
+                    for _ in range(self.samples)
+                )
+                / self.samples
+            )
             return 0.55 * base + 0.45 * sampled
 
         return base
@@ -396,7 +399,9 @@ class AgentSwarm:
             for winner in entry["winners"]:
                 winner_node = self._mermaid_id(f"agent_{index}_{winner}")
                 result_node = self._mermaid_id(f"result_{index}_{winner}")
-                lines.append(f'    {result_node}["winner: {winner}\\nreward={entry["reward"]:.3f}"]')
+                lines.append(
+                    f'    {result_node}["winner: {winner}\\nreward={entry["reward"]:.3f}"]'
+                )
                 lines.append(f"    {winner_node} ==> {result_node}")
         return "\n".join(lines)
 
@@ -564,18 +569,24 @@ class AgentSwarm:
     def _select_winners(self, bids: list[Bid], scores: dict[str, float]) -> list[Bid]:
         if not bids:
             return []
-        ordered = sorted(bids, key=lambda bid: (scores[bid.agent_id], -bid.estimated_cost), reverse=True)
+        ordered = sorted(
+            bids, key=lambda bid: (scores[bid.agent_id], -bid.estimated_cost), reverse=True
+        )
 
         if self.market.auction_type == AuctionType.MULTI_WINNER:
             return ordered[: min(self.market.max_winners, len(ordered))]
         if self.market.auction_type == AuctionType.COALITION:
             return CoalitionFormer(max_size=self.market.coalition_size).form(ordered, scores)
         if self.market.auction_type == AuctionType.ENGLISH:
-            affordable = [bid for bid in ordered if bid.estimated_cost <= self.market.budget_per_task]
+            affordable = [
+                bid for bid in ordered if bid.estimated_cost <= self.market.budget_per_task
+            ]
             return [affordable[0] if affordable else ordered[0]]
         return [ordered[0]]
 
-    def _settlement_cost(self, winners: list[Bid], bids: list[Bid], scores: dict[str, float]) -> float:
+    def _settlement_cost(
+        self, winners: list[Bid], bids: list[Bid], scores: dict[str, float]
+    ) -> float:
         if not winners:
             return 0.0
         if self.market.auction_type == AuctionType.VICKREY and len(bids) > 1:

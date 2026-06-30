@@ -202,7 +202,9 @@ def test_synthetic_bids_use_reputation_when_agent_has_no_bidder():
         reputation=reputation,
     )
 
-    auction = asyncio.run(swarm.auction("Review code", swarm.federation.discover(), task_category="code"))
+    auction = asyncio.run(
+        swarm.auction("Review code", swarm.federation.discover(), task_category="code")
+    )
 
     assert auction.bids[0].estimated_quality == 0.9
     assert auction.bids[0].estimated_cost == 3.0

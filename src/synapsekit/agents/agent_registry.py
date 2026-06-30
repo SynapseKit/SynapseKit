@@ -269,7 +269,9 @@ class RedisReputation(Reputation):
 
     def set(self, snapshot: ReputationSnapshot) -> ReputationSnapshot:
         clean = snapshot.copy()
-        self._redis.set(self._redis_key(clean.agent_id, clean.task_category), json.dumps(clean.to_dict()))
+        self._redis.set(
+            self._redis_key(clean.agent_id, clean.task_category), json.dumps(clean.to_dict())
+        )
         return clean.copy()
 
     def list(self) -> builtin_list[ReputationSnapshot]:

@@ -209,7 +209,9 @@ class PrometheusMetrics:
                 self._swarm_auction_bid_hist.labels(**labels).observe(int(bid_count))
         if latency_ms is not None and self._swarm_auction_latency_hist is not None:
             with suppress(Exception):
-                self._swarm_auction_latency_hist.labels(**labels).observe(float(latency_ms) / 1000.0)
+                self._swarm_auction_latency_hist.labels(**labels).observe(
+                    float(latency_ms) / 1000.0
+                )
 
     def record_swarm_win(
         self,
