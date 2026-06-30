@@ -77,7 +77,7 @@ class AutoRolloutManager:
         self._state.stage_idx = 0
         self._state.stage_samples = 0
         self._state.stage_start_finetuned_count = initial_finetuned_count
-        self._state.current_pct = self._policy.stages[0]
+        self._state.current_pct = self._policy.initial_rollout_pct()
         self._router.rollout_pct = self._state.current_pct
         _log.info("Rollout activated at %.1f%%", self._state.current_pct)
 
@@ -152,8 +152,9 @@ class AutoRolloutManager:
         return False
 
     def _advance(self, current_finetuned_count: int) -> Literal["advanced", "completed"]:
+        stages = self._policy.rollout_stages()
         next_idx = self._state.stage_idx + 1
-        if next_idx >= len(self._policy.stages):
+        if next_idx >= len(stages):
             self._state.current_pct = 100.0
             self._router.rollout_pct = 100.0
             self._state.is_active = False
@@ -163,7 +164,7 @@ class AutoRolloutManager:
         self._state.stage_idx = next_idx
         self._state.stage_samples = 0
         self._state.stage_start_finetuned_count = current_finetuned_count
-        self._state.current_pct = self._policy.stages[next_idx]
+        self._state.current_pct = stages[next_idx]
         self._router.rollout_pct = self._state.current_pct
         _log.info(
             "Advanced to stage %d (%.1f%%)",

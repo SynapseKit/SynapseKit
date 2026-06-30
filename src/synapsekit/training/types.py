@@ -126,6 +126,50 @@ class RolloutPolicy:
     improvement_threshold_pct: float = 2.0
     latency_regression_pct: float = 20.0
     cost_regression_pct: float = 15.0
+    canary_pct: float | None = None
+    min_eval_score: float = 0.85
+    rollback_on_regression: bool = True
+    require_human_approval_for: list[str] = field(default_factory=lambda: ["tool_addition"])
+
+    def __post_init__(self) -> None:
+        if not self.stages:
+            raise ValueError("stages must contain at least one rollout percentage")
+        for pct in self.stages:
+            if not 0.0 <= pct <= 100.0:
+                raise ValueError(f"rollout stages must be in [0, 100], got {pct}")
+        if self.canary_pct is not None and not 0.0 <= self.canary_pct <= 100.0:
+            raise ValueError(f"canary_pct must be in [0, 100], got {self.canary_pct}")
+        if self.min_samples_per_stage < 0:
+            raise ValueError("min_samples_per_stage must be >= 0")
+        if not 0.0 <= self.min_eval_score <= 1.0:
+            raise ValueError("min_eval_score must be in [0, 1]")
+
+    def initial_rollout_pct(self) -> float:
+        """Return the first rollout percentage, honoring explicit canary policy."""
+        return self.rollout_stages()[0]
+
+    def rollout_stages(self) -> list[float]:
+        """Return the effective rollout stage sequence."""
+        if self.canary_pct is None:
+            return list(self.stages)
+        return [self.canary_pct, *[pct for pct in self.stages if pct != self.canary_pct]]
+
+    def requires_human_approval(self, change_type: str) -> bool:
+        """Return whether a change type requires approval before it can ship."""
+        return change_type in set(self.require_human_approval_for)
+
+    def check_eval_gate(
+        self,
+        score: float,
+        *,
+        baseline_score: float | None = None,
+    ) -> tuple[bool, str | None]:
+        """Validate eval score and regression policy for an evolution patch."""
+        if score < self.min_eval_score:
+            return False, f"eval score {score:.3f} < required {self.min_eval_score:.3f}"
+        if self.rollback_on_regression and baseline_score is not None and score < baseline_score:
+            return False, f"eval score regressed from {baseline_score:.3f} to {score:.3f}"
+        return True, None
 
 
 @dataclass

@@ -33,6 +33,14 @@ from .pii_redactor import PIIRedactor, RedactionResult
 from .react import ReActAgent
 from .reasoning_agent import ReasoningAgent, ReasoningAgentConfig, ReasoningDecision
 from .registry import ToolRegistry
+from .self_improving import (
+    AgentConfigPatch,
+    AgentConfigSnapshot,
+    AgentEvolutionAuditLog,
+    EvolutionCycleResult,
+    MetaAnalyzer,
+    SelfImprovingAgent,
+)
 from .step_events import (
     ActionEvent,
     ErrorEvent,
@@ -115,12 +123,18 @@ __all__ = [
     "AgentMemory",
     "AgentScratchpad",
     "AgentStep",
+    "AgentConfigPatch",
+    "AgentConfigSnapshot",
+    "AgentEvolutionAuditLog",
     # Agents
     "ReActAgent",
     "ReasoningAgent",
     "ReasoningAgentConfig",
     "ReasoningDecision",
     "FunctionCallingAgent",
+    "SelfImprovingAgent",
+    "MetaAnalyzer",
+    "EvolutionCycleResult",
     "AgentExecutor",
     "AgentConfig",
     "CronTrigger",

@@ -75,6 +75,10 @@ class AgentExecutor:
                 "Use 'react' or 'function_calling'."
             )
 
+    def rebuild(self) -> None:
+        """Rebuild the concrete agent after mutating ``config``."""
+        self._agent = self._build_agent()
+
     async def run(self, query: str) -> str:
         """Async: run agent and return final answer."""
         return await self._agent.run(query)

@@ -19,9 +19,12 @@ from .rag_evaluator import (
 )
 from .regression import EvalRegression, EvalSnapshot, MetricDelta, RegressionReport
 from .relevancy import RelevancyMetric
+from .suite import EvalSuite, EvalSuiteResult
 
 __all__ = [
     "EvalCaseMeta",
+    "EvalSuite",
+    "EvalSuiteResult",
     "PromptCandidate",
     "PromptOptimizer",
     "PromptVariantRunner",
