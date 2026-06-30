@@ -23,3 +23,17 @@ class TestPrometheusMetrics:
 
         # No crash, metrics disabled => no-ops
         assert True
+
+    def test_agent_evolution_metrics_disabled_noop(self):
+        metrics = PrometheusMetrics(enabled=False)
+
+        metrics.record_agent_evolution_cycle(agent_id="agent", proposals=2)
+        metrics.record_agent_evolution_patch(
+            agent_id="agent",
+            patch_type="prompt_rewrite",
+            status="canary",
+            eval_score=0.92,
+            rollout_pct=5.0,
+        )
+
+        assert True
