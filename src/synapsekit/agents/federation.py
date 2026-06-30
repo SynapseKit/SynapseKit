@@ -7,7 +7,12 @@ from collections.abc import Iterable
 from enum import Enum
 from typing import Any, Protocol, cast
 
-from .agent_registry import AgentMetadata, AgentRegistry, InMemoryAgentRegistry
+from .agent_registry import (
+    AgentMetadata,
+    AgentRegistry,
+    AgentRegistryBackend,
+    InMemoryAgentRegistry,
+)
 
 
 class AgentClient(Protocol):
@@ -51,6 +56,7 @@ class RoutingStrategy(str, Enum):
     ROUND_ROBIN = "round_robin"
     CAPACITY_AWARE = "capacity_aware"
     COST_AWARE = "cost_aware"
+    MARKET = "market"
 
 
 AgentRoutingStrategy = RoutingStrategy
@@ -61,7 +67,7 @@ class AgentFederation:
 
     def __init__(
         self,
-        registry: AgentRegistry | InMemoryAgentRegistry | None = None,
+        registry: AgentRegistry | AgentRegistryBackend | InMemoryAgentRegistry | None = None,
         *,
         clients: dict[str, Any] | None = None,
         default_strategy: RoutingStrategy | str = RoutingStrategy.ROUND_ROBIN,
@@ -142,6 +148,8 @@ class AgentFederation:
             min_cost = min(agent.cost_multiplier for agent in candidates)
             best = [agent for agent in candidates if agent.cost_multiplier == min_cost]
             return self._round_robin(best, "cost_aware")
+        if selected_strategy == RoutingStrategy.MARKET:
+            raise ValueError("Market routing requires AgentFederation.run(..., strategy='market').")
 
         raise ValueError(f"Unsupported routing strategy: {selected_strategy}")
 
@@ -160,9 +168,32 @@ class AgentFederation:
         healthy_only: bool = True,
         **kwargs: Any,
     ) -> Any:
+        selected_strategy = self._normalise_strategy(strategy or self.default_strategy)
+        if agent_id is None and selected_strategy == RoutingStrategy.MARKET:
+            from .agent_swarm import AgentSwarm, MarketPolicy
+
+            market = kwargs.pop("market", None)
+            if market is not None and not isinstance(market, MarketPolicy):
+                raise TypeError("market must be a MarketPolicy when strategy='market'.")
+            swarm = AgentSwarm(
+                market=market,
+                registry=self.registry,
+                clients=dict(self.clients),
+                reputation=kwargs.pop("reputation", None),
+                metrics=kwargs.pop("metrics", None),
+            )
+            return await swarm.execute(
+                prompt,
+                tools=tools,
+                tags=tags,
+                min_capacity=min_capacity,
+                healthy_only=healthy_only,
+                **kwargs,
+            )
+
         if agent_id is None:
             agent = self.select_agent(
-                strategy=strategy,
+                strategy=selected_strategy,
                 tools=tools,
                 tags=tags,
                 min_capacity=min_capacity,
@@ -212,6 +243,9 @@ class AgentFederation:
             "capacity_aware_routing": "capacity_aware",
             "cost": "cost_aware",
             "cost_aware_routing": "cost_aware",
+            "market_based": "market",
+            "market_routing": "market",
+            "swarm": "market",
         }
         value = aliases.get(value, value)
         try:
