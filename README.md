@@ -116,6 +116,42 @@ LangChain has more raw integrations and more tutorials. That's not what SynapseK
 
 ---
 
+## Computer Use
+
+`ComputerUseAgent` lets a model work through a screen provider instead of an API. It observes the current screen, asks a provider for one normalized action, applies a `SafetyPolicy`, executes the action, and records a replayable session log.
+
+```python
+from synapsekit import (
+    AnthropicComputerUseProvider,
+    BrowserScreenProvider,
+    ComputerUseAgent,
+    SafetyPolicy,
+)
+
+agent = ComputerUseAgent(
+    provider=AnthropicComputerUseProvider(client=anthropic_client, model="claude-3-5-sonnet"),
+    screen=BrowserScreenProvider(headless=True, allowed_domains=["example.com"]),
+    safety=SafetyPolicy(
+        confirm_before=["delete", "send", "purchase", "navigate_to_new_domain"],
+        forbidden_apps=["keychain", "1password"],
+        record_session=True,
+    ),
+    recorder="runs/computer-use-session.jsonl",
+)
+
+result = await agent.run("Open the legacy form, enter the invoice total, and stop.")
+```
+
+Install optional runtime dependencies only when you need real screen control:
+
+```bash
+pip install "synapsekit[computer-use]"
+```
+
+Read [Computer Use Safety](docs/computer-use-safety.md) before running this against real desktops, browsers, credentials, or production systems.
+
+---
+
 ## Who is it for?
 
 SynapseKit is for Python developers who want to ship LLM features without fighting their framework.
