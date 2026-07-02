@@ -45,17 +45,18 @@ synapsekit = "synapsekit.cli.main:main"
 graph = ["networkx>=3.0", "neo4j>=5.0"]
 openai = ["openai>=1.0"]
 anthropic = ["anthropic>=0.25"]
-semantic = ["sentence-transformers>=2.7"]
-colbert = ["ragatouille"]
-pdf = ["pypdf>=6.10.2"]
+# Upstream torch has no patched release for GHSA-rrmf-rvhw-rf47 yet, so
+# torch-backed semantic/ColBERT extras are temporarily manual installs.
+semantic = []
+colbert = []
+pdf = ["pypdf>=6.13.3"]
 wikipedia = ["wikipedia-api>=0.6"]
 arxiv = ["arxiv>=2.0"]
 html = ["beautifulsoup4>=4.12", "lxml>=6.1.0"]
 web = ["httpx>=0.27", "beautifulsoup4>=4.12"]
-# CVE-2026-45829: pre-auth code injection in chromadb server mode (>=1.0,<=1.5.9, no patch yet).
-# SynapseKit uses chromadb as an embedded client — server mode is not invoked — so exposure is
-# limited. Pin upper bound here to force a lock file update when a patched release ships.
-chroma = ["chromadb>=0.5,<1.6.0"]
+# CVE-2026-45829 affects chromadb >=1.0.0, <=1.5.9 and has no patched
+# release yet. Stay on the pre-1.0 embedded-client line until upstream fixes it.
+chroma = ["chromadb>=0.5,<1.0.0"]
 faiss = ["faiss-cpu>=1.7"]
 qdrant = ["qdrant-client>=1.9"]
 pinecone = ["pinecone>=3.0"]
@@ -91,7 +92,8 @@ voice-piper = ["piper-tts>=1.2"]
 voice-cartesia = ["cartesia>=0.1"]
 voice-elevenlabs = ["elevenlabs>=1.0"]
 voice-deepgram = ["deepgram-sdk>=3.0"]
-voice-silero = ["torch>=2.0", "torchaudio>=2.0"]
+# Upstream torch has no patched release for GHSA-rrmf-rvhw-rf47 yet.
+voice-silero = []
 training = ["openai>=1.0"]
 cron = ["croniter>=2.0", "tzdata>=2024.1; sys_platform == 'win32'"]
 excel = ["openpyxl>=3.1"]
@@ -99,7 +101,7 @@ pptx = ["python-pptx>=0.6"]
 docx = ["python-docx>=1.0"]
 yaml = ["PyYAML>=6.0"]
 teams = ["httpx>=0.27"]
-http = ["aiohttp>=3.13.4"]
+http = ["aiohttp>=3.14.1"]
 search = ["duckduckgo-search>=6.0"]
 huggingface = ["huggingface-hub>=0.20"]
 transformers = ["transformers>=4.0"]
@@ -107,18 +109,20 @@ tiktoken = ["tiktoken>=0.12"]
 google-search = ["google-search-results>=2.4"]
 tavily = ["tavily-python>=0.3"]
 youtube = ["youtube-search-python>=1.6"]
-mcp = ["mcp>=1.0"]
+mcp = ["mcp>=1.0", "python-multipart>=0.0.31", "starlette>=1.3.1"]
 redis = ["redis>=5.0"]
 memcached = ["aiomcache>=0.8"]
 vertex = ["google-cloud-aiplatform>=1.38"]
 cloudflare = ["httpx>=0.27"]
 aleph-alpha = ["aleph-alpha-client>=7.0"]
-llamacpp = ["llama-cpp-python>=0.2"]
+# llama-cpp-python currently pulls diskcache, which has no patched release for
+# CVE-2025-69872. Keep the integration import-optional until upstream removes it.
+llamacpp = []
 gpt4all = ["gpt4all>=2.0"]
 ernie = ["erniebot>=0.5"]
 minimax = ["httpx>=0.27"]
-serve = ["fastapi>=0.110", "uvicorn[standard]>=0.29"]
-graph-ui = ["fastapi>=0.110", "uvicorn[standard]>=0.29"]
+serve = ["fastapi>=0.110", "starlette>=1.3.1", "uvicorn[standard]>=0.29"]
+graph-ui = ["fastapi>=0.110", "starlette>=1.3.1", "uvicorn[standard]>=0.29"]
 observe = ["prometheus-client>=0.20"]
 postgres = ["psycopg[binary]>=3.1", "asyncpg>=0.29"]
 pgvector = ["psycopg[binary]>=3.1", "pgvector>=0.2"]
@@ -156,15 +160,13 @@ performance = ["orjson>=3.9", "uvloop>=0.19; sys_platform != 'win32'", "xxhash>=
 all = [
     "openai>=1.0",
     "anthropic>=0.25",
-    "sentence-transformers>=2.7",
-    "ragatouille",
-    "pypdf>=6.10.2",
+    "pypdf>=6.13.3",
     "wikipedia-api>=0.6",
     "arxiv>=2.0",
     "beautifulsoup4>=4.12",
     "lxml>=6.1.0",
     "httpx>=0.27",
-    "chromadb>=0.5,<1.6.0",
+    "chromadb>=0.5,<1.0.0",
     "faiss-cpu>=1.7",
     "qdrant-client>=1.9",
     "pinecone>=3.0",
@@ -190,12 +192,12 @@ all = [
     "aiomcache>=0.8",
     "google-cloud-aiplatform>=1.38",
     "fastapi>=0.110",
+    "starlette>=1.3.1",
     "uvicorn[standard]>=0.29",
     "psycopg[binary]>=3.1",
     "asyncpg>=0.29",
     "groq>=0.9",
     "croniter>=2.0",
-    "llama-cpp-python>=0.2",
     "erniebot>=0.5",
     "wolframalpha>=5.0",
     "discord.py>=2.0",
@@ -416,7 +418,7 @@ snowflake-connector-python = "snowflake"
 "piper-tts" = "piper"
 
 [tool.deptry.per_rule_ignores]
-DEP001 = ["sqlalchemy", "pydantic", "aiohttp", "opentelemetry", "whisper", "botocore", "aiomcache", "nest_asyncio", "huggingface_hub", "serpapi", "weaviate", "uvicorn", "starlette", "tomli", "pyttsx3", "faster_whisper", "sounddevice", "soundfile", "aiokafka", "typesense", "prometheus_client"]
-DEP002 = ["numpy", "rank-bm25", "beautifulsoup4", "lxml", "pillow", "pyasn1", "faiss-cpu", "google-generativeai", "tavily-python", "youtube-search-python", "psycopg", "google-search-results", "discord.py", "google-auth", "weaviate-client", "pymilvus", "lancedb", "pgvector", "slack-sdk", "supabase", "pymongo", "azure-storage-blob", "elasticsearch", "tzdata", "torchaudio"]
-DEP003 = ["sqlalchemy", "botocore", "nest_asyncio", "opentelemetry", "starlette", "uvicorn", "tomli"]
+DEP001 = ["sqlalchemy", "pydantic", "aiohttp", "opentelemetry", "whisper", "botocore", "aiomcache", "nest_asyncio", "huggingface_hub", "serpapi", "weaviate", "uvicorn", "starlette", "tomli", "pyttsx3", "faster_whisper", "sounddevice", "soundfile", "aiokafka", "typesense", "prometheus_client", "sentence_transformers", "llama_cpp", "ragatouille", "torch"]
+DEP002 = ["numpy", "rank-bm25", "beautifulsoup4", "lxml", "pillow", "pyasn1", "faiss-cpu", "google-generativeai", "tavily-python", "youtube-search-python", "psycopg", "google-search-results", "discord.py", "google-auth", "weaviate-client", "pymilvus", "lancedb", "pgvector", "slack-sdk", "supabase", "pymongo", "azure-storage-blob", "elasticsearch", "tzdata", "torchaudio", "python-multipart"]
+DEP003 = ["sqlalchemy", "botocore", "nest_asyncio", "opentelemetry", "starlette", "uvicorn", "tomli", "torch"]
 DEP004 = ["pydantic"]
