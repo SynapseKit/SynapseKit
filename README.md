@@ -309,6 +309,33 @@ Docs: [docs/evalhub.md](docs/evalhub.md)
 
 ---
 
+## Neuro-Symbolic Verification
+
+SynapseKit can pair a reasoning model with a symbolic solver so the model proposes
+formal constraints and the solver verifies the answer.
+
+```python
+from synapsekit import NeuroSymbolicAgent, ReasoningLLM, Z3Backend
+
+agent = NeuroSymbolicAgent(
+    llm=ReasoningLLM("claude-3-7-sonnet-latest", api_key="..."),
+    verifier=Z3Backend(),
+    on_unverified="retry",
+    max_proposals=3,
+)
+
+result = await agent.solve("Find an integer x where x > 3 and x < 5.")
+
+print(result.answer)
+print(result.verified)
+print(result.proof.model)
+```
+
+Install solver integrations with `pip install synapsekit[symbolic]`. Prolog
+verification uses the `swipl` executable when `PrologBackend` is selected.
+
+---
+
 ## Integrations
 
 <div align="center">

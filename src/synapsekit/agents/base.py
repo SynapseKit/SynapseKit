@@ -11,6 +11,7 @@ class ToolResult:
 
     output: str
     error: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
     def is_error(self) -> bool:
