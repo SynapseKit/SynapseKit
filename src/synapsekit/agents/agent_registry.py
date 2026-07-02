@@ -89,6 +89,206 @@ class AgentMetadata:
         return current_time - self.last_heartbeat <= stale_timeout
 
 
+@dataclass(slots=True)
+class ReputationSnapshot:
+    """Per-agent, per-task-category reputation used by market routing."""
+
+    agent_id: str
+    task_category: str = "general"
+    attempts: int = 0
+    wins: int = 0
+    avg_cost: float = 0.0
+    mean_quality: float = 0.5
+    mean_reward: float = 0.0
+    quality_alpha: float = 1.0
+    quality_beta: float = 1.0
+
+    def __post_init__(self) -> None:
+        self.agent_id = str(self.agent_id)
+        self.task_category = str(self.task_category or "general")
+        self.attempts = max(0, int(self.attempts))
+        self.wins = max(0, int(self.wins))
+        self.avg_cost = max(0.0, float(self.avg_cost))
+        self.mean_quality = min(1.0, max(0.0, float(self.mean_quality)))
+        self.mean_reward = float(self.mean_reward)
+        self.quality_alpha = max(0.001, float(self.quality_alpha))
+        self.quality_beta = max(0.001, float(self.quality_beta))
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "agent_id": self.agent_id,
+            "task_category": self.task_category,
+            "attempts": self.attempts,
+            "wins": self.wins,
+            "avg_cost": self.avg_cost,
+            "mean_quality": self.mean_quality,
+            "mean_reward": self.mean_reward,
+            "quality_alpha": self.quality_alpha,
+            "quality_beta": self.quality_beta,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> ReputationSnapshot:
+        return cls(
+            agent_id=data["agent_id"],
+            task_category=data.get("task_category", "general"),
+            attempts=data.get("attempts", 0),
+            wins=data.get("wins", 0),
+            avg_cost=data.get("avg_cost", 0.0),
+            mean_quality=data.get("mean_quality", 0.5),
+            mean_reward=data.get("mean_reward", 0.0),
+            quality_alpha=data.get("quality_alpha", 1.0),
+            quality_beta=data.get("quality_beta", 1.0),
+        )
+
+    def copy(self) -> ReputationSnapshot:
+        return ReputationSnapshot.from_dict(self.to_dict())
+
+
+class Reputation:
+    """In-memory reputation store for market-based agent routing."""
+
+    def __init__(self, *, default_quality: float = 0.5) -> None:
+        self.default_quality = min(1.0, max(0.0, float(default_quality)))
+        self._snapshots: dict[tuple[str, str], ReputationSnapshot] = {}
+        self._lock = threading.RLock()
+
+    def get(self, agent_id: str, task_category: str = "general") -> ReputationSnapshot:
+        key = self._key(agent_id, task_category)
+        with self._lock:
+            snapshot = self._snapshots.get(key)
+            if snapshot is None:
+                return ReputationSnapshot(
+                    agent_id=str(agent_id),
+                    task_category=str(task_category or "general"),
+                    mean_quality=self.default_quality,
+                )
+            return snapshot.copy()
+
+    def set(self, snapshot: ReputationSnapshot) -> ReputationSnapshot:
+        clean = snapshot.copy()
+        with self._lock:
+            self._snapshots[self._key(clean.agent_id, clean.task_category)] = clean
+        return clean.copy()
+
+    def record_outcome(
+        self,
+        agent_id: str,
+        task_category: str = "general",
+        *,
+        cost: float,
+        quality: float,
+        reward: float,
+        won: bool = True,
+        learning_rate: float = 0.1,
+    ) -> ReputationSnapshot:
+        learning_rate = min(1.0, max(0.0, float(learning_rate)))
+        snapshot = self.get(agent_id, task_category)
+        previous_attempts = snapshot.attempts
+        snapshot.attempts += 1
+        if won:
+            snapshot.wins += 1
+
+        quality = min(1.0, max(0.0, float(quality)))
+        cost = max(0.0, float(cost))
+        reward = float(reward)
+        if previous_attempts == 0:
+            snapshot.avg_cost = cost
+            snapshot.mean_quality = quality
+            snapshot.mean_reward = reward
+        else:
+            snapshot.avg_cost = self._ema(snapshot.avg_cost, cost, learning_rate)
+            snapshot.mean_quality = self._ema(snapshot.mean_quality, quality, learning_rate)
+            snapshot.mean_reward = self._ema(snapshot.mean_reward, reward, learning_rate)
+
+        snapshot.quality_alpha += quality
+        snapshot.quality_beta += 1.0 - quality
+        return self.set(snapshot)
+
+    def list(self) -> builtin_list[ReputationSnapshot]:
+        with self._lock:
+            return [snapshot.copy() for snapshot in self._snapshots.values()]
+
+    @staticmethod
+    def _key(agent_id: str, task_category: str) -> tuple[str, str]:
+        return (str(agent_id), str(task_category or "general"))
+
+    @staticmethod
+    def _ema(old: float, new: float, learning_rate: float) -> float:
+        return (old * (1.0 - learning_rate)) + (new * learning_rate)
+
+
+class RedisReputation(Reputation):
+    """Redis-backed reputation store.
+
+    Requires the optional redis extra, matching :class:`RedisAgentRegistry`.
+    """
+
+    def __init__(
+        self,
+        *,
+        redis_client: Any | None = None,
+        url: str | None = None,
+        redis_url: str | None = None,
+        prefix: str = "synapsekit:agent_reputation",
+        default_quality: float = 0.5,
+        **redis_kwargs: Any,
+    ) -> None:
+        super().__init__(default_quality=default_quality)
+        self.prefix = prefix.rstrip(":")
+        if redis_client is not None:
+            self._redis = redis_client
+            return
+
+        try:
+            import redis
+        except ImportError as exc:
+            raise ImportError(
+                "RedisReputation requires the optional redis dependency. "
+                "Install it with `pip install synapsekit[redis]`."
+            ) from exc
+
+        redis_kwargs.setdefault("decode_responses", True)
+        connection_url = url or redis_url
+        if connection_url is not None:
+            self._redis = redis.from_url(connection_url, **redis_kwargs)
+        else:
+            self._redis = redis.Redis(**redis_kwargs)
+
+    def get(self, agent_id: str, task_category: str = "general") -> ReputationSnapshot:
+        raw = self._redis.get(self._redis_key(agent_id, task_category))
+        if raw is None:
+            return ReputationSnapshot(
+                agent_id=str(agent_id),
+                task_category=str(task_category or "general"),
+                mean_quality=self.default_quality,
+            )
+        if isinstance(raw, bytes):
+            raw = raw.decode("utf-8")
+        return ReputationSnapshot.from_dict(json.loads(raw))
+
+    def set(self, snapshot: ReputationSnapshot) -> ReputationSnapshot:
+        clean = snapshot.copy()
+        self._redis.set(
+            self._redis_key(clean.agent_id, clean.task_category), json.dumps(clean.to_dict())
+        )
+        return clean.copy()
+
+    def list(self) -> builtin_list[ReputationSnapshot]:
+        snapshots: builtin_list[ReputationSnapshot] = []
+        for key in self._redis.scan_iter(match=f"{self.prefix}:*"):
+            raw = self._redis.get(key)
+            if raw is None:
+                continue
+            if isinstance(raw, bytes):
+                raw = raw.decode("utf-8")
+            snapshots.append(ReputationSnapshot.from_dict(json.loads(raw)))
+        return sorted(snapshots, key=lambda item: (item.agent_id, item.task_category))
+
+    def _redis_key(self, agent_id: str, task_category: str) -> str:
+        return f"{self.prefix}:{agent_id}:{task_category or 'general'}"
+
+
 def _matches_discovery_filters(
     agent: AgentMetadata,
     *,

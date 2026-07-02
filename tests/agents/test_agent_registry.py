@@ -5,6 +5,9 @@ from synapsekit.agents import (
     AgentRegistry,
     InMemoryAgentRegistry,
     RedisAgentRegistry,
+    RedisReputation,
+    Reputation,
+    ReputationSnapshot,
 )
 
 
@@ -116,3 +119,65 @@ def test_redis_registry_works_with_injected_client_without_redis_dependency() ->
 
     registry.heartbeat("redis-agent", timestamp=1)
     assert registry.prune_stale() == ["redis-agent"]
+
+
+def test_reputation_records_outcomes_with_learning_rate() -> None:
+    reputation = Reputation(default_quality=0.6)
+
+    empty = reputation.get("agent-a", "research")
+    assert empty.mean_quality == 0.6
+    assert empty.attempts == 0
+
+    first = reputation.record_outcome(
+        "agent-a",
+        "research",
+        cost=10,
+        quality=0.8,
+        reward=0.7,
+        learning_rate=0.5,
+    )
+    second = reputation.record_outcome(
+        "agent-a",
+        "research",
+        cost=20,
+        quality=0.4,
+        reward=0.2,
+        learning_rate=0.5,
+    )
+
+    assert first.wins == 1
+    assert second.attempts == 2
+    assert second.avg_cost == pytest.approx(15.0)
+    assert second.mean_quality == pytest.approx(0.6)
+    assert second.mean_reward == pytest.approx(0.45)
+
+
+def test_reputation_snapshot_round_trips_dict() -> None:
+    snapshot = ReputationSnapshot(
+        agent_id="agent-a",
+        task_category="code",
+        attempts=3,
+        wins=2,
+        avg_cost=4.5,
+        mean_quality=0.75,
+        mean_reward=0.5,
+    )
+
+    assert ReputationSnapshot.from_dict(snapshot.to_dict()) == snapshot
+
+
+def test_redis_reputation_works_with_injected_client_without_redis_dependency() -> None:
+    reputation = RedisReputation(redis_client=FakeRedis())
+
+    reputation.record_outcome(
+        "redis-agent",
+        "support",
+        cost=2,
+        quality=0.9,
+        reward=0.8,
+    )
+
+    snapshot = reputation.get("redis-agent", "support")
+    assert snapshot.wins == 1
+    assert snapshot.mean_quality == 0.9
+    assert reputation.list()[0].agent_id == "redis-agent"

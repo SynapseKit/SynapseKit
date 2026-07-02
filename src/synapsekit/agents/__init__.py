@@ -17,7 +17,26 @@ from ..computer_use import (
     VNCScreenProvider,
     requires_human_confirmation,
 )
-from .agent_registry import AgentMetadata, AgentRegistry, InMemoryAgentRegistry, RedisAgentRegistry
+from .agent_registry import (
+    AgentMetadata,
+    AgentRegistry,
+    InMemoryAgentRegistry,
+    RedisAgentRegistry,
+    RedisReputation,
+    Reputation,
+    ReputationSnapshot,
+)
+from .agent_swarm import (
+    AgentBidder,
+    AgentSwarm,
+    AuctionResult,
+    AuctionType,
+    Bid,
+    BidStrategy,
+    CoalitionFormer,
+    MarketPolicy,
+    SwarmResult,
+)
 from .base import BaseTool, ToolResult
 from .executor import AgentConfig, AgentExecutor
 from .facade import SimpleAgent, agent
@@ -126,6 +145,9 @@ __all__ = [
     "AgentRegistry",
     "InMemoryAgentRegistry",
     "RedisAgentRegistry",
+    "Reputation",
+    "RedisReputation",
+    "ReputationSnapshot",
     "AgentClient",
     "LocalAgentClient",
     "AgentFederation",
@@ -162,6 +184,15 @@ __all__ = [
     "CronTrigger",
     "EventTrigger",
     "StreamTrigger",
+    "AgentBidder",
+    "AgentSwarm",
+    "AuctionResult",
+    "AuctionType",
+    "Bid",
+    "BidStrategy",
+    "CoalitionFormer",
+    "MarketPolicy",
+    "SwarmResult",
     "SwarmAgent",
     "TriggerResult",
     "SimpleAgent",

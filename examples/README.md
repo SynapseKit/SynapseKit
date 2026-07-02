@@ -101,6 +101,13 @@ pip install synapsekit[observe]
 python examples/observability.py
 ```
 
+### 11. `agent_swarm_market.py` - Market-Based Agent Swarm
+Route work across a five-agent fleet with sealed-bid market selection, deterministic bidding, reputation updates, and Mermaid trace output.
+
+```bash
+python examples/agent_swarm_market.py
+```
+
 ## General Pattern
 
 All examples follow this pattern:
