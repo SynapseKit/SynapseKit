@@ -291,6 +291,24 @@ from .retrieval.self_rag import SelfRAGRetriever
 from .retrieval.sentence_window import SentenceWindowRetriever
 from .retrieval.step_back import StepBackRetriever
 from .retrieval.vectorstore import InMemoryVectorStore
+from .retrieval.world_model import (
+    CausalLinker,
+    EntityMention,
+    EntityResolver,
+    EventMention,
+    ExtractionPolicy,
+    ExtractionResult,
+    GraphQueryResult,
+    HeuristicWorldModelExtractor,
+    HybridWorldModelRetriever,
+    InMemoryWorldGraphBackend,
+    LLMWorldModelExtractor,
+    RelationMention,
+    WorldModelEdge,
+    WorldModelNode,
+    WorldModelQueryResult,
+    WorldModelRAG,
+)
 from .structured_output import (
     IncrementalJSONBuffer,
     StructuredOutput,
@@ -427,6 +445,22 @@ __all__ = [
     "GraphRAGRetriever",
     "KnowledgeGraph",
     "StepBackRetriever",
+    "WorldModelRAG",
+    "ExtractionPolicy",
+    "EntityMention",
+    "RelationMention",
+    "EventMention",
+    "ExtractionResult",
+    "EntityResolver",
+    "CausalLinker",
+    "GraphQueryResult",
+    "HeuristicWorldModelExtractor",
+    "HybridWorldModelRetriever",
+    "InMemoryWorldGraphBackend",
+    "LLMWorldModelExtractor",
+    "WorldModelEdge",
+    "WorldModelNode",
+    "WorldModelQueryResult",
     # Cost intelligence
     "CostTracker",
     "CostRecord",

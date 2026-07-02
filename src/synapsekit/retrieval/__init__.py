@@ -27,6 +27,24 @@ from .step_back import StepBackRetriever
 from .strategies.colbert import ColBERTRetriever
 from .token_counting import TokenCounter
 from .vectorstore import InMemoryVectorStore
+from .world_model import (
+    CausalLinker,
+    EntityMention,
+    EntityResolver,
+    EventMention,
+    ExtractionPolicy,
+    ExtractionResult,
+    GraphQueryResult,
+    HeuristicWorldModelExtractor,
+    HybridWorldModelRetriever,
+    InMemoryWorldGraphBackend,
+    LLMWorldModelExtractor,
+    RelationMention,
+    WorldModelEdge,
+    WorldModelNode,
+    WorldModelQueryResult,
+    WorldModelRAG,
+)
 
 __all__ = [
     "AdaptiveRAGRetriever",
@@ -78,6 +96,22 @@ __all__ = [
     "VectorStore",
     "VespaVectorStore",
     "WeaviateVectorStore",
+    "CausalLinker",
+    "EntityMention",
+    "EntityResolver",
+    "EventMention",
+    "ExtractionPolicy",
+    "ExtractionResult",
+    "GraphQueryResult",
+    "HeuristicWorldModelExtractor",
+    "HybridWorldModelRetriever",
+    "InMemoryWorldGraphBackend",
+    "LLMWorldModelExtractor",
+    "RelationMention",
+    "WorldModelEdge",
+    "WorldModelNode",
+    "WorldModelRAG",
+    "WorldModelQueryResult",
     "ZillizVectorStore",
 ]
 
