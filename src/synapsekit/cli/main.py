@@ -155,6 +155,30 @@ def _add_edge_parser(subparsers: argparse._SubParsersAction) -> None:  # type: i
     build_edge_parser(subparsers)
 
 
+def _add_agent_parser(subparsers: argparse._SubParsersAction) -> None:  # type: ignore[type-arg]
+    p = subparsers.add_parser("agent", help="Inspect and manage SynapseKit agents")
+    agent_sub = p.add_subparsers(dest="agent_command")
+
+    inspect_cmd = agent_sub.add_parser(
+        "inspect-evolution",
+        help="Inspect self-improving agent evolution history",
+    )
+    inspect_cmd.add_argument("agent_id", help="Agent id to inspect, or 'all'")
+    inspect_cmd.add_argument(
+        "--audit-path",
+        default=".synapsekit_agent_evolution.jsonl",
+        help="Evolution audit JSONL path",
+    )
+    inspect_cmd.add_argument("--limit", type=int, default=20, help="Maximum patches to show")
+    inspect_cmd.add_argument(
+        "--format",
+        dest="output_format",
+        choices=["table", "json"],
+        default="table",
+        help="Output format",
+    )
+
+
 def main(argv: list[str] | None = None) -> None:
     """CLI entry point."""
     from .._loop import install_fast_loop
@@ -176,6 +200,7 @@ def main(argv: list[str] | None = None) -> None:
     _add_benchmark_parser(subparsers)
     _add_bench_parser(subparsers)
     _add_edge_parser(subparsers)
+    _add_agent_parser(subparsers)
     _add_ui_parser(subparsers)
     _add_plugin_parser(subparsers)
 
@@ -219,6 +244,10 @@ def main(argv: list[str] | None = None) -> None:
         from .edge import run_edge
 
         run_edge(args)
+    elif args.command == "agent":
+        from .agent import run_agent
+
+        run_agent(args)
     elif args.command == "ui":
         from .ui import run_ui
 

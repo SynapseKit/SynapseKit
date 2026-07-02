@@ -84,6 +84,11 @@ TOP_LEVEL_NAMES = [
     "ReasoningStreamChunk",
     # Cost-quality router
     "CostQualityRouter",
+    # Self-improving agents
+    "SelfImprovingAgent",
+    "AgentConfigPatch",
+    "MetaAnalyzer",
+    "EvalSuite",
 ]
 
 

@@ -284,6 +284,8 @@ print(swarm.trace_to_mermaid())
 **🔁 Continuous Fine-Tuning Pipeline** *(new)*<br/>
 `ContinuousTrainer` closes the loop from production feedback to a deployed fine-tuned model. `FeedbackCollector` batches samples async; `TrainingDataGenerator` exports JSONL and preference pairs; `OpenAIFineTuneProvider` / `AnthropicFineTuneProvider` submit and poll jobs; `ABTestRouter` sticky-routes traffic by SHA-256 bucket; `AutoRolloutManager` stages rollout with latency/cost/quality regression guards; `CostBenefitAnalyzer` projects ROI and payback days. `pip install synapsekit[training]`.
 
+`SelfImprovingAgent` closes the loop for agent configuration. It observes `FeedbackCollector` traces, proposes signed `AgentConfigPatch` diffs, validates prompt candidates with `EvalSuite` / `PromptOptimizer`, and canaries accepted changes through `AutoRolloutManager`. Patches are eval-blocked by default and reversible via `agent.rollback(patch_id)`. Inspect the audit trail with `agent.evolution_history()` or `synapsekit agent inspect-evolution <agent-id>`. See `examples/self_improving_agent.py`.
+
 </td>
 </tr>
 <tr>
