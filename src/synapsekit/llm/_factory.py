@@ -160,11 +160,15 @@ def make_llm(
         from .gpt4all import GPT4AllLLM
 
         return GPT4AllLLM(config)
+    elif provider == "mlx":
+        from .mlx import MLXLLM
+
+        return MLXLLM(config)
     else:
         raise ValueError(
             f"Unknown provider: {provider!r}. "
             "Use 'openai', 'anthropic', 'ollama', 'ai21', 'cohere', 'mistral', 'gemini', "
             "'bedrock', 'groq', 'deepseek', 'openrouter', 'together', 'fireworks', "
             "'moonshot', 'minimax', 'zhipu', 'cloudflare', 'databricks', 'ernie', 'sambanova', "
-            "'aleph-alpha', 'llamacpp', 'vllm', or 'gpt4all'."
+            "'aleph-alpha', 'llamacpp', 'vllm', 'gpt4all', or 'mlx'."
         )

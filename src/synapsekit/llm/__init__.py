@@ -2,6 +2,7 @@ from ._cache import AsyncLRUCache
 from .base import BaseLLM, LLMConfig
 from .cost_quality_router import CostQualityRouter
 from .cost_router import QUALITY_TABLE, CostRouter, CostRouterConfig, RouterModelSpec
+from .edge import EdgeFallbackBlockedError, EdgeRouteMetadata, EdgeRuntime, FallbackPolicy
 from .fallback_chain import FallbackChain, FallbackChainConfig
 from .structured import generate_structured
 
@@ -23,9 +24,13 @@ __all__ = [
     "DatabricksLLM",
     "DeepSeekLLM",
     "DynamoDBCacheBackend",
+    "EdgeFallbackBlockedError",
+    "EdgeRouteMetadata",
+    "EdgeRuntime",
     "ErnieLLM",
     "FallbackChain",
     "FallbackChainConfig",
+    "FallbackPolicy",
     "FireworksLLM",
     "GeminiLLM",
     "GPT4AllLLM",
@@ -36,6 +41,7 @@ __all__ = [
     "LMStudioLLM",
     "MemcachedCacheBackend",
     "MinimaxLLM",
+    "MLXLLM",
     "MistralLLM",
     "MoonshotLLM",
     "NovitaLLM",
@@ -88,6 +94,7 @@ _PROVIDERS = {
     "VLLMLLM": ".vllm",
     "MoonshotLLM": ".moonshot",
     "MinimaxLLM": ".minimax",
+    "MLXLLM": ".mlx",
     "XaiLLM": ".xai",
     "WriterLLM": ".writer",
     "ZhipuLLM": ".zhipu",
