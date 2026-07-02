@@ -218,7 +218,11 @@ class CoalitionFormer:
         self.max_size = max(2, int(max_size))
 
     def form(self, bids: list[Bid], scores: dict[str, float]) -> list[Bid]:
-        if len(bids) <= self.max_size:
+        if len(bids) < self.max_size:
+            raise LookupError(
+                f"Coalition requires at least {self.max_size} agents; got {len(bids)}."
+            )
+        if len(bids) == self.max_size:
             return list(bids)
 
         best: tuple[float, tuple[Bid, ...]] | None = None
@@ -514,7 +518,7 @@ class AgentSwarm:
         if snapshot.attempts:
             quality = snapshot.mean_quality
             confidence = min(1.0, 0.45 + snapshot.attempts / 20.0)
-            cost = snapshot.avg_cost or agent.cost_multiplier
+            cost = snapshot.avg_cost if snapshot.avg_cost is not None else agent.cost_multiplier
         else:
             quality = min(1.0, self.market.cold_start_quality + min(agent.capacity, 10) * 0.015)
             confidence = 0.35
@@ -570,7 +574,9 @@ class AgentSwarm:
         if not bids:
             return []
         ordered = sorted(
-            bids, key=lambda bid: (scores[bid.agent_id], -bid.estimated_cost), reverse=True
+            bids,
+            key=lambda bid: (scores[bid.agent_id], -bid.estimated_cost, bid.agent_id),
+            reverse=True,
         )
 
         if self.market.auction_type == AuctionType.MULTI_WINNER:
@@ -590,8 +596,8 @@ class AgentSwarm:
         if not winners:
             return 0.0
         if self.market.auction_type == AuctionType.VICKREY and len(bids) > 1:
-            ordered = sorted(bids, key=lambda bid: scores[bid.agent_id], reverse=True)
-            second = ordered[1]
+            ordered_by_price = sorted(bids, key=lambda bid: bid.estimated_cost, reverse=True)
+            second = ordered_by_price[1]
             return min(self.market.budget_per_task, second.estimated_cost)
         return min(self.market.budget_per_task, sum(bid.estimated_cost for bid in winners))
 

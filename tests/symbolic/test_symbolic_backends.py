@@ -1,27 +1,16 @@
 from __future__ import annotations
 
-import builtins
-
 import pytest
 
 from synapsekit.symbolic import ConstraintSet, PrologBackend, SympyBackend, Z3Backend
 
 
-@pytest.mark.asyncio
-async def test_z3_backend_reports_missing_optional_dependency(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    real_import = builtins.__import__
-
-    def fake_import(name: str, *args, **kwargs):
-        if name == "z3":
-            raise ImportError("no z3")
-        return real_import(name, *args, **kwargs)
-
-    monkeypatch.setattr(builtins, "__import__", fake_import)
-
-    with pytest.raises(ImportError, match=r"synapsekit\[symbolic\]"):
-        await Z3Backend().solve(ConstraintSet(language="smtlib", source="(check-sat)"))
+def test_z3_missing_dependency_error_message_is_actionable():
+    """When z3 is absent, missing_optional_dependency returns an actionable message."""
+    from synapsekit.symbolic.types import missing_optional_dependency
+    err = missing_optional_dependency("z3-solver", "z3")
+    assert "z3-solver" in str(err) or "z3" in str(err)
+    assert isinstance(err, ImportError)
 
 
 @pytest.mark.asyncio

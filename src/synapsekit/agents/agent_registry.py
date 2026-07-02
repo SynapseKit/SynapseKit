@@ -97,7 +97,7 @@ class ReputationSnapshot:
     task_category: str = "general"
     attempts: int = 0
     wins: int = 0
-    avg_cost: float = 0.0
+    avg_cost: float | None = None
     mean_quality: float = 0.5
     mean_reward: float = 0.0
     quality_alpha: float = 1.0
@@ -108,7 +108,7 @@ class ReputationSnapshot:
         self.task_category = str(self.task_category or "general")
         self.attempts = max(0, int(self.attempts))
         self.wins = max(0, int(self.wins))
-        self.avg_cost = max(0.0, float(self.avg_cost))
+        self.avg_cost = None if self.avg_cost is None else max(0.0, float(self.avg_cost))
         self.mean_quality = min(1.0, max(0.0, float(self.mean_quality)))
         self.mean_reward = float(self.mean_reward)
         self.quality_alpha = max(0.001, float(self.quality_alpha))
@@ -134,7 +134,7 @@ class ReputationSnapshot:
             task_category=data.get("task_category", "general"),
             attempts=data.get("attempts", 0),
             wins=data.get("wins", 0),
-            avg_cost=data.get("avg_cost", 0.0),
+            avg_cost=data.get("avg_cost", None),
             mean_quality=data.get("mean_quality", 0.5),
             mean_reward=data.get("mean_reward", 0.0),
             quality_alpha=data.get("quality_alpha", 1.0),

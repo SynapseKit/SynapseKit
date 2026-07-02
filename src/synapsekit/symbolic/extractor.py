@@ -97,7 +97,10 @@ def _loads_json_object(text: str) -> dict[str, Any]:
         match = re.search(r"\{.*\}", cleaned, flags=re.S)
         if match is None:
             raise VerificationFailure("Constraint extractor did not return JSON.") from exc
-        data = json.loads(match.group(0))
+        try:
+            data = json.loads(match.group(0))
+        except json.JSONDecodeError as exc2:
+            raise VerificationFailure("Constraint extractor returned malformed embedded JSON.") from exc2
 
     if not isinstance(data, dict):
         raise VerificationFailure("Constraint extractor JSON must be an object.")

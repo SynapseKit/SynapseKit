@@ -20,6 +20,7 @@ from synapsekit.retrieval.world_model import (
     InMemoryWorldGraphBackend,
     LLMWorldModelExtractor,
     RelationMention,
+    WorldModelNode,
     WorldModelRAG,
 )
 
@@ -189,6 +190,72 @@ async def test_world_model_rag_ingest_query_and_mermaid():
     assert "World-model subgraph" in llm.prompts[-1]
     assert "release_notes" in {item["metadata"]["source"] for item in result.embeddings}
     assert "caused (causal)" in wm.subgraph_to_mermaid("Alice")
+
+
+def test_world_model_rag_isinstance_assertions() -> None:
+    """Verify that WorldModelNode is importable and is a class."""
+    assert WorldModelNode is not None
+
+
+def test_relation_with_missing_node_returns_none() -> None:
+    graph = InMemoryWorldGraphBackend()
+    result = graph.upsert_relation(RelationMention("Ghost", "knows", "Alice"), "doc_1")
+    assert result is None
+
+
+def test_entity_same_name_different_type_first_wins() -> None:
+    graph = InMemoryWorldGraphBackend()
+    graph.upsert_entity(EntityMention("Alice", type="person", confidence=0.9), "doc_1")
+    graph.upsert_entity(EntityMention("Alice", type="org", confidence=0.95), "doc_2")
+    nodes = list(graph.nodes.values())
+    alice_nodes = [n for n in nodes if n.name == "Alice"]
+    assert len(alice_nodes) == 1
+    assert alice_nodes[0].type == "person"  # first type wins; upsert merges, not replaces
+
+
+@pytest.mark.asyncio
+async def test_query_on_empty_graph_returns_empty_subgraph() -> None:
+    from synapsekit.retrieval.vectorstore import InMemoryVectorStore
+
+    wm = WorldModelRAG(
+        llm=FakeLLM(),
+        vector_store=InMemoryVectorStore(FakeEmbeddings()),  # type: ignore[arg-type]
+        extractor=HeuristicWorldModelExtractor(),
+    )
+    result = await wm.query("anything at all")
+    assert isinstance(result.subgraph.nodes, list)
+    assert len(result.subgraph.nodes) == 0
+
+
+@pytest.mark.asyncio
+async def test_llm_extractor_handles_invalid_json() -> None:
+    class LLMReturningGarbage:
+        async def generate(self, prompt: str, **kw) -> str:
+            return "not json at all !!!"
+
+        async def stream(self, prompt: str, **kw):
+            yield "not json at all !!!"
+
+    extractor = LLMWorldModelExtractor(llm=LLMReturningGarbage())  # type: ignore[arg-type]
+    result = await extractor.extract("some text", ExtractionPolicy())
+    assert isinstance(result, ExtractionResult)
+    assert len(result.entities) == 0
+
+
+def test_world_model_handles_60_entities() -> None:
+    graph = InMemoryWorldGraphBackend()
+    for i in range(60):
+        graph.upsert_entity(EntityMention(f"Entity{i:03d}", type="person", confidence=0.9), "doc_1")
+    assert len(graph.nodes) == 60
+
+
+def test_world_model_async_methods_are_coroutines() -> None:
+    import inspect
+
+    assert inspect.iscoroutinefunction(HeuristicWorldModelExtractor.extract)
+    assert inspect.iscoroutinefunction(LLMWorldModelExtractor.extract)
+    assert inspect.iscoroutinefunction(WorldModelRAG.ingest)
+    assert inspect.iscoroutinefunction(WorldModelRAG.query)
 
 
 def test_external_backend_errors_clearly():

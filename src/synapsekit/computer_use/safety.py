@@ -142,7 +142,7 @@ class SafetyPolicy:
             )
             if part
         ).lower()
-        keywords = tuple(self.confirm_before) or _DANGEROUS_WORDS
+        keywords = tuple(self.confirm_before) if self.confirm_before is not None else _DANGEROUS_WORDS
         if any(re.search(rf"\b{re.escape(word.lower())}\b", text) for word in keywords):
             return True
         if self.require_confirmation_for_text and action.action_type in _SENSITIVE_ACTIONS:

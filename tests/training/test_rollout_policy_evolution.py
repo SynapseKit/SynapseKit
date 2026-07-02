@@ -69,3 +69,25 @@ def test_rollout_policy_allows_regression_when_disabled():
 def test_rollout_policy_validation(kwargs, message):
     with pytest.raises(ValueError, match=message):
         RolloutPolicy(**kwargs)
+
+
+def test_rollout_policy_canary_pct_zero_prepends_zero_stage():
+    """canary_pct=0.0 must prepend a 0-pct canary stage before the regular stages."""
+    policy = RolloutPolicy(stages=[10.0, 50.0], canary_pct=0.0)
+
+    stages = policy.rollout_stages()
+
+    assert stages == [0.0, 10.0, 50.0]
+    assert stages[0] == 0.0
+
+
+def test_rollout_policy_canary_pct_zero_activates_at_zero_pct():
+    """Activating a rollout with canary_pct=0.0 sets the router to 0% traffic."""
+    policy = RolloutPolicy(stages=[10.0, 50.0], canary_pct=0.0)
+    router = ABTestRouter("base", "candidate", rollout_pct=0.0)
+    manager = AutoRolloutManager(router=router, policy=policy)
+
+    manager.activate()
+
+    assert router.rollout_pct == 0.0
+    assert manager.state.current_pct == 0.0

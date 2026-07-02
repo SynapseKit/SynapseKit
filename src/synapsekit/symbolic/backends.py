@@ -74,7 +74,7 @@ class SympyBackend(BaseSymbolicBackend):
         except ImportError:
             raise missing_optional_dependency("symbolic", "sympy") from None
 
-        async def _solve() -> ProofTrace:
+        def _run() -> ProofTrace:
             allowed: dict[str, Any] = {
                 "Eq": sp.Eq,
                 "Symbol": sp.Symbol,
@@ -96,8 +96,8 @@ class SympyBackend(BaseSymbolicBackend):
 
         try:
             if timeout_seconds is None:
-                return await _solve()
-            return await asyncio.wait_for(_solve(), timeout=timeout_seconds)
+                return await asyncio.to_thread(_run)
+            return await asyncio.wait_for(asyncio.to_thread(_run), timeout=timeout_seconds)
         except TimeoutError:
             return ProofTrace(
                 status="unknown",

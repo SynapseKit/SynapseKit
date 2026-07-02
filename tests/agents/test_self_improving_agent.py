@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import inspect
 from dataclasses import dataclass
 
 import pytest
@@ -237,3 +238,96 @@ def agent_snapshot(prompt: str):
     from synapsekit.agents.self_improving import AgentConfigSnapshot
 
     return AgentConfigSnapshot(system_prompt=prompt)
+
+
+# ---------------------------------------------------------------------------
+# Coroutine assertions
+# ---------------------------------------------------------------------------
+
+
+def test_self_improving_agent_async_methods_are_coroutines():
+    assert inspect.iscoroutinefunction(SelfImprovingAgent.arun)
+    assert inspect.iscoroutinefunction(SelfImprovingAgent.evolve)
+
+
+# ---------------------------------------------------------------------------
+# Negative tests for approve / rollback
+# ---------------------------------------------------------------------------
+
+
+def test_approve_unknown_patch_id_raises():
+    agent = SelfImprovingAgent(
+        _executor(),
+        eval_suite=_suite({"Base prompt": 0.9}),
+    )
+    with pytest.raises(KeyError):
+        agent.approve("nonexistent-id")
+
+
+def test_rollback_unknown_patch_id_raises():
+    agent = SelfImprovingAgent(
+        _executor(),
+        eval_suite=_suite({"Base prompt": 0.9}),
+    )
+    with pytest.raises(KeyError):
+        agent.rollback("nonexistent-id")
+
+
+# ---------------------------------------------------------------------------
+# _cadence_due branch coverage
+# ---------------------------------------------------------------------------
+
+
+def test_cadence_manual_never_triggers_evolve():
+    """cadence='manual' must never auto-trigger evolve regardless of run count."""
+    agent = SelfImprovingAgent(
+        _executor(),
+        eval_suite=_suite({"Base prompt": 0.9}),
+        cadence="manual",
+    )
+    # _cadence_due is private; we exercise the branch via the public interface
+    for _ in range(10):
+        agent._run_count += 1
+    assert agent._cadence_due() is False
+
+
+def test_cadence_integer_triggers_every_n_runs():
+    """cadence=3 must become due exactly when _run_count is a multiple of 3."""
+    agent = SelfImprovingAgent(
+        _executor(),
+        eval_suite=_suite({"Base prompt": 0.9}),
+        cadence=3,
+    )
+    agent._run_count = 3
+    assert agent._cadence_due() is True
+    agent._run_count = 4
+    assert agent._cadence_due() is False
+    agent._run_count = 6
+    assert agent._cadence_due() is True
+
+
+# ---------------------------------------------------------------------------
+# Stress test for AgentEvolutionAuditLog
+# ---------------------------------------------------------------------------
+
+
+def test_audit_log_handles_50_entries(tmp_path):
+    path = tmp_path / "audit.jsonl"
+    log = AgentEvolutionAuditLog(path)
+
+    for i in range(50):
+        patch = AgentConfigPatch(
+            patch_type="prompt_rewrite",
+            description=f"patch-{i}",
+            changes={"system_prompt": f"prompt-{i}"},
+        )
+        log.append(patch)
+
+    # Verify all 50 are in memory
+    entries = log.list()
+    assert len(entries) == 50
+
+    # Verify round-trip via disk
+    reloaded = AgentEvolutionAuditLog(path)
+    assert len(reloaded.list()) == 50
+    assert isinstance(reloaded.list()[0], AgentConfigPatch)

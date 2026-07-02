@@ -40,3 +40,27 @@ def test_eval_suite_empty_suite_is_blocking():
     assert result.passed is False
     assert result.score == 0.0
     assert result.failures == ["no eval cases found"]
+
+
+def test_eval_suite_from_decorators_nonexistent_path_returns_empty_suite():
+    """from_decorators() with a path that doesn't exist must not crash."""
+    suite = EvalSuite.from_decorators("/tmp/__no_such_path_synapsekit_test__")
+
+    assert isinstance(suite, EvalSuite)
+    assert suite.cases == []
+
+
+def test_score_prompt_when_case_raises_exception():
+    """score_prompt() when a case raises must not propagate; score must be 0.0."""
+    from synapsekit.evaluation.suite import EvalSuiteResult
+
+    async def _failing_case(prompt: str = ""):
+        raise RuntimeError("eval exploded")
+
+    suite = EvalSuite.from_cases([("failing", _failing_case)], threshold=0.8)
+
+    result = asyncio.run(suite.score_prompt("test prompt"))
+
+    assert isinstance(result, EvalSuiteResult)
+    assert result.score == pytest.approx(0.0)
+    assert result.passed is False

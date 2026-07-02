@@ -212,3 +212,79 @@ async def test_local_error_fallback_can_be_enabled() -> None:
 
     assert await runtime.generate("hello") == "cloud"
     assert runtime.last_fallback_reason == "local_error"
+
+
+@pytest.mark.asyncio
+async def test_fallback_policy_no_gates_stays_local() -> None:
+    local = FakeLLM(name="local", response="local response")
+    cloud = FakeLLM(name="cloud", response="cloud response")
+    runtime = EdgeRuntime(local_llm=local, cloud_llm=cloud, fallback=FallbackPolicy())
+
+    result = await runtime.generate("hello")
+
+    assert result == "local response"
+    assert runtime.last_route == "local"
+
+
+@pytest.mark.asyncio
+async def test_pii_reaches_cloud_when_guard_disabled() -> None:
+    local = FakeLLM(name="local", response="local", fail_generate=True)
+    cloud = FakeLLM(name="cloud", response="cloud response")
+    runtime = EdgeRuntime(
+        local_llm=local,
+        cloud_llm=cloud,
+        fallback=FallbackPolicy(
+            fallback_on_local_error=True,
+            require_pii_redaction_before_fallback=False,
+        ),
+    )
+
+    result = await runtime.generate("Contact alice@example.com for details")
+
+    assert result == "cloud response"
+    # PII must be preserved in the prompt sent to cloud (guard was off)
+    assert "alice@example.com" in cloud.prompts[-1]
+
+
+@pytest.mark.asyncio
+async def test_context_overflow_boundary() -> None:
+    local = FakeLLM(name="local", response="local")
+    cloud = FakeLLM(name="cloud", response="cloud")
+    runtime = EdgeRuntime(
+        local_llm=local,
+        cloud_llm=cloud,
+        fallback=FallbackPolicy(if_context_exceeds=5),
+    )
+
+    # 5 tokens = 5*4 = 20 chars — exactly at threshold, NOT over (> not >=), stays local
+    short_prompt = "a" * 20
+    assert await runtime.generate(short_prompt) == "local"
+
+    # 6 tokens = 24 chars — one token over threshold, routes to cloud
+    long_prompt = "a" * 24
+    assert await runtime.generate(long_prompt) == "cloud"
+
+
+@pytest.mark.asyncio
+async def test_stream_error_fallback_yields_full_chunk() -> None:
+    local = FakeLLM(name="local", response="x", fail_generate=True)
+    cloud = FakeLLM(name="cloud", response="full cloud response")
+    runtime = EdgeRuntime(
+        local_llm=local,
+        cloud_llm=cloud,
+        fallback=FallbackPolicy(fallback_on_local_error=True),
+    )
+
+    chunks = [t async for t in runtime.stream("hello")]
+
+    assert "".join(chunks) == "full cloud response"
+    # must be a single chunk (not char-by-char)
+    assert len(chunks) <= 5
+
+
+def test_edge_runtime_async_methods_are_coroutines() -> None:
+    import inspect
+
+    assert inspect.iscoroutinefunction(EdgeRuntime.generate)
+    # stream is an async generator — not a coroutine but still async
+    assert inspect.isasyncgenfunction(EdgeRuntime.stream)

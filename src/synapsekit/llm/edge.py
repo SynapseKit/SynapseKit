@@ -315,8 +315,7 @@ class EdgeRuntime(BaseLLM):
                 yield token
         except Exception as exc:
             fallback_text = await self._fallback_after_error(prompt=prompt, kw=call_kw, error=exc)
-            for token in fallback_text:
-                yield token
+            yield fallback_text
 
     async def generate(self, prompt: str, **kw: Any) -> str:  # type: ignore[override]
         call_kw = dict(kw)

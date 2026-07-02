@@ -95,8 +95,6 @@ class AgentConfigPatch:
         return self.signature == expected
 
     def to_dict(self) -> dict[str, Any]:
-        if not self.signature:
-            self.sign()
         return asdict(self)
 
     @classmethod
@@ -725,7 +723,7 @@ async def _run_agent_async(agent: Any, prompt: str, kwargs: dict[str, Any]) -> s
         for key, value in kwargs.items()
         if key not in {"feedback", "corrected_response", "cost_usd"}
     }
-    if hasattr(agent, "arun"):
+    if hasattr(agent, "arun") and inspect.iscoroutinefunction(agent.arun):
         result = agent.arun(prompt, **run_kwargs)
     elif isinstance(agent, AgentExecutor):
         result = agent.run(prompt)
@@ -748,9 +746,12 @@ def _extract_executor(agent: Any) -> AgentExecutor | None:
 def _parse_json_objects(text: str) -> list[dict[str, Any]]:
     cleaned = text.strip()
     if cleaned.startswith("```"):
-        cleaned = cleaned.strip("`")
+        cleaned = cleaned[3:]
+        if cleaned.endswith("```"):
+            cleaned = cleaned[:-3]
         if cleaned.startswith("json"):
             cleaned = cleaned[4:].strip()
+        cleaned = cleaned.strip()
     try:
         parsed = json.loads(cleaned)
     except json.JSONDecodeError:

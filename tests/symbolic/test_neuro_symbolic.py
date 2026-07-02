@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import inspect
+
 import pytest
 
 import synapsekit
@@ -15,6 +17,7 @@ from synapsekit.symbolic import (
     parse_constraint_response,
     verified_tool,
 )
+from synapsekit.symbolic.types import NeuroSymbolicResult
 
 
 class FakeLLM(BaseLLM):
@@ -105,6 +108,8 @@ async def test_agent_solves_and_returns_verified_result() -> None:
 
     result = await agent.solve("find x")
 
+    assert isinstance(result, NeuroSymbolicResult)
+    assert isinstance(result.proof, ProofTrace)
     assert result.verified is True
     assert result.answer == "x = 1"
     assert result.proof.model == {"x": 1}
@@ -121,6 +126,8 @@ async def test_agent_accepts_verified_empty_solver_model() -> None:
 
     result = await agent.solve("prove satisfiable")
 
+    assert isinstance(result, NeuroSymbolicResult)
+    assert isinstance(result.proof, ProofTrace)
     assert result.verified is True
     assert result.answer == "constraints are satisfiable"
 
@@ -144,6 +151,8 @@ async def test_agent_retries_unverified_proposals() -> None:
 
     result = await agent.solve("find x")
 
+    assert isinstance(result, NeuroSymbolicResult)
+    assert isinstance(result.proof, ProofTrace)
     assert result.verified is True
     assert result.answer == "good answer"
     assert result.attempts == 2
@@ -193,3 +202,86 @@ async def test_constraint_extractor_uses_backend_language() -> None:
 
     assert constraints.language == "smtlib"
     assert "smtlib solver" in llm.prompts[0]
+
+
+# ---------------------------------------------------------------------------
+# New comprehensive tests
+# ---------------------------------------------------------------------------
+
+
+def test_verified_tool_preserves_async_coroutine_identity() -> None:
+    """@verified_tool wrapping an async fn must yield an object whose .run is a coroutine."""
+    backend = FakeBackend(
+        [ProofTrace(status="sat", model={"ok": True}, backend="fake", verified=True)]
+    )
+
+    def build_constraints(kwargs: dict, output: str) -> ConstraintSet:
+        return ConstraintSet(language="smtlib", source=f"; check {output}")
+
+    @verified_tool(backend, build_constraints)
+    async def async_fn(x: int) -> int:
+        return x * 2
+
+    assert inspect.iscoroutinefunction(async_fn.run)
+
+
+@pytest.mark.asyncio
+async def test_agent_handles_llm_returning_no_source() -> None:
+    """When LLM returns JSON without 'source', agent should raise VerificationFailure."""
+    llm = FakeLLM(['{"language": "smtlib"}'])
+    backend = FakeBackend([])
+    agent = NeuroSymbolicAgent(llm=llm, verifier=backend, on_unverified="reject", max_proposals=1)
+
+    with pytest.raises(VerificationFailure):
+        await agent.solve("find x")
+
+
+@pytest.mark.asyncio
+async def test_agent_flag_policy_returns_unverified_result() -> None:
+    """on_unverified='flag' must return a result rather than raise, with verified=False."""
+    llm = FakeLLM(['{"language": "smtlib", "source": "bad"}', "unverified answer"])
+    backend = FakeBackend([ProofTrace(status="unsat", backend="fake", verified=False)])
+    agent = NeuroSymbolicAgent(llm=llm, verifier=backend, on_unverified="flag", max_proposals=1)
+
+    result = await agent.solve("find x")
+
+    assert isinstance(result, NeuroSymbolicResult)
+    assert isinstance(result.proof, ProofTrace)
+    assert result.verified is False
+    assert result.proof.is_verified is False
+
+
+def test_agent_rejects_invalid_on_unverified_policy() -> None:
+    with pytest.raises(ValueError, match="on_unverified"):
+        NeuroSymbolicAgent(
+            llm=FakeLLM([]),
+            verifier=FakeBackend([]),
+            on_unverified="wrong_policy",  # type: ignore[arg-type]
+        )
+
+
+def test_agent_rejects_zero_max_proposals() -> None:
+    with pytest.raises(ValueError):
+        NeuroSymbolicAgent(
+            llm=FakeLLM([]),
+            verifier=FakeBackend([]),
+            max_proposals=0,
+        )
+
+
+def test_parse_constraint_response_rejects_bare_invalid_json() -> None:
+    with pytest.raises(VerificationFailure, match="[Jj][Ss][Oo][Nn]"):
+        parse_constraint_response("{not valid json at all}")
+
+
+def test_z3_unsat_returns_unverified_trace() -> None:
+    pytest.importorskip("z3")
+    import asyncio
+
+    from synapsekit.symbolic.backends import Z3Backend
+
+    result = asyncio.run(
+        Z3Backend().solve(ConstraintSet(language="smtlib", source="(assert false)(check-sat)"))
+    )
+    assert result.status == "unsat"
+    assert result.verified is False

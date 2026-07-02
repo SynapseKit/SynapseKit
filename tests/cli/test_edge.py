@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import argparse
+import os
+import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -47,51 +48,84 @@ def test_edge_pull_uses_huggingface_hub(capsys, tmp_path: Path) -> None:
     target.parent.mkdir(parents=True)
     target.write_text("mock")
 
-    fake_hub = MagicMock()
-    fake_hub.hf_hub_download.return_value = str(target)
-    args = argparse.Namespace(
-        edge_command="pull",
-        cache_dir=str(tmp_path),
-        model=model.name,
-        force=True,
-    )
+    class FakeHub:
+        def __init__(self) -> None:
+            self.calls: list[dict] = []
 
-    with patch.dict("sys.modules", {"huggingface_hub": fake_hub}):
+        def hf_hub_download(
+            self,
+            repo_id: str,
+            filename: str,
+            local_dir: str | None = None,
+            local_dir_use_symlinks: bool = True,
+            force_download: bool = False,
+        ) -> str:
+            self.calls.append({"repo_id": repo_id, "filename": filename})
+            return str(target)
+
+    fake_hub = FakeHub()
+    original = sys.modules.get("huggingface_hub")
+    sys.modules["huggingface_hub"] = fake_hub  # type: ignore[assignment]
+    try:
+        args = argparse.Namespace(
+            edge_command="pull",
+            cache_dir=str(tmp_path),
+            model=model.name,
+            force=True,
+        )
         run_edge(args)
+    finally:
+        if original is None:
+            del sys.modules["huggingface_hub"]
+        else:
+            sys.modules["huggingface_hub"] = original
 
-    assert fake_hub.hf_hub_download.call_args[1]["repo_id"] == model.repo_id
+    assert len(fake_hub.calls) == 1
+    assert fake_hub.calls[0]["repo_id"] == model.repo_id
     assert model.name in capsys.readouterr().out
 
 
 def test_edge_quantize_missing_binary(tmp_path: Path) -> None:
     input_model = tmp_path / "input.gguf"
     input_model.write_text("model")
-    args = argparse.Namespace(
-        edge_command="quantize",
-        input_model=str(input_model),
-        output=str(tmp_path / "out.gguf"),
-        quantization="Q4_K_M",
-        llama_quantize=None,
-    )
 
-    with patch("shutil.which", return_value=None):
+    # Pass llama_quantize=None and make sure PATH has no 'llama-quantize' binary
+    # by pointing to an empty directory
+    empty_bin = tmp_path / "emptybin"
+    empty_bin.mkdir()
+    old_path = os.environ.get("PATH", "")
+    os.environ["PATH"] = str(empty_bin)
+    try:
+        args = argparse.Namespace(
+            edge_command="quantize",
+            input_model=str(input_model),
+            output=str(tmp_path / "out.gguf"),
+            quantization="Q4_K_M",
+            llama_quantize=None,
+        )
         with pytest.raises(SystemExit, match="llama-quantize"):
             run_edge(args)
+    finally:
+        os.environ["PATH"] = old_path
 
 
 def test_edge_quantize_runs_external_binary(tmp_path: Path, capsys) -> None:
     input_model = tmp_path / "input.gguf"
     input_model.write_text("model")
+
+    # Write a tiny executable that exits successfully
+    fake_binary = tmp_path / "llama-quantize"
+    fake_binary.write_text("#!/usr/bin/env python3\nimport sys\nsys.exit(0)\n")
+    fake_binary.chmod(0o755)
+
     args = argparse.Namespace(
         edge_command="quantize",
         input_model=str(input_model),
         output=str(tmp_path / "out.gguf"),
         quantization="Q4_K_M",
-        llama_quantize="llama-quantize",
+        llama_quantize=str(fake_binary),
     )
 
-    with patch("subprocess.run") as run:
-        run_edge(args)
+    run_edge(args)
 
-    run.assert_called_once()
     assert "Q4_K_M" in capsys.readouterr().out

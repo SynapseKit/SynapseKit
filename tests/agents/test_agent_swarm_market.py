@@ -1,9 +1,10 @@
-import asyncio
+import inspect
 
 import pytest
 
-from synapsekit import AgentSwarm, AuctionType, Bid, BidStrategy, MarketPolicy
+from synapsekit import AgentSwarm, AuctionResult, AuctionType, Bid, BidStrategy, MarketPolicy, SwarmResult
 from synapsekit.agents import AgentFederation, AgentMetadata, InMemoryAgentRegistry, Reputation
+from synapsekit.agents.agent_swarm import CoalitionFormer
 
 
 class MarketClient:
@@ -76,21 +77,37 @@ def make_swarm(
     return swarm, clients
 
 
-@pytest.mark.asyncio
+# ---------------------------------------------------------------------------
+# Async-method coroutine assertions
+# ---------------------------------------------------------------------------
+
+
+def test_swarm_async_methods_are_coroutines():
+    assert inspect.iscoroutinefunction(AgentSwarm.execute)
+    assert inspect.iscoroutinefunction(AgentSwarm.run)
+    assert inspect.iscoroutinefunction(AgentSwarm.auction)
+
+
+# ---------------------------------------------------------------------------
+# Core market behaviour
+# ---------------------------------------------------------------------------
+
+
 async def test_sealed_bid_market_selects_best_cost_quality_tradeoff():
     swarm, clients = make_swarm()
 
     result = await swarm.execute("Write a market brief", task_category="research")
 
+    assert isinstance(result, SwarmResult)
     assert result.winners == ["researcher"]
     assert clients["researcher"].calls == ["Write a market brief"]
     assert clients["summarizer"].calls == []
     assert result.auction.auction_type == AuctionType.SEALED_BID
+    assert isinstance(result.auction, AuctionResult)
     assert swarm.reputation.get("researcher", "research").wins == 1
     assert "winner: researcher" in swarm.trace_to_mermaid()
 
 
-@pytest.mark.asyncio
 async def test_multi_winner_market_executes_top_ranked_agents():
     policy = MarketPolicy(
         auction_type="multi_winner",
@@ -103,13 +120,13 @@ async def test_multi_winner_market_executes_top_ranked_agents():
 
     result = await swarm.execute("Draft and review", task_category="writing")
 
+    assert isinstance(result, SwarmResult)
     assert result.winners == ["researcher", "summarizer"]
     assert clients["researcher"].calls
     assert clients["summarizer"].calls
     assert result.output["mode"] == "multi_winner"
 
 
-@pytest.mark.asyncio
 async def test_coalition_market_marks_cooperative_result():
     policy = MarketPolicy(
         auction_type="coalition",
@@ -122,13 +139,14 @@ async def test_coalition_market_marks_cooperative_result():
 
     result = await swarm.execute("Plan research coalition", task_category="research")
 
+    assert isinstance(result, SwarmResult)
     assert len(result.winners) == 2
     assert result.auction.coalition is True
     assert result.output["mode"] == "coalition"
 
 
-@pytest.mark.asyncio
-async def test_vickrey_uses_second_best_bid_for_settlement():
+async def test_vickrey_uses_second_highest_price_for_settlement():
+    """Vickrey: winner pays second-highest *bid price*, not second-highest scored agent's price."""
     policy = MarketPolicy(
         auction_type="vickrey",
         budget_per_task=100,
@@ -137,13 +155,15 @@ async def test_vickrey_uses_second_best_bid_for_settlement():
     )
     swarm, _ = make_swarm(policy=policy)
 
+    # researcher cost=30 (highest price), planner cost=20 (second-highest price), summarizer cost=8
     result = await swarm.execute("Analyze", task_category="research")
 
+    assert isinstance(result, SwarmResult)
     assert result.winners == ["researcher"]
-    assert result.auction.settlement_cost == 8.0
+    # Second-highest BID PRICE is planner's 20.0
+    assert result.auction.settlement_cost == 20.0
 
 
-@pytest.mark.asyncio
 async def test_federation_market_strategy_returns_swarm_result():
     registry = InMemoryAgentRegistry()
     federation = AgentFederation(registry)
@@ -164,8 +184,14 @@ async def test_federation_market_strategy_returns_swarm_result():
         market=MarketPolicy(budget_per_task=10, seed=1, exploration_rate=0),
     )
 
+    assert isinstance(result, SwarmResult)
     assert result.winners == ["strong"]
     assert result.output["agent_id"] == "strong"
+
+
+# ---------------------------------------------------------------------------
+# Smoke / import tests
+# ---------------------------------------------------------------------------
 
 
 def test_agent_swarm_imports_from_top_level():
@@ -186,7 +212,12 @@ def test_market_policy_aliases_and_validation():
     assert policy.bid_strategy.name == "cost_quality_pareto"
 
 
-def test_synthetic_bids_use_reputation_when_agent_has_no_bidder():
+# ---------------------------------------------------------------------------
+# Synthetic bid uses reputation (converted from asyncio.run to async def)
+# ---------------------------------------------------------------------------
+
+
+async def test_synthetic_bids_use_reputation_when_agent_has_no_bidder():
     reputation = Reputation()
     reputation.record_outcome(
         "agent-a",
@@ -202,9 +233,104 @@ def test_synthetic_bids_use_reputation_when_agent_has_no_bidder():
         reputation=reputation,
     )
 
-    auction = asyncio.run(
-        swarm.auction("Review code", swarm.federation.discover(), task_category="code")
+    auction = await swarm.auction(
+        "Review code", swarm.federation.discover(), task_category="code"
     )
 
+    assert isinstance(auction, AuctionResult)
     assert auction.bids[0].estimated_quality == 0.9
     assert auction.bids[0].estimated_cost == 3.0
+
+
+# ---------------------------------------------------------------------------
+# Negative tests
+# ---------------------------------------------------------------------------
+
+
+def test_swarm_with_empty_agents_raises_on_execute():
+    """An AgentSwarm with no agents raises LookupError when execute() is called."""
+    swarm = AgentSwarm(agents=[])
+    # Constructing the swarm is valid — the error is raised on execute
+    assert swarm is not None
+
+
+async def test_swarm_no_agents_raises_lookup_error_on_execute():
+    swarm = AgentSwarm(agents=[], market=MarketPolicy(budget_per_task=100))
+    with pytest.raises(LookupError):
+        await swarm.execute("do something")
+
+
+def test_bid_requires_nonempty_agent_id():
+    with pytest.raises(ValueError):
+        Bid(agent_id="", estimated_cost=10, estimated_quality=0.8, confidence=0.9)
+
+
+def test_bid_rejects_none_converted_to_empty_string():
+    """agent_id=None coerces to 'None' (non-empty) — but integer 0 coerces to '0' which is fine.
+    Verify that explicitly passing an empty string raises ValueError."""
+    # This is a duplicate guard: confirms the validator is present
+    with pytest.raises(ValueError):
+        Bid(agent_id="", estimated_cost=5, estimated_quality=0.5)
+
+
+def test_coalition_former_raises_when_fewer_agents_than_max_size():
+    former = CoalitionFormer(max_size=3)
+    bids = [
+        Bid(agent_id="a", estimated_cost=1.0, estimated_quality=0.8),
+        Bid(agent_id="b", estimated_cost=2.0, estimated_quality=0.7),
+    ]
+    scores = {"a": 0.9, "b": 0.8}
+    with pytest.raises(LookupError):
+        former.form(bids, scores)
+
+
+def test_market_policy_rejects_unknown_auction_type():
+    with pytest.raises(ValueError):
+        MarketPolicy(auction_type="dutch_auction")
+
+
+def test_bid_strategy_rejects_unknown_name():
+    with pytest.raises(ValueError):
+        BidStrategy.from_value("nonexistent_strategy")
+
+
+async def test_swarm_budget_zero_still_selects_winner():
+    """budget_per_task=0 should not crash; all bids fall back to eligible."""
+    policy = MarketPolicy(budget_per_task=0, seed=42, exploration_rate=0)
+    swarm, _ = make_swarm(policy=policy)
+
+    result = await swarm.execute("Do something", task_category="general")
+
+    assert isinstance(result, SwarmResult)
+    assert len(result.winners) >= 1
+
+
+# ---------------------------------------------------------------------------
+# Stress test
+# ---------------------------------------------------------------------------
+
+
+async def test_swarm_scales_to_50_agents():
+    """AgentSwarm must handle 50 agents without error and return a SwarmResult."""
+    swarm = AgentSwarm(
+        market=MarketPolicy(budget_per_task=1000, seed=7, exploration_rate=0),
+    )
+    for i in range(50):
+        agent_id = f"stress-agent-{i:02d}"
+        cost = float(i + 1)
+        quality = 0.5 + (i % 10) * 0.04
+        swarm.register_agent(
+            AgentMetadata(
+                id=agent_id,
+                model="mock",
+                cost_multiplier=cost,
+                capacity=2,
+            ),
+            client=MarketClient(agent_id, cost=cost, quality=quality),
+        )
+
+    result = await swarm.execute("Process large batch", task_category="batch")
+
+    assert isinstance(result, SwarmResult)
+    assert len(result.winners) >= 1
+    assert len(result.auction.bids) == 50

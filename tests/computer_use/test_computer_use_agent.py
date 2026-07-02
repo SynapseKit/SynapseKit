@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import inspect
+import json
 from pathlib import Path
 
 import pytest
@@ -9,6 +11,7 @@ from synapsekit import (
     ComputerActionType,
     ComputerObservation,
     ComputerUseAgent,
+    ComputerUseResult,
     SafetyPolicy,
     SessionRecorder,
 )
@@ -17,6 +20,8 @@ from synapsekit.computer_use import (
     BrowserScreenProvider,
     OpenAIComputerUseProvider,
     OpenSourceComputerUseProvider,
+    SafetyCheck,
+    SafetyDecision,
     normalize_action,
     requires_confirmation,
     requires_human_confirmation,
@@ -54,6 +59,29 @@ class FakeProvider:
         return self.actions.pop(0)
 
 
+class FailingScreen:
+    """FakeScreen whose execute() always raises RuntimeError."""
+
+    def __init__(self) -> None:
+        self.observation = ComputerObservation(
+            screenshot=b"png",
+            text="Ready",
+            app="browser",
+            window_title="Test",
+            url="https://example.com/",
+        )
+        self.closed = False
+
+    async def observe(self) -> ComputerObservation:
+        return self.observation
+
+    async def execute(self, action: ComputerAction) -> str:
+        raise RuntimeError("screen exploded")
+
+    async def close(self) -> None:
+        self.closed = True
+
+
 @pytest.mark.asyncio
 async def test_agent_runs_until_done() -> None:
     screen = FakeScreen()
@@ -66,6 +94,8 @@ async def test_agent_runs_until_done() -> None:
 
     result = await ComputerUseAgent(provider=provider, screen=screen).run("fill the form")
 
+    assert isinstance(result, ComputerUseResult)
+    assert isinstance(result.steps, list)
     assert result.completed is True
     assert result.output == "form complete"
     assert result.error is None
@@ -81,6 +111,8 @@ async def test_safety_blocks_forbidden_apps() -> None:
 
     result = await ComputerUseAgent(provider=provider, screen=screen).run("click continue")
 
+    assert isinstance(result, ComputerUseResult)
+    assert isinstance(result.steps, list)
     assert result.completed is False
     assert result.error == "Current app or window is forbidden by SafetyPolicy."
     assert screen.executed == []
@@ -98,6 +130,8 @@ async def test_confirmation_denial_stops_sensitive_action() -> None:
         "send invoice"
     )
 
+    assert isinstance(result, ComputerUseResult)
+    assert isinstance(result.steps, list)
     assert result.error == "Human confirmation denied."
     assert screen.executed == []
     assert safety.audit_log[-1].decision.value == "needs_confirmation"
@@ -119,7 +153,10 @@ async def test_confirmation_approval_executes_action() -> None:
         max_steps=1,
     ).run("send invoice")
 
+    assert isinstance(result, ComputerUseResult)
+    assert isinstance(result.steps, list)
     assert result.error == "ComputerUseAgent reached max_steps=1."
+    assert result.completed is False
     assert screen.executed[0].action_type == ComputerActionType.TYPE_TEXT
 
 
@@ -140,6 +177,13 @@ async def test_session_recording_is_replayable(tmp_path: Path) -> None:
     assert replay.observations[0].screenshot == b"png"
     assert replay.actions[0].action_type == ComputerActionType.DONE
     assert replay.events[-1]["event"] == "finish"
+
+    # Validate every JSONL line is valid JSON with required fields
+    lines = recording.read_text().splitlines()
+    for line in lines:
+        obj = json.loads(line)
+        assert "ts" in obj
+        assert "event" in obj
 
 
 def test_normalize_action_supports_provider_aliases() -> None:
@@ -231,3 +275,139 @@ def test_requires_human_confirmation_decorator_marks_function() -> None:
 
     assert pay() == "ok"
     assert requires_confirmation(pay) is True
+
+
+# ---------------------------------------------------------------------------
+# decorator: inspect.iscoroutinefunction assertions
+# ---------------------------------------------------------------------------
+
+
+def test_requires_confirmation_preserves_async_identity() -> None:
+    @requires_human_confirmation
+    async def my_action() -> str:
+        return "done"
+
+    assert inspect.iscoroutinefunction(my_action)
+    assert my_action._requires_confirmation is True  # type: ignore[attr-defined]
+
+
+def test_requires_confirmation_preserves_sync_identity() -> None:
+    @requires_human_confirmation
+    def my_action() -> str:
+        return "done"
+
+    assert not inspect.iscoroutinefunction(my_action)
+    assert my_action._requires_confirmation is True  # type: ignore[attr-defined]
+
+
+def test_requires_confirmation_preserves_async_identity_with_reason() -> None:
+    @requires_human_confirmation("some reason")
+    async def my_action() -> str:
+        return "done"
+
+    assert inspect.iscoroutinefunction(my_action)
+    assert my_action._requires_confirmation is True  # type: ignore[attr-defined]
+
+
+# ---------------------------------------------------------------------------
+# URL domain enforcement
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_safety_blocks_url_outside_allowed_domains() -> None:
+    policy = SafetyPolicy(allowed_domains=["example.com"])
+    action = ComputerAction(type=ComputerActionType.NAVIGATE, url="https://evil.com/steal")
+    obs = ComputerObservation(
+        screenshot=None, app="browser", window_title="", width=1920, height=1080
+    )
+    check = policy.check(action, obs)
+    assert isinstance(check, SafetyCheck)
+    assert check.decision in (SafetyDecision.NEEDS_CONFIRMATION, SafetyDecision.BLOCKED)
+
+
+@pytest.mark.asyncio
+async def test_safety_allows_url_inside_allowed_domains() -> None:
+    policy = SafetyPolicy(allowed_domains=["example.com"])
+    action = ComputerAction(type=ComputerActionType.NAVIGATE, url="https://example.com/page")
+    obs = ComputerObservation(
+        screenshot=None, app="browser", window_title="", width=1920, height=1080
+    )
+    check = policy.check(action, obs)
+    assert isinstance(check, SafetyCheck)
+    assert check.decision == SafetyDecision.ALLOWED
+
+
+@pytest.mark.asyncio
+async def test_safety_blocks_domain_in_blocklist() -> None:
+    policy = SafetyPolicy(blocked_domains=["malware.com"])
+    action = ComputerAction(type=ComputerActionType.NAVIGATE, url="https://malware.com/")
+    obs = ComputerObservation(
+        screenshot=None, app="browser", window_title="", width=1920, height=1080
+    )
+    check = policy.check(action, obs)
+    assert isinstance(check, SafetyCheck)
+    assert check.decision == SafetyDecision.BLOCKED
+
+
+# ---------------------------------------------------------------------------
+# normalize_action — aliases + negative tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "alias,expected_type",
+    [
+        ("scroll", "SCROLL"),
+        ("drag", "DRAG"),
+        ("stop", "DONE"),
+        ("key", "KEY"),
+    ],
+)
+def test_normalize_action_all_aliases(alias: str, expected_type: str) -> None:
+    action = normalize_action({"type": alias})
+    assert action.action_type.name == expected_type
+
+
+def test_normalize_action_raises_on_empty_payload() -> None:
+    with pytest.raises(ValueError):
+        normalize_action({})
+
+
+def test_normalize_action_raises_on_unknown_action() -> None:
+    with pytest.raises(ValueError):
+        normalize_action({"type": "fly_to_mars"})
+
+
+# ---------------------------------------------------------------------------
+# Exception propagation
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_agent_records_error_on_screen_exception() -> None:
+    screen = FailingScreen()
+    provider = FakeProvider([ComputerAction(type=ComputerActionType.CLICK, x=5, y=5)])
+
+    result = await ComputerUseAgent(provider=provider, screen=screen).run("click something")
+
+    assert isinstance(result, ComputerUseResult)
+    assert result.completed is False
+    assert result.error is not None
+
+
+# ---------------------------------------------------------------------------
+# confirm_before=[] disables keyword trigger
+# ---------------------------------------------------------------------------
+
+
+def test_safety_empty_confirm_before_disables_keyword_trigger() -> None:
+    policy = SafetyPolicy(confirm_before=[], require_confirmation_for_text=False)
+    # typing "password" should NOT trigger confirmation since confirm_before is empty list
+    action = ComputerAction(type=ComputerActionType.TYPE_TEXT, text="my password")
+    obs = ComputerObservation(
+        screenshot=None, app="notes", window_title="", width=1920, height=1080
+    )
+    check = policy.check(action, obs)
+    assert isinstance(check, SafetyCheck)
+    assert check.decision == SafetyDecision.ALLOWED
