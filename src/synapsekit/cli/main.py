@@ -179,6 +179,51 @@ def _add_agent_parser(subparsers: argparse._SubParsersAction) -> None:  # type: 
     )
 
 
+def _add_memory_parser(subparsers: argparse._SubParsersAction) -> None:  # type: ignore[type-arg]
+    p = subparsers.add_parser("memory", help="Manage Living Memory patches")
+    mem_sub = p.add_subparsers(dest="memory_command")
+
+    review = mem_sub.add_parser("review", help="Review pending memory patches")
+    review.add_argument("--patch-id", default=None, help="Review a specific patch")
+    review.add_argument(
+        "--store-path",
+        default=".synapsekit_memory_patches.jsonl",
+        help="Patch store file path",
+    )
+
+    apply_cmd = mem_sub.add_parser("apply", help="Apply a pending memory patch")
+    apply_cmd.add_argument("patch_id", help="Patch ID to apply")
+    apply_cmd.add_argument(
+        "--store-path",
+        default=".synapsekit_memory_patches.jsonl",
+        help="Patch store file path",
+    )
+
+    revert_cmd = mem_sub.add_parser("revert", help="Revert an applied memory patch")
+    revert_cmd.add_argument("patch_id", help="Patch ID to revert")
+    revert_cmd.add_argument(
+        "--store-path",
+        default=".synapsekit_memory_patches.jsonl",
+        help="Patch store file path",
+    )
+
+    log_cmd = mem_sub.add_parser("log", help="View memory patch history")
+    log_cmd.add_argument("--status", default=None, help="Filter by status")
+    log_cmd.add_argument("--limit", type=int, default=20, help="Max patches to show")
+    log_cmd.add_argument(
+        "--format",
+        dest="output_format",
+        choices=["table", "json"],
+        default="table",
+        help="Output format",
+    )
+    log_cmd.add_argument(
+        "--store-path",
+        default=".synapsekit_memory_patches.jsonl",
+        help="Patch store file path",
+    )
+
+
 def main(argv: list[str] | None = None) -> None:
     """CLI entry point."""
     from .._loop import install_fast_loop
@@ -201,6 +246,7 @@ def main(argv: list[str] | None = None) -> None:
     _add_bench_parser(subparsers)
     _add_edge_parser(subparsers)
     _add_agent_parser(subparsers)
+    _add_memory_parser(subparsers)
     _add_ui_parser(subparsers)
     _add_plugin_parser(subparsers)
 
@@ -248,6 +294,10 @@ def main(argv: list[str] | None = None) -> None:
         from .agent import run_agent
 
         run_agent(args)
+    elif args.command == "memory":
+        from .memory import run_memory
+
+        run_memory(args)
     elif args.command == "ui":
         from .ui import run_ui
 
