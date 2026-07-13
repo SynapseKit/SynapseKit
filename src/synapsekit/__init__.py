@@ -270,7 +270,22 @@ from .loaders.web import WebLoader
 from .loaders.wikipedia import WikipediaLoader
 from .mcp import MCPClient, MCPServer, MCPToolAdapter
 from .memory import AgentMemory as PersistentAgentMemory
-from .memory import GraphAgentMemory, GraphMemoryBackend
+from .memory import (
+    DiffConflictError,
+    FileDiffEngine,
+    GraphAgentMemory,
+    GraphMemoryBackend,
+    LivingMemory,
+    MemoryFileCategory,
+    MemoryFileRouter,
+    MemoryPatch,
+    MemoryPIIFilter,
+    OccurrenceRecord,
+    OccurrenceTracker,
+    PatchStatus,
+    PatchStore,
+    PIIFilterResult,
+)
 from .memory.buffer import BufferMemory
 from .memory.conversation import ConversationMemory
 from .memory.entity import EntityMemory
@@ -546,6 +561,18 @@ __all__ = [
     "SQLiteConversationMemory",
     "SummaryBufferMemory",
     "TokenBufferMemory",
+    "LivingMemory",
+    "MemoryPatch",
+    "OccurrenceRecord",
+    "MemoryFileCategory",
+    "PatchStatus",
+    "FileDiffEngine",
+    "DiffConflictError",
+    "PatchStore",
+    "OccurrenceTracker",
+    "MemoryPIIFilter",
+    "PIIFilterResult",
+    "MemoryFileRouter",
     "TokenTracer",
     "PrometheusMetrics",
     # Loaders
