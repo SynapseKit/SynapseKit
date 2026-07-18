@@ -360,9 +360,7 @@ def test_neo4j_backend_roundtrip_with_testcontainers():
             backend.upsert_entity(EntityMention(name="Apollo", type="product"), "d1")
             backend.upsert_entity(EntityMention(name="Dana", type="person"), "d1")
             backend.upsert_relation(
-                RelationMention(
-                    subject="Dana", predicate="leads", object="Apollo", confidence=0.9
-                ),
+                RelationMention(subject="Dana", predicate="leads", object="Apollo", confidence=0.9),
                 "d1",
             )
 
@@ -374,9 +372,7 @@ def test_neo4j_backend_roundtrip_with_testcontainers():
 
             # Also verify the write actually landed in Neo4j, not just the mirror.
             with backend._driver.session() as session:
-                count = session.run(
-                    "MATCH (e:WorldModelEntity) RETURN count(e) AS c"
-                ).single()["c"]
+                count = session.run("MATCH (e:WorldModelEntity) RETURN count(e) AS c").single()["c"]
             assert count == 2
         finally:
             backend.close()
