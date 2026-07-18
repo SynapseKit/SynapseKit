@@ -164,6 +164,28 @@ async def test_hybrid_world_model_retriever_fuses_graph_and_vector_results():
 
 
 @pytest.mark.asyncio
+async def test_hybrid_world_model_retriever_honors_graph_first_and_vector_first():
+    graph = InMemoryWorldGraphBackend()
+    graph.upsert_entity(EntityMention("Alice"), "doc_graph")
+    graph.upsert_entity(EntityMention("Search API"), "doc_graph")
+    graph.upsert_relation(RelationMention("Alice", "worked_on", "Search API"), "doc_graph")
+
+    vectorstore = InMemoryVectorStore(FakeEmbeddings())  # type: ignore[arg-type]
+    await vectorstore.add(["vector context"], [{"source": "doc_vector"}])
+    retriever = HybridWorldModelRetriever(graph, vector_retriever=Retriever(vectorstore))
+
+    graph_first = await retriever.retrieve_with_scores(
+        "Alice Search API", top_k=5, strategy="graph_first"
+    )
+    vector_first = await retriever.retrieve_with_scores(
+        "Alice Search API", top_k=5, strategy="vector_first"
+    )
+
+    assert graph_first[0]["text"] == "doc_graph"
+    assert vector_first[0]["text"] == "vector context"
+
+
+@pytest.mark.asyncio
 async def test_world_model_rag_ingest_query_and_mermaid():
     llm = FakeLLM("Alice worked on Search API, which led to v1.5.")
     vectorstore = InMemoryVectorStore(FakeEmbeddings())  # type: ignore[arg-type]
