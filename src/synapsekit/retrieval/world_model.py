@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
@@ -896,6 +897,7 @@ class Neo4jWorldGraphBackend(InMemoryWorldGraphBackend):
                 "Install SynapseKit with the graph extra."
             ) from exc
 
+        self.uri = uri
         self._driver = GraphDatabase.driver(uri, auth=(username, password))
         self._database = database
 
@@ -920,10 +922,11 @@ class Neo4jWorldGraphBackend(InMemoryWorldGraphBackend):
         return edge
 
     def add_event(self, event: EventMention, doc_id: str) -> WorldModelNode:
-        node = super().add_event(event, doc_id)
-        self._persist_entity(node)
-        self._persist_document(doc_id)
-        return node
+        # InMemoryWorldGraphBackend.add_event calls self.upsert_entity(...) and
+        # self.upsert_relation(...) internally, which dispatch to the overrides
+        # above and already persist the event node/document/edges to Neo4j.
+        # Re-persisting here would just be redundant network round trips.
+        return super().add_event(event, doc_id)
 
     def close(self) -> None:
         self._driver.close()
@@ -1248,6 +1251,16 @@ class WorldModelRAG:
         """Sync wrapper for ``ingest``."""
         run_sync(self.ingest(docs))
 
+    def close(self) -> None:
+        """Release resources held by the graph backend (e.g. a Neo4j driver).
+
+        No-op for backends that don't need explicit teardown, such as
+        ``InMemoryWorldGraphBackend``.
+        """
+        close = getattr(self.graph_backend, "close", None)
+        if callable(close):
+            close()
+
     def delete_by_metadata(self, key: str, values: set[str]) -> int:
         """Delete vector-store entries whose ``metadata[key]`` is in ``values``.
 
@@ -1337,7 +1350,15 @@ class WorldModelRAG:
             if backend == "kuzu":
                 return KuzuWorldGraphBackend(Path.home() / ".synapsekit" / "world_model.kuzu")
             if backend in ("neo4j", "memgraph"):
-                return Neo4jWorldGraphBackend("bolt://localhost:7687", resolver=resolver)
+                # No per-backend config object exists yet, so honor NEO4J_* env
+                # vars (the standard names for both Neo4j and Memgraph's Bolt
+                # driver) rather than hardcoding a single local dev endpoint.
+                return Neo4jWorldGraphBackend(
+                    os.environ.get("NEO4J_URI", "bolt://localhost:7687"),
+                    username=os.environ.get("NEO4J_USERNAME", "neo4j"),
+                    password=os.environ.get("NEO4J_PASSWORD", "password"),
+                    resolver=resolver,
+                )
             return ExternalWorldGraphBackend(backend)
         return backend
 

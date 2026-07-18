@@ -76,8 +76,10 @@ async def compare(
         question = question_for_chain(chain)
         relevant = {chain.tail_doc_id}
 
-        hybrid = await wm.retriever.retrieve_with_scores(question, top_k=top_k, strategy="hybrid")
-        vector_only = await wm.vector_retriever.retrieve_with_scores(question, top_k=top_k)
+        hybrid, vector_only = await asyncio.gather(
+            wm.retriever.retrieve_with_scores(question, top_k=top_k, strategy="hybrid"),
+            wm.vector_retriever.retrieve_with_scores(question, top_k=top_k),
+        )
 
         hybrid_ids = [str(r["metadata"]["source"]) for r in hybrid]
         vector_ids = [str(r["metadata"]["source"]) for r in vector_only]

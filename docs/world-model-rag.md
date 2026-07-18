@@ -50,8 +50,14 @@ print(wm.subgraph_to_mermaid("Alice v1.5"))
 ## Backends
 
 The core package ships with `graph_backend="in_memory"` so world-model RAG works
-without external services. `neo4j`, `memgraph`, and `kuzu` are reserved backend names;
-for now they raise clear runtime errors unless you provide a custom `GraphBackend`
+without external services. `graph_backend="kuzu"` persists to a local embedded Kuzu
+database, and `graph_backend="neo4j"` / `"memgraph"` persist to a Neo4j or Memgraph
+instance over Bolt (`pip install synapsekit[graph]`; connection defaults to
+`bolt://localhost:7687`, overridable via the `NEO4J_URI`, `NEO4J_USERNAME`, and
+`NEO4J_PASSWORD` environment variables, or by passing `WorldModelRAG.neo4j(uri, ...)`
+directly as `graph_backend` for full control). All three persistent backends serve
+reads from an in-memory mirror built up as documents are ingested. Any other backend
+name raises a clear runtime error unless you provide a custom `GraphBackend`
 implementation.
 
 ## Time Travel

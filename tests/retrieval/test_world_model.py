@@ -269,6 +269,27 @@ def test_external_backend_errors_clearly():
         wm.subgraph_to_mermaid("anything")
 
 
+def test_neo4j_and_memgraph_strings_route_to_neo4j_backend(monkeypatch):
+    # Regression guard: both "neo4j" and "memgraph" must map to
+    # Neo4jWorldGraphBackend in _make_graph_backend. Doesn't need a live
+    # server -- GraphDatabase.driver() connects lazily on first use.
+    pytest.importorskip("neo4j")
+    from synapsekit.retrieval.world_model import Neo4jWorldGraphBackend
+
+    monkeypatch.setenv("NEO4J_URI", "bolt://example.invalid:7687")
+    monkeypatch.setenv("NEO4J_USERNAME", "custom-user")
+    monkeypatch.setenv("NEO4J_PASSWORD", "custom-pass")
+
+    for backend_name in ("neo4j", "memgraph"):
+        wm = WorldModelRAG(
+            llm=FakeLLM(),
+            vector_store=InMemoryVectorStore(FakeEmbeddings()),  # type: ignore[arg-type]
+            graph_backend=backend_name,  # type: ignore[arg-type]
+        )
+        assert isinstance(wm.graph_backend, Neo4jWorldGraphBackend)
+        assert wm.graph_backend.uri == "bolt://example.invalid:7687"
+
+
 def test_kuzu_backend_roundtrip(tmp_path):
     pytest.importorskip("kuzu")
     from synapsekit.retrieval.world_model import KuzuWorldGraphBackend
