@@ -39,3 +39,11 @@ jobs:
       - uses: astral-sh/setup-uv@v5
       - run: uv sync --group dev
       - run: uv run deptry src/
+
+  world-model-retrieval-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --group dev --group bench
+      - run: uv run pytest benchmarks/test_world_model_retrieval_bench.py -v

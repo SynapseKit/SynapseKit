@@ -308,8 +308,11 @@ def test_neo4j_and_memgraph_strings_route_to_neo4j_backend(monkeypatch):
             vector_store=InMemoryVectorStore(FakeEmbeddings()),  # type: ignore[arg-type]
             graph_backend=backend_name,  # type: ignore[arg-type]
         )
-        assert isinstance(wm.graph_backend, Neo4jWorldGraphBackend)
-        assert wm.graph_backend.uri == "bolt://example.invalid:7687"
+        try:
+            assert isinstance(wm.graph_backend, Neo4jWorldGraphBackend)
+            assert wm.graph_backend.uri == "bolt://example.invalid:7687"
+        finally:
+            wm.close()
 
 
 def test_kuzu_backend_roundtrip(tmp_path):

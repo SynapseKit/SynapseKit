@@ -921,13 +921,6 @@ class Neo4jWorldGraphBackend(InMemoryWorldGraphBackend):
         self._persist_edge(edge)
         return edge
 
-    def add_event(self, event: EventMention, doc_id: str) -> WorldModelNode:
-        # InMemoryWorldGraphBackend.add_event calls self.upsert_entity(...) and
-        # self.upsert_relation(...) internally, which dispatch to the overrides
-        # above and already persist the event node/document/edges to Neo4j.
-        # Re-persisting here would just be redundant network round trips.
-        return super().add_event(event, doc_id)
-
     def close(self) -> None:
         self._driver.close()
 
@@ -1348,7 +1341,9 @@ class WorldModelRAG:
             if backend == "in_memory":
                 return InMemoryWorldGraphBackend(resolver=resolver)
             if backend == "kuzu":
-                return KuzuWorldGraphBackend(Path.home() / ".synapsekit" / "world_model.kuzu")
+                return KuzuWorldGraphBackend(
+                    Path.home() / ".synapsekit" / "world_model.kuzu", resolver=resolver
+                )
             if backend in ("neo4j", "memgraph"):
                 # No per-backend config object exists yet, so honor NEO4J_* env
                 # vars (the standard names for both Neo4j and Memgraph's Bolt
