@@ -262,11 +262,81 @@ def test_external_backend_errors_clearly():
     wm = WorldModelRAG(
         llm=FakeLLM(),
         vector_store=InMemoryVectorStore(FakeEmbeddings()),  # type: ignore[arg-type]
-        graph_backend="neo4j",
+        graph_backend="dgraph",  # type: ignore[arg-type]
     )
 
     with pytest.raises(RuntimeError, match="not available in the core package"):
         wm.subgraph_to_mermaid("anything")
+
+
+def test_kuzu_backend_roundtrip(tmp_path):
+    pytest.importorskip("kuzu")
+    from synapsekit.retrieval.world_model import KuzuWorldGraphBackend
+
+    backend = KuzuWorldGraphBackend(tmp_path / "world_model.kuzu")
+    backend.upsert_entity(EntityMention(name="Apollo", type="product"), "d1")
+    backend.upsert_entity(EntityMention(name="Dana", type="person"), "d1")
+    backend.upsert_relation(
+        RelationMention(subject="Dana", predicate="leads", object="Apollo", confidence=0.9),
+        "d1",
+    )
+
+    result = backend.query_subgraph("Apollo Dana", max_hops=1)
+    assert {node.name for node in result.nodes} == {"Apollo", "Dana"}
+    assert [edge.predicate for edge in result.edges] == ["leads"]
+    assert result.documents == ["d1"]
+
+    count_result = backend._execute("MATCH (e:Entity) RETURN count(e) AS c")
+    assert count_result.get_next()[0] == 2
+
+
+def test_neo4j_backend_roundtrip_with_testcontainers():
+    pytest.importorskip("neo4j")
+    container_mod = pytest.importorskip("testcontainers.core.container")
+    wait_mod = pytest.importorskip("testcontainers.core.waiting_utils")
+    docker_container = container_mod.DockerContainer
+    wait_for_logs = wait_mod.wait_for_logs
+
+    from synapsekit.retrieval.world_model import Neo4jWorldGraphBackend
+
+    password = "synapsekit-password"
+    with (
+        docker_container("neo4j:5")
+        .with_env("NEO4J_AUTH", f"neo4j/{password}")
+        .with_exposed_ports(7687) as container
+    ):
+        wait_for_logs(container, "Bolt enabled", timeout=60)
+        host = container.get_container_host_ip()
+        port = container.get_exposed_port(7687)
+        backend = Neo4jWorldGraphBackend(
+            f"bolt://{host}:{port}",
+            username="neo4j",
+            password=password,
+        )
+        try:
+            backend.upsert_entity(EntityMention(name="Apollo", type="product"), "d1")
+            backend.upsert_entity(EntityMention(name="Dana", type="person"), "d1")
+            backend.upsert_relation(
+                RelationMention(
+                    subject="Dana", predicate="leads", object="Apollo", confidence=0.9
+                ),
+                "d1",
+            )
+
+            # In-memory mirror is what query_subgraph/to_mermaid read from.
+            result = backend.query_subgraph("Apollo Dana", max_hops=1)
+            assert {node.name for node in result.nodes} == {"Apollo", "Dana"}
+            assert [edge.predicate for edge in result.edges] == ["leads"]
+            assert result.documents == ["d1"]
+
+            # Also verify the write actually landed in Neo4j, not just the mirror.
+            with backend._driver.session() as session:
+                count = session.run(
+                    "MATCH (e:WorldModelEntity) RETURN count(e) AS c"
+                ).single()["c"]
+            assert count == 2
+        finally:
+            backend.close()
 
 
 def test_event_ingestion_links_participants():

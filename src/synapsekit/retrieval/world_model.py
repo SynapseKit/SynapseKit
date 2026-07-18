@@ -869,6 +869,118 @@ class KuzuWorldGraphBackend(InMemoryWorldGraphBackend):
         return self._conn.execute(query, parameters)
 
 
+class Neo4jWorldGraphBackend(InMemoryWorldGraphBackend):
+    """Optional Neo4j/Memgraph-backed world graph with an in-memory query mirror.
+
+    Both Neo4j and Memgraph speak the Bolt protocol, so this one class serves
+    both. Same shape as ``KuzuWorldGraphBackend``: writes are mirrored to the
+    external store while reads (``query_subgraph``, ``to_mermaid``) are served
+    from the in-memory graph inherited from the parent class.
+    """
+
+    def __init__(
+        self,
+        uri: str,
+        *,
+        username: str = "neo4j",
+        password: str = "password",
+        database: str | None = None,
+        resolver: EntityResolver | None = None,
+    ) -> None:
+        super().__init__(resolver=resolver)
+        try:
+            from neo4j import GraphDatabase
+        except ImportError as exc:
+            raise ImportError(
+                "Neo4jWorldGraphBackend requires the 'neo4j' package. "
+                "Install SynapseKit with the graph extra."
+            ) from exc
+
+        self._driver = GraphDatabase.driver(uri, auth=(username, password))
+        self._database = database
+
+    def upsert_entity(self, entity: EntityMention, doc_id: str) -> WorldModelNode:
+        node = super().upsert_entity(entity, doc_id)
+        self._persist_entity(node)
+        self._persist_document(doc_id)
+        self._run(
+            "MATCH (d:WorldModelDocument {id: $doc_id}), (e:WorldModelEntity {id: $entity_id}) "
+            "MERGE (d)-[:MENTIONS]->(e)",
+            doc_id=doc_id,
+            entity_id=node.id,
+        )
+        return node
+
+    def upsert_relation(self, relation: RelationMention, doc_id: str) -> WorldModelEdge | None:
+        edge = super().upsert_relation(relation, doc_id)
+        if edge is None:
+            return None
+        self._persist_document(doc_id)
+        self._persist_edge(edge)
+        return edge
+
+    def add_event(self, event: EventMention, doc_id: str) -> WorldModelNode:
+        node = super().add_event(event, doc_id)
+        self._persist_entity(node)
+        self._persist_document(doc_id)
+        return node
+
+    def close(self) -> None:
+        self._driver.close()
+
+    def _persist_document(self, doc_id: str) -> None:
+        self._run("MERGE (:WorldModelDocument {id: $id})", id=doc_id)
+
+    def _persist_entity(self, node: WorldModelNode) -> None:
+        self._run(
+            """
+            MERGE (e:WorldModelEntity {id: $id})
+            SET e.name = $name,
+                e.kind = $kind,
+                e.aliases = $aliases,
+                e.confidence = $confidence,
+                e.provenance = $provenance,
+                e.created_at = $created_at,
+                e.updated_at = $updated_at
+            """,
+            id=node.id,
+            name=node.name,
+            kind=node.type,
+            aliases=json.dumps(sorted(node.aliases)),
+            confidence=node.confidence,
+            provenance=json.dumps(sorted(node.provenance)),
+            created_at=node.created_at.isoformat(),
+            updated_at=node.updated_at.isoformat(),
+        )
+
+    def _persist_edge(self, edge: WorldModelEdge) -> None:
+        self._run(
+            """
+            MATCH (s:WorldModelEntity {id: $subject_id}), (o:WorldModelEntity {id: $object_id})
+            MERGE (s)-[r:WORLD_RELATES {id: $id}]->(o)
+            SET r.predicate = $predicate,
+                r.confidence = $confidence,
+                r.causal = $causal,
+                r.provenance = $provenance,
+                r.valid_at = $valid_at,
+                r.valid_until = $valid_until
+            """,
+            id=edge.id,
+            subject_id=edge.subject_id,
+            object_id=edge.object_id,
+            predicate=edge.predicate,
+            confidence=edge.confidence,
+            causal=edge.causal,
+            provenance=json.dumps(sorted(edge.provenance)),
+            valid_at=edge.valid_at.isoformat() if edge.valid_at else None,
+            valid_until=edge.valid_until.isoformat() if edge.valid_until else None,
+        )
+
+    def _run(self, query: str, **parameters: Any) -> None:
+        with self._driver.session(database=self._database) as session:
+            session.run(query, **parameters)
+
+
 class CausalLinker:
     """Scores candidate causal edges with optional NeuroSymbolicAgent-style verifier."""
 
@@ -1074,6 +1186,22 @@ class WorldModelRAG:
 
         return KuzuWorldGraphBackend(path, resolver=resolver)
 
+    @classmethod
+    def neo4j(
+        cls,
+        uri: str,
+        *,
+        username: str = "neo4j",
+        password: str = "password",
+        database: str | None = None,
+        resolver: EntityResolver | None = None,
+    ) -> Neo4jWorldGraphBackend:
+        """Create an optional Neo4j/Memgraph graph backend for ``WorldModelRAG``."""
+
+        return Neo4jWorldGraphBackend(
+            uri, username=username, password=password, database=database, resolver=resolver
+        )
+
     async def ingest(self, docs: list[str] | list[Any]) -> None:
         """Ingest documents into both the vector index and world graph."""
         # Collect all (text, metadata, doc_id) first, then add to the vector index
@@ -1208,6 +1336,8 @@ class WorldModelRAG:
                 return InMemoryWorldGraphBackend(resolver=resolver)
             if backend == "kuzu":
                 return KuzuWorldGraphBackend(Path.home() / ".synapsekit" / "world_model.kuzu")
+            if backend in ("neo4j", "memgraph"):
+                return Neo4jWorldGraphBackend("bolt://localhost:7687", resolver=resolver)
             return ExternalWorldGraphBackend(backend)
         return backend
 

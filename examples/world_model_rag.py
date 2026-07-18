@@ -1,76 +1,85 @@
-import asyncio
-from collections.abc import AsyncGenerator
+"""End-to-end WorldModelRAG demo at 10k-document scale.
 
-import numpy as np
+Ingests a deterministic synthetic corpus (see ``world_model_corpus.py``) of
+causal two-hop chains -- "Person worked on Product" / "Product caused
+Incident" -- spread across separate documents, then asks a multi-hop
+question that names only the person and requires graph traversal (not
+vector similarity alone) to reach the resulting incident.
+
+Runs fully offline by default: ``HeuristicWorldModelExtractor`` (regex-based,
+zero-cost) and ``HashingEmbeddings`` (deterministic, numpy-only) mean no
+network calls or API key are required. Ingesting and querying 10k documents
+is pure CPU regex/hash work -- expect low tens of seconds. Set
+``OPENAI_API_KEY`` or ``ANTHROPIC_API_KEY`` to have the final answer
+synthesized by a real LLM instead of the canned offline stub.
+"""
+
+import asyncio
+import os
+import sys
+import time
+from collections.abc import AsyncGenerator
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from world_model_corpus import generate_corpus, question_for_chain
 
 from synapsekit import ExtractionPolicy, WorldModelRAG
 from synapsekit.llm.base import BaseLLM, LLMConfig
+from synapsekit.mesh.embeddings import HashingEmbeddings
 from synapsekit.retrieval.vectorstore import InMemoryVectorStore
-
-
-class DemoEmbeddings:
-    async def embed(self, texts: list[str]) -> np.ndarray:
-        return np.array([self._vector(text) for text in texts], dtype=np.float32)
-
-    async def embed_one(self, text: str) -> np.ndarray:
-        return self._vector(text)
-
-    @staticmethod
-    def _vector(text: str) -> np.ndarray:
-        values = np.zeros(8, dtype=np.float32)
-        for index, char in enumerate(text.encode("utf-8")):
-            values[index % len(values)] += float(char)
-        norm = np.linalg.norm(values)
-        return values / norm if norm else values
+from synapsekit.retrieval.world_model import HeuristicWorldModelExtractor
 
 
 class DemoLLM(BaseLLM):
+    """Offline stand-in used when no LLM API key is configured."""
+
     def __init__(self) -> None:
         super().__init__(LLMConfig(model="demo", api_key="", provider="demo"))
 
     async def stream(self, prompt: str, **kw) -> AsyncGenerator[str]:
         yield (
-            "Alice worked on Search API, and the graph marks Search API as a causal "
-            "input to the v1.5 release."
+            "Based on the retrieved graph and context above, the causal chain "
+            "connects the named person's work to the incident that followed."
         )
 
 
+def _llm_kwargs() -> dict:
+    """Use a real provider if an API key is set in the environment, else offline."""
+    if api_key := os.environ.get("ANTHROPIC_API_KEY"):
+        return {"model": "claude-3-5-haiku-20241022", "api_key": api_key}
+    if api_key := os.environ.get("OPENAI_API_KEY"):
+        return {"model": "gpt-4o-mini", "api_key": api_key}
+    return {"llm": DemoLLM()}
+
+
 async def main() -> None:
+    docs, chains = generate_corpus(n_docs=10_000, seed=42)
+
     wm = WorldModelRAG(
-        extraction=ExtractionPolicy(
-            entities=["person", "product", "event"],
-            relations="open_schema",
-            temporal=True,
-            causal=True,
-        ),
+        extraction=ExtractionPolicy(temporal=True, causal=True),
         graph_backend="in_memory",
-        vector_store=InMemoryVectorStore(DemoEmbeddings()),
-        llm=DemoLLM(),
-        retrieval_top_k=4,
+        extractor=HeuristicWorldModelExtractor(),
+        vector_store=InMemoryVectorStore(HashingEmbeddings()),
+        retrieval_top_k=5,
+        **_llm_kwargs(),
     )
 
-    await wm.ingest(
-        [
-            {
-                "text": "Alice worked on Search API in 2026. Search API led to v1.5 Release.",
-                "metadata": {"source": "release_notes"},
-            },
-            {
-                "text": "Billing Service depends on Deprecated API.",
-                "metadata": {"source": "architecture_review"},
-            },
-        ]
-    )
+    t0 = time.time()
+    await wm.ingest(docs)
+    print(f"Ingested {len(docs)} documents in {time.time() - t0:.1f}s")
 
-    result = await wm.query(
-        "What did Alice work on that led to v1.5?",
-        strategy="graph_first",
-        as_of="2026-12-01",
-    )
+    for chain in chains[:2]:
+        question = question_for_chain(chain)
+        result = await wm.query(question, strategy="hybrid")
+        print()
+        print(f"Q: {question}")
+        print(f"A: {result.answer}")
+        print(f"Subgraph documents: {result.subgraph.documents}")
 
-    print(result.answer)
     print()
-    print(wm.subgraph_to_mermaid("Alice v1.5"))
+    print(wm.subgraph_to_mermaid(question_for_chain(chains[0])))
 
 
 if __name__ == "__main__":
