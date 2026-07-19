@@ -367,7 +367,7 @@ def test_neo4j_backend_roundtrip_with_testcontainers():
                 "d1",
             )
 
-            # In-memory mirror is what query_subgraph/to_mermaid read from.
+            # query_subgraph/to_mermaid now read live from Neo4j, not a mirror.
             result = backend.query_subgraph("Apollo Dana", max_hops=1)
             assert {node.name for node in result.nodes} == {"Apollo", "Dana"}
             assert [edge.predicate for edge in result.edges] == ["leads"]
