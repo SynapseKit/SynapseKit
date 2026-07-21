@@ -296,6 +296,7 @@ integration = [
     "clickhouse-connect>=0.7",
     "opensearch-py>=2.0",
     "asyncpg>=0.29",
+    "boto3>=1.26",
 ]
 
 [tool.hatch.build.targets.wheel]
