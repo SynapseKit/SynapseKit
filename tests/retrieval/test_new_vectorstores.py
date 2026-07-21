@@ -605,6 +605,8 @@ class TestClickHouseVectorStore:
         store._table_created = True
         results = _run(store.search("q", metadata_filter={"cat": "x"}))
         assert len(results) == 1
+
+
 # ===========================================================================
 # __init__.py exports
 # ===========================================================================
