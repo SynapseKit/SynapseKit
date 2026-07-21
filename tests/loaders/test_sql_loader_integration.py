@@ -46,9 +46,7 @@ def sa_url():
                 time.sleep(1)
         else:
             raise RuntimeError(f"postgres not ready: {last_err}")
-        conn.execute(
-            "CREATE TABLE articles (id INT, title TEXT, content TEXT, category TEXT)"
-        )
+        conn.execute("CREATE TABLE articles (id INT, title TEXT, content TEXT, category TEXT)")
         conn.execute(
             "INSERT INTO articles VALUES "
             "(1, 'Apples', 'about fruit', 'food'),"
@@ -92,9 +90,7 @@ def test_empty_result(sa_url):
 
 @pytest.mark.asyncio
 async def test_aload_matches(sa_url):
-    docs = await SQLLoader(
-        connection_string=sa_url, query="SELECT * FROM articles"
-    ).aload()
+    docs = await SQLLoader(connection_string=sa_url, query="SELECT * FROM articles").aload()
     assert len(docs) == 2
 
 
