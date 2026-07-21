@@ -105,14 +105,18 @@ class CassandraVectorStore(VectorStore):
     def _astra_search_sync(
         self, q_vec: list[float], top_k: int, metadata_filter: dict | None
     ) -> list[dict]:
-        collection = self._db.get_collection(self._table_name)
-        resp = collection.find(
-            filter=metadata_filter or {},
-            sort={"$vector": q_vec},
-            limit=top_k,
-            projection={"text": True, "metadata": True, "$similarity": True},
-            include_similarity=True,
-        )
+        try:
+            collection = self._db.get_collection(self._table_name)
+            resp = collection.find(
+                filter=metadata_filter or {},
+                sort={"$vector": q_vec},
+                limit=top_k,
+                projection={"text": True, "metadata": True, "$similarity": True},
+                include_similarity=True,
+            )
+        except Exception:
+            # Collection doesn't exist yet (search before add / fresh reconnect).
+            return []
         results = []
         for doc in resp:
             results.append(
@@ -129,15 +133,23 @@ class CassandraVectorStore(VectorStore):
     def _cass_ensure_table(self, dim: int) -> None:
         if self._table_created and self._dim == dim:
             return
+        # Cassandra 5.0 ANN search needs a typed vector column plus a
+        # StorageAttachedIndex — not a plain list<float>.
         self._session.execute(
             f"""
             CREATE TABLE IF NOT EXISTS {self._keyspace}.{self._table_name} (
                 id uuid PRIMARY KEY,
                 text text,
                 metadata text,
-                embedding list<float>
+                embedding vector<float, {int(dim)}>
             )
             """
+        )
+        self._session.execute(
+            f"CREATE CUSTOM INDEX IF NOT EXISTS {self._table_name}_ann_idx "
+            f"ON {self._keyspace}.{self._table_name}(embedding) "
+            "USING 'StorageAttachedIndex' "
+            "WITH OPTIONS = {'similarity_function': 'cosine'}"
         )
         self._table_created = True
         self._dim = dim
@@ -162,15 +174,25 @@ class CassandraVectorStore(VectorStore):
         # clause, where the CQL grammar requires a vector literal, not a bound marker,
         # so it cannot be parameterised; we build it from floats coerced above in
         # ``add`` (they originate from the embedding backend, never user text).
+        from cassandra import InvalidRequest
+
         limit = int(top_k)
         if limit <= 0:
             raise ValueError(f"top_k must be a positive integer, got {top_k!r}")
         vec_literal = "[" + ",".join(str(float(x)) for x in q_vec) + "]"
+        # similarity_cosine gives the real score; the ANN clause requires a vector
+        # literal (not a bound marker), so the vector is inlined from coerced floats.
         cql = (
-            f"SELECT text, metadata FROM {self._keyspace}.{self._table_name} "
+            f"SELECT text, metadata, similarity_cosine(embedding, {vec_literal}) AS score "
+            f"FROM {self._keyspace}.{self._table_name} "
             f"ORDER BY embedding ANN OF {vec_literal} LIMIT %s"
         )
-        rows = self._session.execute(cql, (limit,))
+        try:
+            rows = self._session.execute(cql, (limit,))
+        except InvalidRequest:
+            # Table/index doesn't exist yet (search before add, or a fresh
+            # reconnected instance with nothing indexed) — treat as no results.
+            return []
         results = []
         for row in rows:
             try:
@@ -179,7 +201,7 @@ class CassandraVectorStore(VectorStore):
                 meta = {}
             if metadata_filter and not all(meta.get(k) == v for k, v in metadata_filter.items()):
                 continue
-            results.append({"text": row.text, "score": 1.0, "metadata": meta})
+            results.append({"text": row.text, "score": float(row.score), "metadata": meta})
         return results
 
     # --------------------------------------------------------- Public API
@@ -208,8 +230,9 @@ class CassandraVectorStore(VectorStore):
         top_k: int = 5,
         metadata_filter: dict | None = None,
     ) -> list[dict]:
-        if not self._table_created and self._dim is None:
-            return []
+        # No early-return on an uncreated table: a reconnected instance has no
+        # cached dim but rows may already exist. The mode-specific *_search_sync
+        # returns [] when the table/collection genuinely doesn't exist.
         q_vec = await self._embeddings.embed_one(query)
         loop = asyncio.get_running_loop()
         if self._mode == "astra":
