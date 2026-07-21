@@ -174,7 +174,12 @@ class CassandraVectorStore(VectorStore):
         # clause, where the CQL grammar requires a vector literal, not a bound marker,
         # so it cannot be parameterised; we build it from floats coerced above in
         # ``add`` (they originate from the embedding backend, never user text).
-        from cassandra import InvalidRequest
+        try:
+            from cassandra import InvalidRequest
+        except ImportError:
+            # Driver absent (e.g. pure query-building unit tests) — nothing
+            # cassandra-specific to catch; the empty tuple matches no exception.
+            InvalidRequest = ()  # type: ignore[assignment]  # noqa: N806
 
         limit = int(top_k)
         if limit <= 0:
@@ -201,7 +206,9 @@ class CassandraVectorStore(VectorStore):
                 meta = {}
             if metadata_filter and not all(meta.get(k) == v for k, v in metadata_filter.items()):
                 continue
-            results.append({"text": row.text, "score": float(row.score), "metadata": meta})
+            results.append(
+                {"text": row.text, "score": float(getattr(row, "score", 0.0)), "metadata": meta}
+            )
         return results
 
     # --------------------------------------------------------- Public API
