@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 from enum import Enum
 from typing import Any
@@ -89,13 +90,21 @@ class MilvusVectorStore(VectorStore):
             self._client.load_collection(collection_name=self._collection_name)
             return
 
-        # auto_id=True — Milvus assigns IDs automatically; do NOT add a manual primary field
-        schema = self._client.create_schema(auto_id=True, enable_dynamic_field=True)
+        # Milvus requires an explicit primary key field even with auto_id, and
+        # metadata goes in a JSON field so it round-trips on search (dynamic
+        # fields aren't returned unless named in output_fields).
+        schema = self._client.create_schema(auto_id=True, enable_dynamic_field=False)
+        schema.add_field(
+            field_name="id",
+            datatype=self._data_type.INT64,
+            is_primary=True,
+        )
         schema.add_field(
             field_name="text",
             datatype=self._data_type.VARCHAR,
             max_length=65535,
         )
+        schema.add_field(field_name="metadata", datatype=self._data_type.JSON)
         schema.add_field(
             field_name="embedding",
             datatype=self._data_type.FLOAT_VECTOR,
@@ -103,10 +112,18 @@ class MilvusVectorStore(VectorStore):
         )
 
         self._client.create_collection(collection_name=self._collection_name, schema=schema)
+        # MilvusClient.create_index needs an IndexParams object, not a dict.
+        index_config = self._build_index_params()
+        index_params = self._client.prepare_index_params()
+        index_params.add_index(
+            field_name="embedding",
+            index_type=index_config["index_type"],
+            metric_type=index_config["metric_type"],
+            params=index_config["params"],
+        )
         self._client.create_index(
             collection_name=self._collection_name,
-            field_name="embedding",
-            index_params=self._build_index_params(),
+            index_params=index_params,
         )
         self._client.load_collection(collection_name=self._collection_name)
 
@@ -116,7 +133,8 @@ class MilvusVectorStore(VectorStore):
             return None
         clauses = []
         for key, value in metadata_filter.items():
-            clauses.append(f"{key} == {json.dumps(value)}")
+            # metadata is a JSON field; filter by JSON path.
+            clauses.append(f'metadata["{key}"] == {json.dumps(value)}')
         return " and ".join(clauses)
 
     @staticmethod
@@ -136,11 +154,6 @@ class MilvusVectorStore(VectorStore):
             if not k.startswith("_") and not callable(getattr(entity, k))
         }
 
-    @classmethod
-    def _extract_metadata(cls, entity: dict[str, Any]) -> dict[str, Any]:
-        reserved = {"id", "text", "embedding", "distance", "score"}
-        return {k: v for k, v in entity.items() if k not in reserved}
-
     async def add(
         self,
         texts: list[str],
@@ -153,12 +166,18 @@ class MilvusVectorStore(VectorStore):
             raise ValueError("metadata must match texts length")
 
         vecs = await self._embeddings.embed(texts)
-        self._ensure_collection(vecs.shape[1])
-        rows = []
-        for text, vector, extra in zip(texts, vecs, meta, strict=True):
-            row = {"text": text, "embedding": vector.tolist(), **extra}
-            rows.append(row)
-        self._client.insert(collection_name=self._collection_name, data=rows)
+        dim = int(vecs.shape[1])
+        rows = [
+            {"text": text, "metadata": dict(extra), "embedding": vector.tolist()}
+            for text, vector, extra in zip(texts, vecs, meta, strict=True)
+        ]
+
+        def _write() -> None:
+            # Blocking pymilvus client — run off the event loop to keep async alive.
+            self._ensure_collection(dim)
+            self._client.insert(collection_name=self._collection_name, data=rows)
+
+        await asyncio.to_thread(_write)
 
     async def search(
         self,
@@ -166,29 +185,33 @@ class MilvusVectorStore(VectorStore):
         top_k: int = 5,
         metadata_filter: dict | None = None,
     ) -> list[dict]:
-        if not self._client.has_collection(collection_name=self._collection_name):
-            return []
-
         q_vec = await self._embeddings.embed_one(query)
-        results = self._client.search(
-            collection_name=self._collection_name,
-            data=[q_vec.tolist()],
-            limit=top_k,
-            filter=self._build_expr(metadata_filter),
-            output_fields=["text"],
-            search_params=self._build_search_params(),
-        )
+        expr = self._build_expr(metadata_filter)
 
-        hits = results[0] if results and isinstance(results[0], list) else results or []
-        out: list[dict] = []
-        for hit in hits:
-            entity = self._entity_to_dict(getattr(hit, "entity", hit))
-            score = getattr(hit, "distance", getattr(hit, "score", 0.0))
-            out.append(
-                {
-                    "text": entity.get("text", ""),
-                    "score": float(score),
-                    "metadata": self._extract_metadata(entity),
-                }
+        def _query() -> list[dict]:
+            if not self._client.has_collection(collection_name=self._collection_name):
+                return []
+            results = self._client.search(
+                collection_name=self._collection_name,
+                data=[q_vec.tolist()],
+                limit=top_k,
+                filter=expr or "",
+                output_fields=["text", "metadata"],
+                search_params=self._build_search_params(),
             )
-        return out
+            hits = results[0] if results and isinstance(results[0], list) else results or []
+            out: list[dict] = []
+            for hit in hits:
+                entity = self._entity_to_dict(getattr(hit, "entity", hit))
+                score = getattr(hit, "distance", getattr(hit, "score", 0.0))
+                md = entity.get("metadata")
+                out.append(
+                    {
+                        "text": entity.get("text", ""),
+                        "score": float(score),
+                        "metadata": md if isinstance(md, dict) else {},
+                    }
+                )
+            return out
+
+        return await asyncio.to_thread(_query)
