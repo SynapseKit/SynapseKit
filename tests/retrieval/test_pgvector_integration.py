@@ -9,6 +9,7 @@ hid). Skips cleanly when Docker or the deps are unavailable.
 
 from __future__ import annotations
 
+import inspect
 import time
 
 import numpy as np
@@ -160,3 +161,13 @@ async def test_metadata_length_mismatch_raises(pg_conn_string):
     store = _store(pg_conn_string, "docs_mismatch")
     with pytest.raises(ValueError):
         await store.add(["a", "b"], [{"only": "one"}])
+
+
+def test_async_api_is_coroutine():
+    # SynapseKit is async-first: the public IO surface must stay coroutines.
+    store = PGVectorStore(
+        embedding_backend=KeywordEmbeddings(_VOCAB),
+        connection_string="postgresql://localhost/db",
+    )
+    assert inspect.iscoroutinefunction(store.add)
+    assert inspect.iscoroutinefunction(store.search)
