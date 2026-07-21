@@ -38,6 +38,7 @@ class S3Loader:
         aws_access_key_id: str | None = None,
         aws_secret_access_key: str | None = None,
         aws_session_token: str | None = None,
+        endpoint_url: str | None = None,
         max_files: int | None = None,
     ) -> None:
         if not bucket_name:
@@ -49,6 +50,9 @@ class S3Loader:
         self.aws_access_key_id = aws_access_key_id
         self.aws_secret_access_key = aws_secret_access_key
         self.aws_session_token = aws_session_token
+        # Custom endpoint for S3-compatible stores (MinIO, Cloudflare R2,
+        # LocalStack, …). Left None for real AWS S3.
+        self.endpoint_url = endpoint_url
         self.max_files = max_files
         self.file_extensions = self._normalize_extensions(file_extensions)
 
@@ -120,6 +124,13 @@ class S3Loader:
             kwargs["aws_secret_access_key"] = self.aws_secret_access_key
         if self.aws_session_token:
             kwargs["aws_session_token"] = self.aws_session_token
+        if self.endpoint_url:
+            kwargs["endpoint_url"] = self.endpoint_url
+            # S3-compatible endpoints addressed by host:port need path-style
+            # addressing (virtual-host style can't resolve a bare host/IP).
+            from botocore.config import Config
+
+            kwargs["config"] = Config(s3={"addressing_style": "path"})
         return boto3_module.client("s3", **kwargs)
 
     def _list_objects(self, client: Any) -> list[dict[str, Any]]:

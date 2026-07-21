@@ -10,6 +10,7 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
+- **`S3Loader` now supports S3-compatible endpoints** (#851) — a new optional `endpoint_url` parameter (with automatic path-style addressing) lets it load from MinIO, Cloudflare R2, DigitalOcean Spaces, and LocalStack, not just AWS S3. Covered by real MinIO testcontainers tests.
 
 - Spec test for a replayable `AgentSwarm` auction receipt (`tests/agents/test_agent_swarm_receipt.py`, `xfail` pending implementation) — captures task_id, reputation-prior version, budget consumed, and outcome-score provenance per auction so a reviewer can tell whether a market win reflects a real outcome or a stale/self-reported score; added as an acceptance criterion on #734 (h/t @clementineCU)
 - **`WorldModelRAG` Neo4j/Memgraph backend** — `Neo4jWorldGraphBackend` (Bolt; serves both Neo4j and Memgraph) with write-through persistence and live bounded-hop Cypher reads; selectable via `graph_backend="neo4j"` / `"memgraph"` (honoring `NEO4J_URI` / `NEO4J_USERNAME` / `NEO4J_PASSWORD`) or `WorldModelRAG.neo4j(...)`; plus a 10k-document offline demo and a hybrid-vs-vector-only retrieval accuracy benchmark with a CI regression gate; completes the remaining #735 acceptance criteria; contributed by [@Abhay-Mmmm](https://github.com/Abhay-Mmmm)
