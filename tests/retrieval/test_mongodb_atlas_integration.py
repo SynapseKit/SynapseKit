@@ -69,19 +69,54 @@ def atlas_uri():
                 time.sleep(1)
         else:
             raise RuntimeError(f"atlas-local did not become ready: {last_err}")
+        # Warm up mongot once here so its cold-start replica-set step-down is
+        # absorbed before any test runs, not mid-test. _prepare_collection is
+        # fully transient-tolerant, so this settles the deployment.
+        _prepare_collection(uri, "_warmup")
         yield uri
 
 
+# Transient replica-set / search-service error codes atlas-local throws while
+# mongot initializes on cold start: NotPrimary, InterruptedAtShutdown, and
+# "Error connecting to Search Index Management service" (125).
+_TRANSIENT_CODES = {125, 11600, 91, 189, 10107, 13435, 13436}
+
+
+def _is_transient(exc: Exception) -> bool:
+    from pymongo.errors import AutoReconnect, NotPrimaryError, OperationFailure
+
+    if isinstance(exc, (NotPrimaryError, AutoReconnect)):
+        return True
+    return isinstance(exc, OperationFailure) and getattr(exc, "code", None) in _TRANSIENT_CODES
+
+
+def _retry_sync(fn, *, tries: int = 180, desc: str = "op"):
+    last: Exception | None = None
+    for _ in range(tries):
+        try:
+            return fn()
+        except Exception as exc:
+            if not _is_transient(exc):
+                raise
+            last = exc
+            time.sleep(1)
+    raise RuntimeError(f"{desc} kept failing on a transient error: {last}")
+
+
 def _prepare_collection(uri: str, collection: str) -> None:
-    """Create the vector search index on a fresh collection and wait until queryable."""
+    """Create the vector search index on a fresh collection and wait until queryable.
+
+    Every server op is transient-tolerant: on cold start (esp. in CI) atlas-local's
+    single-node replica set steps down and its search service reconnects while
+    mongot initializes, so any op here may briefly hit NotPrimary / code 125.
+    """
     from pymongo import MongoClient
-    from pymongo.errors import OperationFailure
     from pymongo.operations import SearchIndexModel
 
     client = MongoClient(uri)
     coll = client[_DB][collection]
-    coll.insert_one({"_seed": True})  # collection must exist before createSearchIndex
-    coll.delete_many({"_seed": True})
+    _retry_sync(lambda: coll.insert_one({"_seed": True}), desc="seed insert")
+    _retry_sync(lambda: coll.delete_many({"_seed": True}), desc="seed cleanup")
     model = SearchIndexModel(
         definition={
             "fields": [
@@ -97,21 +132,15 @@ def _prepare_collection(uri: str, collection: str) -> None:
         name="vector_index",
         type="vectorSearch",
     )
-    # The atlas-local search service (mongot) comes up after mongod, so index
-    # creation can fail with "Error connecting to Search Index Management
-    # service" for a while — retry until it accepts the request.
-    last_err: Exception | None = None
-    for _ in range(90):
+    _retry_sync(lambda: coll.create_search_index(model=model), desc="create search index")
+    for _ in range(180):
         try:
-            coll.create_search_index(model=model)
-            break
-        except OperationFailure as exc:
-            last_err = exc
+            info = list(coll.list_search_indexes("vector_index"))
+        except Exception as exc:
+            if not _is_transient(exc):
+                raise
             time.sleep(1)
-    else:
-        raise RuntimeError(f"search index management not ready: {last_err}")
-    for _ in range(120):
-        info = list(coll.list_search_indexes("vector_index"))
+            continue
         if info and info[0].get("queryable"):
             break
         time.sleep(1)
