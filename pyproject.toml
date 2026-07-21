@@ -298,6 +298,9 @@ integration = [
     "asyncpg>=0.29",
     "boto3>=1.26",
     "sqlalchemy>=2.0",
+    # Azurite (the Azure Storage emulator) lags the azure-storage-blob default
+    # API version; pin to a range Azurite accepts so the loader integration test runs.
+    "azure-storage-blob>=12.0,<12.20",
 ]
 
 [tool.hatch.build.targets.wheel]
