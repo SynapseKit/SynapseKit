@@ -11251,6 +11251,7 @@ integration = [
     { name = "qdrant-client" },
     { name = "redis" },
     { name = "testcontainers" },
+    { name = "weaviate-client" },
 ]
 
 [package.metadata]
@@ -11511,6 +11512,7 @@ integration = [
     { name = "qdrant-client", specifier = ">=1.9" },
     { name = "redis", specifier = ">=5.0" },
     { name = "testcontainers", specifier = ">=4.0" },
+    { name = "weaviate-client", specifier = ">=4.0" },
 ]
 
 [[package]]

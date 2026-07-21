@@ -289,6 +289,7 @@ integration = [
     "elasticsearch>=8.0,<9",
     "pymongo>=4.0",
     "qdrant-client>=1.9",
+    "weaviate-client>=4.0",
 ]
 
 [tool.hatch.build.targets.wheel]
