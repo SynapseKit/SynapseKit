@@ -74,9 +74,7 @@ def redis_url():
 
 
 def _store(url: str, index: str) -> RedisVectorStore:
-    return RedisVectorStore(
-        embedding_backend=KeywordEmbeddings(_VOCAB), url=url, index_name=index
-    )
+    return RedisVectorStore(embedding_backend=KeywordEmbeddings(_VOCAB), url=url, index_name=index)
 
 
 @pytest.mark.asyncio
@@ -98,9 +96,7 @@ async def test_add_and_search_returns_true_nearest_neighbor(redis_url):
 @pytest.mark.asyncio
 async def test_metadata_filter(redis_url):
     store = _store(redis_url, "filter_idx")
-    await store.add(
-        ["apple fruit", "car vehicle"], [{"kind": "fruit"}, {"kind": "auto"}]
-    )
+    await store.add(["apple fruit", "car vehicle"], [{"kind": "fruit"}, {"kind": "auto"}])
     results = await store.search("apple car", top_k=5, metadata_filter={"kind": "auto"})
     assert [r["text"] for r in results] == ["car vehicle"]
 
