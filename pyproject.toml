@@ -290,6 +290,8 @@ integration = [
     "pymongo>=4.0",
     "qdrant-client>=1.9",
     "weaviate-client>=4.0",
+    "pymilvus>=2.4",
+    "milvus-lite>=2.4",
 ]
 
 [tool.hatch.build.targets.wheel]

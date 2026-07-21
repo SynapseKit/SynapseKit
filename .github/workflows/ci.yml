@@ -57,4 +57,4 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
       - run: uv sync --group dev --group integration
-      - run: uv run pytest tests/retrieval/test_world_model.py tests/retrieval/test_property_graph.py tests/retrieval/test_pgvector_integration.py tests/retrieval/test_redis_vector_integration.py tests/retrieval/test_elasticsearch_vector_integration.py tests/retrieval/test_mongodb_atlas_integration.py tests/retrieval/test_qdrant_integration.py tests/retrieval/test_weaviate_integration.py -v
+      - run: uv run pytest tests/retrieval/test_world_model.py tests/retrieval/test_property_graph.py tests/retrieval/test_pgvector_integration.py tests/retrieval/test_redis_vector_integration.py tests/retrieval/test_elasticsearch_vector_integration.py tests/retrieval/test_mongodb_atlas_integration.py tests/retrieval/test_qdrant_integration.py tests/retrieval/test_weaviate_integration.py tests/retrieval/test_milvus_integration.py -v
