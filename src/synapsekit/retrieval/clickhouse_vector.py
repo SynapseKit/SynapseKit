@@ -84,12 +84,21 @@ class ClickHouseVectorStore(VectorStore):
     def _search_sync(
         self, q_vec: list[float], top_k: int, metadata_filter: dict | None
     ) -> list[dict]:
-        vec_literal = "[" + ",".join(str(x) for x in q_vec) + "]"
+        # Validate/cast top_k so it can never carry injected SQL into the LIMIT
+        # clause (it's interpolated, not a bound parameter).
+        limit = int(top_k)
+        if limit <= 0:
+            raise ValueError(f"top_k must be a positive integer, got {top_k!r}")
+        # Table may not exist yet (search before add, or a fresh reconnected instance).
+        exists = self._client.command(f"EXISTS TABLE {self._q(self._table_name)}")
+        if str(exists).strip() != "1":
+            return []
+        vec_literal = "[" + ",".join(str(float(x)) for x in q_vec) + "]"
         sql = (
             f"SELECT text, metadata, L2Distance(embedding, {vec_literal}) AS score "
             f"FROM {self._q(self._table_name)} "
             f"ORDER BY score ASC "
-            f"LIMIT {top_k}"
+            f"LIMIT {limit}"
         )
         result = self._client.query(sql)
         rows = result.result_rows
@@ -127,8 +136,9 @@ class ClickHouseVectorStore(VectorStore):
         top_k: int = 5,
         metadata_filter: dict | None = None,
     ) -> list[dict]:
-        if not self._table_created:
-            return []
+        # No early-return on an uncreated table: a reconnected instance has no
+        # cached flag but the table may already exist. _search_sync checks
+        # EXISTS TABLE and returns [] when it genuinely doesn't.
         q_vec = await self._embeddings.embed_one(query)
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(
