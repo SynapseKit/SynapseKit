@@ -52,20 +52,20 @@ class ElasticsearchVectorStore(VectorStore):
             self._index_created = True
             self._dims = dim
             return
+        # Modern elasticsearch-py: pass `mappings=` directly. The old `body=`
+        # form is deprecated in 8.x and removed in 9.x.
         self._es.indices.create(
             index=self._index_name,
-            body={
-                "mappings": {
-                    "properties": {
-                        "text": {"type": "text"},
-                        "metadata": {"type": "object"},
-                        "embedding": {
-                            "type": "dense_vector",
-                            "dims": dim,
-                            "index": True,
-                            "similarity": "cosine",
-                        },
-                    }
+            mappings={
+                "properties": {
+                    "text": {"type": "text"},
+                    "metadata": {"type": "object"},
+                    "embedding": {
+                        "type": "dense_vector",
+                        "dims": dim,
+                        "index": True,
+                        "similarity": "cosine",
+                    },
                 }
             },
         )
@@ -87,15 +87,22 @@ class ElasticsearchVectorStore(VectorStore):
     def _search_sync(
         self, q_vec: list[float], top_k: int, metadata_filter: dict | None
     ) -> list[dict]:
-        query: dict = {
-            "knn": {
-                "field": "embedding",
-                "query_vector": q_vec,
-                "k": top_k,
-                "num_candidates": top_k * 10,
-            }
+        from elasticsearch import NotFoundError
+
+        knn = {
+            "field": "embedding",
+            "query_vector": q_vec,
+            "k": top_k,
+            "num_candidates": top_k * 10,
         }
-        resp = self._es.search(index=self._index_name, body=query, size=top_k)
+        try:
+            # Modern elasticsearch-py: `knn=` top-level param (not `body=`, which
+            # is deprecated in 8.x and removed in 9.x).
+            resp = self._es.search(index=self._index_name, knn=knn, size=top_k)
+        except NotFoundError:
+            # Index doesn't exist yet (search before add, or a genuinely missing
+            # index) — treat as no results.
+            return []
         results = []
         for hit in resp["hits"]["hits"]:
             src = hit["_source"]
@@ -134,8 +141,9 @@ class ElasticsearchVectorStore(VectorStore):
         top_k: int = 5,
         metadata_filter: dict | None = None,
     ) -> list[dict]:
-        if not self._index_created and self._dims is None:
-            return []
+        # No early-return on an uncached index: a freshly reconnected instance
+        # has no cached dim but the index may already exist in Elasticsearch.
+        # `_search_sync` returns [] via NotFoundError when it genuinely doesn't.
         q_vec = await self._embeddings.embed_one(query)
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(
