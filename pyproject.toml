@@ -295,6 +295,7 @@ integration = [
     "cassandra-driver>=3.28",
     "clickhouse-connect>=0.7",
     "opensearch-py>=2.0",
+    "asyncpg>=0.29",
 ]
 
 [tool.hatch.build.targets.wheel]
