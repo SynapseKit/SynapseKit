@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
@@ -869,6 +870,244 @@ class KuzuWorldGraphBackend(InMemoryWorldGraphBackend):
         return self._conn.execute(query, parameters)
 
 
+class Neo4jWorldGraphBackend(InMemoryWorldGraphBackend):
+    """Neo4j/Memgraph-backed world graph with live bounded-hop Cypher reads.
+
+    Both Neo4j and Memgraph speak the Bolt protocol, so this one class serves
+    both. Writes go through the inherited ``InMemoryWorldGraphBackend`` (which
+    also gives seed lookup via the name index) and are additionally persisted
+    to the external store. Unlike ``KuzuWorldGraphBackend``, reads
+    (``query_subgraph``, ``to_mermaid``) are served by live Cypher traversal
+    against Neo4j, not the in-memory mirror, so durability and multi-process
+    reads actually work for this backend.
+    """
+
+    def __init__(
+        self,
+        uri: str,
+        *,
+        username: str = "neo4j",
+        password: str = "password",
+        database: str | None = None,
+        resolver: EntityResolver | None = None,
+    ) -> None:
+        super().__init__(resolver=resolver)
+        try:
+            from neo4j import GraphDatabase
+        except ImportError as exc:
+            raise ImportError(
+                "Neo4jWorldGraphBackend requires the 'neo4j' package. "
+                "Install SynapseKit with the graph extra."
+            ) from exc
+
+        self.uri = uri
+        self._driver = GraphDatabase.driver(uri, auth=(username, password))
+        self._database = database
+
+    def upsert_entity(self, entity: EntityMention, doc_id: str) -> WorldModelNode:
+        node = super().upsert_entity(entity, doc_id)
+        self._persist_entity(node)
+        self._persist_document(doc_id)
+        self._run(
+            "MATCH (d:WorldModelDocument {id: $doc_id}), (e:WorldModelEntity {id: $entity_id}) "
+            "MERGE (d)-[:MENTIONS]->(e)",
+            doc_id=doc_id,
+            entity_id=node.id,
+        )
+        return node
+
+    def upsert_relation(self, relation: RelationMention, doc_id: str) -> WorldModelEdge | None:
+        edge = super().upsert_relation(relation, doc_id)
+        if edge is None:
+            return None
+        self._persist_document(doc_id)
+        self._persist_edge(edge)
+        return edge
+
+    def close(self) -> None:
+        self._driver.close()
+
+    def query_subgraph(
+        self,
+        query: str,
+        *,
+        max_hops: int = 2,
+        as_of: str | datetime | None = None,
+        min_confidence: float = 0.0,
+    ) -> GraphQueryResult:
+        # Seed lookup only needs the name index, which the write-through
+        # mirror keeps up to date; the actual traversal reads live from Neo4j.
+        seeds = self._query_seeds(query)
+        if not seeds:
+            seeds = self._fallback_seeds(query)
+        if not seeds:
+            return GraphQueryResult(nodes=[], edges=[], documents=[], query_entities=[])
+
+        hops = int(max_hops)
+        if hops < 0:
+            raise ValueError("max_hops must be non-negative")
+        timestamp = _parse_datetime(as_of)
+        as_of_iso = timestamp.isoformat() if timestamp else None
+
+        with self._driver.session(database=self._database) as session:
+            node_rows = session.run(
+                f"""
+                MATCH path=(n:WorldModelEntity)-[:WORLD_RELATES*0..{hops}]-(m:WorldModelEntity)
+                WHERE n.id IN $ids
+                UNWIND nodes(path) AS node
+                RETURN DISTINCT node
+                """,
+                ids=seeds,
+            )
+            nodes = {row["node"]["id"]: self._node_from_record(row["node"]) for row in node_rows}
+
+            edges: dict[str, WorldModelEdge] = {}
+            if hops > 0:
+                edge_rows = session.run(
+                    f"""
+                    MATCH path=(n:WorldModelEntity)-[:WORLD_RELATES*1..{hops}]-(m:WorldModelEntity)
+                    WHERE n.id IN $ids
+                    UNWIND relationships(path) AS rel
+                    WITH DISTINCT rel
+                    WHERE coalesce(rel.confidence, 1.0) >= $min_confidence
+                      AND ($as_of IS NULL OR rel.valid_at IS NULL OR rel.valid_at <= $as_of)
+                      AND ($as_of IS NULL OR rel.valid_until IS NULL OR rel.valid_until > $as_of)
+                    RETURN startNode(rel).id AS subject_id, endNode(rel).id AS object_id, rel
+                    """,
+                    ids=seeds,
+                    min_confidence=min_confidence,
+                    as_of=as_of_iso,
+                )
+                for row in edge_rows:
+                    edge = self._edge_from_record(row["subject_id"], row["object_id"], row["rel"])
+                    edges[edge.id] = edge
+
+            doc_rows = session.run(
+                """
+                MATCH (d:WorldModelDocument)-[:MENTIONS]->(e:WorldModelEntity)
+                WHERE e.id IN $ids
+                RETURN DISTINCT d.id AS doc
+                """,
+                ids=list(nodes),
+            )
+            documents = sorted(str(row["doc"]) for row in doc_rows)
+
+        return GraphQueryResult(
+            nodes=[nodes[node_id] for node_id in sorted(nodes)],
+            edges=[edges[edge_id] for edge_id in sorted(edges)],
+            documents=documents,
+            query_entities=[self.nodes[seed].name for seed in seeds if seed in self.nodes],
+        )
+
+    def to_mermaid(self, result: GraphQueryResult | None = None) -> str:
+        if result is None:
+            result = self._live_snapshot()
+        return super().to_mermaid(result)
+
+    def _live_snapshot(self) -> GraphQueryResult:
+        with self._driver.session(database=self._database) as session:
+            node_rows = session.run("MATCH (n:WorldModelEntity) RETURN n AS node")
+            nodes = {row["node"]["id"]: self._node_from_record(row["node"]) for row in node_rows}
+            edge_rows = session.run(
+                "MATCH (s:WorldModelEntity)-[r:WORLD_RELATES]->(o:WorldModelEntity) "
+                "RETURN s.id AS subject_id, o.id AS object_id, r"
+            )
+            edges = {
+                edge.id: edge
+                for edge in (
+                    self._edge_from_record(row["subject_id"], row["object_id"], row["r"])
+                    for row in edge_rows
+                )
+            }
+        return GraphQueryResult(
+            nodes=[nodes[node_id] for node_id in sorted(nodes)],
+            edges=[edges[edge_id] for edge_id in sorted(edges)],
+            documents=[],
+            query_entities=[],
+        )
+
+    @staticmethod
+    def _node_from_record(record: Any) -> WorldModelNode:
+        data = dict(record)
+        return WorldModelNode(
+            id=str(data["id"]),
+            name=str(data.get("name", data["id"])),
+            type=str(data.get("kind", "entity")),
+            aliases=set(json.loads(data.get("aliases") or "[]")),
+            confidence=float(data.get("confidence", 1.0)),
+            provenance=set(json.loads(data.get("provenance") or "[]")),
+            created_at=_parse_datetime(data.get("created_at")) or datetime.now(UTC),
+            updated_at=_parse_datetime(data.get("updated_at")) or datetime.now(UTC),
+        )
+
+    @staticmethod
+    def _edge_from_record(subject_id: str, object_id: str, record: Any) -> WorldModelEdge:
+        data = dict(record)
+        return WorldModelEdge(
+            id=str(data["id"]),
+            subject_id=str(subject_id),
+            predicate=str(data.get("predicate", "related_to")),
+            object_id=str(object_id),
+            confidence=float(data.get("confidence", 1.0)),
+            valid_at=_parse_datetime(data.get("valid_at")),
+            valid_until=_parse_datetime(data.get("valid_until")),
+            causal=bool(data.get("causal", False)),
+            provenance=set(json.loads(data.get("provenance") or "[]")),
+        )
+
+    def _persist_document(self, doc_id: str) -> None:
+        self._run("MERGE (:WorldModelDocument {id: $id})", id=doc_id)
+
+    def _persist_entity(self, node: WorldModelNode) -> None:
+        self._run(
+            """
+            MERGE (e:WorldModelEntity {id: $id})
+            SET e.name = $name,
+                e.kind = $kind,
+                e.aliases = $aliases,
+                e.confidence = $confidence,
+                e.provenance = $provenance,
+                e.created_at = $created_at,
+                e.updated_at = $updated_at
+            """,
+            id=node.id,
+            name=node.name,
+            kind=node.type,
+            aliases=json.dumps(sorted(node.aliases)),
+            confidence=node.confidence,
+            provenance=json.dumps(sorted(node.provenance)),
+            created_at=node.created_at.isoformat(),
+            updated_at=node.updated_at.isoformat(),
+        )
+
+    def _persist_edge(self, edge: WorldModelEdge) -> None:
+        self._run(
+            """
+            MATCH (s:WorldModelEntity {id: $subject_id}), (o:WorldModelEntity {id: $object_id})
+            MERGE (s)-[r:WORLD_RELATES {id: $id}]->(o)
+            SET r.predicate = $predicate,
+                r.confidence = $confidence,
+                r.causal = $causal,
+                r.provenance = $provenance,
+                r.valid_at = $valid_at,
+                r.valid_until = $valid_until
+            """,
+            id=edge.id,
+            subject_id=edge.subject_id,
+            object_id=edge.object_id,
+            predicate=edge.predicate,
+            confidence=edge.confidence,
+            causal=edge.causal,
+            provenance=json.dumps(sorted(edge.provenance)),
+            valid_at=edge.valid_at.isoformat() if edge.valid_at else None,
+            valid_until=edge.valid_until.isoformat() if edge.valid_until else None,
+        )
+
+    def _run(self, query: str, **parameters: Any) -> None:
+        with self._driver.session(database=self._database) as session:
+            session.run(query, **parameters)
+
+
 class CausalLinker:
     """Scores candidate causal edges with optional NeuroSymbolicAgent-style verifier."""
 
@@ -1074,6 +1313,22 @@ class WorldModelRAG:
 
         return KuzuWorldGraphBackend(path, resolver=resolver)
 
+    @classmethod
+    def neo4j(
+        cls,
+        uri: str,
+        *,
+        username: str = "neo4j",
+        password: str = "password",
+        database: str | None = None,
+        resolver: EntityResolver | None = None,
+    ) -> Neo4jWorldGraphBackend:
+        """Create an optional Neo4j/Memgraph graph backend for ``WorldModelRAG``."""
+
+        return Neo4jWorldGraphBackend(
+            uri, username=username, password=password, database=database, resolver=resolver
+        )
+
     async def ingest(self, docs: list[str] | list[Any]) -> None:
         """Ingest documents into both the vector index and world graph."""
         # Collect all (text, metadata, doc_id) first, then add to the vector index
@@ -1119,6 +1374,16 @@ class WorldModelRAG:
     def ingest_sync(self, docs: list[str] | list[Any]) -> None:
         """Sync wrapper for ``ingest``."""
         run_sync(self.ingest(docs))
+
+    def close(self) -> None:
+        """Release resources held by the graph backend (e.g. a Neo4j driver).
+
+        No-op for backends that don't need explicit teardown, such as
+        ``InMemoryWorldGraphBackend``.
+        """
+        close = getattr(self.graph_backend, "close", None)
+        if callable(close):
+            close()
 
     def delete_by_metadata(self, key: str, values: set[str]) -> int:
         """Delete vector-store entries whose ``metadata[key]`` is in ``values``.
@@ -1207,7 +1472,19 @@ class WorldModelRAG:
             if backend == "in_memory":
                 return InMemoryWorldGraphBackend(resolver=resolver)
             if backend == "kuzu":
-                return KuzuWorldGraphBackend(Path.home() / ".synapsekit" / "world_model.kuzu")
+                return KuzuWorldGraphBackend(
+                    Path.home() / ".synapsekit" / "world_model.kuzu", resolver=resolver
+                )
+            if backend in ("neo4j", "memgraph"):
+                # No per-backend config object exists yet, so honor NEO4J_* env
+                # vars (the standard names for both Neo4j and Memgraph's Bolt
+                # driver) rather than hardcoding a single local dev endpoint.
+                return Neo4jWorldGraphBackend(
+                    os.environ.get("NEO4J_URI", "bolt://localhost:7687"),
+                    username=os.environ.get("NEO4J_USERNAME", "neo4j"),
+                    password=os.environ.get("NEO4J_PASSWORD", "password"),
+                    resolver=resolver,
+                )
             return ExternalWorldGraphBackend(backend)
         return backend
 
