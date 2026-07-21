@@ -89,6 +89,8 @@ class OpenSearchVectorStore(VectorStore):
     def _search_sync(
         self, q_vec: list[float], top_k: int, metadata_filter: dict | None
     ) -> list[dict]:
+        from opensearchpy.exceptions import NotFoundError
+
         body = {
             "size": top_k,
             "query": {
@@ -100,7 +102,11 @@ class OpenSearchVectorStore(VectorStore):
                 }
             },
         }
-        resp = self._os.search(index=self._index_name, body=body)
+        try:
+            resp = self._os.search(index=self._index_name, body=body)
+        except NotFoundError:
+            # Index doesn't exist yet (search before add, or a fresh reconnect).
+            return []
         results = []
         for hit in resp["hits"]["hits"]:
             src = hit["_source"]
@@ -139,8 +145,9 @@ class OpenSearchVectorStore(VectorStore):
         top_k: int = 5,
         metadata_filter: dict | None = None,
     ) -> list[dict]:
-        if not self._index_created and self._dims is None:
-            return []
+        # No early-return on an uncreated index: a reconnected instance has no
+        # cached dim but the index may already exist. _search_sync returns []
+        # via NotFoundError when it genuinely doesn't.
         q_vec = await self._embeddings.embed_one(query)
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(
