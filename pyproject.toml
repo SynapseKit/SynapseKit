@@ -286,6 +286,7 @@ integration = [
     "psycopg[binary]>=3.1",
     "pgvector>=0.2",
     "redis>=5.0",
+    "elasticsearch>=8.0,<9",
 ]
 
 [tool.hatch.build.targets.wheel]
