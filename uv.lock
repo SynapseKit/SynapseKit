@@ -11258,6 +11258,7 @@ dev = [
 ]
 integration = [
     { name = "asyncpg" },
+    { name = "boto3" },
     { name = "cassandra-driver" },
     { name = "clickhouse-connect" },
     { name = "elasticsearch" },
@@ -11526,6 +11527,7 @@ dev = [
 ]
 integration = [
     { name = "asyncpg", specifier = ">=0.29" },
+    { name = "boto3", specifier = ">=1.26" },
     { name = "cassandra-driver", specifier = ">=3.28" },
     { name = "clickhouse-connect", specifier = ">=0.7" },
     { name = "elasticsearch", specifier = ">=8.0,<9" },
