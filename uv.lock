@@ -11257,6 +11257,7 @@ dev = [
     { name = "tzdata" },
 ]
 integration = [
+    { name = "asyncpg" },
     { name = "cassandra-driver" },
     { name = "clickhouse-connect" },
     { name = "elasticsearch" },
@@ -11524,6 +11525,7 @@ dev = [
     { name = "tzdata", specifier = ">=2024.1" },
 ]
 integration = [
+    { name = "asyncpg", specifier = ">=0.29" },
     { name = "cassandra-driver", specifier = ">=3.28" },
     { name = "clickhouse-connect", specifier = ">=0.7" },
     { name = "elasticsearch", specifier = ">=8.0,<9" },
