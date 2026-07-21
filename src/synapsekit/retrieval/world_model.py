@@ -870,6 +870,19 @@ class KuzuWorldGraphBackend(InMemoryWorldGraphBackend):
         return self._conn.execute(query, parameters)
 
 
+# Cypher fragment: is a single relationship ``r`` valid under the confidence and
+# bitemporal filters? Mirrors ``InMemoryWorldGraphBackend`` traversal pruning:
+# ``edge.confidence >= min_confidence`` and ``_edge_active(edge, as_of)``.
+_REL_VALID_PREDICATE = (
+    "coalesce(r.confidence, 1.0) >= $min_confidence "
+    "AND ($as_of IS NULL OR r.valid_at IS NULL OR r.valid_at <= $as_of) "
+    "AND ($as_of IS NULL OR r.valid_until IS NULL OR r.valid_until > $as_of)"
+)
+# Same predicate applied to *every* relationship on a traversed path, so a node
+# reachable only through an invalid/expired/low-confidence edge is not returned.
+_REL_LIST_VALID_PREDICATE = f"all(r IN rels WHERE {_REL_VALID_PREDICATE})"
+
+
 class Neo4jWorldGraphBackend(InMemoryWorldGraphBackend):
     """Neo4j/Memgraph-backed world graph with live bounded-hop Cypher reads.
 
@@ -908,12 +921,7 @@ class Neo4jWorldGraphBackend(InMemoryWorldGraphBackend):
         node = super().upsert_entity(entity, doc_id)
         self._persist_entity(node)
         self._persist_document(doc_id)
-        self._run(
-            "MATCH (d:WorldModelDocument {id: $doc_id}), (e:WorldModelEntity {id: $entity_id}) "
-            "MERGE (d)-[:MENTIONS]->(e)",
-            doc_id=doc_id,
-            entity_id=node.id,
-        )
+        self._persist_mention(doc_id, node.id)
         return node
 
     def upsert_relation(self, relation: RelationMention, doc_id: str) -> WorldModelEdge | None:
@@ -921,6 +929,12 @@ class Neo4jWorldGraphBackend(InMemoryWorldGraphBackend):
         if edge is None:
             return None
         self._persist_document(doc_id)
+        # Mirror the in-memory backend, which records the relation's document
+        # against *both* endpoints (``_documents_by_node``); without these
+        # MENTIONS edges, ``query_subgraph`` would drop relation-provenance
+        # documents that in-memory keeps.
+        self._persist_mention(doc_id, edge.subject_id)
+        self._persist_mention(doc_id, edge.object_id)
         self._persist_edge(edge)
         return edge
 
@@ -950,31 +964,30 @@ class Neo4jWorldGraphBackend(InMemoryWorldGraphBackend):
         as_of_iso = timestamp.isoformat() if timestamp else None
 
         with self._driver.session(database=self._database) as session:
-            node_rows = session.run(
-                f"""
-                MATCH path=(n:WorldModelEntity)-[:WORLD_RELATES*0..{hops}]-(m:WorldModelEntity)
-                WHERE n.id IN $ids
-                UNWIND nodes(path) AS node
-                RETURN DISTINCT node
-                """,
-                ids=seeds,
-            )
-            nodes = {row["node"]["id"]: self._node_from_record(row["node"]) for row in node_rows}
+            # Nodes/documents: only those reachable via a fully-valid path, so
+            # confidence/as_of filtering prunes the traversal exactly like the
+            # in-memory BFS (a node reached only through an invalid edge, and its
+            # documents, must not leak into the result).
+            nodes = self._valid_path_nodes(session, seeds, hops, min_confidence, as_of_iso)
 
             edges: dict[str, WorldModelEdge] = {}
             if hops > 0:
+                # BFS-edge parity: an edge is returned iff it is itself valid AND
+                # at least one endpoint is reachable via a fully-valid path of
+                # length <= hops-1 -- i.e. a node the in-memory BFS would expand.
+                # That endpoint's neighbour is then within hops, so both ends are
+                # already in ``nodes``.
+                inner_ids = list(
+                    self._valid_path_nodes(session, seeds, hops - 1, min_confidence, as_of_iso)
+                )
                 edge_rows = session.run(
                     f"""
-                    MATCH path=(n:WorldModelEntity)-[:WORLD_RELATES*1..{hops}]-(m:WorldModelEntity)
-                    WHERE n.id IN $ids
-                    UNWIND relationships(path) AS rel
-                    WITH DISTINCT rel
-                    WHERE coalesce(rel.confidence, 1.0) >= $min_confidence
-                      AND ($as_of IS NULL OR rel.valid_at IS NULL OR rel.valid_at <= $as_of)
-                      AND ($as_of IS NULL OR rel.valid_until IS NULL OR rel.valid_until > $as_of)
-                    RETURN startNode(rel).id AS subject_id, endNode(rel).id AS object_id, rel
+                    MATCH (s:WorldModelEntity)-[r:WORLD_RELATES]->(o:WorldModelEntity)
+                    WHERE (s.id IN $inner_ids OR o.id IN $inner_ids)
+                      AND {_REL_VALID_PREDICATE}
+                    RETURN s.id AS subject_id, o.id AS object_id, r AS rel
                     """,
-                    ids=seeds,
+                    inner_ids=inner_ids,
                     min_confidence=min_confidence,
                     as_of=as_of_iso,
                 )
@@ -998,6 +1011,36 @@ class Neo4jWorldGraphBackend(InMemoryWorldGraphBackend):
             documents=documents,
             query_entities=[self.nodes[seed].name for seed in seeds if seed in self.nodes],
         )
+
+    def _valid_path_nodes(
+        self,
+        session: Any,
+        seeds: list[str],
+        hops: int,
+        min_confidence: float,
+        as_of_iso: str | None,
+    ) -> dict[str, WorldModelNode]:
+        """Nodes reachable from ``seeds`` via paths of length ``0..hops`` whose
+        every relationship passes the confidence/temporal filters.
+
+        The Neo4j analogue of ``InMemoryWorldGraphBackend``'s pruned BFS: the
+        zero-length path always yields the seed itself, so isolated seeds are
+        still returned, and a node reachable only through an invalid edge is not.
+        """
+        if hops < 0:
+            return {}
+        rows = session.run(
+            f"""
+            MATCH path=(n:WorldModelEntity)-[rels:WORLD_RELATES*0..{hops}]-(m:WorldModelEntity)
+            WHERE n.id IN $ids AND {_REL_LIST_VALID_PREDICATE}
+            UNWIND nodes(path) AS node
+            RETURN DISTINCT node
+            """,
+            ids=seeds,
+            min_confidence=min_confidence,
+            as_of=as_of_iso,
+        )
+        return {row["node"]["id"]: self._node_from_record(row["node"]) for row in rows}
 
     def to_mermaid(self, result: GraphQueryResult | None = None) -> str:
         if result is None:
@@ -1057,6 +1100,14 @@ class Neo4jWorldGraphBackend(InMemoryWorldGraphBackend):
 
     def _persist_document(self, doc_id: str) -> None:
         self._run("MERGE (:WorldModelDocument {id: $id})", id=doc_id)
+
+    def _persist_mention(self, doc_id: str, entity_id: str) -> None:
+        self._run(
+            "MATCH (d:WorldModelDocument {id: $doc_id}), (e:WorldModelEntity {id: $entity_id}) "
+            "MERGE (d)-[:MENTIONS]->(e)",
+            doc_id=doc_id,
+            entity_id=entity_id,
+        )
 
     def _persist_entity(self, node: WorldModelNode) -> None:
         self._run(

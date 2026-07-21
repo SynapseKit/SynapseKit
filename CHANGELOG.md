@@ -12,6 +12,11 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 
 - Spec test for a replayable `AgentSwarm` auction receipt (`tests/agents/test_agent_swarm_receipt.py`, `xfail` pending implementation) — captures task_id, reputation-prior version, budget consumed, and outcome-score provenance per auction so a reviewer can tell whether a market win reflects a real outcome or a stale/self-reported score; added as an acceptance criterion on #734 (h/t @clementineCU)
+- **`WorldModelRAG` Neo4j/Memgraph backend** — `Neo4jWorldGraphBackend` (Bolt; serves both Neo4j and Memgraph) with write-through persistence and live bounded-hop Cypher reads; selectable via `graph_backend="neo4j"` / `"memgraph"` (honoring `NEO4J_URI` / `NEO4J_USERNAME` / `NEO4J_PASSWORD`) or `WorldModelRAG.neo4j(...)`; plus a 10k-document offline demo and a hybrid-vs-vector-only retrieval accuracy benchmark with a CI regression gate; completes the remaining #735 acceptance criteria; contributed by [@Abhay-Mmmm](https://github.com/Abhay-Mmmm)
+
+### Fixed
+
+- **`Neo4jWorldGraphBackend.query_subgraph` now filters nodes and documents by `min_confidence` / `as_of`, not just the returned edges** (#826) — a `neo4j` / `memgraph` graph backend previously returned entities (and their source documents) reachable only through low-confidence or time-expired edges, diverging from the in-memory backend on confidence-filtered and time-travel queries; `upsert_relation` now also records relation-provenance documents against both endpoints. Verified for parity against a live Neo4j via testcontainers.
 
 ---
 
