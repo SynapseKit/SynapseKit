@@ -22,7 +22,14 @@ class PostgresMemoryBackend(BaseMemoryBackend):
         except ImportError:
             raise ImportError("asyncpg required: pip install asyncpg") from None
 
-        self._pool = await asyncpg.create_pool(self._dsn)
+        async def _init_conn(conn) -> None:
+            # asyncpg returns JSON/JSONB as raw strings by default; register a
+            # codec so embedding/metadata round-trip as native list/dict.
+            await conn.set_type_codec(
+                "jsonb", encoder=json.dumps, decoder=json.loads, schema="pg_catalog"
+            )
+
+        self._pool = await asyncpg.create_pool(self._dsn, init=_init_conn)
         assert self._pool is not None
         async with self._pool.acquire() as conn:
             await conn.execute(
@@ -89,12 +96,12 @@ class PostgresMemoryBackend(BaseMemoryBackend):
                 record.agent_id,
                 record.content,
                 record.memory_type,
-                json.dumps(record.embedding),
+                record.embedding,
                 record.created_at.timestamp(),
                 record.accessed_at.timestamp(),
                 record.access_count,
                 record.ttl_days,
-                json.dumps(record.metadata),
+                record.metadata,
             )
 
     async def fetch(
