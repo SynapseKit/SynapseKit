@@ -8,6 +8,7 @@ Skips cleanly when Docker or the deps are unavailable. Part of epic #829.
 
 from __future__ import annotations
 
+import inspect
 import time
 
 import numpy as np
@@ -137,3 +138,12 @@ async def test_metadata_length_mismatch_raises(redis_url):
     store = _store(redis_url, "mismatch_idx")
     with pytest.raises(ValueError):
         await store.add(["a", "b"], [{"only": "one"}])
+
+
+def test_async_api_is_coroutine():
+    # SynapseKit is async-first: the public IO surface must stay coroutines.
+    store = RedisVectorStore(
+        embedding_backend=KeywordEmbeddings(_VOCAB), url="redis://localhost:6379"
+    )
+    assert inspect.iscoroutinefunction(store.add)
+    assert inspect.iscoroutinefunction(store.search)
