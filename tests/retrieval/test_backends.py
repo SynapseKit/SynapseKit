@@ -218,6 +218,8 @@ class TestFAISSVectorStore:
             store = FAISSVectorStore(make_mock_embeddings())
             await store.add([])
             assert store._index is None
+
+
 # ------------------------------------------------------------------ #
 # PineconeVectorStore (mocked pinecone)
 # ------------------------------------------------------------------ #
