@@ -11257,6 +11257,7 @@ dev = [
     { name = "tzdata" },
 ]
 integration = [
+    { name = "cassandra-driver" },
     { name = "elasticsearch" },
     { name = "kuzu" },
     { name = "milvus-lite" },
@@ -11521,6 +11522,7 @@ dev = [
     { name = "tzdata", specifier = ">=2024.1" },
 ]
 integration = [
+    { name = "cassandra-driver", specifier = ">=3.28" },
     { name = "elasticsearch", specifier = ">=8.0,<9" },
     { name = "kuzu", specifier = ">=0.8" },
     { name = "milvus-lite", specifier = ">=2.4" },
