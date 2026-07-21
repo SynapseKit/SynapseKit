@@ -11258,6 +11258,7 @@ dev = [
 ]
 integration = [
     { name = "cassandra-driver" },
+    { name = "clickhouse-connect" },
     { name = "elasticsearch" },
     { name = "kuzu" },
     { name = "milvus-lite" },
@@ -11523,6 +11524,7 @@ dev = [
 ]
 integration = [
     { name = "cassandra-driver", specifier = ">=3.28" },
+    { name = "clickhouse-connect", specifier = ">=0.7" },
     { name = "elasticsearch", specifier = ">=8.0,<9" },
     { name = "kuzu", specifier = ">=0.8" },
     { name = "milvus-lite", specifier = ">=2.4" },
