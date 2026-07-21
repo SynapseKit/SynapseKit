@@ -17,7 +17,7 @@ import pytest
 pytest.importorskip("pymilvus")
 pytest.importorskip("milvus_lite")
 
-from synapsekit.retrieval.milvus import MilvusVectorStore  # noqa: E402
+from synapsekit.retrieval.milvus import MilvusVectorStore
 
 _VOCAB = ["apple", "banana", "cherry", "fruit", "red", "yellow", "car", "vehicle", "fast"]
 
