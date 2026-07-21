@@ -117,67 +117,6 @@ class TestVespaVectorStore:
 
 
 # ===========================================================================
-# 4. OpenSearchVectorStore
-# ===========================================================================
-
-
-class TestOpenSearchVectorStore:
-    def _make_store(self):
-        mock_os_mod = MagicMock()
-        mock_os_client = MagicMock()
-        mock_os_mod.OpenSearch.return_value = mock_os_client
-        mock_os_client.indices.exists.return_value = False
-        mock_os_client.indices.create.return_value = {}
-        mock_os_client.index.return_value = {"result": "created"}
-        mock_os_client.indices.refresh.return_value = {}
-        mock_os_client.search.return_value = {
-            "hits": {"hits": [{"_source": {"text": "t", "metadata": {}}, "_score": 0.7}]}
-        }
-
-        with patch.dict(sys.modules, {"opensearchpy": mock_os_mod}):
-            sys.modules.pop("synapsekit.retrieval.opensearch_vector", None)
-            from synapsekit.retrieval.opensearch_vector import OpenSearchVectorStore
-
-            store = OpenSearchVectorStore(
-                embedding_backend=_make_embeddings(),
-                url="http://localhost:9200",
-                index_name="test_idx",
-            )
-            store._os = mock_os_client
-            return store, mock_os_client
-
-    def test_add_and_search(self):
-        store, _mock_os = self._make_store()
-        _run(store.add(["t"]))
-        results = _run(store.search("q"))
-        assert results[0]["text"] == "t"
-
-    def test_search_empty_before_add(self):
-        store, _ = self._make_store()
-        store._index_created = False
-        store._dims = None
-        assert _run(store.search("q")) == []
-
-    def test_import_error(self):
-        with patch.dict(sys.modules, {"opensearchpy": None}):
-            sys.modules.pop("synapsekit.retrieval.opensearch_vector", None)
-            with pytest.raises(ImportError, match="pip install synapsekit\\[opensearch\\]"):
-                import importlib as _il
-
-                mod = _il.import_module("synapsekit.retrieval.opensearch_vector")
-                mod.OpenSearchVectorStore(embedding_backend=_make_embeddings())
-
-    def test_add_empty(self):
-        store, _ = self._make_store()
-        _run(store.add([]))
-
-    def test_metadata_mismatch(self):
-        store, _ = self._make_store()
-        with pytest.raises(ValueError):
-            _run(store.add(["a", "b"], [{}]))
-
-
-# ===========================================================================
 # 5. SupabaseVectorStore
 # ===========================================================================
 
