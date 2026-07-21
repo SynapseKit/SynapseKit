@@ -1,11 +1,20 @@
 from __future__ import annotations
 
+import asyncio
+import uuid
+
 from ..embeddings.backend import SynapsekitEmbeddings
 from .base import VectorStore
 
 
 class QdrantVectorStore(VectorStore):
-    """Qdrant-backed vector store. Embeds externally via SynapsekitEmbeddings."""
+    """Qdrant-backed vector store. Embeds externally via SynapsekitEmbeddings.
+
+    The collection is created on the first ``add()`` using the embedding
+    dimension of the first vector; ``search()`` before any documents exist
+    returns ``[]``. Point ids are UUIDs, so reconnecting and adding again
+    appends rather than overwriting.
+    """
 
     def __init__(
         self,
@@ -22,7 +31,6 @@ class QdrantVectorStore(VectorStore):
         self._embeddings = embedding_backend
         self._collection = collection_name
         self._client = QdrantClient(url=url, api_key=api_key)
-        self._count = 0
 
     async def add(
         self,
@@ -31,48 +39,67 @@ class QdrantVectorStore(VectorStore):
     ) -> None:
         if not texts:
             return
-        try:
-            from qdrant_client.models import Distance, PointStruct, VectorParams
-        except ImportError:
-            raise ImportError("qdrant-client required: pip install synapsekit[qdrant]") from None
+        from qdrant_client.models import Distance, PointStruct, VectorParams
 
         meta = metadata or [{} for _ in texts]
+        if len(meta) != len(texts):
+            raise ValueError("metadata must match texts length")
+
         vecs = await self._embeddings.embed(texts)
-        dim = vecs.shape[1]
+        dim = int(vecs.shape[1])
 
-        try:
-            self._client.get_collection(self._collection)
-        except Exception:
-            self._client.create_collection(
-                self._collection,
-                vectors_config=VectorParams(size=dim, distance=Distance.COSINE),
-            )
+        def _write() -> None:
+            # Blocking qdrant client — run off the event loop to keep async alive.
+            if not self._client.collection_exists(self._collection):
+                self._client.create_collection(
+                    self._collection,
+                    vectors_config=VectorParams(size=dim, distance=Distance.COSINE),
+                )
+            points = [
+                PointStruct(
+                    id=str(uuid.uuid4()),
+                    vector=vecs[i].tolist(),
+                    payload={"text": texts[i], **meta[i]},
+                )
+                for i in range(len(texts))
+            ]
+            self._client.upsert(collection_name=self._collection, points=points)
 
-        points = [
-            PointStruct(
-                id=self._count + i,
-                vector=vecs[i].tolist(),
-                payload={"text": texts[i], **meta[i]},
-            )
-            for i in range(len(texts))
-        ]
-        self._client.upsert(collection_name=self._collection, points=points)
-        self._count += len(texts)
+        await asyncio.to_thread(_write)
 
     async def search(
         self, query: str, top_k: int = 5, metadata_filter: dict | None = None
     ) -> list[dict]:
+        from qdrant_client.models import FieldCondition, Filter, MatchValue
+
         q_vec = await self._embeddings.embed_one(query)
-        results = self._client.search(
-            collection_name=self._collection,
-            query_vector=q_vec.tolist(),
-            limit=top_k,
-        )
+        query_filter = None
+        if metadata_filter:
+            query_filter = Filter(
+                must=[
+                    FieldCondition(key=key, match=MatchValue(value=value))
+                    for key, value in metadata_filter.items()
+                ]
+            )
+
+        def _query() -> list:
+            if not self._client.collection_exists(self._collection):
+                return []
+            response = self._client.query_points(
+                collection_name=self._collection,
+                query=q_vec.tolist(),
+                limit=top_k,
+                query_filter=query_filter,
+                with_payload=True,
+            )
+            return response.points
+
+        points = await asyncio.to_thread(_query)
         return [
             {
-                "text": r.payload.get("text", ""),
-                "score": r.score,
-                "metadata": {k: v for k, v in r.payload.items() if k != "text"},
+                "text": (p.payload or {}).get("text", ""),
+                "score": p.score,
+                "metadata": {k: v for k, v in (p.payload or {}).items() if k != "text"},
             }
-            for r in results
+            for p in points
         ]
