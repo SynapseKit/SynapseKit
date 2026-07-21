@@ -129,10 +129,38 @@ def _store(uri: str, collection: str) -> MongoDBAtlasVectorStore:
     )
 
 
+async def _resilient_add(store, texts, metadata) -> None:
+    """Insert, retrying transient replica-set errors.
+
+    atlas-local runs a single-node replica set that briefly steps down /
+    restarts when its search service (mongot) first initializes, surfacing as
+    NotPrimaryError / "interrupted at shutdown". That's a startup artifact of the
+    local image (real Atlas doesn't restart mid-use), so the test tolerates it.
+    """
+    from pymongo.errors import PyMongoError
+
+    last: Exception | None = None
+    for _ in range(30):
+        try:
+            await store.add(texts, metadata)
+            return
+        except PyMongoError as exc:
+            last = exc
+            time.sleep(1)
+    raise RuntimeError(f"insert kept failing on a transient error: {last}")
+
+
 async def _search_until(store, query, expected_text, *, top_k=5, metadata_filter=None):
-    """Poll until Atlas's eventually-consistent index surfaces the expected doc."""
+    """Poll until Atlas's eventually-consistent index surfaces the expected doc,
+    tolerating the same transient replica-set errors as _resilient_add."""
+    from pymongo.errors import PyMongoError
+
     for _ in range(60):
-        results = await store.search(query, top_k=top_k, metadata_filter=metadata_filter)
+        try:
+            results = await store.search(query, top_k=top_k, metadata_filter=metadata_filter)
+        except PyMongoError:
+            time.sleep(1)
+            continue
         if any(r["text"] == expected_text for r in results):
             return results
         time.sleep(1)
@@ -143,7 +171,8 @@ async def _search_until(store, query, expected_text, *, top_k=5, metadata_filter
 async def test_add_and_search_returns_true_nearest_neighbor(atlas_uri):
     _prepare_collection(atlas_uri, "rank")
     store = _store(atlas_uri, "rank")
-    await store.add(
+    await _resilient_add(
+        store,
         ["apple fruit red", "banana fruit yellow", "car vehicle fast"],
         [{"kind": "fruit"}, {"kind": "fruit"}, {"kind": "auto"}],
     )
@@ -158,7 +187,9 @@ async def test_add_and_search_returns_true_nearest_neighbor(atlas_uri):
 async def test_metadata_filter(atlas_uri):
     _prepare_collection(atlas_uri, "filter")
     store = _store(atlas_uri, "filter")
-    await store.add(["apple fruit", "car vehicle"], [{"kind": "fruit"}, {"kind": "auto"}])
+    await _resilient_add(
+        store, ["apple fruit", "car vehicle"], [{"kind": "fruit"}, {"kind": "auto"}]
+    )
     results = await _search_until(
         store, "apple car", "car vehicle", top_k=5, metadata_filter={"kind": "auto"}
     )
@@ -169,7 +200,7 @@ async def test_metadata_filter(atlas_uri):
 async def test_persistence_across_reconnect(atlas_uri):
     _prepare_collection(atlas_uri, "persist")
     writer = _store(atlas_uri, "persist")
-    await writer.add(["apple fruit red"], [{"kind": "fruit"}])
+    await _resilient_add(writer, ["apple fruit red"], [{"kind": "fruit"}])
     reader = _store(atlas_uri, "persist")
     results = await _search_until(reader, "apple", "apple fruit red", top_k=1)
     assert results[0]["text"] == "apple fruit red"
