@@ -19,6 +19,20 @@ sys.modules["redis"] = _mock_redis_module
 from synapsekit.memory.redis import RedisConversationMemory  # noqa: E402
 
 
+def teardown_module(module):
+    """Undo the session-wide ``sys.modules['redis']`` mock installed at import.
+
+    Without this, once pytest collects this module every later ``import redis``
+    returns the MagicMock, poisoning real-backend tests (e.g.
+    ``tests/retrieval/test_redis_vector_integration.py``). Drop the mock entries
+    so the real installed ``redis`` is re-imported on next use.
+    """
+    for name in [n for n in list(sys.modules) if n == "redis" or n.startswith("redis.")]:
+        del sys.modules[name]
+    if _original_redis is not None:
+        sys.modules["redis"] = _original_redis
+
+
 @pytest.fixture(autouse=True)
 def _fresh_redis_client():
     """Give each test a fresh MagicMock as the Redis client."""
