@@ -11274,6 +11274,7 @@ integration = [
     { name = "pymongo" },
     { name = "qdrant-client" },
     { name = "redis" },
+    { name = "sqlalchemy" },
     { name = "testcontainers" },
     { name = "weaviate-client" },
 ]
@@ -11542,6 +11543,7 @@ integration = [
     { name = "pymongo", specifier = ">=4.0" },
     { name = "qdrant-client", specifier = ">=1.9" },
     { name = "redis", specifier = ">=5.0" },
+    { name = "sqlalchemy", specifier = ">=2.0" },
     { name = "testcontainers", specifier = ">=4.0" },
     { name = "weaviate-client", specifier = ">=4.0" },
 ]
