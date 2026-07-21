@@ -74,9 +74,7 @@ class PGVectorStore(VectorStore):
             import psycopg
             from pgvector.psycopg import register_vector_async
 
-            conn = await psycopg.AsyncConnection.connect(
-                self._connection_string, autocommit=True
-            )
+            conn = await psycopg.AsyncConnection.connect(self._connection_string, autocommit=True)
             await conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
             # Register the vector type adapters so numpy arrays / lists round-trip
             # to the pgvector ``vector`` column. Must run after CREATE EXTENSION.
@@ -106,8 +104,7 @@ class PGVectorStore(VectorStore):
         )
         await conn.execute(
             sql.SQL(
-                "CREATE INDEX IF NOT EXISTS {idx} ON {table} "
-                "USING hnsw (embedding {op})"
+                "CREATE INDEX IF NOT EXISTS {idx} ON {table} USING hnsw (embedding {op})"
             ).format(
                 idx=sql.Identifier(f"{self._table_name}_embedding_idx"),
                 table=sql.Identifier(self._table_name),
@@ -150,9 +147,9 @@ class PGVectorStore(VectorStore):
         conn = await self._ensure_connection()
         await self._ensure_table(dim)
 
-        insert = sql.SQL(
-            "INSERT INTO {} (text, metadata, embedding) VALUES (%s, %s, %s)"
-        ).format(sql.Identifier(self._table_name))
+        insert = sql.SQL("INSERT INTO {} (text, metadata, embedding) VALUES (%s, %s, %s)").format(
+            sql.Identifier(self._table_name)
+        )
         for i, text in enumerate(texts):
             await conn.execute(insert, (text, Jsonb(meta[i]), vecs[i]))
 
