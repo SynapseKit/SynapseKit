@@ -11248,6 +11248,7 @@ integration = [
     { name = "pgvector" },
     { name = "psycopg", extra = ["binary"] },
     { name = "pymongo" },
+    { name = "qdrant-client" },
     { name = "redis" },
     { name = "testcontainers" },
 ]
@@ -11507,6 +11508,7 @@ integration = [
     { name = "pgvector", specifier = ">=0.2" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.1" },
     { name = "pymongo", specifier = ">=4.0" },
+    { name = "qdrant-client", specifier = ">=1.9" },
     { name = "redis", specifier = ">=5.0" },
     { name = "testcontainers", specifier = ">=4.0" },
 ]
