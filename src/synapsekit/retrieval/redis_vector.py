@@ -100,24 +100,39 @@ class RedisVectorStore(VectorStore):
     def _search_sync(
         self, q_vec: list[float], top_k: int, metadata_filter: dict | None
     ) -> list[dict]:
+        from redis.exceptions import ResponseError
+
         query_bytes = _vec_to_bytes(q_vec)
         query = f"*=>[KNN {top_k} @embedding $vec AS score]"
-        raw = self._client.execute_command(
-            "FT.SEARCH",
-            self._index_name,
-            query,
-            "PARAMS",
-            "2",
-            "vec",
-            query_bytes,
-            "SORTBY",
-            "score",
-            "DIALECT",
-            "2",
-            "LIMIT",
-            "0",
-            str(top_k),
-        )
+        try:
+            raw = self._client.execute_command(
+                "FT.SEARCH",
+                self._index_name,
+                query,
+                # Only return the fields we parse; without this RediSearch also
+                # returns the raw float32 ``embedding`` bytes, which then blow up
+                # the UTF-8 decode below.
+                "RETURN",
+                "3",
+                "text",
+                "metadata",
+                "score",
+                "PARAMS",
+                "2",
+                "vec",
+                query_bytes,
+                "SORTBY",
+                "score",
+                "DIALECT",
+                "2",
+                "LIMIT",
+                "0",
+                str(top_k),
+            )
+        except ResponseError:
+            # Index doesn't exist yet (e.g. search before any add on this or a
+            # freshly reconnected instance) — treat as no results.
+            return []
         results = []
         # raw: [total, key, [field, value, ...], key, ...]
         i = 1
@@ -170,8 +185,9 @@ class RedisVectorStore(VectorStore):
         top_k: int = 5,
         metadata_filter: dict | None = None,
     ) -> list[dict]:
-        if self._dim is None:
-            return []
+        # Note: we do NOT short-circuit on ``self._dim is None`` — a freshly
+        # reconnected instance has no cached dim but the index may already exist
+        # in Redis. ``_search_sync`` returns [] if the index is genuinely absent.
         q_vec = await self._embeddings.embed_one(query)
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(
