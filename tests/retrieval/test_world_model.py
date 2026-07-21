@@ -381,6 +381,88 @@ def test_neo4j_backend_roundtrip_with_testcontainers():
             backend.close()
 
 
+def _populate_parity_graph(backend) -> None:
+    """Alpha links to Bravo (expired edge), Charlie (valid), Delta (low confidence).
+
+    Each entity carries its own document and each relation a distinct document,
+    so both entity-provenance and relation-provenance can be checked for leaks.
+    """
+    backend.upsert_entity(EntityMention(name="Alpha"), "docA")
+    backend.upsert_entity(EntityMention(name="Bravo"), "docB")
+    backend.upsert_entity(EntityMention(name="Charlie"), "docC")
+    backend.upsert_entity(EntityMention(name="Delta"), "docD")
+    backend.upsert_relation(
+        RelationMention(
+            subject="Alpha",
+            predicate="linked_to",
+            object="Bravo",
+            valid_at=datetime(2020, 1, 1, tzinfo=UTC),
+            valid_until=datetime(2023, 1, 1, tzinfo=UTC),  # expired before the as_of below
+        ),
+        "relAB",
+    )
+    backend.upsert_relation(
+        RelationMention(subject="Alpha", predicate="linked_to", object="Charlie", confidence=0.9),
+        "relAC",
+    )
+    backend.upsert_relation(
+        RelationMention(subject="Alpha", predicate="linked_to", object="Delta", confidence=0.2),
+        "relAD",
+    )
+
+
+def _subgraph_signature(result) -> tuple:
+    return (
+        sorted(node.name for node in result.nodes),
+        sorted(result.documents),
+        sorted((edge.subject_id, edge.predicate, edge.object_id) for edge in result.edges),
+    )
+
+
+def test_neo4j_query_subgraph_matches_in_memory_for_as_of_and_min_confidence():
+    """Regression for #826: the Neo4j backend must prune nodes AND documents by
+    confidence/as_of exactly like the in-memory backend, not just the edge list."""
+    pytest.importorskip("neo4j")
+    container_mod = pytest.importorskip("testcontainers.core.container")
+    wait_mod = pytest.importorskip("testcontainers.core.waiting_utils")
+    from synapsekit.retrieval.world_model import Neo4jWorldGraphBackend
+
+    password = "synapsekit-password"
+    with (
+        container_mod.DockerContainer("neo4j:5")
+        .with_env("NEO4J_AUTH", f"neo4j/{password}")
+        .with_exposed_ports(7687) as container
+    ):
+        wait_mod.wait_for_logs(container, "Bolt enabled", timeout=60)
+        host = container.get_container_host_ip()
+        port = container.get_exposed_port(7687)
+        neo4j_backend = Neo4jWorldGraphBackend(
+            f"bolt://{host}:{port}", username="neo4j", password=password
+        )
+        try:
+            in_memory = InMemoryWorldGraphBackend()
+            _populate_parity_graph(in_memory)
+            _populate_parity_graph(neo4j_backend)
+
+            # Time travel: the Alpha->Bravo edge has expired, so Bravo (and its
+            # entity document docB) must vanish from both backends identically.
+            mem_tt = in_memory.query_subgraph("Alpha", max_hops=2, as_of="2025-01-01")
+            neo_tt = neo4j_backend.query_subgraph("Alpha", max_hops=2, as_of="2025-01-01")
+            assert "Bravo" not in {n.name for n in neo_tt.nodes}
+            assert "docB" not in neo_tt.documents
+            assert _subgraph_signature(neo_tt) == _subgraph_signature(mem_tt)
+
+            # Confidence filter: the low-confidence Alpha->Delta edge drops Delta
+            # (and docD) from both backends identically.
+            mem_conf = in_memory.query_subgraph("Alpha", max_hops=2, min_confidence=0.5)
+            neo_conf = neo4j_backend.query_subgraph("Alpha", max_hops=2, min_confidence=0.5)
+            assert "Delta" not in {n.name for n in neo_conf.nodes}
+            assert "docD" not in neo_conf.documents
+            assert _subgraph_signature(neo_conf) == _subgraph_signature(mem_conf)
+        finally:
+            neo4j_backend.close()
+
+
 def test_event_ingestion_links_participants():
     graph = InMemoryWorldGraphBackend()
     graph.upsert_entity(EntityMention("Alice"), "doc_event")
