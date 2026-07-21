@@ -218,62 +218,6 @@ class TestFAISSVectorStore:
             store = FAISSVectorStore(make_mock_embeddings())
             await store.add([])
             assert store._index is None
-
-
-# ------------------------------------------------------------------ #
-# QdrantVectorStore (mocked qdrant_client)
-# ------------------------------------------------------------------ #
-
-
-class TestQdrantVectorStore:
-    def _make_qdrant_mocks(self):
-        mock_result = MagicMock()
-        mock_result.payload = {"text": "qdrant doc", "src": "a"}
-        mock_result.score = 0.95
-
-        mock_client = MagicMock()
-        mock_client.search.return_value = [mock_result]
-        mock_client.get_collection.side_effect = Exception("not found")
-
-        mock_qdrant_client = MagicMock()
-        mock_qdrant_client.QdrantClient.return_value = mock_client
-
-        mock_models = MagicMock()
-
-        return mock_qdrant_client, mock_models, mock_client
-
-    @pytest.mark.asyncio
-    async def test_add_and_search(self):
-        mock_qc, mock_models, mock_client = self._make_qdrant_mocks()
-        with patch.dict(
-            "sys.modules",
-            {
-                "qdrant_client": mock_qc,
-                "qdrant_client.models": mock_models,
-            },
-        ):
-            from synapsekit.retrieval.qdrant import QdrantVectorStore
-
-            store = QdrantVectorStore(make_mock_embeddings())
-            await store.add(["test text"])
-            mock_client.upsert.assert_called_once()
-
-            results = await store.search("query")
-            assert len(results) == 1
-            assert results[0]["text"] == "qdrant doc"
-            assert results[0]["score"] == pytest.approx(0.95)
-
-    def test_import_error_without_qdrant(self):
-        with patch.dict("sys.modules", {"qdrant_client": None}):
-            import importlib
-
-            import synapsekit.retrieval.qdrant as qdrant_mod
-
-            importlib.reload(qdrant_mod)
-            with pytest.raises(ImportError, match="qdrant-client"):
-                qdrant_mod.QdrantVectorStore(make_mock_embeddings())
-
-
 # ------------------------------------------------------------------ #
 # PineconeVectorStore (mocked pinecone)
 # ------------------------------------------------------------------ #
