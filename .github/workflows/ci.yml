@@ -47,3 +47,14 @@ jobs:
       - uses: astral-sh/setup-uv@v5
       - run: uv sync --group dev --group bench
       - run: uv run pytest benchmarks/test_world_model_retrieval_bench.py -v
+
+  # Real-backend tests via testcontainers (Neo4j/Memgraph, Kuzu, property graph).
+  # ubuntu-latest ships a running Docker daemon, so these execute for real here
+  # instead of skipping. Kept as a separate job so the fast `test` job stays lean.
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --group dev --group integration
+      - run: uv run pytest tests/retrieval/test_world_model.py tests/retrieval/test_property_graph.py -v

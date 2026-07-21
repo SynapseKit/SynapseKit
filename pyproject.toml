@@ -274,6 +274,17 @@ bench = [
     "psutil>=5.9",
 ]
 
+# Real-backend integration tests. These deps + a running Docker daemon let the
+# testcontainers-based tests (Neo4j/Memgraph, Kuzu, property graph) execute for
+# real instead of skipping via importorskip. Installed by the CI `integration`
+# job; run locally with `uv sync --group dev --group integration`.
+integration = [
+    "testcontainers>=4.0",
+    "neo4j>=5.0",
+    "networkx>=3.0",
+    "kuzu>=0.8",
+]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/synapsekit"]
 
