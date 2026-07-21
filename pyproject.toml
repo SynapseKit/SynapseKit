@@ -287,6 +287,7 @@ integration = [
     "pgvector>=0.2",
     "redis>=5.0",
     "elasticsearch>=8.0,<9",
+    "pymongo>=4.0",
 ]
 
 [tool.hatch.build.targets.wheel]
