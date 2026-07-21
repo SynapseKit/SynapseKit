@@ -11247,6 +11247,9 @@ integration = [
     { name = "neo4j" },
     { name = "networkx", version = "3.4.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "networkx", version = "3.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "pgvector" },
+    { name = "psycopg", extra = ["binary"] },
+    { name = "redis" },
     { name = "testcontainers" },
 ]
 
@@ -11501,6 +11504,9 @@ integration = [
     { name = "kuzu", specifier = ">=0.8" },
     { name = "neo4j", specifier = ">=5.0" },
     { name = "networkx", specifier = ">=3.0" },
+    { name = "pgvector", specifier = ">=0.2" },
+    { name = "psycopg", extras = ["binary"], specifier = ">=3.1" },
+    { name = "redis", specifier = ">=5.0" },
     { name = "testcontainers", specifier = ">=4.0" },
 ]
 

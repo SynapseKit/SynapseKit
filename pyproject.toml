@@ -283,6 +283,9 @@ integration = [
     "neo4j>=5.0",
     "networkx>=3.0",
     "kuzu>=0.8",
+    "psycopg[binary]>=3.1",
+    "pgvector>=0.2",
+    "redis>=5.0",
 ]
 
 [tool.hatch.build.targets.wheel]
