@@ -294,6 +294,7 @@ integration = [
     "milvus-lite>=2.4",
     "cassandra-driver>=3.28",
     "clickhouse-connect>=0.7",
+    "opensearch-py>=2.0",
 ]
 
 [tool.hatch.build.targets.wheel]
