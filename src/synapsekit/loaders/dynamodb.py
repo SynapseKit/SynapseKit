@@ -53,6 +53,7 @@ class DynamoDBLoader:
         aws_access_key_id: str | None = None,
         aws_secret_access_key: str | None = None,
         aws_session_token: str | None = None,
+        endpoint_url: str | None = None,
         max_items: int | None = None,
     ) -> None:
         if not table_name:
@@ -72,6 +73,9 @@ class DynamoDBLoader:
         self._aws_access_key_id = aws_access_key_id
         self._aws_secret_access_key = aws_secret_access_key
         self._aws_session_token = aws_session_token
+        # Custom endpoint for DynamoDB-compatible stores (DynamoDB Local,
+        # LocalStack, …). Left None for real AWS DynamoDB.
+        self._endpoint_url = endpoint_url
 
         self._max_items = max_items
 
@@ -108,6 +112,8 @@ class DynamoDBLoader:
             kwargs["aws_secret_access_key"] = self._aws_secret_access_key
         if self._aws_session_token:
             kwargs["aws_session_token"] = self._aws_session_token
+        if self._endpoint_url:
+            kwargs["endpoint_url"] = self._endpoint_url
 
         resource = boto3_module.resource("dynamodb", **kwargs)
         return resource.Table(self._table_name)

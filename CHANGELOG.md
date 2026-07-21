@@ -10,6 +10,7 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
+- **`DynamoDBLoader` now supports DynamoDB-compatible endpoints** (#855) — a new optional `endpoint_url` parameter lets it load from DynamoDB Local and LocalStack, not just AWS DynamoDB. Covered by real DynamoDB Local testcontainers tests.
 - **`S3Loader` now supports S3-compatible endpoints** (#851) — a new optional `endpoint_url` parameter (with automatic path-style addressing) lets it load from MinIO, Cloudflare R2, DigitalOcean Spaces, and LocalStack, not just AWS S3. Covered by real MinIO testcontainers tests.
 
 - Spec test for a replayable `AgentSwarm` auction receipt (`tests/agents/test_agent_swarm_receipt.py`, `xfail` pending implementation) — captures task_id, reputation-prior version, budget consumed, and outcome-score provenance per auction so a reviewer can tell whether a market win reflects a real outcome or a stale/self-reported score; added as an acceptance criterion on #734 (h/t @clementineCU)
