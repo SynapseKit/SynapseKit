@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-import json
 from enum import Enum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from ..embeddings.backend import SynapsekitEmbeddings
 from .base import VectorStore
@@ -22,8 +21,13 @@ class DistanceStrategy(str, Enum):
 class PGVectorStore(VectorStore):
     """PostgreSQL with pgvector-backed vector store. Embeds externally via SynapsekitEmbeddings.
 
+    The embedding dimension is taken from the first vector produced at ``add()``
+    time, so any embeddings backend works (no ``.dimension`` attribute needed).
+    The table and index are created on the first ``add()``; ``search()`` before
+    any documents exist returns ``[]``.
+
     Prerequisites:
-        - PostgreSQL with the pgvector extension installed
+        - PostgreSQL with the pgvector extension available
         - The database user must have permission to run ``CREATE EXTENSION``
           (requires ``SUPERUSER`` or ``rds_superuser`` on managed PostgreSQL)
 
@@ -62,57 +66,63 @@ class PGVectorStore(VectorStore):
         self._table_name = table_name
         self._distance_strategy = distance_strategy
         self._conn: psycopg.AsyncConnection | None = None
+        self._table_created = False
+        self._dim: int | None = None
 
     async def _ensure_connection(self) -> psycopg.AsyncConnection:
         if self._conn is None:
             import psycopg
+            from pgvector.psycopg import register_vector_async
 
-            self._conn = await psycopg.AsyncConnection.connect(self._connection_string)
-            await self._conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
-            await self._init_table()
+            conn = await psycopg.AsyncConnection.connect(
+                self._connection_string, autocommit=True
+            )
+            await conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
+            # Register the vector type adapters so numpy arrays / lists round-trip
+            # to the pgvector ``vector`` column. Must run after CREATE EXTENSION.
+            await register_vector_async(conn)
+            self._conn = conn
         return self._conn
 
-    async def _init_table(self) -> None:
+    async def _ensure_table(self, dim: int) -> None:
+        if self._table_created and self._dim == dim:
+            return
         from psycopg import sql
 
-        conn = self._conn
-        if conn is None:
-            raise RuntimeError("PGVector connection not initialized")
-
-        op_string = self._get_operator_string()
-        dim = self._embeddings.dimension
+        conn = await self._ensure_connection()
+        op_class = self._get_operator_class()
 
         await conn.execute(
             sql.SQL(
                 """
-                CREATE TABLE IF NOT EXISTS {} (
+                CREATE TABLE IF NOT EXISTS {table} (
                     id SERIAL PRIMARY KEY,
                     text TEXT NOT NULL,
                     metadata JSONB,
-                    embedding vector({})
+                    embedding vector({dim})
                 )
                 """
-            ).format(sql.Identifier(self._table_name), sql.Literal(dim))
+            ).format(table=sql.Identifier(self._table_name), dim=sql.Literal(dim))
         )
         await conn.execute(
             sql.SQL(
-                """
-                CREATE INDEX IF NOT EXISTS {idx}
-                ON {table} USING ivfflat (embedding {op})
-                """
+                "CREATE INDEX IF NOT EXISTS {idx} ON {table} "
+                "USING hnsw (embedding {op})"
             ).format(
                 idx=sql.Identifier(f"{self._table_name}_embedding_idx"),
                 table=sql.Identifier(self._table_name),
-                op=sql.SQL(op_string),
+                op=sql.SQL(op_class),
             )
         )
+        self._table_created = True
+        self._dim = dim
 
-    def _get_operator_string(self) -> str:
+    def _get_operator_class(self) -> str:
         if self._distance_strategy == DistanceStrategy.COSINE:
-            return "cosine_ops"
+            return "vector_cosine_ops"
         elif self._distance_strategy == DistanceStrategy.L2:
-            return "l2_ops"
-        return "inner_product_ops"
+            return "vector_l2_ops"
+        return "vector_ip_ops"
 
     def _get_distance_operator(self) -> str:
         if self._distance_strategy == DistanceStrategy.COSINE:
@@ -129,18 +139,27 @@ class PGVectorStore(VectorStore):
         if not texts:
             return
         from psycopg import sql
+        from psycopg.types.json import Jsonb
 
-        conn = await self._ensure_connection()
         meta = metadata or [{} for _ in texts]
-        vecs = await self._embeddings.embed(texts)
+        if len(meta) != len(texts):
+            raise ValueError("metadata must match texts length")
 
+        vecs = await self._embeddings.embed(texts)
+        dim = int(vecs.shape[1]) if hasattr(vecs, "shape") else len(vecs[0])
+        conn = await self._ensure_connection()
+        await self._ensure_table(dim)
+
+        insert = sql.SQL(
+            "INSERT INTO {} (text, metadata, embedding) VALUES (%s, %s, %s)"
+        ).format(sql.Identifier(self._table_name))
         for i, text in enumerate(texts):
-            await conn.execute(
-                sql.SQL("INSERT INTO {} (text, metadata, embedding) VALUES (%s, %s, %s)").format(
-                    sql.Identifier(self._table_name)
-                ),
-                (text, json.dumps(meta[i]), vecs[i].tolist()),
-            )
+            await conn.execute(insert, (text, Jsonb(meta[i]), vecs[i]))
+
+    async def _detect_existing_table(self, conn: psycopg.AsyncConnection) -> bool:
+        cur = await conn.execute("SELECT to_regclass(%s)", (self._table_name,))
+        row = await cur.fetchone()
+        return bool(row and row[0] is not None)
 
     async def search(
         self,
@@ -151,27 +170,26 @@ class PGVectorStore(VectorStore):
         from psycopg import sql
 
         conn = await self._ensure_connection()
+        if not self._table_created and not await self._detect_existing_table(conn):
+            return []
+        self._table_created = True
+
         q_vec = await self._embeddings.embed_one(query)
         op = self._get_distance_operator()
 
         where_parts: list[sql.Composable] = []
-        params: list = []
+        params: list[Any] = []
         if metadata_filter:
             for key, value in metadata_filter.items():
                 where_parts.append(sql.SQL("metadata->>%s = %s"))
                 params.extend([key, str(value)])
 
         if self._distance_strategy == DistanceStrategy.COSINE:
-            score_expr = sql.SQL("1 - (embedding {} %s) AS score").format(sql.SQL("<=>"))
-        elif self._distance_strategy == DistanceStrategy.L2:
-            score_expr = sql.SQL("embedding {} %s AS score").format(sql.SQL("<->"))
+            score_expr = sql.SQL("1 - (embedding {} %s) AS score").format(sql.SQL(op))
         else:
-            score_expr = sql.SQL("embedding {} %s AS score").format(sql.SQL("<#>"))
+            score_expr = sql.SQL("embedding {} %s AS score").format(sql.SQL(op))
 
-        score_params = [q_vec.tolist()]
-        order_params = [q_vec.tolist(), top_k]
-
-        query_parts = [
+        query_parts: list[sql.Composable] = [
             sql.SQL("SELECT text, metadata, "),
             score_expr,
             sql.SQL(" FROM "),
@@ -180,22 +198,38 @@ class PGVectorStore(VectorStore):
         if where_parts:
             query_parts.append(sql.SQL(" WHERE "))
             query_parts.append(sql.SQL(" AND ").join(where_parts))
-
         query_parts.append(sql.SQL(" ORDER BY embedding {} %s LIMIT %s").format(sql.SQL(op)))
 
         query_sql = sql.Composed(query_parts)
-        all_params = score_params + params + order_params
+        all_params = [q_vec, *params, q_vec, top_k]
 
-        async with await conn.cursor() as cur:
+        async with conn.cursor() as cur:
             await cur.execute(query_sql, all_params)
             rows = await cur.fetchall()
             col_names = [desc[0] for desc in cur.description or []]
 
+        text_i = col_names.index("text")
+        meta_i = col_names.index("metadata")
+        score_i = col_names.index("score")
         return [
             {
-                "text": row[col_names.index("text")],
-                "score": float(row[col_names.index("score")]),
-                "metadata": json.loads(row[col_names.index("metadata")] or "{}"),
+                "text": row[text_i],
+                "score": float(row[score_i]),
+                "metadata": _as_dict(row[meta_i]),
             }
             for row in rows
         ]
+
+
+def _as_dict(value: Any) -> dict:
+    """psycopg returns jsonb as a dict already; tolerate a str or None too."""
+    if value is None:
+        return {}
+    if isinstance(value, dict):
+        return value
+    import json
+
+    try:
+        return json.loads(value)
+    except (json.JSONDecodeError, TypeError):
+        return {}
