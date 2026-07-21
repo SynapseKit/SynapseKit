@@ -293,6 +293,7 @@ integration = [
     "pymilvus>=2.4",
     "milvus-lite>=2.4",
     "cassandra-driver>=3.28",
+    "clickhouse-connect>=0.7",
 ]
 
 [tool.hatch.build.targets.wheel]
