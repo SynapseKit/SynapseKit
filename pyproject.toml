@@ -304,6 +304,7 @@ integration = [
     # Azurite (the Azure Storage emulator) lags the azure-storage-blob default
     # API version; pin to a range Azurite accepts so the loader integration test runs.
     "azure-storage-blob>=12.0,<12.20",
+    "ollama>=0.3",
 ]
 
 [tool.hatch.build.targets.wheel]
