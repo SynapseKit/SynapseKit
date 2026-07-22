@@ -461,6 +461,16 @@ from .training import (
     TrainingDataGenerator,
     TrainingExample,
 )
+from .twin import (
+    DelegationLevel,
+    DelegationPolicy,
+    DigitalTwinAgent,
+    DraftResult,
+    LearnedPatterns,
+    StyleProfile,
+    VoiceMatcher,
+    VoiceMatchResult,
+)
 
 __version__ = "2.0.0"
 __all__ = [
@@ -590,6 +600,15 @@ __all__ = [
     "CrossProjectEntityResolver",
     "DuplicationDetector",
     "DuplicationMatch",
+    # Digital Twin Agent
+    "DigitalTwinAgent",
+    "StyleProfile",
+    "LearnedPatterns",
+    "VoiceMatcher",
+    "VoiceMatchResult",
+    "DelegationPolicy",
+    "DelegationLevel",
+    "DraftResult",
     # Cost intelligence
     "CostTracker",
     "CostRecord",
