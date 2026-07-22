@@ -10,6 +10,7 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
+- **`OllamaLLM` now supports a custom `host`** (#858) — a new optional `host` parameter lets it target a remote or non-default Ollama server instead of only `http://localhost:11434`. Covered by a real Ollama testcontainer that runs actual local inference.
 - **`DynamoDBLoader` now supports DynamoDB-compatible endpoints** (#855) — a new optional `endpoint_url` parameter lets it load from DynamoDB Local and LocalStack, not just AWS DynamoDB. Covered by real DynamoDB Local testcontainers tests.
 - **`S3Loader` now supports S3-compatible endpoints** (#851) — a new optional `endpoint_url` parameter (with automatic path-style addressing) lets it load from MinIO, Cloudflare R2, DigitalOcean Spaces, and LocalStack, not just AWS S3. Covered by real MinIO testcontainers tests.
 

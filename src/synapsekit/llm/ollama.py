@@ -9,8 +9,11 @@ from .base import BaseLLM, LLMConfig
 class OllamaLLM(BaseLLM):
     """Ollama local model provider with async streaming."""
 
-    def __init__(self, config: LLMConfig) -> None:
+    def __init__(self, config: LLMConfig, host: str | None = None) -> None:
         super().__init__(config)
+        # Host of the Ollama server (e.g. "http://remote:11434"); None uses the
+        # ollama client default (http://localhost:11434).
+        self._host = host
         self._client: Any = None
 
     def _get_client(self):
@@ -19,7 +22,7 @@ class OllamaLLM(BaseLLM):
                 from ollama import AsyncClient
             except ImportError:
                 raise ImportError("ollama required: pip install synapsekit[ollama]") from None
-            self._client = AsyncClient()
+            self._client = AsyncClient(host=self._host)
         return self._client
 
     async def stream(self, prompt: str, **kw) -> AsyncGenerator[str]:
