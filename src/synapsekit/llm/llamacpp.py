@@ -46,7 +46,9 @@ class LlamaCppLLM(BaseLLM):
                 from llama_cpp import Llama
             except ImportError:
                 raise ImportError(
-                    "llama-cpp-python required: pip install synapsekit[llamacpp]"
+                    "llama-cpp-python required: pip install llama-cpp-python "
+                    "(not bundled in any synapsekit extra: its diskcache dependency "
+                    "has no patched release for CVE-2025-69872)"
                 ) from None
             self._model = Llama(
                 model_path=self._model_path,
