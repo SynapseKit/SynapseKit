@@ -73,6 +73,7 @@ docs/*
 !docs/architecture/
 !docs/production-checklist.md
 !docs/comparison-matrix.md
+!docs/agent-bundle-v1.md
 
 # Saved vectorstores
 *.npz
