@@ -108,8 +108,12 @@ class VoiceAgent:
         out_path_str = None
         if output and audio_bytes:
             out_path = Path(output)
-            out_path.parent.mkdir(parents=True, exist_ok=True)
-            out_path.write_bytes(audio_bytes)
+
+            def _write() -> None:
+                out_path.parent.mkdir(parents=True, exist_ok=True)
+                out_path.write_bytes(audio_bytes)
+
+            await asyncio.to_thread(_write)
             out_path_str = str(out_path)
 
         return VoiceResult(

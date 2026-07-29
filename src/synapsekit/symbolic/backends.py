@@ -185,7 +185,7 @@ class PrologBackend(BaseSymbolicBackend):
         program = f"{constraints.source}\n"
         with tempfile.TemporaryDirectory() as tmpdir:
             path = Path(tmpdir) / "query.pl"
-            path.write_text(program, encoding="utf-8")
+            await asyncio.to_thread(path.write_text, program, encoding="utf-8")
             cmd = [
                 self.executable,
                 "-q",

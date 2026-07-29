@@ -87,9 +87,9 @@ class TextToSpeechTool(BaseTool):
             )
 
         target = Path(output_path)
-        target.parent.mkdir(parents=True, exist_ok=True)
 
         def _synthesize() -> None:
+            target.parent.mkdir(parents=True, exist_ok=True)
             client = openai.OpenAI(api_key=api_key)
             response_format: Any = format
             response = client.audio.speech.create(
