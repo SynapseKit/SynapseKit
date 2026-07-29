@@ -123,12 +123,13 @@ cloudflare = ["httpx>=0.27"]
 aleph-alpha = ["aleph-alpha-client>=7.0"]
 # llama-cpp-python currently pulls diskcache, which has no patched release for
 # CVE-2025-69872. Keep the integration import-optional until upstream removes it.
+# This applies to every extra: `edge` must not pull it back in either -- install
+# llama-cpp-python directly if you want the llama.cpp backend.
 llamacpp = []
 gpt4all = ["gpt4all>=2.0"]
 onnx = ["onnxruntime>=1.17"]
 mlx = ["mlx-lm>=0.20; platform_system == 'Darwin' and platform_machine == 'arm64'"]
 edge = [
-    "llama-cpp-python>=0.2",
     "onnxruntime>=1.17",
     "sqlite-vec>=0.1",
 ]

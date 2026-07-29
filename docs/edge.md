@@ -9,10 +9,21 @@ agents that need to work on laptops, edge servers, and offline environments.
 Install only the backends you need:
 
 ```bash
-pip install "synapsekit[llamacpp,sqlite-vec]"
-pip install "synapsekit[onnx]"
-pip install "synapsekit[edge]"
+pip install "synapsekit[edge]"     # ONNX Runtime + SQLite-vec
+pip install "synapsekit[onnx]"     # ONNX embeddings only
+pip install "synapsekit[mlx]"      # Apple Silicon
 ```
+
+The llama.cpp backend is **not** bundled in any extra and must be installed
+directly:
+
+```bash
+pip install llama-cpp-python
+```
+
+It is excluded because its `diskcache` dependency has no patched release for
+CVE-2025-69872. Installing it is your call; SynapseKit will not pull it into
+your dependency tree on your behalf.
 
 The core package does not import llama.cpp, ONNX Runtime, or MLX unless you
 instantiate those providers.
@@ -136,3 +147,40 @@ synapsekit edge quantize model-f16.gguf model-q4.gguf --quantization Q4_K_M
 Mobile Swift/Kotlin wrappers are intentionally left for a future PR. The
 runtime added here is the Python policy and provider foundation those bindings
 can call into later.
+
+## Local vs. cloud tradeoffs
+
+`benchmarks/edge_local_vs_cloud_bench.py` runs a 200-task suite (extraction,
+classification, structured JSON, and date formatting; see
+`examples/edge_task_suite.py`) through a local GGUF model and a cloud model
+directly, and reports accuracy, p50/p95 latency, and USD cost per category.
+This is a head-to-head model comparison, not a test of `EdgeRuntime`'s
+routing -- it tells you which task families are safe to keep on-device before
+you set `FallbackPolicy` gates.
+
+Reproduce it locally (needs a GGUF file and `ANTHROPIC_API_KEY`; CI only runs
+the harness-correctness checks in `test_edge_local_vs_cloud_bench.py` against
+stub models, since it has neither):
+
+```bash
+python benchmarks/edge_local_vs_cloud_bench.py \
+    --model-path /models/Llama-3.2-3B-Instruct-Q4_K_M.gguf --n-tasks 200
+```
+
+<!--
+Fill in with real numbers from a Llama-3.2-3B-Instruct-Q4_K_M run once
+available -- this table is the "document tradeoffs" acceptance criterion for
+issue #736 and should not stay empty.
+-->
+
+| model | accuracy | p50 ms | p95 ms | cost USD |
+|---|---|---|---|---|
+| local (Llama 3.2 3B Q4_K_M) | _pending_ | _pending_ | _pending_ | 0.0000 |
+| cloud (`claude-haiku-4-5-20251001`) | _pending_ | _pending_ | _pending_ | _pending_ |
+
+| category | local | cloud | gap |
+|---|---|---|---|
+| extraction | _pending_ | _pending_ | _pending_ |
+| classification | _pending_ | _pending_ | _pending_ |
+| json | _pending_ | _pending_ | _pending_ |
+| format | _pending_ | _pending_ | _pending_ |
