@@ -286,6 +286,26 @@ from .loaders.text import StringLoader, TextLoader
 from .loaders.tsv import TSVLoader
 from .loaders.web import WebLoader
 from .loaders.wikipedia import WikipediaLoader
+from .marketplace import (
+    AgentBundleFile,
+    AgentBundleVerification,
+    AgentManifest,
+    AgentMarketplaceError,
+    AgentSandbox,
+    FileAgentRegistry,
+    InstalledAgent,
+    InvalidAgentBundleError,
+    PublisherIdentity,
+    RankedRegistryEntry,
+    RegistryEntry,
+    SandboxRequiredError,
+    SignedAgentReview,
+    UntrustedPublisherError,
+    install_agent,
+    pack_agent,
+    unpack_agent,
+    verify_agent_bundle,
+)
 from .mcp import MCPClient, MCPServer, MCPToolAdapter
 from .memory import (
     AgentMemory,
@@ -435,6 +455,17 @@ from .text_splitters import (
     SentenceWindowSplitter,
     TokenAwareSplitter,
 )
+from .timetravel import (
+    AsOf,
+    CommitInfo,
+    DiffNarrativeGenerator,
+    DriftCandidate,
+    DriftDetector,
+    EvolutionEntry,
+    EvolutionIndex,
+    GitBackend,
+    TimeTravelAgent,
+)
 from .training import (
     ANTHROPIC_TRAINING_RATE_PER_M_TOKENS,
     OPENAI_TRAINING_RATE_PER_M_TOKENS,
@@ -460,6 +491,37 @@ from .training import (
     RolloutState,
     TrainingDataGenerator,
     TrainingExample,
+)
+from .twin import (
+    ApprovalRequiredError,
+    AutoSendForbiddenError,
+    DelegationLevel,
+    DelegationPolicy,
+    DigitalTwinAgent,
+    DraftResult,
+    LearnedPatterns,
+    StyleProfile,
+    VoiceMatcher,
+    VoiceMatchResult,
+)
+from .ump import (
+    AiderAdapter,
+    BaseUMPAdapter,
+    ClaudeAdapter,
+    ContinueAdapter,
+    CursorAdapter,
+    UMPDocument,
+    UMPFrontmatter,
+    UMPProvenance,
+    UMPReader,
+    UMPScope,
+    UMPType,
+    UMPValidator,
+    UMPVisibility,
+    UMPWriter,
+    ValidationError,
+    ValidationResult,
+    auto_detect_and_convert,
 )
 
 __version__ = "2.0.0"
@@ -590,6 +652,45 @@ __all__ = [
     "CrossProjectEntityResolver",
     "DuplicationDetector",
     "DuplicationMatch",
+    # Digital Twin Agent
+    "DigitalTwinAgent",
+    "StyleProfile",
+    "LearnedPatterns",
+    "VoiceMatcher",
+    "VoiceMatchResult",
+    "DelegationPolicy",
+    "DelegationLevel",
+    "DraftResult",
+    "ApprovalRequiredError",
+    "AutoSendForbiddenError",
+    # Universal Memory Protocol (UMP)
+    "UMPDocument",
+    "UMPFrontmatter",
+    "UMPProvenance",
+    "UMPType",
+    "UMPScope",
+    "UMPVisibility",
+    "UMPReader",
+    "UMPWriter",
+    "UMPValidator",
+    "ValidationError",
+    "ValidationResult",
+    "BaseUMPAdapter",
+    "ClaudeAdapter",
+    "CursorAdapter",
+    "AiderAdapter",
+    "ContinueAdapter",
+    "auto_detect_and_convert",
+    # Time Travel Codebase
+    "TimeTravelAgent",
+    "AsOf",
+    "CommitInfo",
+    "DiffNarrativeGenerator",
+    "DriftCandidate",
+    "DriftDetector",
+    "EvolutionEntry",
+    "EvolutionIndex",
+    "GitBackend",
     # Cost intelligence
     "CostTracker",
     "CostRecord",
@@ -1034,6 +1135,25 @@ __all__ = [
     "AuditMetrics",
     "VerifiableAgent",
     "AuditPIIRedactor",
+    # Portable agent marketplace
+    "AgentBundleFile",
+    "AgentBundleVerification",
+    "AgentManifest",
+    "AgentMarketplaceError",
+    "AgentSandbox",
+    "FileAgentRegistry",
+    "InstalledAgent",
+    "InvalidAgentBundleError",
+    "PublisherIdentity",
+    "RankedRegistryEntry",
+    "RegistryEntry",
+    "SandboxRequiredError",
+    "SignedAgentReview",
+    "UntrustedPublisherError",
+    "install_agent",
+    "pack_agent",
+    "unpack_agent",
+    "verify_agent_bundle",
 ]
 
 # Lazy imports for optional backends

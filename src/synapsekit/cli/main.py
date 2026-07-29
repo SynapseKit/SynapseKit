@@ -190,6 +190,64 @@ def _add_agent_parser(subparsers: argparse._SubParsersAction) -> None:  # type: 
         help="Output format",
     )
 
+    keygen = agent_sub.add_parser("keygen", help="Generate an Ed25519 publisher key")
+    keygen.add_argument("private_key", help="New raw private-key file")
+    keygen.add_argument("--public-key", default=None, help="Optional base64 public-key output")
+    keygen.add_argument("--key-id", default=None, help="Optional stable publisher key id")
+
+    pack = agent_sub.add_parser("pack", help="Pack and sign a portable .agent bundle")
+    pack.add_argument("source", help="Agent source directory")
+    pack.add_argument("--output", required=True, help="Output .agent path")
+    pack.add_argument("--name", required=True, help="Portable agent name")
+    pack.add_argument("--agent-version", required=True, help="Portable agent version")
+    pack.add_argument("--author", required=True, help="Publisher or author name")
+    pack.add_argument("--private-key", required=True, help="Raw Ed25519 private-key file")
+    pack.add_argument("--key-id", default=None, help="Publisher key id")
+    pack.add_argument("--description", default="", help="Agent description")
+    pack.add_argument("--entrypoint", default=None, help="Optional bundled FILE:SYMBOL")
+    pack.add_argument("--tag", dest="tags", action="append", default=[], help="Agent tag")
+    pack.add_argument("--eval-score", type=float, default=None, help="Eval score from 0 to 1")
+
+    def add_trust_options(command: argparse.ArgumentParser) -> None:
+        command.add_argument(
+            "--trusted-key",
+            dest="trusted_keys",
+            action="append",
+            default=None,
+            metavar="KEY_ID:BASE64_PUBLIC_KEY",
+            help="Pin an independently obtained publisher key (repeatable)",
+        )
+        command.add_argument(
+            "--require-trusted",
+            action="store_true",
+            help="Reject bundles whose publisher key is not pinned",
+        )
+
+    verify = agent_sub.add_parser("verify", help="Verify hashes, signature, and publisher trust")
+    verify.add_argument("bundle", help="Path to a .agent bundle")
+    verify.add_argument("--format", dest="output_format", choices=["text", "json"], default="text")
+    add_trust_options(verify)
+
+    unpack = agent_sub.add_parser("unpack", help="Verify and unpack a .agent bundle")
+    unpack.add_argument("bundle", help="Path to a .agent bundle")
+    unpack.add_argument("output", help="New destination directory")
+    add_trust_options(unpack)
+
+    install = agent_sub.add_parser("install", help="Verify and install an inert agent bundle")
+    install.add_argument("bundle", help="Path to a .agent bundle")
+    install.add_argument("--install-root", default=None, help="Agent installation root")
+    add_trust_options(install)
+
+    publish = agent_sub.add_parser("publish", help="Publish a bundle to a file-backed registry")
+    publish.add_argument("bundle", help="Path to a .agent bundle")
+    publish.add_argument("--registry", required=True, help="Registry root directory")
+    publish.add_argument(
+        "--allow-untrusted",
+        action="store_true",
+        help="Explicitly allow self-signed publishers in this registry",
+    )
+    add_trust_options(publish)
+
 
 def _add_memory_parser(subparsers: argparse._SubParsersAction) -> None:  # type: ignore[type-arg]
     p = subparsers.add_parser("memory", help="Manage Living Memory patches")
