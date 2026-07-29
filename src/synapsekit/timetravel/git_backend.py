@@ -190,11 +190,17 @@ class GitBackend:
         except RuntimeError:
             pass
 
+        # Target predates all history: return the true OLDEST commit.
+        # NB: `git log -1 --reverse` returns HEAD (git applies -1 before
+        # --reverse), so take the first line of the full reverse log instead.
         try:
-            output = self._run_git(["log", "-1", "--reverse", "--format=%H"])
-            return output.strip() or "HEAD"
+            output = self._run_git(["log", "--reverse", "--format=%H"])
+            for line in output.splitlines():
+                if line.strip():
+                    return line.strip()
         except RuntimeError:
-            return "HEAD"
+            pass
+        return "HEAD"
 
     def blame(self, path: str | Path, commit: str | None = None) -> list[dict[str, Any]]:
         """Run git blame on a file and return structured line ownership."""

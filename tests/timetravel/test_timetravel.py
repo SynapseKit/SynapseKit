@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 import subprocess
 from collections.abc import AsyncGenerator
 from datetime import UTC, datetime
@@ -239,3 +240,91 @@ async def test_time_travel_agent_drift_and_timeline(git_repo):
 
     timeline = await agent.timeline("AgentRegistry")
     assert len(timeline) >= 2
+
+
+# --- Async-first tripwire: public IO methods must be coroutines (Defect 1) ---
+
+
+def test_public_methods_are_coroutines():
+    """Public IO methods must be coroutines so blocking git IO is offloaded."""
+    assert inspect.iscoroutinefunction(TimeTravelAgent.query)
+    assert inspect.iscoroutinefunction(TimeTravelAgent.timeline)
+    assert inspect.iscoroutinefunction(TimeTravelAgent.detect_drift)
+    assert inspect.iscoroutinefunction(TimeTravelAgent._query_as_of)
+
+
+def test_asof_methods_are_coroutines():
+    """AsOf's public IO methods must be coroutines too."""
+    assert inspect.iscoroutinefunction(AsOf.query)
+    assert inspect.iscoroutinefunction(AsOf.detect_drift)
+    assert inspect.iscoroutinefunction(AsOf.timeline)
+
+
+# --- Regression: pre-history date must resolve to the EARLIEST commit (Defect 2) ---
+
+
+def test_find_commit_at_before_history_returns_earliest(git_repo):
+    """A date predating all history must resolve to the OLDEST commit, not HEAD.
+
+    Old code ran `git log -1 --reverse` which git evaluates as HEAD (it applies
+    -1 before --reverse), so pre-history dates silently scoped to HEAD.
+    """
+    backend = GitBackend(git_repo)
+    commits = backend.log()
+    earliest = commits[-1].hash  # log() is newest-first
+    head = commits[0].hash
+    assert earliest != head
+
+    before_history = datetime(1990, 1, 1, tzinfo=UTC)
+    resolved = backend.find_commit_at(before_history)
+
+    assert resolved == earliest
+    assert resolved != head
+
+
+def test_as_of_before_history_scopes_to_earliest(git_repo):
+    """agent.as_of(<date before repo existed>) must anchor to the first commit."""
+    agent = TimeTravelAgent(repo=git_repo)
+    backend = GitBackend(git_repo)
+    earliest = backend.log()[-1].hash
+
+    as_of = agent.as_of(datetime(1990, 1, 1, tzinfo=UTC))
+    assert as_of.commit == earliest
+
+
+# --- Negatives: empty repo + invalid ref ---
+
+
+@pytest.fixture
+def empty_git_repo(tmp_path):
+    """An initialized git repo with no commits."""
+    subprocess.run(["git", "init", str(tmp_path)], check=True, capture_output=True)
+    subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.name", "Test User"], cwd=tmp_path, check=True)
+    return tmp_path
+
+
+def test_empty_repo_handled_gracefully(empty_git_repo):
+    """An empty repo (no commits) must not raise from the read paths."""
+    backend = GitBackend(empty_git_repo)
+
+    assert backend.log() == []
+    assert backend.list_files() == []
+    # No commits => fallback yields the sentinel HEAD without raising.
+    assert backend.find_commit_at(datetime(1990, 1, 1, tzinfo=UTC)) == "HEAD"
+
+
+def test_invalid_ref_raises_clear_error(git_repo):
+    """_run_git surfaces a clear RuntimeError on a bogus ref."""
+    backend = GitBackend(git_repo)
+    with pytest.raises(RuntimeError, match="Git command failed"):
+        backend._run_git(["rev-parse", "--verify", "definitely-not-a-ref"])
+
+
+@pytest.mark.asyncio
+async def test_query_offloads_and_returns(git_repo):
+    """query() runs the blocking pipeline via to_thread and still returns a narrative."""
+    agent = TimeTravelAgent(repo=git_repo, llm=FakeLLM("evolved"))
+    answer = await agent.query("how has AgentRegistry changed?")
+    assert isinstance(answer, str)
+    assert answer != ""

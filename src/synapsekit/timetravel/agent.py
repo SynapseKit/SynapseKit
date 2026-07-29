@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -88,6 +89,17 @@ class TimeTravelAgent:
         until: str | datetime | None = None,
     ) -> list[EvolutionEntry]:
         """Fetch chronological timeline of evolution entries for a file or symbol."""
+        return await asyncio.to_thread(
+            self._timeline_sync, file_or_symbol, since=since, until=until
+        )
+
+    def _timeline_sync(
+        self,
+        file_or_symbol: str,
+        since: str | datetime | None = None,
+        until: str | datetime | None = None,
+    ) -> list[EvolutionEntry]:
+        """Blocking timeline computation (runs git subprocess pipeline)."""
         return self.index.timeline(file_or_symbol, since=since, until=until)
 
     async def detect_drift(
@@ -97,6 +109,20 @@ class TimeTravelAgent:
         as_of_date: datetime | None = None,
     ) -> list[DriftCandidate]:
         """Detect abstractions whose original justification or caller count has drifted."""
+        return await asyncio.to_thread(
+            self._detect_drift_sync,
+            symbol=symbol,
+            min_age_days=min_age_days,
+            as_of_date=as_of_date,
+        )
+
+    def _detect_drift_sync(
+        self,
+        symbol: str | None = None,
+        min_age_days: int = 0,
+        as_of_date: datetime | None = None,
+    ) -> list[DriftCandidate]:
+        """Blocking drift detection (runs git subprocess pipeline)."""
         return self.drift_detector.detect(
             min_age_days=min_age_days,
             symbol=symbol,
@@ -105,6 +131,30 @@ class TimeTravelAgent:
 
     async def query(self, question: str) -> str:
         """Answer a question about code evolution, design changes, and history."""
+        # Offload the blocking git/index pipeline off the event loop.
+        deduped, memory_notes = await asyncio.to_thread(self._query_collect_sync, question)
+
+        # Incorporate world model bitemporal graph if attached (async IO)
+        if self.world_model is not None:
+            try:
+                wm_res = await self.world_model.query(question)
+                if wm_res and hasattr(wm_res, "answer"):
+                    memory_notes.append(f"World Model Graph Context: {wm_res.answer}")
+            except Exception:
+                pass
+
+        narrative = await self.narrative_generator.generate(deduped[:30], question, self.llm)
+        if memory_notes:
+            narrative += "\n\n### Historical Memory & Knowledge Graph Context\n" + "\n".join(
+                memory_notes
+            )
+
+        return narrative
+
+    def _query_collect_sync(
+        self, question: str
+    ) -> tuple[list[EvolutionEntry], list[str]]:
+        """Blocking part of query(): build/query the evolution index off the event loop."""
         # Check if question specifies a class or file symbol
         entries = self.index.build()
 
@@ -131,7 +181,7 @@ class TimeTravelAgent:
                 deduped.append(e)
 
         # Incorporate memory file patches if memory instance attached
-        memory_notes = []
+        memory_notes: list[str] = []
         if self.memory is not None:
             try:
                 patches = self.memory.patch_history()
@@ -144,25 +194,23 @@ class TimeTravelAgent:
             except Exception:
                 pass
 
-        # Incorporate world model bitemporal graph if attached
-        if self.world_model is not None:
-            try:
-                wm_res = await self.world_model.query(question)
-                if wm_res and hasattr(wm_res, "answer"):
-                    memory_notes.append(f"World Model Graph Context: {wm_res.answer}")
-            except Exception:
-                pass
-
-        narrative = await self.narrative_generator.generate(deduped[:30], question, self.llm)
-        if memory_notes:
-            narrative += "\n\n### Historical Memory & Knowledge Graph Context\n" + "\n".join(
-                memory_notes
-            )
-
-        return narrative
+        return deduped, memory_notes
 
     async def _query_as_of(self, question: str, date: datetime, commit: str) -> str:
         """Query codebase state as of a specific historical date and commit."""
+        # Offload the blocking git/index pipeline off the event loop.
+        lines, entries = await asyncio.to_thread(
+            self._query_as_of_sync, question, date, commit
+        )
+
+        narrative = await self.narrative_generator.generate(entries[:20], question, self.llm)
+
+        return "\n\n".join(lines) + "\n\n" + narrative
+
+    def _query_as_of_sync(
+        self, question: str, date: datetime, commit: str
+    ) -> tuple[list[str], list[EvolutionEntry]]:
+        """Blocking part of _query_as_of(): read files/index at a commit off the event loop."""
         # Query files and contents at that commit
         files = self.backend.list_files(commit)
         date_str = date.strftime("%Y-%m-%d")
@@ -187,6 +235,5 @@ class TimeTravelAgent:
 
         # Generate timeline up to commit
         entries = self.index.build(until=date)
-        narrative = await self.narrative_generator.generate(entries[:20], question, self.llm)
 
-        return "\n\n".join(lines) + "\n\n" + narrative
+        return lines, entries
