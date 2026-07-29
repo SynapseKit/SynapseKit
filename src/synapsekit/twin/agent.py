@@ -160,8 +160,7 @@ class DigitalTwinAgent:
 
         if self.delegation.requires_human_approval(target) and not approved:
             raise ApprovalRequiredError(
-                f"Channel '{target}' requires explicit human approval; "
-                "pass approved=True to send."
+                f"Channel '{target}' requires explicit human approval; pass approved=True to send."
             )
 
         return draft_result

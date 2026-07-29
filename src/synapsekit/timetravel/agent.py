@@ -151,9 +151,7 @@ class TimeTravelAgent:
 
         return narrative
 
-    def _query_collect_sync(
-        self, question: str
-    ) -> tuple[list[EvolutionEntry], list[str]]:
+    def _query_collect_sync(self, question: str) -> tuple[list[EvolutionEntry], list[str]]:
         """Blocking part of query(): build/query the evolution index off the event loop."""
         # Check if question specifies a class or file symbol
         entries = self.index.build()
@@ -199,9 +197,7 @@ class TimeTravelAgent:
     async def _query_as_of(self, question: str, date: datetime, commit: str) -> str:
         """Query codebase state as of a specific historical date and commit."""
         # Offload the blocking git/index pipeline off the event loop.
-        lines, entries = await asyncio.to_thread(
-            self._query_as_of_sync, question, date, commit
-        )
+        lines, entries = await asyncio.to_thread(self._query_as_of_sync, question, date, commit)
 
         narrative = await self.narrative_generator.generate(entries[:20], question, self.llm)
 
