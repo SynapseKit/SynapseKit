@@ -286,6 +286,26 @@ from .loaders.text import StringLoader, TextLoader
 from .loaders.tsv import TSVLoader
 from .loaders.web import WebLoader
 from .loaders.wikipedia import WikipediaLoader
+from .marketplace import (
+    AgentBundleFile,
+    AgentBundleVerification,
+    AgentManifest,
+    AgentMarketplaceError,
+    AgentSandbox,
+    FileAgentRegistry,
+    InstalledAgent,
+    InvalidAgentBundleError,
+    PublisherIdentity,
+    RankedRegistryEntry,
+    RegistryEntry,
+    SandboxRequiredError,
+    SignedAgentReview,
+    UntrustedPublisherError,
+    install_agent,
+    pack_agent,
+    unpack_agent,
+    verify_agent_bundle,
+)
 from .mcp import MCPClient, MCPServer, MCPToolAdapter
 from .memory import (
     AgentMemory,
@@ -1034,6 +1054,25 @@ __all__ = [
     "AuditMetrics",
     "VerifiableAgent",
     "AuditPIIRedactor",
+    # Portable agent marketplace
+    "AgentBundleFile",
+    "AgentBundleVerification",
+    "AgentManifest",
+    "AgentMarketplaceError",
+    "AgentSandbox",
+    "FileAgentRegistry",
+    "InstalledAgent",
+    "InvalidAgentBundleError",
+    "PublisherIdentity",
+    "RankedRegistryEntry",
+    "RegistryEntry",
+    "SandboxRequiredError",
+    "SignedAgentReview",
+    "UntrustedPublisherError",
+    "install_agent",
+    "pack_agent",
+    "unpack_agent",
+    "verify_agent_bundle",
 ]
 
 # Lazy imports for optional backends
