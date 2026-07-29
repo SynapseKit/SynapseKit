@@ -481,6 +481,18 @@ from .training import (
     TrainingDataGenerator,
     TrainingExample,
 )
+from .twin import (
+    ApprovalRequiredError,
+    AutoSendForbiddenError,
+    DelegationLevel,
+    DelegationPolicy,
+    DigitalTwinAgent,
+    DraftResult,
+    LearnedPatterns,
+    StyleProfile,
+    VoiceMatcher,
+    VoiceMatchResult,
+)
 from .ump import (
     AiderAdapter,
     BaseUMPAdapter,
@@ -629,6 +641,17 @@ __all__ = [
     "CrossProjectEntityResolver",
     "DuplicationDetector",
     "DuplicationMatch",
+    # Digital Twin Agent
+    "DigitalTwinAgent",
+    "StyleProfile",
+    "LearnedPatterns",
+    "VoiceMatcher",
+    "VoiceMatchResult",
+    "DelegationPolicy",
+    "DelegationLevel",
+    "DraftResult",
+    "ApprovalRequiredError",
+    "AutoSendForbiddenError",
     # Universal Memory Protocol (UMP)
     "UMPDocument",
     "UMPFrontmatter",
