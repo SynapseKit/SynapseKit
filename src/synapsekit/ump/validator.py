@@ -54,9 +54,9 @@ class UMPValidator:
         return ValidationResult(is_valid=is_valid, errors=errors, warnings=warnings)
 
     @classmethod
-    def validate_file(cls, path: str | Path) -> ValidationResult:
+    async def validate_file(cls, path: str | Path) -> ValidationResult:
         try:
-            doc = UMPReader.read_file(path)
+            doc = await UMPReader.read_file(path)
             return cls.validate(doc)
         except Exception as err:
             return ValidationResult(

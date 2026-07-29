@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 from pathlib import Path
 from typing import ClassVar
@@ -23,7 +24,7 @@ class BaseUMPAdapter:
         return path.exists()
 
     @classmethod
-    def to_ump(cls, path: str | Path) -> UMPDocument:
+    async def to_ump(cls, path: str | Path) -> UMPDocument:
         raise NotImplementedError
 
     @classmethod
@@ -38,9 +39,13 @@ class ClaudeAdapter(BaseUMPAdapter):
     default_filename = "CLAUDE.md"
 
     @classmethod
-    def to_ump(cls, path: str | Path) -> UMPDocument:
+    async def to_ump(cls, path: str | Path) -> UMPDocument:
         file_path = Path(path)
-        content = file_path.read_text(encoding="utf-8") if file_path.exists() else ""
+        content = (
+            await asyncio.to_thread(file_path.read_text, encoding="utf-8")
+            if file_path.exists()
+            else ""
+        )
         fm = UMPFrontmatter(
             name="claude-memory",
             type="project",
@@ -64,9 +69,13 @@ class CursorAdapter(BaseUMPAdapter):
         return p1.exists() or p2.exists()
 
     @classmethod
-    def to_ump(cls, path: str | Path) -> UMPDocument:
+    async def to_ump(cls, path: str | Path) -> UMPDocument:
         file_path = Path(path)
-        content = file_path.read_text(encoding="utf-8") if file_path.exists() else ""
+        content = (
+            await asyncio.to_thread(file_path.read_text, encoding="utf-8")
+            if file_path.exists()
+            else ""
+        )
         fm = UMPFrontmatter(
             name="cursor-rules",
             type="project",
@@ -84,11 +93,11 @@ class AiderAdapter(BaseUMPAdapter):
     default_filename = ".aider.conf.yml"
 
     @classmethod
-    def to_ump(cls, path: str | Path) -> UMPDocument:
+    async def to_ump(cls, path: str | Path) -> UMPDocument:
         file_path = Path(path)
         content = ""
         if file_path.exists():
-            raw_text = file_path.read_text(encoding="utf-8")
+            raw_text = await asyncio.to_thread(file_path.read_text, encoding="utf-8")
             try:
                 data = yaml.safe_load(raw_text)
                 content = json.dumps(data, indent=2) if data else raw_text
@@ -112,11 +121,11 @@ class ContinueAdapter(BaseUMPAdapter):
     default_filename = ".continue/config.json"
 
     @classmethod
-    def to_ump(cls, path: str | Path) -> UMPDocument:
+    async def to_ump(cls, path: str | Path) -> UMPDocument:
         file_path = Path(path)
         content = ""
         if file_path.exists():
-            raw_text = file_path.read_text(encoding="utf-8")
+            raw_text = await asyncio.to_thread(file_path.read_text, encoding="utf-8")
             try:
                 data = json.loads(raw_text)
                 content = json.dumps(data, indent=2)
@@ -133,13 +142,13 @@ class ContinueAdapter(BaseUMPAdapter):
         return UMPDocument(frontmatter=fm, body=content, source_path=str(file_path.resolve()))
 
 
-def auto_detect_and_convert(directory: str | Path) -> list[UMPDocument]:
+async def auto_detect_and_convert(directory: str | Path) -> list[UMPDocument]:
     """Scan directory for known tool memory files and convert to UMP documents."""
     base = Path(directory)
     results: list[UMPDocument] = []
 
     if ClaudeAdapter.detect(base):
-        results.append(ClaudeAdapter.to_ump(base / ClaudeAdapter.default_filename))
+        results.append(await ClaudeAdapter.to_ump(base / ClaudeAdapter.default_filename))
 
     if CursorAdapter.detect(base):
         cursor_path = (
@@ -147,12 +156,12 @@ def auto_detect_and_convert(directory: str | Path) -> list[UMPDocument]:
             if (base / ".cursorrules").exists()
             else base / ".cursor" / "rules"
         )
-        results.append(CursorAdapter.to_ump(cursor_path))
+        results.append(await CursorAdapter.to_ump(cursor_path))
 
     if AiderAdapter.detect(base):
-        results.append(AiderAdapter.to_ump(base / AiderAdapter.default_filename))
+        results.append(await AiderAdapter.to_ump(base / AiderAdapter.default_filename))
 
     if ContinueAdapter.detect(base):
-        results.append(ContinueAdapter.to_ump(base / ContinueAdapter.default_filename))
+        results.append(await ContinueAdapter.to_ump(base / ContinueAdapter.default_filename))
 
     return results

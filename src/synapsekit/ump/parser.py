@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import re
 from pathlib import Path
 from typing import Any
@@ -36,9 +37,9 @@ class UMPReader:
         )
 
     @classmethod
-    def read_file(cls, path: str | Path) -> UMPDocument:
+    async def read_file(cls, path: str | Path) -> UMPDocument:
         file_path = Path(path)
-        content = file_path.read_text(encoding="utf-8")
+        content = await asyncio.to_thread(file_path.read_text, encoding="utf-8")
         return cls.parse(content, source_path=str(file_path.resolve()))
 
     @classmethod
@@ -84,11 +85,15 @@ class UMPWriter:
         return f"---\n{yaml_str}---\n\n{doc.body}\n"
 
     @classmethod
-    def write_file(cls, doc: UMPDocument, path: str | Path) -> None:
+    async def write_file(cls, doc: UMPDocument, path: str | Path) -> None:
         file_path = Path(path)
-        file_path.parent.mkdir(parents=True, exist_ok=True)
         content = cls.serialize(doc)
-        file_path.write_text(content, encoding="utf-8")
+
+        def _write() -> None:
+            file_path.parent.mkdir(parents=True, exist_ok=True)
+            file_path.write_text(content, encoding="utf-8")
+
+        await asyncio.to_thread(_write)
 
     @classmethod
     def _render_yaml_frontmatter(cls, fm: UMPFrontmatter) -> str:
