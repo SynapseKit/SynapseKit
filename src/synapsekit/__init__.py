@@ -462,6 +462,8 @@ from .training import (
     TrainingExample,
 )
 from .twin import (
+    ApprovalRequiredError,
+    AutoSendForbiddenError,
     DelegationLevel,
     DelegationPolicy,
     DigitalTwinAgent,
@@ -609,6 +611,8 @@ __all__ = [
     "DelegationPolicy",
     "DelegationLevel",
     "DraftResult",
+    "ApprovalRequiredError",
+    "AutoSendForbiddenError",
     # Cost intelligence
     "CostTracker",
     "CostRecord",

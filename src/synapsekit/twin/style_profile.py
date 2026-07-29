@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from dataclasses import asdict, dataclass, field
@@ -49,7 +50,10 @@ class StyleProfile:
         self._version: int = 1
         self._patterns: LearnedPatterns = LearnedPatterns()
         if self.profile_path.exists():
-            self.load()
+            # Synchronous read at construction time only; the public IO
+            # methods (load/save/update_from_samples) are async and offload
+            # blocking filesystem calls via asyncio.to_thread.
+            self._load_sync()
 
     @property
     def version(self) -> int:
@@ -59,8 +63,8 @@ class StyleProfile:
     def patterns(self) -> LearnedPatterns:
         return self._patterns
 
-    def load(self) -> LearnedPatterns:
-        """Load style patterns and version from profile_path."""
+    def _load_sync(self) -> LearnedPatterns:
+        """Blocking load implementation. Runs off-thread via load()."""
         if not self.profile_path.exists():
             self._patterns = LearnedPatterns()
             self._version = 1
@@ -75,8 +79,12 @@ class StyleProfile:
             self._version = 1
         return self._patterns
 
-    def save(self, patterns: LearnedPatterns | None = None) -> None:
-        """Save patterns to profile_path, incrementing version."""
+    async def load(self) -> LearnedPatterns:
+        """Load style patterns and version from profile_path (async, off-thread)."""
+        return await asyncio.to_thread(self._load_sync)
+
+    def _save_sync(self, patterns: LearnedPatterns | None = None) -> None:
+        """Blocking save implementation. Runs off-thread via save()."""
         if patterns is not None:
             self._patterns = patterns
         self._version += 1
@@ -84,7 +92,11 @@ class StyleProfile:
         markdown_content = self._render_markdown_profile(self._patterns, self._version)
         self.profile_path.write_text(markdown_content, encoding="utf-8")
 
-    def update_from_samples(self, samples: list[str]) -> LearnedPatterns:
+    async def save(self, patterns: LearnedPatterns | None = None) -> None:
+        """Save patterns to profile_path, incrementing version (async, off-thread)."""
+        await asyncio.to_thread(self._save_sync, patterns)
+
+    async def update_from_samples(self, samples: list[str]) -> LearnedPatterns:
         """Extract patterns from writing samples and update profile."""
         if not samples:
             return self._patterns
@@ -122,7 +134,7 @@ class StyleProfile:
             code_conventions=list(self._patterns.code_conventions),
             review_style=self._patterns.review_style,
         )
-        self.save(new_patterns)
+        await self.save(new_patterns)
         return self._patterns
 
     def _render_markdown_profile(self, patterns: LearnedPatterns, version: int) -> str:

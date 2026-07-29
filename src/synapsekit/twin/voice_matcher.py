@@ -35,6 +35,17 @@ class VoiceMatcher:
         if patterns is None:
             patterns = LearnedPatterns()
 
+        # Degenerate guard: a genuinely empty candidate draft is a zero match,
+        # not a mid-confidence 0.5. Never let a blank draft read as ~0.5/1.0.
+        if not candidate.strip():
+            return VoiceMatchResult(
+                score=0.0,
+                ngram_overlap=0.0,
+                vocabulary_match=0.0,
+                structure_match=0.0,
+                details={"heuristic_score": 0.0, "llm_score": 0.0, "empty_candidate": True},
+            )
+
         ngram = self._compute_ngram_overlap(candidate, reference_samples)
         vocab = self._compute_vocabulary_match(candidate, patterns)
         struct = self._compute_structure_match(candidate, patterns)
@@ -119,7 +130,8 @@ class VoiceMatcher:
             "Reference samples:\n"
             + "\n---\n".join(references[:3])
             + f"\n\nCandidate draft:\n{candidate}\n\n"
-            f"Rate how well the candidate matches the tone, style, and vocabulary (0.0 to 1.0). Output ONLY a single floating-point number."
+            "Rate how well the candidate matches the tone, style, and vocabulary "
+            "(0.0 to 1.0). Output ONLY a single floating-point number."
         )
 
         response_chunks: list[str] = []

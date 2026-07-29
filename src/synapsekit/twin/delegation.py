@@ -6,6 +6,14 @@ from typing import Literal
 DelegationLevel = Literal["draft", "draft_with_approval", "never_send_auto"]
 
 
+class AutoSendForbiddenError(PermissionError):
+    """Raised when an auto-send is attempted on a channel gated as never_send_auto."""
+
+
+class ApprovalRequiredError(PermissionError):
+    """Raised when a send on a draft_with_approval channel lacks explicit approval."""
+
+
 @dataclass
 class DelegationPolicy:
     commit_messages: DelegationLevel = "draft"
@@ -23,6 +31,24 @@ class DelegationPolicy:
         elif channel in ("emails", "email"):
             return self.emails
         return "draft_with_approval"
+
+    def can_auto_send(self, channel: str) -> bool:
+        """True only when the channel is level 'draft' (safe to auto-send).
+
+        Both 'draft_with_approval' and 'never_send_auto' return False.
+        """
+        return self.get_level(channel) == "draft"
+
+    def requires_human_approval(self, channel: str) -> bool:
+        """True when the channel is gated as 'draft_with_approval'.
+
+        Such a channel may be sent, but only with an explicit approval token.
+        """
+        return self.get_level(channel) == "draft_with_approval"
+
+    def is_send_forbidden(self, channel: str) -> bool:
+        """True when the channel is 'never_send_auto' — sending is never allowed."""
+        return self.get_level(channel) == "never_send_auto"
 
 
 @dataclass

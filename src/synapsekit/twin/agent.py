@@ -5,7 +5,12 @@ from collections.abc import Sequence
 
 from synapsekit.llm._factory import make_llm
 from synapsekit.llm.base import BaseLLM
-from synapsekit.twin.delegation import DelegationPolicy, DraftResult
+from synapsekit.twin.delegation import (
+    ApprovalRequiredError,
+    AutoSendForbiddenError,
+    DelegationPolicy,
+    DraftResult,
+)
 from synapsekit.twin.style_profile import LearnedPatterns, StyleProfile
 from synapsekit.twin.voice_matcher import VoiceMatcher, VoiceMatchResult
 
@@ -52,7 +57,7 @@ class DigitalTwinAgent:
     async def learn(self, samples: Sequence[str]) -> LearnedPatterns:
         """Learn writing patterns from a set of human-written text samples."""
         self.reference_samples.extend(samples)
-        return self.profile.update_from_samples(self.reference_samples)
+        return await self.profile.update_from_samples(self.reference_samples)
 
     async def draft_commit_message(self, diff: str) -> DraftResult:
         """Draft a git commit message matching user voice."""
@@ -89,7 +94,7 @@ class DigitalTwinAgent:
     async def draft(self, channel: str, prompt_or_content: str) -> DraftResult:
         """Generic drafting method enforcing delegation policy and voice matching."""
         level = self.delegation.get_level(channel)
-        requires_approval = level != "draft"
+        requires_approval = not self.delegation.can_auto_send(channel)
 
         generated_text = ""
         if self.llm is not None:
@@ -127,6 +132,39 @@ class DigitalTwinAgent:
         return await self.voice_matcher.evaluate(
             candidate, self.reference_samples, self.profile.patterns
         )
+
+    async def send(
+        self,
+        draft_result: DraftResult,
+        channel: str | None = None,
+        *,
+        approved: bool = False,
+    ) -> DraftResult:
+        """Enforce the delegation gate before a draft may be dispatched.
+
+        - ``never_send_auto`` channels always raise ``AutoSendForbiddenError``.
+        - ``draft_with_approval`` channels require ``approved=True`` (an explicit
+          human approval token) or raise ``ApprovalRequiredError``.
+        - ``draft`` channels may be sent freely.
+
+        The default (``approved=False``) is safe: any gated channel refuses.
+        Returns the ``draft_result`` unchanged on success so callers may chain.
+        """
+        target = channel or draft_result.channel
+
+        if self.delegation.is_send_forbidden(target):
+            raise AutoSendForbiddenError(
+                f"Channel '{target}' is gated as never_send_auto; "
+                "auto-sending is forbidden and requires a manual human send."
+            )
+
+        if self.delegation.requires_human_approval(target) and not approved:
+            raise ApprovalRequiredError(
+                f"Channel '{target}' requires explicit human approval; "
+                "pass approved=True to send."
+            )
+
+        return draft_result
 
     def _fallback_draft(self, channel: str, prompt: str) -> str:
         patterns = self.profile.patterns

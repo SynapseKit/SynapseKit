@@ -1,7 +1,13 @@
 from __future__ import annotations
 
 from synapsekit.twin.agent import DigitalTwinAgent
-from synapsekit.twin.delegation import DelegationLevel, DelegationPolicy, DraftResult
+from synapsekit.twin.delegation import (
+    ApprovalRequiredError,
+    AutoSendForbiddenError,
+    DelegationLevel,
+    DelegationPolicy,
+    DraftResult,
+)
 from synapsekit.twin.style_profile import LearnedPatterns, StyleProfile
 from synapsekit.twin.voice_matcher import VoiceMatcher, VoiceMatchResult
 
@@ -14,4 +20,6 @@ __all__ = [
     "DelegationPolicy",
     "DelegationLevel",
     "DraftResult",
+    "ApprovalRequiredError",
+    "AutoSendForbiddenError",
 ]
