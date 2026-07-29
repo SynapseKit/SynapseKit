@@ -481,6 +481,25 @@ from .training import (
     TrainingDataGenerator,
     TrainingExample,
 )
+from .ump import (
+    AiderAdapter,
+    BaseUMPAdapter,
+    ClaudeAdapter,
+    ContinueAdapter,
+    CursorAdapter,
+    UMPDocument,
+    UMPFrontmatter,
+    UMPProvenance,
+    UMPReader,
+    UMPScope,
+    UMPType,
+    UMPValidator,
+    UMPVisibility,
+    UMPWriter,
+    ValidationError,
+    ValidationResult,
+    auto_detect_and_convert,
+)
 
 __version__ = "2.0.0"
 __all__ = [
@@ -610,6 +629,24 @@ __all__ = [
     "CrossProjectEntityResolver",
     "DuplicationDetector",
     "DuplicationMatch",
+    # Universal Memory Protocol (UMP)
+    "UMPDocument",
+    "UMPFrontmatter",
+    "UMPProvenance",
+    "UMPType",
+    "UMPScope",
+    "UMPVisibility",
+    "UMPReader",
+    "UMPWriter",
+    "UMPValidator",
+    "ValidationError",
+    "ValidationResult",
+    "BaseUMPAdapter",
+    "ClaudeAdapter",
+    "CursorAdapter",
+    "AiderAdapter",
+    "ContinueAdapter",
+    "auto_detect_and_convert",
     # Cost intelligence
     "CostTracker",
     "CostRecord",
