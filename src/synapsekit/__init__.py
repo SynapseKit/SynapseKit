@@ -455,6 +455,17 @@ from .text_splitters import (
     SentenceWindowSplitter,
     TokenAwareSplitter,
 )
+from .timetravel import (
+    AsOf,
+    CommitInfo,
+    DiffNarrativeGenerator,
+    DriftCandidate,
+    DriftDetector,
+    EvolutionEntry,
+    EvolutionIndex,
+    GitBackend,
+    TimeTravelAgent,
+)
 from .training import (
     ANTHROPIC_TRAINING_RATE_PER_M_TOKENS,
     OPENAI_TRAINING_RATE_PER_M_TOKENS,
@@ -670,6 +681,16 @@ __all__ = [
     "AiderAdapter",
     "ContinueAdapter",
     "auto_detect_and_convert",
+    # Time Travel Codebase
+    "TimeTravelAgent",
+    "AsOf",
+    "CommitInfo",
+    "DiffNarrativeGenerator",
+    "DriftCandidate",
+    "DriftDetector",
+    "EvolutionEntry",
+    "EvolutionIndex",
+    "GitBackend",
     # Cost intelligence
     "CostTracker",
     "CostRecord",
