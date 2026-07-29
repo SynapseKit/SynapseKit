@@ -40,6 +40,16 @@ jobs:
       - run: uv sync --group dev
       - run: uv run deptry src/
 
+  # Async-first gate: fail if any blocking file/subprocess/sleep/network call runs
+  # directly inside an `async def` (must be offloaded via asyncio.to_thread /
+  # run_in_executor). Catches the event-loop-blocking bug class before review.
+  async-blocking-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv run python scripts/check_async_blocking.py
+
   world-model-retrieval-gate:
     runs-on: ubuntu-latest
     steps:
