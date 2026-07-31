@@ -373,6 +373,7 @@ from .parsers.pydantic_parser import PydanticParser
 from .plugins import PluginRegistry
 from .prompts.hub import PromptHub
 from .prompts.template import ChatPromptTemplate, FewShotPromptTemplate, PromptTemplate
+from .provenance import GroundedSignal, SignalSource
 from .rag.facade import RAG
 from .rag.pipeline import RAGConfig, RAGPipeline
 from .rag.self_healing import SelfHealingRAG
@@ -583,6 +584,8 @@ __all__ = [
     "VectorStore",
     "InMemoryVectorStore",
     "GraphVectorStore",
+    "GroundedSignal",
+    "SignalSource",
     "ChromaVectorStore",
     "FAISSVectorStore",
     "LanceDBVectorStore",

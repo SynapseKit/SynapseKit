@@ -309,7 +309,27 @@ class AgentEvolutionAuditLog:
 
 
 class SelfImprovingAgent:
-    """Wrap an agent with an eval-blocked self-improvement loop."""
+    """Wrap an agent with an eval-blocked self-improvement loop.
+
+    Grounding audit (#822)
+    ----------------------
+    The accept/reject **gate is grounded**: a candidate patch is only adopted if
+    it beats the baseline on an independent :class:`~synapsekit.evaluation.EvalSuite`
+    (:meth:`evolve` scores ``snapshot.system_prompt`` and each candidate via
+    ``eval_suite.score_prompt`` — code that is not the agent grading itself), so
+    a self-modifying agent cannot rubber-stamp its own patch through the gate.
+
+    The one **ungrounded input is the proposal signal**: the ``FeedbackCollector``
+    samples that drive patch *proposal* are whatever the caller records via
+    ``run(..., feedback=...)``, which today has no provenance tag — so feedback
+    that originated from the agent instance being evaluated is indistinguishable
+    from independently-collected user feedback at proposal time. This only biases
+    *which* patches are proposed, never which are *accepted* (that stays
+    eval-gated). Tagging ``FeedbackSample`` with
+    :class:`~synapsekit.provenance.SignalSource` so self-originated feedback can
+    be down-weighted in proposal is a documented, deferred follow-up, tracked
+    against #822; it is intentionally out of scope for the primitive PR.
+    """
 
     def __init__(
         self,

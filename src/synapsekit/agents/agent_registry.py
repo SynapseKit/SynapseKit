@@ -10,6 +10,14 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
+from ..provenance import GroundedSignal
+
+# Version of the reputation update rule (EMA over cost/quality/reward). Bumped
+# if the update maths changes, so a swarm receipt can flag drift in the rule
+# itself, not just in an agent's track record.
+REPUTATION_LEARNING_RULE = "ema"
+REPUTATION_LEARNING_RULE_VERSION = "1"
+
 
 def _normalise_strings(values: Iterable[str] | str | None) -> builtin_list[str]:
     if values is None:
@@ -102,6 +110,9 @@ class ReputationSnapshot:
     mean_reward: float = 0.0
     quality_alpha: float = 1.0
     quality_beta: float = 1.0
+    version: int = 0
+    grounded: bool = False
+    grounded_attempts: int = 0
 
     def __post_init__(self) -> None:
         self.agent_id = str(self.agent_id)
@@ -113,6 +124,17 @@ class ReputationSnapshot:
         self.mean_reward = float(self.mean_reward)
         self.quality_alpha = max(0.001, float(self.quality_alpha))
         self.quality_beta = max(0.001, float(self.quality_beta))
+        self.version = max(0, int(self.version))
+        self.grounded = bool(self.grounded)
+        self.grounded_attempts = max(0, int(self.grounded_attempts))
+
+    @property
+    def grounded_fraction(self) -> float:
+        """Fraction of this agent's whole track record backed by an external
+        (grounded) outcome signal, in ``[0, 1]`` — ``0.0`` before any attempt."""
+        if self.attempts <= 0:
+            return 0.0
+        return self.grounded_attempts / self.attempts
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -125,6 +147,9 @@ class ReputationSnapshot:
             "mean_reward": self.mean_reward,
             "quality_alpha": self.quality_alpha,
             "quality_beta": self.quality_beta,
+            "version": self.version,
+            "grounded": self.grounded,
+            "grounded_attempts": self.grounded_attempts,
         }
 
     @classmethod
@@ -139,6 +164,9 @@ class ReputationSnapshot:
             mean_reward=data.get("mean_reward", 0.0),
             quality_alpha=data.get("quality_alpha", 1.0),
             quality_beta=data.get("quality_beta", 1.0),
+            version=data.get("version", 0),
+            grounded=data.get("grounded", False),
+            grounded_attempts=data.get("grounded_attempts", 0),
         )
 
     def copy(self) -> ReputationSnapshot:
@@ -181,7 +209,18 @@ class Reputation:
         reward: float,
         won: bool = True,
         learning_rate: float = 0.1,
+        quality_signal: GroundedSignal | None = None,
     ) -> ReputationSnapshot:
+        """Fold one outcome into an agent's running reputation.
+
+        ``cost``/``quality``/``reward`` are plain floats, unchanged. The new,
+        optional ``quality_signal`` carries the *provenance* of the ``quality``
+        number (see :class:`~synapsekit.provenance.GroundedSignal`): whether it
+        came from an independent source or was self-reported by the agent being
+        scored. It only labels the update — it never changes the maths — so the
+        snapshot can record what fraction of an agent's track record is
+        externally grounded. Callers that pass only floats are unaffected.
+        """
         learning_rate = min(1.0, max(0.0, float(learning_rate)))
         snapshot = self.get(agent_id, task_category)
         previous_attempts = snapshot.attempts
@@ -204,6 +243,10 @@ class Reputation:
 
         snapshot.quality_alpha += quality
         snapshot.quality_beta += 1.0 - quality
+        snapshot.version += 1
+        snapshot.grounded = bool(quality_signal is not None and quality_signal.grounded)
+        if snapshot.grounded:
+            snapshot.grounded_attempts += 1
         return self.set(snapshot)
 
     def list(self) -> builtin_list[ReputationSnapshot]:
