@@ -30,6 +30,18 @@ class CostQualityRouter(BaseLLM):
         )
         answer = await router.call("Summarise this document")
         print(router.stats())
+
+    Grounding audit (#822)
+    ----------------------
+    ``GroundedSignal`` is **not applicable** here: the router's learning inputs
+    are externally measured, not self-reported by the model being scored. Cost
+    comes from token usage, and quality comes from a *separate* ``EvalSuite``
+    evaluator via :meth:`_evaluate_quality` (or ``None``, which skips the
+    update) — the candidate model never supplies its own score. The one caveat
+    is that a user could configure the eval suite to be the same model as a
+    candidate (LLM-as-judge on itself); that's a user eval-config decision, and
+    even then it's a separate call/rubric, not the model grading its own routing
+    observation. No provenance tag is threaded through as a result.
     """
 
     def __init__(

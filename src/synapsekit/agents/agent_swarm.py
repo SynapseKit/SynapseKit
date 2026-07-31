@@ -13,7 +13,10 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Protocol, cast
 
+from ..provenance import GroundedSignal, SignalSource
 from .agent_registry import (
+    REPUTATION_LEARNING_RULE,
+    REPUTATION_LEARNING_RULE_VERSION,
     AgentMetadata,
     AgentRegistry,
     AgentRegistryBackend,
@@ -22,6 +25,19 @@ from .agent_registry import (
     ReputationSnapshot,
 )
 from .federation import AgentFederation, LocalAgentClient
+
+
+class _TraceList(list):
+    """List of auction receipts.
+
+    ``AgentSwarm.trace`` is exposed as an indexable sequence (``swarm.trace[-1]``
+    is the latest receipt). This subclass stays callable — ``swarm.trace()`` —
+    for backward compatibility with the pre-2.0.1 method-style API, returning a
+    shallow copy of the receipts.
+    """
+
+    def __call__(self) -> list[dict[str, Any]]:
+        return [dict(entry) for entry in self]
 
 
 class AuctionType(str, Enum):
@@ -182,6 +198,7 @@ class MarketPolicy:
     exploration_rate: float = 0.05
     cold_start_quality: float = 0.6
     max_agent_task_share: float = 0.70
+    require_grounded_reward: bool = False
 
     def __post_init__(self) -> None:
         self.bid_strategy = BidStrategy.from_value(self.bid_strategy)
@@ -193,6 +210,7 @@ class MarketPolicy:
         self.exploration_rate = min(1.0, max(0.0, float(self.exploration_rate)))
         self.cold_start_quality = min(1.0, max(0.0, float(self.cold_start_quality)))
         self.max_agent_task_share = min(1.0, max(0.0, float(self.max_agent_task_share)))
+        self.require_grounded_reward = bool(self.require_grounded_reward)
 
     @staticmethod
     def _coerce_auction_type(value: AuctionType | str) -> AuctionType:
@@ -299,30 +317,46 @@ class AgentSwarm:
         if not auction.winners:
             raise LookupError("No agents submitted an eligible market bid.")
 
+        # Capture the reputation snapshot each bid was scored against *before*
+        # any outcome is recorded, so the receipt shows the prior the market
+        # actually used — not the post-update state.
+        priors = {bid.agent_id: self.reputation.get(bid.agent_id, category) for bid in auction.bids}
+
+        task_id = f"task-{self._executions + 1}"
         results = await self._execute_winners(task, auction.winners, kwargs)
         output = self._combine_results(results, auction)
         actual_cost = self._actual_cost(output, auction)
-        actual_quality = self._actual_quality(output, auction, quality)
+        quality_signal = self._quality_signal(output, auction, quality)
+        actual_quality = quality_signal.value
         actual_reward = self._actual_reward(output, actual_cost, actual_quality, reward)
 
+        # Skeptical-by-default: an ungrounded (self-reported) outcome still
+        # updates reputation as it always has. Only the opt-in strict mode
+        # no-ops the reputation update when the signal isn't externally grounded.
+        reputation_updated = quality_signal.grounded or not self.market.require_grounded_reward
+
         for winner in auction.winners:
-            self.reputation.record_outcome(
-                winner.agent_id,
-                category,
-                cost=actual_cost / len(auction.winners),
-                quality=actual_quality,
-                reward=actual_reward,
-                won=True,
-                learning_rate=self.market.learning_rate,
-            )
+            if reputation_updated:
+                self.reputation.record_outcome(
+                    winner.agent_id,
+                    category,
+                    cost=actual_cost / len(auction.winners),
+                    quality=actual_quality,
+                    reward=actual_reward,
+                    won=True,
+                    learning_rate=self.market.learning_rate,
+                    quality_signal=quality_signal,
+                )
             self._wins_by_agent[winner.agent_id] = self._wins_by_agent.get(winner.agent_id, 0) + 1
             await self._settle_bidder(winner, auction, actual_cost, actual_quality, actual_reward)
             self._record_win_metric(winner, category, auction, actual_cost, actual_reward)
 
         self._executions += 1
+        winner_ids = set(auction.winner_ids)
         self._trace.append(
             {
                 "task": task,
+                "task_id": task_id,
                 "task_category": category,
                 "auction_type": auction.auction_type.value,
                 "bids": [
@@ -332,14 +366,29 @@ class AgentSwarm:
                         "estimated_quality": bid.estimated_quality,
                         "confidence": bid.confidence,
                         "score": auction.scores.get(bid.agent_id, 0.0),
+                        "reputation_prior": self._prior_view(priors.get(bid.agent_id)),
                     }
                     for bid in auction.bids
                 ],
                 "winners": auction.winner_ids,
+                "selected_roles": auction.winner_ids,
+                "rejected_roles": [
+                    bid.agent_id for bid in auction.bids if bid.agent_id not in winner_ids
+                ],
                 "settlement_cost": auction.settlement_cost,
+                "budget_allocated": self.market.budget_per_task,
+                "budget_consumed": actual_cost,
                 "reward": actual_reward,
                 "actual_cost": actual_cost,
                 "actual_quality": actual_quality,
+                "outcome_score_source": quality_signal.provenance.get("origin", "unknown"),
+                "outcome_signal_grounded": quality_signal.grounded,
+                "reputation_updated": reputation_updated,
+                "learning_rule": {
+                    "name": REPUTATION_LEARNING_RULE,
+                    "learning_rate": self.market.learning_rate,
+                    "version": REPUTATION_LEARNING_RULE_VERSION,
+                },
             }
         )
 
@@ -383,8 +432,34 @@ class AgentSwarm:
         self._record_auction_metric(category, result)
         return result
 
-    def trace(self) -> list[dict[str, Any]]:
-        return [dict(entry) for entry in self._trace]
+    @property
+    def trace(self) -> _TraceList:
+        """Auction receipts, newest last. ``swarm.trace[-1]`` is the latest.
+
+        Each receipt is a replayable role-allocation record: ``task_id``, every
+        ``bid`` with the ``reputation_prior`` it was scored against,
+        ``selected_roles`` / ``rejected_roles``, ``budget_allocated`` /
+        ``budget_consumed``, the ``outcome_score_source`` (and whether it was
+        grounded), and the ``learning_rule`` that will fold the outcome into
+        future bids. The returned list is also callable — ``swarm.trace()`` —
+        for backward compatibility with the pre-2.0.1 method API.
+        """
+        return _TraceList(dict(entry) for entry in self._trace)
+
+    @staticmethod
+    def _prior_view(snapshot: ReputationSnapshot | None) -> dict[str, Any]:
+        """A compact, replayable view of the reputation prior a bid was scored
+        against — enough to tell a real track record from a stale one."""
+        if snapshot is None:
+            return {"mean_quality": 0.0, "attempts": 0, "version": 0, "grounded_fraction": 0.0}
+        return {
+            "mean_quality": snapshot.mean_quality,
+            "mean_reward": snapshot.mean_reward,
+            "attempts": snapshot.attempts,
+            "wins": snapshot.wins,
+            "version": snapshot.version,
+            "grounded_fraction": snapshot.grounded_fraction,
+        }
 
     def trace_to_mermaid(self) -> str:
         lines = ["flowchart TD"]
@@ -633,14 +708,44 @@ class AgentSwarm:
         return auction.settlement_cost
 
     def _actual_quality(self, output: Any, auction: AuctionResult, override: float | None) -> float:
+        return self._quality_signal(output, auction, override).value
+
+    def _quality_signal(
+        self, output: Any, auction: AuctionResult, override: float | None
+    ) -> GroundedSignal:
+        """Resolve the outcome quality *and where it came from*.
+
+        A caller-supplied ``override`` is the only externally-grounded source. A
+        ``quality``/``score`` field read out of the winning agent's own output,
+        and the bid-estimate fallback used when nothing else is available, are
+        both the agent describing itself — so both are ``SELF_REPORTED`` (see
+        :mod:`synapsekit.provenance` for why there is no middle tier).
+        """
         if override is not None:
-            return min(1.0, max(0.0, float(override)))
+            return GroundedSignal(
+                value=min(1.0, max(0.0, float(override))),
+                source=SignalSource.EXTERNAL_OVERRIDE,
+                provenance={"origin": "caller_override"},
+            )
         value = self._extract_number(output, "actual_quality", "quality", "score")
         if value is not None:
-            return min(1.0, max(0.0, value))
+            return GroundedSignal(
+                value=min(1.0, max(0.0, value)),
+                source=SignalSource.SELF_REPORTED,
+                provenance={"origin": "output_field"},
+            )
         if not auction.winners:
-            return 0.0
-        return sum(bid.estimated_quality for bid in auction.winners) / len(auction.winners)
+            return GroundedSignal(
+                value=0.0,
+                source=SignalSource.SELF_REPORTED,
+                provenance={"origin": "no_winner"},
+            )
+        fallback = sum(bid.estimated_quality for bid in auction.winners) / len(auction.winners)
+        return GroundedSignal(
+            value=fallback,
+            source=SignalSource.SELF_REPORTED,
+            provenance={"origin": "self_reported_bid_fallback"},
+        )
 
     def _actual_reward(
         self,
