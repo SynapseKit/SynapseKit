@@ -3,11 +3,12 @@ from __future__ import annotations
 import asyncio
 import os
 import random
-from typing import Any
-
-import httpx
+from typing import TYPE_CHECKING, Any
 
 from ..base import BaseTool, ToolResult
+
+if TYPE_CHECKING:
+    import httpx
 
 
 class NotionTool(BaseTool):
@@ -89,6 +90,8 @@ class NotionTool(BaseTool):
         json_data: dict | None = None,
     ) -> httpx.Response:
         """Make HTTP request with retry logic for transient failures."""
+        import httpx
+
         retryable_statuses = {409, 429, 500, 502, 503, 504}
         base_delay = 1.0
         max_wait = 60.0
@@ -153,6 +156,8 @@ class NotionTool(BaseTool):
         content: str = "",
         **kwargs: Any,
     ) -> ToolResult:
+        import httpx
+
         operation = operation or kwargs.get("op", "")
         if not operation:
             return ToolResult(
@@ -178,6 +183,8 @@ class NotionTool(BaseTool):
 
     async def search(self, query: str = "") -> ToolResult:
         """Search pages and databases by query."""
+        import httpx
+
         url = "https://api.notion.com/v1/search"
         payload: dict[str, Any] = {"filter": {"value": "page", "property": "object"}}
         if query:
@@ -224,6 +231,8 @@ class NotionTool(BaseTool):
 
     async def get_page(self, page_id: str) -> ToolResult:
         """Retrieve page content by page ID."""
+        import httpx
+
         if not page_id:
             return ToolResult(output="", error="No page_id provided.")
 
@@ -279,6 +288,8 @@ class NotionTool(BaseTool):
         self, parent_id: str = "", title: str = "", content: str = ""
     ) -> ToolResult:
         """Create a new page in a database or as a child page."""
+        import httpx
+
         if not parent_id:
             return ToolResult(output="", error="No parent_id provided.")
 
@@ -329,6 +340,8 @@ class NotionTool(BaseTool):
 
     async def append_block(self, page_id: str = "", content: str = "") -> ToolResult:
         """Append content to an existing page."""
+        import httpx
+
         if not page_id:
             return ToolResult(output="", error="No page_id provided.")
         if not content:
