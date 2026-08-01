@@ -55,6 +55,24 @@ class _Handler(BaseHTTPRequestHandler):
         else:
             self.send_error(404, "Not found")
 
+    def do_POST(self) -> None:
+        path = urlparse(self.path).path
+        if path != "/approve":
+            self.send_error(404, "Not found")
+            return
+        if _token and self._query().get("token", [""])[0] != _token:
+            self.send_error(403, "Bad token")
+            return
+        length = int(self.headers.get("Content-Length", 0) or 0)
+        try:
+            data = json.loads(self.rfile.read(length) or b"{}")
+        except Exception:
+            data = {}
+        from .approvals import resolve
+
+        ok = resolve(data.get("id"), bool(data.get("approved")))
+        self._serve_json({"ok": ok})
+
     def _serve_html(self) -> None:
         body = _dashboard_html().encode("utf-8")
         self.send_response(200)
