@@ -22,6 +22,7 @@ import textwrap
 # outside the core deps (numpy, rank-bm25, pillow, pyasn1, cryptography).
 _OPTIONAL_IMPORT_NAMES = [
     "httpx",
+    "yaml",
     "bs4",
     "lxml",
     "chromadb",

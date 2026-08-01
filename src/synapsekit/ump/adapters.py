@@ -5,8 +5,6 @@ import json
 from pathlib import Path
 from typing import ClassVar
 
-import yaml
-
 from synapsekit.ump.types import UMPDocument, UMPFrontmatter, UMPProvenance
 
 
@@ -99,6 +97,8 @@ class AiderAdapter(BaseUMPAdapter):
         if file_path.exists():
             raw_text = await asyncio.to_thread(file_path.read_text, encoding="utf-8")
             try:
+                import yaml
+
                 data = yaml.safe_load(raw_text)
                 content = json.dumps(data, indent=2) if data else raw_text
             except Exception:
