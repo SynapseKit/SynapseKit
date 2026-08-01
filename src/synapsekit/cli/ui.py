@@ -8,8 +8,29 @@ import time
 import webbrowser
 
 
+def _run_live(args: argparse.Namespace) -> None:
+    """Start the zero-dependency live dashboard (stdlib http.server + SSE)."""
+    from ..live import enable
+
+    port = 7900 if getattr(args, "port", 7860) == 7860 else args.port
+    from ..live.server import serve
+
+    serve(host=args.host, port=port, open_browser=True)
+    enable(open_browser=False, quiet=True)  # turn on silent span instrumentation
+    print("Watching for SynapseKit runs. Press Ctrl+C to stop.")
+    try:
+        while True:
+            time.sleep(3600)
+    except KeyboardInterrupt:
+        print("\nStopped.")
+
+
 def run_ui(args: argparse.Namespace) -> None:
     """Start the observability dashboard and open a browser tab."""
+    if getattr(args, "live", False):
+        _run_live(args)
+        return
+
     import uvicorn
 
     from .ui_server import create_app

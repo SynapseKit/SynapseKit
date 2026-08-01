@@ -115,6 +115,11 @@ def _add_ui_parser(subparsers: argparse._SubParsersAction) -> None:  # type: ign
     p = subparsers.add_parser("ui", help="Launch the observability dashboard")
     p.add_argument("--host", default="127.0.0.1", help="Bind host (default: 127.0.0.1)")
     p.add_argument("--port", type=int, default=7860, help="Bind port (default: 7860)")
+    p.add_argument(
+        "--live",
+        action="store_true",
+        help="Lightweight zero-dependency live run dashboard (stdlib only, no extras needed)",
+    )
 
 
 def _add_plugin_parser(subparsers: argparse._SubParsersAction) -> None:  # type: ignore[type-arg]

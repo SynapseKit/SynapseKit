@@ -291,11 +291,34 @@ def end_span(
     if span._context_token is not None:
         _CURRENT_SPAN.reset(span._context_token)
         span._context_token = None
+    _publish_live(span)
     if span.parent is None:
         _STATE.exporter.export(span)
         _STATE.exporter.after_export(span)
         if _STATE.metrics is not None:
             _STATE.metrics.record_span(span)
+
+
+def _publish_live(span: ObserveSpan) -> None:
+    """Stream every finished span to the SynapseKit Live event bus.
+
+    Additive and near-free: `_maybe_autostart` early-returns after the first call,
+    and `bus.publish` is a single attribute read when Live is disabled.
+    """
+    from ..live import _maybe_autostart
+    from ..live.bus import bus as _live_bus
+
+    _maybe_autostart()
+    if _live_bus.enabled:
+        _live_bus.publish(
+            {
+                "kind": "span",
+                "name": span.name,
+                "status": span.status,
+                "duration_ms": round(span.duration_ms, 3),
+                "attributes": dict(span.attributes),
+            }
+        )
 
 
 def record_exception(span: ObserveSpan | None, exc: Exception) -> None:
