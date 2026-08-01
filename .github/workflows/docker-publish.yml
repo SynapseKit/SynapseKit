@@ -38,12 +38,15 @@ jobs:
             extras: ""
             suffix: ""
             moving_tag: latest
+            python: "3.13"
             platforms: linux/amd64,linux/arm64
           - variant: all
             extras: "[all]"
             suffix: "-all"
             moving_tag: all
-            # `all` pulls heavy/native wheels; keep it amd64 to stay reliable.
+            # `all` pulls heavy/native wheels — pin to 3.12 where they all publish
+            # wheels, and keep it amd64 to stay reliable.
+            python: "3.12"
             platforms: linux/amd64
     steps:
       - uses: actions/checkout@v4
@@ -93,6 +96,7 @@ jobs:
           tags: synapsekit:smoke-${{ matrix.variant }}
           build-args: |
             EXTRAS=${{ matrix.extras }}
+            PYTHON_VERSION=${{ matrix.python }}
           cache-from: type=gha,scope=${{ matrix.variant }}
           cache-to: type=gha,mode=max,scope=${{ matrix.variant }}
 
@@ -115,5 +119,6 @@ jobs:
           tags: ${{ steps.tags.outputs.tags }}
           build-args: |
             EXTRAS=${{ matrix.extras }}
+            PYTHON_VERSION=${{ matrix.python }}
           cache-from: type=gha,scope=${{ matrix.variant }}
           cache-to: type=gha,mode=max,scope=${{ matrix.variant }}
