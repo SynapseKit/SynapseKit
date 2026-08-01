@@ -44,6 +44,10 @@ def enable(*, open_browser: bool = True, quiet: bool = False) -> str:
             configure(exporter=InMemoryExporter(), cost_tracking=True)
     except Exception:  # pragma: no cover - observe optional/edge cases
         pass
+    # Instrument the paths observe spans miss: tools, MCP, memory/DB, graphs, mesh.
+    from .instrument import instrument_all
+
+    instrument_all()
     return url
 
 
