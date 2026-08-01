@@ -264,7 +264,15 @@ def instrument_all() -> None:
         _patch(PrometheusMetrics, "record_swarm_win", "swarm", _const(event="win"))
 
     for step in (
-        tools, memory, world_model, property_graph, mesh, loaders, embeddings,
-        budget, audit, swarm,
+        tools,
+        memory,
+        world_model,
+        property_graph,
+        mesh,
+        loaders,
+        embeddings,
+        budget,
+        audit,
+        swarm,
     ):
         _try(step)
