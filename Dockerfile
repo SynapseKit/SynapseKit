@@ -13,8 +13,12 @@
 # separately with maturin and is NOT included here — SynapseKit falls back to
 # its pure-Python chunker automatically.
 
+# Python version to build on — overridable so images can target 3.11–3.14.
+# SynapseKit requires-python is >=3.10; verified to import on 3.12/3.13/3.14.
+ARG PYTHON_VERSION=3.12
+
 # ── Stage 1: builder ─────────────────────────────────────────────────────────
-FROM python:3.12-slim AS builder
+FROM python:${PYTHON_VERSION}-slim AS builder
 
 # uv provides fast, reproducible installs (matches the project's package manager).
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
@@ -37,7 +41,9 @@ RUN uv venv /opt/venv \
     && VIRTUAL_ENV=/opt/venv uv pip install --no-cache ".${EXTRAS}"
 
 # ── Stage 2: runtime ─────────────────────────────────────────────────────────
-FROM python:3.12-slim AS runtime
+# Redeclare the global ARG so it is in scope for this stage's FROM.
+ARG PYTHON_VERSION=3.12
+FROM python:${PYTHON_VERSION}-slim AS runtime
 
 LABEL org.opencontainers.image.title="SynapseKit" \
       org.opencontainers.image.description="Async-first Python framework for RAG, agents, and LLM apps" \
