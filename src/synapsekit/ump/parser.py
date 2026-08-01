@@ -5,8 +5,6 @@ import re
 from pathlib import Path
 from typing import Any
 
-import yaml
-
 from synapsekit.ump.types import UMPDocument, UMPFrontmatter
 
 WIKILINK_PATTERN = re.compile(r"\[\[([^\]]+)\]\]")
@@ -44,6 +42,8 @@ class UMPReader:
 
     @classmethod
     def _parse_yaml_frontmatter(cls, raw: str) -> tuple[dict[str, Any], str]:
+        import yaml
+
         if not raw.startswith("---"):
             return {}, raw.strip()
 
@@ -97,6 +97,8 @@ class UMPWriter:
 
     @classmethod
     def _render_yaml_frontmatter(cls, fm: UMPFrontmatter) -> str:
+        import yaml
+
         data = fm.to_dict()
         # Clean up empty values for concise YAML
         if not data["provenance"]["authors"]:
