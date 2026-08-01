@@ -1,0 +1,50 @@
+name: Release validation
+
+# Reusable release-validation harness (release_check). Proves a release build
+# actually works, end to end, with no mocks:
+#   - core-import   : `import synapsekit` with every optional dep blocked
+#   - export-surface: every synapsekit.__all__ name resolves
+#   - functional    : the real smoke_test.py (loaders/graph/tools/vector stores;
+#                     live LLM completions when API keys are present)
+#
+# Runs offline on a schedule and can be triggered manually. When LLM API-key
+# secrets are configured, the manual "live" mode also exercises real providers.
+# Report-only by default — a failure surfaces in the run + uploaded artifact.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC
+  workflow_dispatch:
+    inputs:
+      live:
+        description: "Run live LLM checks (requires API-key secrets)"
+        type: boolean
+        default: false
+
+jobs:
+  release-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      # Install with all extras so the functional + export-surface layers have
+      # every optional backend available; the core-import layer blocks them itself.
+      - run: uv sync --group dev --extra all
+      - name: Run release-validation harness
+        env:
+          # Populated only if the secrets exist; missing keys → those checks skip.
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ "${{ github.event.inputs.live }}" = "true" ]; then
+            uv run python -m release_check --live --md release_check_report.md --json release_check_report.json
+          else
+            uv run python -m release_check --md release_check_report.md --json release_check_report.json
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: release-check-report
+          path: |
+            release_check_report.md
+            release_check_report.json

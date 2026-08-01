@@ -85,3 +85,7 @@ benchmarks/asv/machine.json
 # pytest-benchmark output artifact (--benchmark-json), regenerated each run
 benchmarks/benchmark.json
 .asv/
+
+# release-validation harness output
+release_check_report.md
+release_check_report.json
