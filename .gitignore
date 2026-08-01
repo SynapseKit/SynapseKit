@@ -82,4 +82,6 @@ typescript
 
 # ASV machine profiles (contributor-specific, not project config)
 benchmarks/asv/machine.json
+# pytest-benchmark output artifact (--benchmark-json), regenerated each run
+benchmarks/benchmark.json
 .asv/
