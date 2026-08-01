@@ -1,19 +1,24 @@
-"""Watch (almost) EVERY SynapseKit subsystem stream into the Live dashboard.
+"""Watch EVERY SynapseKit subsystem — plus a real Claude RAG answer — stream live.
 
+    export ANTHROPIC_API_KEY=sk-ant-...     # optional: real Claude; else a local FakeLLM
     python examples/live_all_features.py
 
-Opens http://127.0.0.1:7900 and runs a loop that exercises loaders, embeddings,
-vector search / retrieval, tools, an MCP-style tool, agent memory (DB), the
-knowledge graph, and an LLM call — all real SynapseKit objects, auto-instrumented
-by ``synapsekit.live``. Set ANTHROPIC_API_KEY to use a real Claude call; otherwise
-a local FakeLLM stands in. The server stays up as long as this process runs
-(Ctrl+C to stop) — that's why you can keep the browser tab open.
+Opens http://127.0.0.1:7900 and loops through the whole framework with real
+objects, auto-instrumented by ``synapsekit.live``:
+
+    loader → embeddings → vector search → tool → MCP tool → memory (DB)
+           → knowledge graph → RAG answer (real Claude if a key is set)
+
+The server stays up as long as this runs (Ctrl+C to stop), so the browser tab
+stays connected. With a key it uses Haiku + small max_tokens (a fraction of a
+cent per loop).
 """
 
 from __future__ import annotations
 
 import asyncio
 import os
+import re
 import tempfile
 from collections.abc import AsyncGenerator
 from pathlib import Path
@@ -23,23 +28,34 @@ import numpy as np
 from synapsekit.agents.base import BaseTool, ToolResult
 from synapsekit.embeddings.backend import SynapsekitEmbeddings
 from synapsekit.live import enable
-from synapsekit.live.instrument import _patch  # instrument the demo's own classes too
+from synapsekit.live.instrument import _patch
 from synapsekit.llm.base import BaseLLM, LLMConfig
 
+_DIM = 64
+KNOWLEDGE_BASE = [
+    "Refunds are processed within 5 business days to the original payment method.",
+    "Orders over $50 ship free. Standard shipping takes 3 to 5 days.",
+    "You can return any item within 30 days of delivery for a full refund.",
+    "Gift cards are non-refundable and cannot be exchanged for cash.",
+]
+QUESTION = "How long do refunds take?"
 
-class DemoEmbeddings(SynapsekitEmbeddings):
-    """Tiny deterministic embeddings so vector/graph run with no model download."""
+
+class BagOfWordsEmbeddings(SynapsekitEmbeddings):
+    """Hashing bag-of-words — real lexical retrieval with no model download."""
 
     async def embed(self, texts: list[str]) -> np.ndarray:
-        return np.array(
-            [[(hash(f"{t}:{i}") % 1000) / 1000.0 for i in range(16)] for t in texts],
-            dtype="float32",
-        )
+        vecs = np.zeros((len(texts), _DIM), dtype="float32")
+        for row, text in enumerate(texts):
+            for word in re.findall(r"[a-z0-9]+", text.lower()):
+                vecs[row, hash(word) % _DIM] += 1.0
+            vecs[row] /= np.linalg.norm(vecs[row]) or 1.0
+        return vecs
 
 
 class FakeLLM(BaseLLM):
     async def stream(self, prompt: str, **kw: object) -> AsyncGenerator[str, None]:
-        for word in ("Your", "refund", "is", "on", "the", "way."):
+        for word in ("Refunds", "take", "5", "business", "days."):
             yield word + " "
 
 
@@ -52,33 +68,51 @@ class SearchDocsTool(BaseTool):
         return ToolResult(output="found 3 docs")
 
 
+def _hit_text(hit: object) -> str:
+    if isinstance(hit, dict):
+        return str(hit.get("text", hit))
+    return str(getattr(hit, "text", hit))
+
+
+def _make_llm() -> BaseLLM:
+    key = os.environ.get("ANTHROPIC_API_KEY")
+    if key:
+        from synapsekit.llm.anthropic import AnthropicLLM
+
+        return AnthropicLLM(
+            LLMConfig(
+                provider="anthropic",
+                model="claude-haiku-4-5-20251001",
+                api_key=key,
+                max_tokens=120,
+                temperature=0,
+            )
+        )
+    return FakeLLM(LLMConfig(provider="fake", model="fake-1", api_key=""))
+
+
 async def _guard(label: str, fn) -> None:
-    """Run one subsystem block; never let a single one break the whole pass."""
     try:
         await fn()
-    except Exception as exc:
+    except Exception as exc:  # keep the loop alive whatever a subsystem does
         print(f"   · {label}: skipped ({type(exc).__name__}: {exc})")
 
 
-async def one_pass() -> None:
-    emb = DemoEmbeddings()
-    # instrument the demo's own embeddings subclass so it shows too
-    _patch(DemoEmbeddings, "embed", "embeddings.embed", lambda self, a, k: {"dim": 16})
+async def one_pass(emb: BagOfWordsEmbeddings, llm: BaseLLM) -> None:
+    from synapsekit.retrieval.vectorstore import InMemoryVectorStore
+
+    store = InMemoryVectorStore(embedding_backend=emb)
 
     async def loader() -> None:
         from synapsekit.loaders import TextLoader
 
         with tempfile.TemporaryDirectory() as d:
             p = Path(d) / "policy.txt"
-            p.write_text("Refunds are processed within 5 business days.")
+            p.write_text(KNOWLEDGE_BASE[0])
             await asyncio.to_thread(TextLoader(str(p)).load)
 
-    async def retrieval() -> None:
-        from synapsekit.retrieval.vectorstore import InMemoryVectorStore
-
-        store = InMemoryVectorStore(embedding_backend=emb)
-        await store.add(["refund policy", "shipping policy", "returns"])
-        await store.search("refund", top_k=2)
+    async def index() -> None:  # embeddings + vector store
+        await store.add(KNOWLEDGE_BASE)
 
     async def tool() -> None:
         await SearchDocsTool().run(operation="query")
@@ -101,7 +135,6 @@ async def one_pass() -> None:
         await mem.recall(agent_id="support", query="refund")
 
     async def graph() -> None:
-        from synapsekit.retrieval.vectorstore import InMemoryVectorStore
         from synapsekit.retrieval.world_model import WorldModelRAG
 
         wm = WorldModelRAG(
@@ -112,40 +145,36 @@ async def one_pass() -> None:
         await wm.ingest(["Acme refunded order 48213 on 2026-08-01."])
         await wm.query("refund")
 
-    async def llm() -> None:
-        key = os.environ.get("ANTHROPIC_API_KEY")
-        if key:
-            from synapsekit.llm.anthropic import AnthropicLLM
-
-            model: BaseLLM = AnthropicLLM(
-                LLMConfig(
-                    provider="anthropic",
-                    model="claude-haiku-4-5-20251001",
-                    api_key=key,
-                    max_tokens=20,
-                )
-            )
-        else:
-            model = FakeLLM(LLMConfig(provider="fake", model="fake-1", api_key=""))
-        await model.generate("Reply in one short sentence about the refund.")
+    async def rag_answer() -> None:  # the capstone: real retrieval → real Claude
+        hits = await store.search(QUESTION, top_k=2)
+        context = "\n".join(_hit_text(h) for h in hits)
+        prompt = (
+            "Answer the customer using ONLY this policy context.\n\n"
+            f"Context:\n{context}\n\nQuestion: {QUESTION}\nAnswer:"
+        )
+        answer = await llm.generate(prompt)
+        print(f"RAG → {answer.strip()}")
 
     for label, fn in [
         ("loader", loader),
-        ("retrieval", retrieval),
+        ("index", index),
         ("tool", tool),
         ("mcp", mcp_tool),
         ("memory", memory),
         ("graph", graph),
-        ("llm", llm),
+        ("rag", rag_answer),
     ]:
         await _guard(label, fn)
 
 
 async def main() -> None:
     enable(open_browser=True)
-    print("Running every subsystem on a loop… open the tab. Ctrl+C to stop.")
+    _patch(BagOfWordsEmbeddings, "embed", "embeddings.embed", lambda self, a, k: {"dim": _DIM})
+    emb, llm = BagOfWordsEmbeddings(), _make_llm()
+    mode = "real Claude" if os.environ.get("ANTHROPIC_API_KEY") else "local FakeLLM"
+    print(f"Running every subsystem on a loop ({mode})… open the tab. Ctrl+C to stop.")
     while True:
-        await one_pass()
+        await one_pass(emb, llm)
         await asyncio.sleep(1.5)
 
 
