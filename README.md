@@ -748,6 +748,21 @@ poetry add synapsekit[openai]
 poetry add "synapsekit[all]"
 ```
 
+**Docker** — official images on GitHub Container Registry, no Python setup required:
+```bash
+# Core library + CLI
+docker pull ghcr.io/synapsekit/synapsekit:latest
+docker run --rm ghcr.io/synapsekit/synapsekit --version
+
+# Batteries-included (all extras baked in)
+docker pull ghcr.io/synapsekit/synapsekit:all
+
+# Serve a SynapseKit app as an HTTP API (bind 0.0.0.0 inside the container)
+docker run --rm -p 8000:8000 -v "$PWD:/app" -w /app \
+  ghcr.io/synapsekit/synapsekit serve my_module:rag --host 0.0.0.0
+```
+Tags: `:latest` / `:<version>` (core) and `:all` / `:<version>-all` (all extras). A matching image is published automatically on every release.
+
 Full installation options → [docs](https://synapsekit.github.io/synapsekit-docs/docs/getting-started/installation)
 
 Observability guide → [docs/observability.md](docs/observability.md)
