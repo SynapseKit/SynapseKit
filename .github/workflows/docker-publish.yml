@@ -1,0 +1,119 @@
+name: Publish Docker image (GHCR)
+
+# Publishes the official SynapseKit image to GitHub Container Registry.
+#   ghcr.io/synapsekit/synapsekit:<version>   / :latest        (core lib + CLI)
+#   ghcr.io/synapsekit/synapsekit:<version>-all / :all         (all extras baked in)
+#
+# A matching image is published automatically on every GitHub Release (the same
+# `release: published` event that drives the PyPI publish), so a Docker version
+# ships with every release. It can also be triggered manually (workflow_dispatch)
+# to publish an :edge test image, or to (re)publish a specific version on demand.
+# Each image is smoke-tested locally before it is pushed, so a broken build never
+# reaches the registry.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish (e.g. 2.0.0). Leave empty for an :edge test build."
+        required: false
+        default: ""
+
+env:
+  IMAGE: ghcr.io/${{ github.repository }}
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: core
+            extras: ""
+            suffix: ""
+            moving_tag: latest
+            platforms: linux/amd64,linux/arm64
+          - variant: all
+            extras: "[all]"
+            suffix: "-all"
+            moving_tag: all
+            # `all` pulls heavy/native wheels; keep it amd64 to stay reliable.
+            platforms: linux/amd64
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      # GHCR login uses the built-in token — no external secrets to manage.
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Compute image tags. On a Release (or a manual run with a version input) we
+      # publish that version plus the moving tag (:latest / :all). On a manual run
+      # with no version we publish only an :edge / :edge-all test image.
+      - name: Compute tags
+        id: tags
+        env:
+          SUFFIX: ${{ matrix.suffix }}
+          MOVING_TAG: ${{ matrix.moving_tag }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+        run: |
+          set -euo pipefail
+          image="${IMAGE,,}"   # GHCR requires a lowercase path
+          # Release event → release tag; manual run → optional version input.
+          version="${RELEASE_TAG:-$INPUT_VERSION}"
+          version="${version#v}"   # strip a leading v if present
+          if [ -n "$version" ]; then
+            tags="${image}:${version}${SUFFIX},${image}:${MOVING_TAG}"
+          else
+            tags="${image}:edge${SUFFIX}"
+          fi
+          echo "image=${image}" >> "$GITHUB_OUTPUT"
+          echo "tags=${tags}" >> "$GITHUB_OUTPUT"
+          echo "Tags: ${tags}"
+
+      # 1) Build a single-arch image loaded into the local daemon and smoke-test it.
+      - name: Build (smoke)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          push: false
+          tags: synapsekit:smoke-${{ matrix.variant }}
+          build-args: |
+            EXTRAS=${{ matrix.extras }}
+          cache-from: type=gha,scope=${{ matrix.variant }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.variant }}
+
+      - name: Smoke test image
+        run: |
+          set -euo pipefail
+          echo "→ synapsekit --version"
+          docker run --rm synapsekit:smoke-${{ matrix.variant }} --version
+          echo "→ import synapsekit"
+          docker run --rm --entrypoint python synapsekit:smoke-${{ matrix.variant }} \
+            -c "import synapsekit; print('import OK', synapsekit.__version__)"
+
+      # 2) Only after the smoke test passes, build multi-arch and push.
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: ${{ matrix.platforms }}
+          push: true
+          tags: ${{ steps.tags.outputs.tags }}
+          build-args: |
+            EXTRAS=${{ matrix.extras }}
+          cache-from: type=gha,scope=${{ matrix.variant }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.variant }}

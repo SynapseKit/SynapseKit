@@ -1,0 +1,34 @@
+# Keep the build context small and reproducible — only ship src + package metadata.
+.git
+.github
+.venv
+.idea
+.vscode
+.mypy_cache
+.pytest_cache
+.ruff_cache
+.benchmarks
+__pycache__
+*.py[cod]
+*.so
+build/
+dist/
+*.egg-info/
+
+# Tests, docs, examples, benchmarks — not needed in the runtime image.
+tests
+docs
+examples
+benchmarks
+assets
+typescript
+scripts
+
+# Local state / caches / coverage that must never leak into an image layer.
+.coverage
+coverage.json
+.env
+*.log
+.DS_Store
+.discord_*state.json
+uv.lock
