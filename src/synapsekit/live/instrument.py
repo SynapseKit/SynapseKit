@@ -62,14 +62,45 @@ def _make_wrapper(orig: Any, kind: str, attrs_fn: AttrsFn) -> Any:
     return wrapped
 
 
+def _make_sync_wrapper(orig: Any, kind: str, attrs_fn: AttrsFn) -> Any:
+    @functools.wraps(orig)
+    def wrapped(self: Any, *args: Any, **kwargs: Any) -> Any:
+        if not bus.enabled:
+            return orig(self, *args, **kwargs)
+        start = time.perf_counter()
+        status = "ok"
+        try:
+            return orig(self, *args, **kwargs)
+        except Exception:
+            status = "error"
+            raise
+        finally:
+            attrs: dict[str, Any] = {}
+            with contextlib.suppress(Exception):
+                attrs = attrs_fn(self, args, kwargs) or {}
+            bus.publish(
+                {
+                    "kind": kind,
+                    "name": kind,
+                    "status": status,
+                    "duration_ms": round((time.perf_counter() - start) * 1000, 3),
+                    "attributes": attrs,
+                }
+            )
+
+    setattr(wrapped, _SENTINEL, True)
+    return wrapped
+
+
 def _patch(cls: type, method_name: str, kind: str, attrs_fn: AttrsFn) -> None:
-    """Wrap an async method defined *on this class* (not inherited)."""
+    """Wrap a method defined *on this class* (not inherited). Async or sync."""
     method = cls.__dict__.get(method_name)
     if method is None or getattr(method, _SENTINEL, False):
         return
-    if not inspect.iscoroutinefunction(method):
-        return
-    setattr(cls, method_name, _make_wrapper(method, kind, attrs_fn))
+    if inspect.iscoroutinefunction(method):
+        setattr(cls, method_name, _make_wrapper(method, kind, attrs_fn))
+    elif callable(method):
+        setattr(cls, method_name, _make_sync_wrapper(method, kind, attrs_fn))
 
 
 def _all_subclasses(base: type) -> list[type]:
@@ -170,5 +201,35 @@ def instrument_all() -> None:
         _patch(KnowledgeMesh, "query", "mesh.query", lambda self, a, k: {})
         _patch(KnowledgeMesh, "ingest_okf", "mesh.ingest", lambda self, a, k: {"format": "okf"})
 
-    for step in (tools, memory, world_model, property_graph, mesh):
+    # -- Data loaders (no shared base class → patch the common concrete loaders) --
+    def loaders() -> None:
+        from .. import loaders as loaders_pkg
+
+        for name in (
+            "TextLoader",
+            "CSVLoader",
+            "JSONLoader",
+            "MarkdownLoader",
+            "DirectoryLoader",
+            "PDFLoader",
+            "HTMLLoader",
+            "YAMLLoader",
+        ):
+            cls = getattr(loaders_pkg, name, None)
+            if cls is None:
+                continue
+            for method in ("load", "aload"):
+                _patch(cls, method, "loader.load", _const(loader=name))
+
+    # -- Embeddings --
+    def embeddings() -> None:
+        from ..embeddings.backend import SynapsekitEmbeddings
+
+        _patch(SynapsekitEmbeddings, "embed", "embeddings.embed", lambda self, a, k: {})
+        with contextlib.suppress(Exception):
+            from ..embeddings.onnx import ONNXEmbeddings
+
+            _patch(ONNXEmbeddings, "embed", "embeddings.embed", _const(backend="onnx"))
+
+    for step in (tools, memory, world_model, property_graph, mesh, loaders, embeddings):
         _try(step)
