@@ -48,6 +48,10 @@ def enable(*, open_browser: bool = True, quiet: bool = False) -> str:
     from .instrument import instrument_all
 
     instrument_all()
+    # Route Python logging into the feed so logger.* / errors show up live.
+    from .logs import attach_log_bridge
+
+    attach_log_bridge()
     return url
 
 

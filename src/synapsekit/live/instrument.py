@@ -20,6 +20,7 @@ import contextlib
 import functools
 import inspect
 import time
+import traceback
 from collections.abc import Callable
 from typing import Any
 
@@ -32,31 +33,36 @@ _instrumented = False
 AttrsFn = Callable[[Any, tuple[Any, ...], dict[str, Any]], dict[str, Any]]
 
 
+def _publish(kind: str, start: float, status: str, attrs: dict[str, Any], tb: str | None) -> None:
+    if tb:
+        attrs = {**attrs, "traceback": tb[-1800:]}
+    bus.publish(
+        {
+            "kind": kind,
+            "name": kind,
+            "status": status,
+            "duration_ms": round((time.perf_counter() - start) * 1000, 3),
+            "attributes": attrs,
+        }
+    )
+
+
 def _make_wrapper(orig: Any, kind: str, attrs_fn: AttrsFn) -> Any:
     @functools.wraps(orig)
     async def wrapped(self: Any, *args: Any, **kwargs: Any) -> Any:
         if not bus.enabled:
             return await orig(self, *args, **kwargs)
-        start = time.perf_counter()
-        status = "ok"
+        start, status, tb = time.perf_counter(), "ok", None
         try:
             return await orig(self, *args, **kwargs)
         except Exception:
-            status = "error"
+            status, tb = "error", traceback.format_exc()
             raise
         finally:
             attrs: dict[str, Any] = {}
             with contextlib.suppress(Exception):
                 attrs = attrs_fn(self, args, kwargs) or {}
-            bus.publish(
-                {
-                    "kind": kind,
-                    "name": kind,
-                    "status": status,
-                    "duration_ms": round((time.perf_counter() - start) * 1000, 3),
-                    "attributes": attrs,
-                }
-            )
+            _publish(kind, start, status, attrs, tb)
 
     setattr(wrapped, _SENTINEL, True)
     return wrapped
@@ -67,26 +73,17 @@ def _make_sync_wrapper(orig: Any, kind: str, attrs_fn: AttrsFn) -> Any:
     def wrapped(self: Any, *args: Any, **kwargs: Any) -> Any:
         if not bus.enabled:
             return orig(self, *args, **kwargs)
-        start = time.perf_counter()
-        status = "ok"
+        start, status, tb = time.perf_counter(), "ok", None
         try:
             return orig(self, *args, **kwargs)
         except Exception:
-            status = "error"
+            status, tb = "error", traceback.format_exc()
             raise
         finally:
             attrs: dict[str, Any] = {}
             with contextlib.suppress(Exception):
                 attrs = attrs_fn(self, args, kwargs) or {}
-            bus.publish(
-                {
-                    "kind": kind,
-                    "name": kind,
-                    "status": status,
-                    "duration_ms": round((time.perf_counter() - start) * 1000, 3),
-                    "attributes": attrs,
-                }
-            )
+            _publish(kind, start, status, attrs, tb)
 
     setattr(wrapped, _SENTINEL, True)
     return wrapped

@@ -9,7 +9,7 @@
     --bg:#EEF2F7;--panel:#fff;--panel-2:#FBFCFE;--line:#E6EAF1;--line-2:#DBE1EA;
     --ink:#0F1728;--ink-2:#364152;--muted:#667085;--faint:#98A2B3;
     --brand:#16A34A;--brand-2:#22C55E;--brand-ink:#05603A;--brand-soft:#E9F9EF;
-    --warn:#B54708;--crit:#D92D20;--gold:#B54708;
+    --warn:#B54708;--warn-soft:#FEF0E6;--crit:#D92D20;--crit-soft:#FEECEB;--gold:#B54708;--info:#2563EB;
     --shadow:0 1px 2px rgba(16,24,40,.05),0 10px 30px rgba(16,24,40,.07);
     --sans:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
@@ -17,8 +17,7 @@
   *{box-sizing:border-box}
   html,body{height:100%}
   body{margin:0;font-family:var(--sans);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;
-    background:radial-gradient(900px 520px at 90% -12%,#E4F7EC,transparent 68%),
-      radial-gradient(760px 520px at -6% 112%,#E7EEFA,transparent 68%),var(--bg);}
+    background:radial-gradient(900px 520px at 90% -12%,#E4F7EC,transparent 68%),radial-gradient(760px 520px at -6% 112%,#E7EEFA,transparent 68%),var(--bg);}
   .wrap{max-width:1220px;margin:0 auto;padding:20px 22px 34px;min-height:100%;display:flex;flex-direction:column}
   header{display:flex;align-items:center;gap:16px;padding:8px 4px 16px;flex-wrap:wrap}
   .brand{display:flex;align-items:center;gap:12px}
@@ -49,41 +48,59 @@
   .grid{display:grid;gap:16px;grid-template-columns:1.7fr .92fr;align-items:stretch;flex:1;min-height:520px}
   @media(max-width:860px){.grid{grid-template-columns:1fr}.side,.feedpanel{height:auto!important}.feedpanel{height:60vh!important}}
   .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
-  .panel>h2{margin:0;padding:14px 17px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.6px;color:var(--muted);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:9px}
-  .panel>h2 .count{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--faint);font-weight:500}
+  .phead{padding:12px 12px 12px 17px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+  .tabs{display:inline-flex;gap:2px;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:3px}
+  .tabs button{font:inherit;font-size:11.5px;font-weight:650;color:var(--muted);background:none;border:0;cursor:pointer;padding:5px 12px;border-radius:8px;display:flex;align-items:center;gap:6px}
+  .tabs button[aria-selected="true"]{background:var(--panel);color:var(--ink);box-shadow:var(--shadow)}
+  .tabs .b{font-family:var(--mono);font-size:10px;background:#EEF2F7;color:var(--muted);border-radius:999px;padding:0 6px;min-width:16px;text-align:center}
+  .tabs button[aria-selected="true"] .b{background:var(--brand-soft);color:var(--brand-ink)}
+  .phead .count{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--faint)}
 
   .feedpanel{display:flex;flex-direction:column;min-height:0}
   .feed{flex:1;min-height:0;overflow-y:auto;padding:6px 6px 10px}
-  .empty{padding:60px 20px;text-align:center;color:var(--faint);font-size:13.5px}
+  .feed.show-activity .ev:not(.is-activity){display:none}
+  .feed.show-logs .ev:not(.is-log){display:none}
+  .feed.show-errors .ev:not(.is-error){display:none}
+  .empty{padding:56px 20px;text-align:center;color:var(--faint);font-size:13.5px}
   .empty .big{font-size:34px;margin-bottom:12px;opacity:.55}
-  .ev{display:grid;grid-template-columns:28px 1fr;gap:12px;padding:12px 13px;border-radius:12px;margin:2px 5px;animation:slidein .35s cubic-bezier(.2,.7,.3,1)}
+  .ev{border-radius:12px;margin:2px 5px;animation:slidein .3s cubic-bezier(.2,.7,.3,1)}
   @keyframes slidein{from{opacity:0;transform:translateY(-7px)}to{opacity:1;transform:none}}
-  .ev:hover{background:#F4F8FB}
-  .ev .ic{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;font-size:14px;margin-top:1px;background:var(--brand-soft);border:1px solid #C7EED6}
-  .ev.err .ic{background:#FEECEB;border-color:#F5B5B0}
-  .ev .t{font-size:14px;color:var(--ink-2);line-height:1.45}
-  .ev .t b{color:var(--ink);font-weight:700}
+  .ev .row{display:grid;grid-template-columns:28px 1fr auto;gap:12px;padding:11px 13px;border-radius:12px;cursor:pointer;align-items:start}
+  .ev .row:hover{background:#F4F8FB}
+  .ev .ic{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;font-size:14px;background:var(--brand-soft);border:1px solid #C7EED6}
+  .ev.is-error .ic{background:var(--crit-soft);border-color:#F5B5B0}
+  .ev.lvl-warn .ic{background:var(--warn-soft);border-color:#F5C99B}
+  .ev .t{font-size:14px;color:var(--ink-2);line-height:1.45}.ev .t b{color:var(--ink);font-weight:700}
   .ev .t code{font-family:var(--mono);font-size:12px;background:#EEF2F7;padding:1px 6px;border-radius:6px;color:#344054}
+  .ev.is-log .t{font-family:var(--mono);font-size:12.5px;color:var(--ink-2)}
+  .ev.lvl-error .t{color:var(--crit)}.ev.lvl-warn .t{color:var(--warn)}
   .ev .meta{font-family:var(--mono);font-size:10.5px;color:var(--faint);margin-top:5px;display:flex;gap:10px;flex-wrap:wrap}
   .ev .meta b{color:var(--muted);font-weight:600}
+  .ev .caret{font-family:var(--mono);color:var(--faint);font-size:11px;padding-top:3px;transition:transform .2s}
+  .ev.open .caret{transform:rotate(90deg)}
+  .ev .detail{display:none;padding:2px 14px 14px 53px}
+  .ev.open .detail{display:block;animation:slidein .2s}
+  .ev .detail .k{font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.8px;color:var(--faint);font-weight:700;margin:10px 0 5px}
+  .ev .detail pre{margin:0;font-family:var(--mono);font-size:11.5px;line-height:1.5;background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:10px 12px;white-space:pre-wrap;word-break:break-word;max-height:240px;overflow:auto;color:#344054}
+  .ev .detail pre.tb{background:var(--crit-soft);border-color:#F5B5B0;color:#7a271a}
   .feed.trace .ev .t{font-family:var(--mono);font-size:12px;color:#475467;word-break:break-word}
 
   .side{display:flex;flex-direction:column;min-height:0}
   .side .panel{flex:1;display:flex;flex-direction:column;min-height:0}
+  .side .panel>h2{margin:0;padding:14px 17px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.6px;color:var(--muted);border-bottom:1px solid var(--line)}
   .meters{display:grid;grid-template-columns:1fr 1fr;gap:11px;padding:14px}
   .meter{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:13px 14px}
   .meter .lab{font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.8px;color:var(--faint);font-weight:600}
   .meter .val{font-family:var(--mono);font-size:22px;font-weight:700;margin-top:5px;font-variant-numeric:tabular-nums;letter-spacing:-.6px;color:var(--ink)}
   .meter.big{grid-column:1/-1}.meter.big .val{font-size:32px}
   .val.cost{color:var(--gold)}
-  .chart{flex:1;min-height:120px;display:flex;flex-direction:column;padding:12px 16px 8px;border-top:1px solid var(--line)}
+  .chart{flex:1;min-height:110px;display:flex;flex-direction:column;padding:12px 16px 8px;border-top:1px solid var(--line)}
   .chart .lab{font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.8px;color:var(--faint);font-weight:600;display:flex;justify-content:space-between}
-  .spark{flex:1;display:flex;align-items:flex-end;gap:3px;margin-top:10px;min-height:60px}
+  .spark{flex:1;display:flex;align-items:flex-end;gap:3px;margin-top:10px;min-height:56px}
   .spark > i{flex:1;min-width:2px;background:linear-gradient(180deg,var(--brand-2),#16A34A22);border-radius:3px 3px 0 0;min-height:3px;transition:height .3s}
   .spark > i.slow{background:linear-gradient(180deg,#F2B33D,#F2B33D22)}
-  .laststep{padding:11px 16px;border-top:1px solid var(--line);font-family:var(--mono);font-size:11.5px;color:var(--muted);display:flex;gap:8px;align-items:center}
+  .laststep{padding:11px 16px;border-top:1px solid var(--line);font-family:var(--mono);font-size:11.5px;color:var(--muted);display:flex;gap:8px}
   .laststep b{color:var(--ink);font-weight:600}
-
   .foot{margin-top:18px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--faint)}
   .foot b{color:var(--brand);font-weight:600}
   @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -94,21 +111,12 @@
   <header>
     <div class="brand">
       <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-label="SynapseKit">
-        <defs><linearGradient id="skg" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#22c55e"/><stop offset="100%" stop-color="#15803d"/></linearGradient></defs>
-        <circle cx="8" cy="16" r="4.5" fill="url(#skg)"/>
-        <circle cx="25" cy="7" r="3.5" fill="#16a34a" opacity="0.9"/>
-        <circle cx="25" cy="25" r="3.5" fill="#16a34a" opacity="0.9"/>
-        <line x1="12" y1="13.5" x2="22" y2="9" stroke="url(#skg)" stroke-width="1.8" stroke-linecap="round"/>
-        <line x1="12" y1="18.5" x2="22" y2="23" stroke="url(#skg)" stroke-width="1.8" stroke-linecap="round"/>
-      </svg>
-      <div><b>SynapseKit&nbsp;Live</b>
-        <div class="live-tag" id="status"><span class="pulse"></span> <span id="statusText">connecting…</span></div></div>
+        <defs><linearGradient id="skg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#22c55e"/><stop offset="100%" stop-color="#15803d"/></linearGradient></defs>
+        <circle cx="8" cy="16" r="4.5" fill="url(#skg)"/><circle cx="25" cy="7" r="3.5" fill="#16a34a" opacity="0.9"/><circle cx="25" cy="25" r="3.5" fill="#16a34a" opacity="0.9"/>
+        <line x1="12" y1="13.5" x2="22" y2="9" stroke="url(#skg)" stroke-width="1.8" stroke-linecap="round"/><line x1="12" y1="18.5" x2="22" y2="23" stroke="url(#skg)" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <div><b>SynapseKit&nbsp;Live</b><div class="live-tag" id="status"><span class="pulse"></span> <span id="statusText">connecting…</span></div></div>
     </div>
-    <div class="seg" role="group" aria-label="View mode">
-      <button id="mStory" aria-pressed="true">Story</button>
-      <button id="mTrace" aria-pressed="false">Trace</button>
-    </div>
+    <div class="seg" role="group" aria-label="Detail level"><button id="mStory" aria-pressed="true">Story</button><button id="mTrace" aria-pressed="false">Trace</button></div>
     <div class="runmeta"><span class="dep-badge">localhost · SSE · 0 new deps</span></div>
   </header>
 
@@ -116,9 +124,16 @@
 
   <div class="grid">
     <section class="panel feedpanel">
-      <h2>Live activity <span class="count" id="evCount">0 events</span></h2>
-      <div class="feed" id="feed" aria-live="polite">
-        <div class="empty" id="empty"><div class="big">◇</div>Waiting for a SynapseKit run…<br>Execute an agent, RAG query, tool, or graph and it streams here live.</div>
+      <div class="phead">
+        <div class="tabs" role="tablist">
+          <button data-tab="activity" role="tab" aria-selected="true">Activity <span class="b" id="tabActivity">0</span></button>
+          <button data-tab="logs" role="tab" aria-selected="false">Logs <span class="b" id="tabLogs">0</span></button>
+          <button data-tab="errors" role="tab" aria-selected="false">Errors <span class="b" id="tabErrors">0</span></button>
+        </div>
+        <span class="count" id="evCount">0 events</span>
+      </div>
+      <div class="feed show-activity" id="feed" aria-live="polite">
+        <div class="empty" id="empty"><div class="big">◇</div>Waiting for a SynapseKit run…<br>Run an agent, RAG query, tool, or graph — activity, logs, and errors stream here.</div>
       </div>
     </section>
     <aside class="side">
@@ -131,10 +146,7 @@
           <div class="meter"><div class="lab">Tokens in</div><div class="val" id="mTokIn">0</div></div>
           <div class="meter"><div class="lab">Tokens out</div><div class="val" id="mTokOut">0</div></div>
         </div>
-        <div class="chart">
-          <div class="lab"><span>Latency per step</span><span id="mLatMax">0 ms</span></div>
-          <div class="spark" id="spark"></div>
-        </div>
+        <div class="chart"><div class="lab"><span>Latency per step</span><span id="mLatMax">0 ms</span></div><div class="spark" id="spark"></div></div>
         <div class="laststep">Last step: <b id="mLast">—</b></div>
       </section>
     </aside>
@@ -145,38 +157,46 @@
 <script>
 (function(){
   "use strict";
-  var TOKEN = "{{TOKEN}}";
+  var TOKEN="{{TOKEN}}";
   var $=function(id){return document.getElementById(id)};
-  var feed=$("feed"), spark=$("spark"), mode="story", n=0, cost=0, tin=0, tout=0, latMax=1;
+  var feed=$("feed"), spark=$("spark"), mode="story", tab="activity";
+  var n=0,cost=0,tin=0,tout=0,latMax=1,counts={activity:0,logs:0,errors:0};
   var reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   var SUBS=[["llm","🧠","LLM"],["retrieval","🔍","Retrieval"],["tool","🔧","Tools"],["mcp","🔌","MCP"],
             ["memory","🗃","Memory"],["graph","🕸","Graph"],["loader","📄","Loaders"],["embed","🧬","Embeddings"]];
   var chips={};
-  SUBS.forEach(function(s){
-    var el=document.createElement("div"); el.className="chip";
+  SUBS.forEach(function(s){var el=document.createElement("div");el.className="chip";
     el.innerHTML='<div class="top"><span class="em">'+s[1]+'</span><span class="n" id="c_'+s[0]+'">0</span></div><div class="lab">'+s[2]+'</div>';
-    $("activity").appendChild(el); chips[s[0]]={el:el,c:0};
-  });
+    $("activity").appendChild(el);chips[s[0]]={el:el,c:0};});
   function subOf(ev){var k=(ev.kind||ev.name||"").toLowerCase();var a=ev.attributes||{};
+    if(k==="log")return null;
     if(k.indexOf("tool")>-1)return String(a.tool||"").indexOf("mcp")===0?"mcp":"tool";
-    if(k.indexOf("llm")>-1||a.model)return "llm";if(k.indexOf("embed")>-1)return "embed";if(k.indexOf("memory")>-1)return "memory";
-    if(k.indexOf("graph")>-1||k.indexOf("mesh")>-1)return "graph";if(k.indexOf("loader")>-1)return "loader";
-    if(k.indexOf("retriev")>-1||k.indexOf("search")>-1||k.indexOf("vector")>-1)return "retrieval";return null;}
-  function bump(sub){var c=chips[sub];if(!c)return;c.c++;$("c_"+sub).textContent=c.c;
-    c.el.classList.add("lit");c.el.classList.add("hot");if(!reduce)setTimeout(function(){c.el.classList.remove("hot")},450);else c.el.classList.remove("hot");}
+    if(k.indexOf("llm")>-1||a.model||a["llm.model"])return "llm";if(k.indexOf("embed")>-1)return "embed";
+    if(k.indexOf("memory")>-1)return "memory";if(k.indexOf("graph")>-1||k.indexOf("mesh")>-1)return "graph";
+    if(k.indexOf("loader")>-1)return "loader";if(k.indexOf("retriev")>-1||k.indexOf("search")>-1||k.indexOf("vector")>-1)return "retrieval";return null;}
+  function bump(sub){var c=chips[sub];if(!c)return;c.c++;$("c_"+sub).textContent=c.c;c.el.classList.add("lit");c.el.classList.add("hot");
+    if(!reduce)setTimeout(function(){c.el.classList.remove("hot")},450);else c.el.classList.remove("hot");}
+
+  // tabs
+  [].slice.call(document.querySelectorAll(".tabs button")).forEach(function(b){
+    b.onclick=function(){tab=b.dataset.tab;
+      [].slice.call(document.querySelectorAll(".tabs button")).forEach(function(x){x.setAttribute("aria-selected",x===b);});
+      feed.classList.remove("show-activity","show-logs","show-errors");feed.classList.add("show-"+tab);};});
 
   $("mStory").onclick=function(){setMode("story")};$("mTrace").onclick=function(){setMode("trace")};
   function setMode(m){mode=m;$("mStory").setAttribute("aria-pressed",m==="story");$("mTrace").setAttribute("aria-pressed",m==="trace");
     feed.classList.toggle("trace",m==="trace");
-    [].slice.call(feed.querySelectorAll(".ev")).forEach(function(el){el.querySelector(".t").innerHTML=m==="story"?el.dataset.story:el.dataset.trace;});}
+    [].slice.call(feed.querySelectorAll(".ev:not(.is-log) .t")).forEach(function(el){el.innerHTML=el.parentNode.parentNode.parentNode.dataset[m];});}
 
-  var ICONS={span:"◆","llm.call":"🧠",llm:"🧠","retriever.search":"🔍",retrieval:"🔍","tool.call":"🔧",tool:"🔧",mcp:"🔌",
-    "memory.read":"🗃","memory.write":"🗃",memory:"🗃","db.query":"🗃","graph.query":"🕸","graph.ingest":"🕸",graph:"🕸",
-    "mesh.query":"🪢","mesh.ingest":"🪢",mesh:"🪢","loader.load":"📄",loader:"📄","embeddings.embed":"🧬",embeddings:"🧬","run.complete":"✅"};
-  function iconFor(ev){var k=(ev.kind||ev.name||"").toLowerCase();for(var key in ICONS){if(k.indexOf(key)>-1)return ICONS[key];}return (k.indexOf("search")>-1?"🔍":"◆");}
+  var ICONS={span:"◆","llm.call":"🧠","llm.generate":"🧠",llm:"🧠","retriever.search":"🔍",retrieval:"🔍","tool.call":"🔧",tool:"🔧",mcp:"🔌",
+    "memory.read":"🗃","memory.write":"🗃",memory:"🗃","graph.query":"🕸","graph.ingest":"🕸",graph:"🕸",
+    "mesh.query":"🪢","mesh.ingest":"🪢",mesh:"🪢","loader.load":"📄",loader:"📄","embeddings.embed":"🧬",embeddings:"🧬",log:"🪵","run.complete":"✅"};
+  function iconFor(ev){if(ev.kind==="log")return ev.level==="error"?"⛔":ev.level==="warning"?"⚠️":"🪵";
+    var k=(ev.kind||ev.name||"").toLowerCase();for(var key in ICONS){if(k.indexOf(key)>-1)return ICONS[key];}return (k.indexOf("search")>-1?"🔍":"◆");}
   function esc(s){return String(s==null?"":s).replace(/[&<>]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;"}[c]});}
 
+  function model(a){return a.model||a["llm.model"]}
   function story(ev){var a=ev.attributes||{};var name=ev.name||ev.kind||"event";var k=(ev.kind||name+"").toLowerCase();
     var dur=ev.duration_ms!=null?(" · "+Math.round(ev.duration_ms)+"ms"):"";
     if(k.indexOf("retriev")>-1||k.indexOf("search")>-1)return "Retrieved <b>"+(a.hits||a.k||"top")+"</b> passages"+dur;
@@ -186,54 +206,68 @@
     if(k.indexOf("graph.ingest")>-1)return "Wrote to the knowledge graph"+dur;
     if(k.indexOf("graph")>-1)return "Queried the knowledge graph"+dur;
     if(k.indexOf("tool")>-1)return "Tool <code>"+esc(a.tool||name)+"</code>"+(a.operation?(" ("+esc(a.operation)+")"):"")+dur;
-    if(k.indexOf("llm")>-1||a.model)return "Thinking with <code>"+esc(a.model||"llm")+"</code>"+dur;
+    if(k.indexOf("llm")>-1||model(a))return "Thinking with <code>"+esc(model(a)||"llm")+"</code>"+dur;
     if(k.indexOf("loader")>-1)return "Loaded documents with <code>"+esc(a.loader||"loader")+"</code>"+dur;
     if(k.indexOf("embed")>-1)return "Embedded text"+dur;
     return "<b>"+esc(name)+"</b>"+dur+(ev.status&&ev.status!=="ok"?(" — "+esc(ev.status)):"");}
   function trace(ev){var a=ev.attributes||{};var bits=[ev.name||ev.kind];
-    Object.keys(a).slice(0,6).forEach(function(kk){bits.push(kk+"="+JSON.stringify(a[kk]));});
+    Object.keys(a).slice(0,8).forEach(function(kk){if(kk!=="traceback"&&kk!=="llm.input"&&kk!=="llm.output")bits.push(kk+"="+JSON.stringify(a[kk]));});
     if(ev.duration_ms!=null)bits.push(Math.round(ev.duration_ms)+"ms");return esc(bits.join(" "));}
 
-  function addSpark(ms){
-    var b=document.createElement("i"); var v=Math.max(1,Math.round(ms||0));
-    latMax=Math.max(latMax,v); b.dataset.v=v; if(v>300)b.className="slow";
-    spark.appendChild(b); while(spark.children.length>36) spark.removeChild(spark.firstChild);
-    $("mLatMax").textContent=latMax+" ms";
-    [].slice.call(spark.children).forEach(function(x){x.style.height=(6+Math.round(Math.log10(1+ (+x.dataset.v))/Math.log10(1+latMax)*54))+"px";});
+  function detailHTML(ev){
+    var a=ev.attributes||{},h="";
+    if(a["llm.input"])h+='<div class="k">Prompt</div><pre>'+esc(a["llm.input"])+'</pre>';
+    if(a["llm.output"])h+='<div class="k">Response</div><pre>'+esc(a["llm.output"])+'</pre>';
+    if(a.traceback)h+='<div class="k">Traceback</div><pre class="tb">'+esc(a.traceback)+'</pre>';
+    var shown={"llm.input":1,"llm.output":1,traceback:1};
+    var rest={};Object.keys(a).forEach(function(kk){if(!shown[kk])rest[kk]=a[kk];});
+    if(Object.keys(rest).length)h+='<div class="k">Attributes</div><pre>'+esc(JSON.stringify(rest,null,2))+'</pre>';
+    if(ev.kind==="log")h+='<div class="k">Logger</div><pre>'+esc(ev.logger||"root")+'</pre>';
+    return h||'<div class="k" style="color:var(--faint)">no extra detail</div>';
   }
 
+  function addSpark(ms){var b=document.createElement("i");var v=Math.max(1,Math.round(ms||0));latMax=Math.max(latMax,v);b.dataset.v=v;if(v>300)b.className="slow";
+    spark.appendChild(b);while(spark.children.length>36)spark.removeChild(spark.firstChild);$("mLatMax").textContent=latMax+" ms";
+    [].slice.call(spark.children).forEach(function(x){x.style.height=(6+Math.round(Math.log10(1+(+x.dataset.v))/Math.log10(1+latMax)*52))+"px";});}
+
   function render(ev){
-    var e=$("empty"); if(e)e.remove();
-    var a=ev.attributes||{};
-    var el=document.createElement("div"); el.className="ev "+(ev.status==="error"?"err":"");
-    el.dataset.story=story(ev); el.dataset.trace=trace(ev);
+    var e=$("empty");if(e)e.remove();
+    var a=ev.attributes||{}, isLog=ev.kind==="log";
+    var isError=ev.status==="error"||ev.level==="error"||ev.level==="warning";
+    var el=document.createElement("div");
+    el.className="ev "+(ev.status==="error"?"is-error ":"")+(isLog?"is-log lvl-"+(ev.level||"info")+" ":"is-activity ")+(isError?"is-error ":"");
+    if(!isLog){el.dataset.story=story(ev);el.dataset.trace=trace(ev);}
+    var text=isLog?esc(ev.message||""):(mode==="story"?el.dataset.story:el.dataset.trace);
     var meta=[];
-    if(a.model)meta.push("<b>model</b> "+esc(a.model));
-    if(a.tool)meta.push("<b>tool</b> "+esc(a.tool));
-    if(ev.duration_ms!=null)meta.push("<b>took</b> "+Math.round(ev.duration_ms)+"ms");
-    if(ev.status&&ev.status!=="ok")meta.push("<b>status</b> "+esc(ev.status));
-    el.innerHTML='<div class="ic">'+iconFor(ev)+'</div><div><div class="t">'+
-      (mode==="story"?el.dataset.story:el.dataset.trace)+'</div>'+
-      (meta.length?'<div class="meta">'+meta.join('<span style="opacity:.4">·</span> ')+'</div>':'')+'</div>';
+    if(isLog){meta.push("<b>"+esc((ev.level||"info").toUpperCase())+"</b>");meta.push(esc(ev.logger||"root"));}
+    else{if(model(a))meta.push("<b>model</b> "+esc(model(a)));if(a.tool)meta.push("<b>tool</b> "+esc(a.tool));
+      if(ev.duration_ms!=null)meta.push("<b>took</b> "+Math.round(ev.duration_ms)+"ms");
+      if(ev.status&&ev.status!=="ok")meta.push("<b>status</b> "+esc(ev.status));}
+    el.innerHTML='<div class="row"><div class="ic">'+iconFor(ev)+'</div><div><div class="t">'+text+'</div>'+
+      (meta.length?'<div class="meta">'+meta.join('<span style="opacity:.4">·</span> ')+'</div>':'')+
+      '</div><div class="caret">▸</div></div><div class="detail">'+detailHTML(ev)+'</div>';
+    el.querySelector(".row").onclick=function(){el.classList.toggle("open");};
     feed.insertBefore(el,feed.firstChild);
-    while(feed.children.length>60) feed.removeChild(feed.lastChild);
-    n++; $("evCount").textContent=n+(n===1?" event":" events"); $("mEvents").textContent=n.toLocaleString();
+    while(feed.children.length>80)feed.removeChild(feed.lastChild);
+
+    n++;$("evCount").textContent=n+(n===1?" event":" events");$("mEvents").textContent=n.toLocaleString();
+    counts.activity+= isLog?0:1; counts.logs+= isLog?1:0; counts.errors+= isError?1:0;
+    $("tabActivity").textContent=counts.activity;$("tabLogs").textContent=counts.logs;$("tabErrors").textContent=counts.errors;
+
+    if(isLog)return;
     $("mLast").textContent=(ev.name||ev.kind||"—");
-    var sub=subOf(ev); if(sub) bump(sub);
+    var sub=subOf(ev);if(sub)bump(sub);
     addSpark(ev.duration_ms);
-    var c=a.cost_usd||a.cost||0; if(c){cost+=Number(c);$("mCost").textContent="$"+cost.toFixed(4);}
-    if(a.tokens_in||a.prompt_tokens){tin+=Number(a.tokens_in||a.prompt_tokens);$("mTokIn").textContent=tin.toLocaleString();}
-    if(a.tokens_out||a.completion_tokens){tout+=Number(a.tokens_out||a.completion_tokens);$("mTokOut").textContent=tout.toLocaleString();}
+    var c=a.cost_usd||a.cost||a["llm.cost_usd"]||0;if(c){cost+=Number(c);$("mCost").textContent="$"+cost.toFixed(4);}
+    var ti=a.tokens_in||a.prompt_tokens||a["llm.prompt_tokens"];if(ti){tin+=Number(ti);$("mTokIn").textContent=tin.toLocaleString();}
+    var to=a.tokens_out||a.completion_tokens||a["llm.completion_tokens"];if(to){tout+=Number(to);$("mTokOut").textContent=tout.toLocaleString();}
     $("mTok").textContent=(tin+tout).toLocaleString();
   }
 
   function setStatus(on,txt){var s=$("status");s.classList.toggle("on",on);$("statusText").textContent=txt;}
-  function connect(){
-    var es=new EventSource("/events?token="+encodeURIComponent(TOKEN));
-    es.onopen=function(){setStatus(true,"streaming");};
-    es.onmessage=function(m){try{render(JSON.parse(m.data));}catch(e){}};
-    es.onerror=function(){setStatus(false,"reconnecting…");};
-  }
+  function connect(){var es=new EventSource("/events?token="+encodeURIComponent(TOKEN));
+    es.onopen=function(){setStatus(true,"streaming");};es.onmessage=function(m){try{render(JSON.parse(m.data));}catch(e){}};
+    es.onerror=function(){setStatus(false,"reconnecting…");};}
   connect();
 })();
 </script>
