@@ -272,6 +272,7 @@ from .loaders.latex import LaTeXLoader
 from .loaders.markdown import MarkdownLoader
 from .loaders.mongodb import MongoDBLoader
 from .loaders.obsidian import ObsidianLoader
+from .loaders.okf import OKFLoader, OpenKnowledgeFormatLoader
 from .loaders.onedrive import OneDriveLoader
 from .loaders.pdf import PDFLoader
 from .loaders.pubmed import PubMedLoader
@@ -759,6 +760,8 @@ __all__ = [
     "MarkdownLoader",
     "LocalMdLoader",
     "ObsidianLoader",
+    "OKFLoader",
+    "OpenKnowledgeFormatLoader",
     "MongoDBLoader",
     "DynamoDBLoader",
     "OneDriveLoader",
@@ -1237,6 +1240,8 @@ _LAZY_IMPORTS = {
     "HubSpotLoader": "loaders.hubspot",
     "MongoDBLoader": "loaders.mongodb",
     "ObsidianLoader": "loaders.obsidian",
+    "OKFLoader": "loaders.okf",
+    "OpenKnowledgeFormatLoader": "loaders.okf",
     "OneDriveLoader": "loaders.onedrive",
     "AzureBlobLoader": "loaders.azure_blob",
     "BigQueryLoader": "loaders.bigquery",
