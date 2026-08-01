@@ -130,18 +130,26 @@
     feed.classList.toggle("trace",m==="trace");
     [].slice.call(feed.querySelectorAll(".ev")).forEach(function(el){el.querySelector(".t").innerHTML=m==="story"?el.dataset.story:el.dataset.trace;});}
 
-  var ICONS={span:"◆",llm:"🧠","llm.call":"🧠",retrieval:"🔍","retriever.search":"🔍",tool:"🔧","tool.call":"🔧",graph:"🕸",agent:"🤖",error:"⚠️","run.complete":"✅"};
+  var ICONS={span:"◆",llm:"🧠","llm.call":"🧠",retrieval:"🔍","retriever.search":"🔍",tool:"🔧","tool.call":"🔧",mcp:"🔌","memory.read":"🗃","memory.write":"🗃",memory:"🗃","db.query":"🗃","graph.query":"🕸","graph.ingest":"🕸",graph:"🕸","mesh.query":"🪢","mesh.ingest":"🪢",mesh:"🪢",loader:"📄",agent:"🤖",error:"⚠️","run.complete":"✅"};
   function iconFor(ev){ var k=(ev.kind||ev.name||"").toLowerCase();
     for(var key in ICONS){ if(k.indexOf(key)>-1) return ICONS[key]; } return "◆"; }
   function esc(s){return String(s==null?"":s).replace(/[&<>]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;"}[c]});}
 
   function story(ev){
     var a=ev.attributes||{};
+    var kind=(ev.kind||ev.name||"event")+"";
     var name=ev.name||ev.kind||"event";
+    var k=kind.toLowerCase();
     var dur=ev.duration_ms!=null?(" · "+Math.round(ev.duration_ms)+"ms"):"";
-    if((name+"").toLowerCase().indexOf("retriev")>-1) return "Retrieved <b>"+(a.hits||a.k||"?")+"</b> passages"+dur;
-    if((name+"").toLowerCase().indexOf("llm")>-1||a.model) return "Thinking with <code>"+esc(a.model||"llm")+"</code>"+dur;
-    if((name+"").toLowerCase().indexOf("tool")>-1) return "Tool <code>"+esc(a.tool||a.name||name)+"</code>"+dur;
+    if(k.indexOf("retriev")>-1) return "Retrieved <b>"+(a.hits||a.k||"?")+"</b> passages"+dur;
+    if(k.indexOf("memory.write")>-1) return "Saved to memory"+dur;
+    if(k.indexOf("memory.read")>-1||k.indexOf("memory")>-1) return "Read from memory / DB"+dur;
+    if(k.indexOf("mesh.ingest")>-1) return "Ingested into the knowledge mesh"+dur;
+    if(k.indexOf("mesh")>-1) return "Queried the knowledge mesh"+dur;
+    if(k.indexOf("graph.ingest")>-1) return "Wrote to the knowledge graph <code>"+esc(a.graph||a.backend||"")+"</code>"+dur;
+    if(k.indexOf("graph")>-1) return "Queried the knowledge graph <code>"+esc(a.graph||a.backend||"")+"</code>"+dur;
+    if(k.indexOf("tool")>-1) return "Tool <code>"+esc(a.tool||a.name||name)+"</code>"+(a.operation?(" ("+esc(a.operation)+")"):"")+dur;
+    if(k.indexOf("llm")>-1||a.model) return "Thinking with <code>"+esc(a.model||"llm")+"</code>"+dur;
     return "<b>"+esc(name)+"</b>"+dur+(ev.status&&ev.status!=="ok"?(" — "+esc(ev.status)):"");
   }
   function trace(ev){ var a=ev.attributes||{}; var bits=[ev.name||ev.kind];
