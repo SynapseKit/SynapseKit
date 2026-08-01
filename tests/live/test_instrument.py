@@ -98,3 +98,15 @@ async def test_noop_when_bus_disabled() -> None:
     bus.clear()
     await _CalcTool().run()
     assert bus.history() == []  # nothing published when Live is off
+
+
+def test_sync_loader_publishes(tmp_path) -> None:
+    # Loaders are sync and share no base class — the sync wrapper covers them.
+    from synapsekit.loaders import TextLoader
+
+    p = tmp_path / "doc.txt"
+    p.write_text("hello world")
+    TextLoader(str(p)).load()
+    events = [e for e in bus.history() if e["kind"] == "loader.load"]
+    assert events, "loader.load not published"
+    assert events[-1]["attributes"]["loader"] == "TextLoader"
