@@ -58,6 +58,17 @@ jobs:
       - run: uv sync --group dev --group bench
       - run: uv run pytest benchmarks/test_world_model_retrieval_bench.py -v
 
+  # Enforces the #734 AgentSwarm acceptance targets: market routing must beat a
+  # hardcoded round-robin AgentFederation on quality by >=15% and cost >=25% less
+  # than always-routing-to-best-model, on a deterministic 100-task benchmark.
+  agent-swarm-market-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --group dev --group bench
+      - run: uv run pytest benchmarks/test_agent_swarm_bench.py -v
+
   # Harness-correctness check for the edge local-vs-cloud benchmark (#736). Runs
   # against stub LLMs -- no GGUF file or ANTHROPIC_API_KEY in CI -- so it can
   # only assert the graders and runner are right, not real model quality.
