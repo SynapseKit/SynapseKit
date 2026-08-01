@@ -485,6 +485,60 @@ class KnowledgeMesh:
 
         return run_sync(self.reindex(force=force))
 
+    async def ingest_okf(
+        self, path: str | Path, *, extract_body: bool = False, **loader_kwargs: Any
+    ) -> int:
+        """Ingest an Open Knowledge Format bundle end-to-end (#825).
+
+        Loads the bundle via :class:`~synapsekit.loaders.okf.OpenKnowledgeFormatLoader`,
+        vector-indexes each concept body, and builds the *explicit* cross-link
+        graph on the mesh's world model via
+        :func:`~synapsekit.retrieval.okf_graph.okf_to_world_model` — bypassing
+        the lossy ``HeuristicWorldModelExtractor`` for the structure OKF already
+        encodes. Pass ``extract_body=True`` to *also* run extraction over the
+        freeform Markdown bodies. Query the result through ``self.rag``
+        (``WorldModelRAG``) with ``graph_first`` / ``vector_first`` / ``hybrid``.
+
+        Returns the number of concepts ingested. Link resolution is forced on
+        (the graph needs it), so any ``resolve_links`` kwarg is ignored.
+        """
+        from ..loaders.okf import OpenKnowledgeFormatLoader
+        from ..retrieval.okf_graph import okf_to_world_model
+
+        loader_kwargs.pop("resolve_links", None)
+        docs = await OpenKnowledgeFormatLoader(path, resolve_links=True, **loader_kwargs).aload()
+
+        texts: list[str] = []
+        metadatas: list[dict[str, Any]] = []
+        for doc in docs:
+            if not doc.text.strip():
+                continue
+            doc_id = doc.metadata.get("concept_path")
+            # The vector store indexes metadata into a hashable inverted index,
+            # so pass only scalar fields — the rich frontmatter/link structure
+            # lives on the graph nodes built below.
+            scalar: dict[str, Any] = {"source": doc_id, "world_model_doc_id": doc_id}
+            for key in ("concept_path", "okf_type", "title", "resource", "timestamp"):
+                value = doc.metadata.get(key)
+                if isinstance(value, str | int | float | bool):
+                    scalar[key] = value
+            texts.append(doc.text)
+            metadatas.append(scalar)
+        if texts:
+            await self.rag.vector_retriever.add(texts, metadatas)
+
+        okf_to_world_model(docs, self.rag.graph_backend)
+        if extract_body and docs:
+            await self.rag.ingest(docs)
+        return len(docs)
+
+    def ingest_okf_sync(
+        self, path: str | Path, *, extract_body: bool = False, **loader_kwargs: Any
+    ) -> int:
+        """Sync wrapper for ``ingest_okf``."""
+
+        return run_sync(self.ingest_okf(path, extract_body=extract_body, **loader_kwargs))
+
     async def query(
         self,
         query: str,
