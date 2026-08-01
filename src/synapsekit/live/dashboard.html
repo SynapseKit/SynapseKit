@@ -94,6 +94,9 @@
   .meter .val{font-family:var(--mono);font-size:22px;font-weight:700;margin-top:5px;font-variant-numeric:tabular-nums;letter-spacing:-.6px;color:var(--ink)}
   .meter.big{grid-column:1/-1}.meter.big .val{font-size:32px}
   .val.cost{color:var(--gold)}
+  .gauge{height:8px;border-radius:5px;background:#EAEEF4;margin-top:10px;overflow:hidden}
+  .gauge>i{display:block;height:100%;width:0;border-radius:5px;background:linear-gradient(90deg,#22C55E,#16A34A);transition:width .4s,background .4s}
+  .gauge>i.hi{background:linear-gradient(90deg,#F2B33D,#B54708)}.gauge>i.crit{background:linear-gradient(90deg,#F97066,#D92D20)}
   .chart{flex:1;min-height:110px;display:flex;flex-direction:column;padding:12px 16px 8px;border-top:1px solid var(--line)}
   .chart .lab{font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.8px;color:var(--faint);font-weight:600;display:flex;justify-content:space-between}
   .spark{flex:1;display:flex;align-items:flex-end;gap:3px;margin-top:10px;min-height:56px}
@@ -145,13 +148,14 @@
           <div class="meter"><div class="lab">Tokens</div><div class="val" id="mTok">0</div></div>
           <div class="meter"><div class="lab">Tokens in</div><div class="val" id="mTokIn">0</div></div>
           <div class="meter"><div class="lab">Tokens out</div><div class="val" id="mTokOut">0</div></div>
+          <div class="meter big" id="budgetMeter" style="display:none"><div class="lab">Daily budget <span id="mBudgetTxt" style="color:var(--muted)"></span></div><div class="gauge"><i id="mBudgetBar"></i></div></div>
         </div>
         <div class="chart"><div class="lab"><span>Latency per step</span><span id="mLatMax">0 ms</span></div><div class="spark" id="spark"></div></div>
         <div class="laststep">Last step: <b id="mLast">—</b></div>
       </section>
     </aside>
   </div>
-  <div class="foot">one event bus · stdlib <b>http.server</b> + SSE · single-file UI · <b>0 new dependencies</b></div>
+  <div class="foot">one event bus · stdlib <b>http.server</b> + SSE · single-file UI · <b>0 new dependencies</b> · the same events also export to <b>Prometheus / Grafana</b> via <code>synapsekit[observe]</code></div>
 </div>
 
 <script>
@@ -191,7 +195,8 @@
 
   var ICONS={span:"◆","llm.call":"🧠","llm.generate":"🧠",llm:"🧠","retriever.search":"🔍",retrieval:"🔍","tool.call":"🔧",tool:"🔧",mcp:"🔌",
     "memory.read":"🗃","memory.write":"🗃",memory:"🗃","graph.query":"🕸","graph.ingest":"🕸",graph:"🕸",
-    "mesh.query":"🪢","mesh.ingest":"🪢",mesh:"🪢","loader.load":"📄",loader:"📄","embeddings.embed":"🧬",embeddings:"🧬",log:"🪵","run.complete":"✅"};
+    "mesh.query":"🪢","mesh.ingest":"🪢",mesh:"🪢","loader.load":"📄",loader:"📄","embeddings.embed":"🧬",embeddings:"🧬",
+    budget:"💰",audit:"🔐",swarm:"🐝",log:"🪵","run.complete":"✅"};
   function iconFor(ev){if(ev.kind==="log")return ev.level==="error"?"⛔":ev.level==="warning"?"⚠️":"🪵";
     var k=(ev.kind||ev.name||"").toLowerCase();for(var key in ICONS){if(k.indexOf(key)>-1)return ICONS[key];}return (k.indexOf("search")>-1?"🔍":"◆");}
   function esc(s){return String(s==null?"":s).replace(/[&<>]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;"}[c]});}
@@ -209,6 +214,9 @@
     if(k.indexOf("llm")>-1||model(a))return "Thinking with <code>"+esc(model(a)||"llm")+"</code>"+dur;
     if(k.indexOf("loader")>-1)return "Loaded documents with <code>"+esc(a.loader||"loader")+"</code>"+dur;
     if(k.indexOf("embed")>-1)return "Embedded text"+dur;
+    if(k.indexOf("budget")>-1)return "Recorded spend"+(a.limit?(" — $"+Number(a.spent||0).toFixed(4)+" of $"+a.limit+" daily"):"")+dur;
+    if(k.indexOf("audit")>-1)return "Signed audit entry"+(a.model?(" — <code>"+esc(a.model)+"</code>"):"")+dur;
+    if(k.indexOf("swarm")>-1)return "Agent swarm auction"+dur;
     return "<b>"+esc(name)+"</b>"+dur+(ev.status&&ev.status!=="ok"?(" — "+esc(ev.status)):"");}
   function trace(ev){var a=ev.attributes||{};var bits=[ev.name||ev.kind];
     Object.keys(a).slice(0,8).forEach(function(kk){if(kk!=="traceback"&&kk!=="llm.input"&&kk!=="llm.output")bits.push(kk+"="+JSON.stringify(a[kk]));});
@@ -262,6 +270,9 @@
     var ti=a.tokens_in||a.prompt_tokens||a["llm.prompt_tokens"];if(ti){tin+=Number(ti);$("mTokIn").textContent=tin.toLocaleString();}
     var to=a.tokens_out||a.completion_tokens||a["llm.completion_tokens"];if(to){tout+=Number(to);$("mTokOut").textContent=tout.toLocaleString();}
     $("mTok").textContent=(tin+tout).toLocaleString();
+    if(ev.kind==="budget"&&a.limit){var pct=Math.min(100,(Number(a.spent||0)/Number(a.limit))*100);
+      $("budgetMeter").style.display="";var bar=$("mBudgetBar");bar.style.width=pct.toFixed(1)+"%";
+      bar.className=pct>=90?"crit":pct>=70?"hi":"";$("mBudgetTxt").textContent="$"+Number(a.spent||0).toFixed(4)+" / $"+a.limit;}
   }
 
   function setStatus(on,txt){var s=$("status");s.classList.toggle("on",on);$("statusText").textContent=txt;}

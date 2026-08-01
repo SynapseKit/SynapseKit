@@ -100,6 +100,20 @@ async def test_noop_when_bus_disabled() -> None:
     assert bus.history() == []  # nothing published when Live is off
 
 
+def test_budget_and_audit_publish() -> None:
+    from synapsekit.observability.audit_log import AuditLog
+    from synapsekit.observability.budget_guard import BudgetGuard, BudgetLimit
+
+    BudgetGuard(BudgetLimit(daily=5.0)).record_spend(0.0043)
+    AuditLog().record(model="claude-haiku-4-5", input_text="hi", output_text="hello", user="u1")
+    kinds = [e["kind"] for e in bus.history()]
+    assert "budget" in kinds and "audit" in kinds
+    budget = [e for e in bus.history() if e["kind"] == "budget"][-1]
+    assert budget["attributes"]["limit"] == 5.0
+    audit = [e for e in bus.history() if e["kind"] == "audit"][-1]
+    assert audit["attributes"]["model"] == "claude-haiku-4-5"
+
+
 def test_sync_loader_publishes(tmp_path) -> None:
     # Loaders are sync and share no base class — the sync wrapper covers them.
     from synapsekit.loaders import TextLoader

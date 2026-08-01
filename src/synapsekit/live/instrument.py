@@ -228,5 +228,51 @@ def instrument_all() -> None:
 
             _patch(ONNXEmbeddings, "embed", "embeddings.embed", _const(backend="onnx"))
 
-    for step in (tools, memory, world_model, property_graph, mesh, loaders, embeddings):
+    # -- Budget guard → live budget gauge --
+    def budget() -> None:
+        from ..observability.budget_guard import BudgetGuard
+
+        _patch(
+            BudgetGuard,
+            "record_spend",
+            "budget",
+            lambda self, a, k: {
+                "spent": round(getattr(self, "_daily_spend", 0.0), 6),
+                "limit": getattr(getattr(self, "_limits", None), "daily", None),
+                "cost": (a[0] if a else k.get("cost")),
+            },
+        )
+
+    # -- Signed audit log --
+    def audit() -> None:
+        from ..observability.audit_log import AuditLog
+
+        _patch(
+            AuditLog,
+            "record",
+            "audit",
+            lambda self, a, k: {
+                "model": (a[0] if a else k.get("model")),
+                "signed": True,
+            },
+        )
+
+    # -- Agent swarm auctions --
+    def swarm() -> None:
+        from ..observability.metrics import PrometheusMetrics
+
+        _patch(PrometheusMetrics, "record_swarm_win", "swarm", _const(event="win"))
+
+    for step in (
+        tools,
+        memory,
+        world_model,
+        property_graph,
+        mesh,
+        loaders,
+        embeddings,
+        budget,
+        audit,
+        swarm,
+    ):
         _try(step)
