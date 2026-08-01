@@ -392,6 +392,7 @@ from .retrieval.hybrid_search import HybridSearchRetriever
 from .retrieval.hyde import HyDERetriever
 from .retrieval.mongodb_atlas import MongoDBAtlasVectorStore
 from .retrieval.multi_step import MultiStepRetriever
+from .retrieval.okf_graph import okf_to_world_model
 from .retrieval.parent_document import ParentDocumentRetriever
 from .retrieval.property_graph import (
     ExtractedEntity,
@@ -628,6 +629,7 @@ __all__ = [
     "ExtractedRelationship",
     "StepBackRetriever",
     "WorldModelRAG",
+    "okf_to_world_model",
     "ExtractionPolicy",
     "EntityMention",
     "RelationMention",
