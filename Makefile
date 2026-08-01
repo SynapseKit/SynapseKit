@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: install lint format format-check typecheck test deptry check bench bench-compare help
+.PHONY: install lint format format-check typecheck test deptry check bench bench-compare release-check release-check-live help
 
 install: ## Install dependencies (dev group)
 	uv sync --group dev
@@ -29,5 +29,11 @@ bench: ## Run micro-benchmarks
 
 bench-compare: ## Compare against saved baseline (fail >10% regression)
 	PYTHONHASHSEED=0 uv run pytest benchmarks/ -c benchmarks/pytest.ini --benchmark-compare --benchmark-compare-fail=mean:10%
+
+release-check: ## Run the release-validation harness (offline, no API keys)
+	uv run python -m release_check --md release_check_report.md
+
+release-check-live: ## Run the release-validation harness incl. live LLM checks (needs API keys)
+	uv run python -m release_check --live --md release_check_report.md
 
 check: lint format-check typecheck test deptry ## Run all checks
