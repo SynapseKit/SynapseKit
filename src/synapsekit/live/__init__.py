@@ -20,10 +20,11 @@ from __future__ import annotations
 import contextlib
 import os
 
+from .approvals import request_approval
 from .bus import EventBus, bus, publish
 from .server import serve
 
-__all__ = ["EventBus", "bus", "enable", "publish", "serve"]
+__all__ = ["EventBus", "bus", "enable", "publish", "request_approval", "serve"]
 
 _TRUTHY = {"1", "true", "yes", "on"}
 _autostart_checked = False
@@ -52,6 +53,22 @@ def enable(*, open_browser: bool = True, quiet: bool = False) -> str:
     from .logs import attach_log_bridge
 
     attach_log_bridge()
+
+    # A run banner: version + Python so the dashboard can show what it's watching.
+    import platform
+
+    try:
+        from .. import __version__ as _v
+    except Exception:  # pragma: no cover
+        _v = "?"
+    bus.publish(
+        {
+            "kind": "run.start",
+            "name": "run.start",
+            "status": "ok",
+            "attributes": {"version": _v, "python": platform.python_version()},
+        }
+    )
     return url
 
 
