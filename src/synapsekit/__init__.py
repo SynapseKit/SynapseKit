@@ -1250,6 +1250,7 @@ _LAZY_IMPORTS = {
     "S3Loader": "loaders.s3",
     "SalesforceLoader": "loaders.salesforce",
     "SnowflakeLoader": "loaders.snowflake",
+    "SupabaseLoader": "loaders.supabase",
     "DropboxLoader": "loaders.dropbox",
     "ParquetLoader": "loaders.parquet",
     "PubMedLoader": "loaders.pubmed",
