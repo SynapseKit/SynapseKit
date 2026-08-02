@@ -309,14 +309,27 @@ def _publish_live(span: ObserveSpan) -> None:
     from ..live.bus import bus as _live_bus
 
     _maybe_autostart()
-    if _live_bus.enabled:
+    if not _live_bus.enabled:
+        return
+    _live_bus.publish(
+        {
+            "kind": "span",
+            "name": span.name,
+            "status": span.status,
+            "duration_ms": round(span.duration_ms, 3),
+            "attributes": dict(span.attributes),
+        }
+    )
+    # For a completed root span, also publish the full nested tree so the
+    # dashboard can render a flame-graph (children carry start/duration).
+    if span.parent is None and span.children:
         _live_bus.publish(
             {
-                "kind": "span",
+                "kind": "trace",
                 "name": span.name,
                 "status": span.status,
                 "duration_ms": round(span.duration_ms, 3),
-                "attributes": dict(span.attributes),
+                "attributes": {"tree": span.to_dict()},
             }
         )
 
