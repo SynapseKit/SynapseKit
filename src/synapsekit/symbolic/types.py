@@ -1,9 +1,36 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from typing import Any, Literal, Protocol, runtime_checkable
 
 ConstraintLanguage = Literal["smtlib", "prolog", "minizinc", "sympy", "text"]
+
+_NUMBER_RE = re.compile(r"-?\d+(?:\.\d+)?")
+
+
+def _first_number(text: object) -> float | None:
+    if text is None:
+        return None
+    match = _NUMBER_RE.search(str(text).replace(",", ""))
+    return float(match.group()) if match else None
+
+
+def _answer_consistent_with_result(answer: str, result: object) -> bool:
+    """True if a numeric solver result also appears (matching) in the answer.
+
+    Only enforced when the solver produced a numeric result (e.g. SymPy math): a
+    wrong rendered answer is rejected. For non-numeric results (Z3 models, Prolog,
+    MiniZinc) we can't do a cheap numeric check, so we stay lenient rather than
+    reject answers we cannot confidently disprove.
+    """
+    expected = _first_number(result)
+    if expected is None:
+        return True
+    got = _first_number(answer)
+    return got is not None and abs(got - expected) < 1e-6
+
+
 SolverStatus = Literal["sat", "unsat", "unknown", "error"]
 UnverifiedPolicy = Literal["retry", "reject", "flag"]
 
@@ -104,8 +131,15 @@ class BaseSymbolicBackend:
         *,
         timeout_seconds: float | None = None,
     ) -> ProofTrace:
-        del constraints, answer, timeout_seconds
-        if proof.status == "sat" and proof.verified:
+        del constraints, timeout_seconds
+        result = proof.model.get("result") if proof.model else None
+        if result is None:
+            result = proof.raw_output
+        if (
+            proof.status == "sat"
+            and proof.verified
+            and _answer_consistent_with_result(answer, result)
+        ):
             return ProofTrace(
                 status="sat",
                 model=dict(proof.model),
@@ -113,12 +147,17 @@ class BaseSymbolicBackend:
                 backend=self.name,
                 verified=True,
             )
+        if proof.status == "sat" and proof.verified:
+            # Solver found a model, but the rendered answer contradicts it.
+            error = f"Rendered answer {answer!r} is inconsistent with the solver result {result!r}."
+        else:
+            error = proof.error or "Solver did not produce a satisfiable model."
         return ProofTrace(
             status=proof.status,
             model=dict(proof.model),
             raw_output=proof.raw_output,
             backend=self.name,
-            error=proof.error or "Solver did not produce a satisfiable model.",
+            error=error,
             verified=False,
         )
 

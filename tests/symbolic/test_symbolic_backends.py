@@ -28,6 +28,24 @@ async def test_sympy_backend_solves_expression_when_available() -> None:
 
 
 @pytest.mark.asyncio
+async def test_verify_rejects_answer_that_contradicts_solver(monkeypatch) -> None:
+    # Regression for #911: verify() must compare the rendered answer to the
+    # solver's numeric result, not just check that the model is satisfiable.
+    pytest.importorskip("sympy")
+    backend = SympyBackend()
+    constraints = ConstraintSet(language="sympy", source="47*53")
+    proof = await backend.solve(constraints)
+    assert proof.model["result"] == "2491"
+
+    correct = await backend.verify(constraints, "2491", proof)
+    assert correct.is_verified is True
+
+    wrong = await backend.verify(constraints, "2481", proof)
+    assert wrong.is_verified is False
+    assert "inconsistent" in (wrong.error or "")
+
+
+@pytest.mark.asyncio
 async def test_prolog_backend_missing_executable_is_actionable() -> None:
     backend = PrologBackend(executable="definitely-missing-swipl")
 
