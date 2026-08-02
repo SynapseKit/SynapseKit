@@ -19,12 +19,38 @@ from __future__ import annotations
 
 import contextlib
 import os
+from typing import Any
 
 from .approvals import request_approval
 from .bus import EventBus, bus, publish
 from .server import serve
 
-__all__ = ["EventBus", "bus", "enable", "publish", "request_approval", "serve"]
+__all__ = [
+    "EventBus",
+    "bus",
+    "enable",
+    "publish",
+    "publish_graph",
+    "request_approval",
+    "serve",
+]
+
+
+def publish_graph(nodes: list[Any], edges: list[Any]) -> None:
+    """Push a knowledge-graph snapshot to the Live canvas.
+
+    ``nodes``: list of ``{"id","label"?,"group"?}`` (or plain id strings).
+    ``edges``: list of ``{"source","target","label"?}`` (or ``[src,dst]`` pairs).
+    """
+    bus.publish(
+        {
+            "kind": "graph.snapshot",
+            "name": "graph.snapshot",
+            "status": "ok",
+            "attributes": {"nodes": nodes, "edges": edges},
+        }
+    )
+
 
 _TRUTHY = {"1", "true", "yes", "on"}
 _autostart_checked = False
