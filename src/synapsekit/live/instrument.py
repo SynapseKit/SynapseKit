@@ -143,6 +143,66 @@ def _try(fn: Callable[[], None]) -> None:
         fn()
 
 
+def _snapshot_graph(backend: Any, limit: int = 60) -> None:
+    """Read an in-memory graph backend and push its nodes/edges to the canvas."""
+    if backend is None:
+        return
+    nodes_src = getattr(backend, "nodes", None)
+    if nodes_src is None:
+        nodes_src = getattr(backend, "_nodes", None)
+    if not nodes_src:
+        return  # remote backend (Neo4j etc.) — nothing in memory to read
+    edges_src = getattr(backend, "edges", None)
+    if edges_src is None:
+        edges_src = getattr(backend, "_edges", None)
+
+    node_items = list(nodes_src.values())[:limit]
+    node_ids = {getattr(n, "id", None) for n in node_items}
+    nodes = [
+        {
+            "id": n.id,
+            "label": getattr(n, "name", None) or getattr(n, "label", n.id),
+            "group": "graph",
+        }
+        for n in node_items
+    ]
+    edges = []
+    for e in edges_src.values() if edges_src else []:
+        src = getattr(e, "subject_id", None) or getattr(e, "source", None)
+        dst = getattr(e, "object_id", None) or getattr(e, "target", None)
+        if src in node_ids and dst in node_ids:
+            edges.append([src, dst])
+
+    from . import publish_graph
+
+    publish_graph(nodes, edges)
+
+
+def _wrap_ingest(cls: type, method_name: str, get_backend: Callable[[Any], Any]) -> None:
+    """Wrap an ingest method to publish a graph.ingest event + a graph snapshot."""
+    orig = cls.__dict__.get(method_name)
+    if orig is None or getattr(orig, _SENTINEL, False) or not inspect.iscoroutinefunction(orig):
+        return
+
+    @functools.wraps(orig)
+    async def wrapped(self: Any, *args: Any, **kwargs: Any) -> Any:
+        if not bus.enabled:
+            return await orig(self, *args, **kwargs)
+        start, status, tb = time.perf_counter(), "ok", None
+        try:
+            return await orig(self, *args, **kwargs)
+        except Exception:
+            status, tb = "error", traceback.format_exc()
+            raise
+        finally:
+            _publish("graph.ingest", start, status, {"graph": type(self).__name__}, tb)
+            with contextlib.suppress(Exception):
+                _snapshot_graph(get_backend(self))
+
+    setattr(wrapped, _SENTINEL, True)
+    setattr(cls, method_name, wrapped)
+
+
 def instrument_all() -> None:
     """Instrument every supported subsystem. Idempotent; safe to call repeatedly."""
     global _instrumented
@@ -179,7 +239,8 @@ def instrument_all() -> None:
         _patch(
             WorldModelRAG, "retrieve", "graph.query", lambda self, a, k: {"graph": "world_model"}
         )
-        _patch(WorldModelRAG, "ingest", "graph.ingest", lambda self, a, k: {"graph": "world_model"})
+        # ingest also snapshots the entity graph onto the Live canvas
+        _wrap_ingest(WorldModelRAG, "ingest", lambda s: getattr(s, "graph_backend", None))
 
     # -- Knowledge graph: property-graph backends --
     def property_graph() -> None:
@@ -189,7 +250,8 @@ def instrument_all() -> None:
             cls = getattr(pg, name, None)
             if cls is not None:
                 _patch(cls, "search", "graph.query", _const(backend=name))
-                _patch(cls, "ingest", "graph.ingest", _const(backend=name))
+                # the backend *is* self here, so snapshot its own nodes/edges
+                _wrap_ingest(cls, "ingest", lambda s: s)
 
     # -- Knowledge mesh --
     def mesh() -> None:
