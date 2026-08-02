@@ -33,11 +33,11 @@ SynapseKit is the minimal, async-first Python framework for LLM applications. 35
 
 ### 🎬 See it live
 
-<a href="https://github.com/SynapseKit/media/releases/download/v1-live-demo/synapsekit-live-demo.mp4">
+<a href="https://synapsekit.github.io/media/">
   <img src="assets/live-demo-poster.jpg" alt="SynapseKit Live — watch your agents think" width="840">
 </a>
 
-**[▶ Play the demo](https://github.com/SynapseKit/media/releases/download/v1-live-demo/synapsekit-live-demo.mp4)** &nbsp;·&nbsp; watch every LLM call, tool, retrieval, DB write, knowledge-graph update, cost, and human approval stream live.
+**[▶ Play the demo](https://synapsekit.github.io/media/)** &nbsp;·&nbsp; watch every LLM call, tool, retrieval, DB write, knowledge-graph update, cost, and human approval stream live.
 
 *SynapseKit Live — a zero-dependency, real-time dashboard built into the framework. Just run `SYNAPSEKIT_LIVE=1 python your_agent.py`.*
 
