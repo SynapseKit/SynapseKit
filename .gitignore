@@ -89,3 +89,6 @@ benchmarks/benchmark.json
 # release-validation harness output
 release_check_report.md
 release_check_report.json
+
+# local demo recordings (source; hosted video lives in SynapseKit/media)
+*.mov

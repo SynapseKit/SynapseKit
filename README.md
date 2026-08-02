@@ -5,7 +5,7 @@
 <div align="center">
 
 [![PyPI version](https://img.shields.io/pypi/v/synapsekit?color=22c55e&label=pypi&logo=pypi&logoColor=white)](https://pypi.org/project/synapsekit/)
-[![Python](https://img.shields.io/badge/python-3.10%2B-22c55e?logo=python&logoColor=white)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/python-3.11%2B-22c55e?logo=python&logoColor=white)](https://www.python.org/)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-22c55e)](LICENSE)
 [![Tests](https://img.shields.io/badge/tests-3871%20passing-22c55e?logo=pytest&logoColor=white)]()
 [![Downloads](https://img.shields.io/pypi/dm/synapsekit?color=22c55e&logo=pypi&logoColor=white)](https://pypistats.org/packages/synapsekit)
@@ -26,6 +26,22 @@ Async-native RAG, Agents, and Graph workflows — no magic, no SaaS, no bloat.
 > *"LangChain for people who hate LangChain."*
 
 SynapseKit is the minimal, async-first Python framework for LLM applications. 35 providers · 50 tools · 66 loaders · 22 vector stores. Every abstraction is plain Python you can read, debug, and extend. No hidden chains. No global state. No lock-in.
+
+---
+
+<div align="center">
+
+### 🎬 See it live
+
+<a href="https://github.com/SynapseKit/media/releases/download/v1-live-demo/synapsekit-live-demo.mp4">
+  <img src="assets/live-demo-poster.jpg" alt="SynapseKit Live — watch your agents think" width="840">
+</a>
+
+**[▶ Play the demo](https://github.com/SynapseKit/media/releases/download/v1-live-demo/synapsekit-live-demo.mp4)** &nbsp;·&nbsp; watch every LLM call, tool, retrieval, DB write, knowledge-graph update, cost, and human approval stream live.
+
+*SynapseKit Live — a zero-dependency, real-time dashboard built into the framework. Just run `SYNAPSEKIT_LIVE=1 python your_agent.py`.*
+
+</div>
 
 ---
 
