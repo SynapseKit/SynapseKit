@@ -45,6 +45,49 @@ class _SleepTool(BaseTool):
         return ToolResult(output="ok")
 
 
+def test_worldmodel_ingest_snapshots_real_entities() -> None:
+    import re
+    from collections.abc import AsyncGenerator
+
+    import numpy as np
+
+    from synapsekit.embeddings.backend import SynapsekitEmbeddings
+    from synapsekit.llm.base import BaseLLM, LLMConfig
+    from synapsekit.retrieval.vectorstore import InMemoryVectorStore
+    from synapsekit.retrieval.world_model import WorldModelRAG
+
+    class _Emb(SynapsekitEmbeddings):
+        async def embed(self, texts: list[str]) -> np.ndarray:
+            v = np.zeros((len(texts), 16), dtype="float32")
+            for i, t in enumerate(texts):
+                for w in re.findall(r"[a-z]+", t.lower()):
+                    v[i, hash(w) % 16] += 1
+                v[i] /= np.linalg.norm(v[i]) or 1
+            return v
+
+    class _LLM(BaseLLM):
+        async def stream(self, prompt: str, **kw: object) -> AsyncGenerator[str, None]:
+            yield "ok"
+
+    instrument_all()
+    bus.enabled = True
+    bus.clear()
+
+    async def go() -> None:
+        wm = WorldModelRAG(
+            vector_store=InMemoryVectorStore(embedding_backend=_Emb()),
+            graph_backend="in_memory",
+            llm=_LLM(LLMConfig(provider="fake", model="f", api_key="")),
+        )
+        await wm.ingest(["Acme Corp refunded Alice for order 48213."])
+
+    asyncio.run(go())
+    snaps = [e for e in bus.history() if e["kind"] == "graph.snapshot"]
+    assert snaps, "ingest did not snapshot the entity graph"
+    labels = [n["label"] for n in snaps[-1]["attributes"]["nodes"]]
+    assert any("Acme" in x or "Alice" in x for x in labels)
+
+
 def test_concurrent_async_calls_all_captured() -> None:
     instrument_all()
     bus.enabled = True
