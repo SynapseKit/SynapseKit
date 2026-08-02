@@ -81,8 +81,8 @@
   .ev .detail .k{font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.8px;color:var(--faint);font-weight:700;margin:10px 0 5px}
   .ev .detail pre{margin:0;font-family:var(--mono);font-size:11.5px;line-height:1.5;background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:10px 12px;white-space:pre-wrap;word-break:break-word;max-height:240px;overflow:auto;color:#344054}
   .ev .detail pre.tb{background:var(--crit-soft);border-color:#F5B5B0;color:#7a271a}
-  .feed.show-activity .ev:not(.is-activity){display:none}.feed.show-logs .ev:not(.is-log){display:none}.feed.show-errors .ev:not(.is-error){display:none}
   .feed.trace .ev .t{font-family:var(--mono);font-size:12px;color:#475467;word-break:break-word}
+  .runsel{font:inherit;font-size:12px;font-weight:600;color:var(--muted);background:var(--panel);border:1px solid var(--line-2);border-radius:999px;padding:6px 10px;cursor:pointer;box-shadow:var(--shadow)}
   .approval{margin:8px 6px;padding:14px 15px;border:1px solid #F5C99B;background:var(--warn-soft);border-radius:13px;animation:slidein .3s}
   .approval .q{font-size:14px;color:var(--ink);font-weight:650}.approval .q code{font-family:var(--mono);font-size:12.5px;background:#fff;padding:1px 7px;border-radius:6px;border:1px solid #F5C99B}
   .approval .d{font-family:var(--mono);font-size:11.5px;color:var(--warn);margin-top:6px}
@@ -136,6 +136,7 @@
     </div>
     <div class="seg" role="group" aria-label="Detail level"><button id="mStory" aria-pressed="true">Story</button><button id="mTrace" aria-pressed="false">Trace</button></div>
     <div class="runmeta">
+      <select id="runSel" class="runsel" title="Browse run history" style="display:none"><option value="all">All runs</option></select>
       <span id="verChip" class="dep-badge" style="display:none;background:#fff;color:var(--ink-2);border-color:var(--line-2)"></span>
       <button id="exportBtn" class="expbtn" title="Download this run as JSON">Export run</button>
       <span class="dep-badge">localhost · SSE · 0 new deps</span>
@@ -226,9 +227,16 @@
   function bump(sub){var c=chips[sub];if(!c)return;c.c++;$("c_"+sub).textContent=c.c;c.el.classList.add("lit");c.el.classList.add("hot");
     if(!reduce)setTimeout(function(){c.el.classList.remove("hot")},450);else c.el.classList.remove("hot");}
 
+  var runFilter="all", currentRun=0;
+  function evVisible(el){
+    var okTab= tab==="activity"?el.classList.contains("is-activity"):tab==="logs"?el.classList.contains("is-log"):el.classList.contains("is-error");
+    var okRun= runFilter==="all"||el.dataset.run===runFilter;
+    return okTab&&okRun;}
+  function applyOne(el){el.style.display=evVisible(el)?"block":"none";}
+  function applyAll(){[].slice.call(feed.querySelectorAll(".ev")).forEach(applyOne);}
   [].slice.call(document.querySelectorAll(".tabs button")).forEach(function(b){b.onclick=function(){tab=b.dataset.tab;
-    [].slice.call(document.querySelectorAll(".tabs button")).forEach(function(x){x.setAttribute("aria-selected",x===b);});
-    feed.classList.remove("show-activity","show-logs","show-errors");feed.classList.add("show-"+tab);};});
+    [].slice.call(document.querySelectorAll(".tabs button")).forEach(function(x){x.setAttribute("aria-selected",x===b);});applyAll();};});
+  $("runSel").onchange=function(){runFilter=$("runSel").value;applyAll();};
   $("mStory").onclick=function(){setMode("story")};$("mTrace").onclick=function(){setMode("trace")};
   function setMode(m){mode=m;$("mStory").setAttribute("aria-pressed",m==="story");$("mTrace").setAttribute("aria-pressed",m==="trace");
     feed.classList.toggle("trace",m==="trace");
@@ -304,7 +312,9 @@
 
   function render(ev){
     allEvents.push(ev);
-    if(ev.kind==="run.start"){var a0=ev.attributes||{};$("verChip").style.display="";$("verChip").textContent="v"+(a0.version||"?")+" · py"+(a0.python||"");return;}
+    if(ev.kind==="run.start"){var a0=ev.attributes||{};$("verChip").style.display="";$("verChip").textContent="v"+(a0.version||"?")+" · py"+(a0.python||"");
+      currentRun++;var sel=$("runSel");sel.style.display="";var o=document.createElement("option");o.value=String(currentRun);
+      o.textContent=(a0.label?a0.label:("Run "+currentRun));sel.appendChild(o);sel.value=String(currentRun);runFilter=String(currentRun);applyAll();return;}
     if(ev.kind==="approval.request"){renderApproval(ev);return;}
     if(ev.kind==="approval.result"){var card=feed.querySelector('.approval[data-aid="'+ev.id+'"]');if(card)markApproval(card,(ev.attributes||{}).approved);return;}
     if(ev.kind==="trace"){if((ev.attributes||{}).tree)renderFlame(ev.attributes.tree);return;}
@@ -321,7 +331,8 @@
     else{if(model(a))meta.push("<b>model</b> "+esc(model(a)));if(a.tool)meta.push("<b>tool</b> "+esc(a.tool));if(ev.duration_ms!=null)meta.push("<b>took</b> "+Math.round(ev.duration_ms)+"ms");if(ev.status&&ev.status!=="ok")meta.push("<b>status</b> "+esc(ev.status));}
     el.innerHTML='<div class="row"><div class="ic">'+iconFor(ev)+'</div><div><div class="t">'+text+'</div>'+(meta.length?'<div class="meta">'+meta.join('<span style="opacity:.4">·</span> ')+'</div>':'')+'</div><div class="caret">▸</div></div><div class="detail">'+detailHTML(ev)+'</div>';
     el.querySelector(".row").onclick=function(){el.classList.toggle("open");};
-    feed.insertBefore(el,feed.firstChild);while(feed.children.length>80)feed.removeChild(feed.lastChild);
+    el.dataset.run=String(currentRun||1);
+    feed.insertBefore(el,feed.firstChild);applyOne(el);while(feed.children.length>80)feed.removeChild(feed.lastChild);
 
     n++;$("evCount").textContent=n+(n===1?" event":" events");$("mEvents").textContent=n.toLocaleString();
     counts.activity+= isLog?0:1;counts.logs+= isLog?1:0;counts.errors+= isError?1:0;

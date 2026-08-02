@@ -29,11 +29,30 @@ __all__ = [
     "EventBus",
     "bus",
     "enable",
+    "new_run",
     "publish",
     "publish_graph",
     "request_approval",
     "serve",
 ]
+
+
+def new_run(label: str = "") -> None:
+    """Mark the start of a new run so the dashboard can group/browse history."""
+    import platform
+
+    try:
+        from .. import __version__ as _v
+    except Exception:  # pragma: no cover
+        _v = "?"
+    bus.publish(
+        {
+            "kind": "run.start",
+            "name": "run.start",
+            "status": "ok",
+            "attributes": {"label": label, "version": _v, "python": platform.python_version()},
+        }
+    )
 
 
 def publish_graph(nodes: list[Any], edges: list[Any]) -> None:
@@ -81,20 +100,7 @@ def enable(*, open_browser: bool = True, quiet: bool = False) -> str:
     attach_log_bridge()
 
     # A run banner: version + Python so the dashboard can show what it's watching.
-    import platform
-
-    try:
-        from .. import __version__ as _v
-    except Exception:  # pragma: no cover
-        _v = "?"
-    bus.publish(
-        {
-            "kind": "run.start",
-            "name": "run.start",
-            "status": "ok",
-            "attributes": {"version": _v, "python": platform.python_version()},
-        }
-    )
+    new_run()
     return url
 
 
