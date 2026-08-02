@@ -39,9 +39,31 @@ SynapseKit is the minimal, async-first Python framework for LLM applications. 35
 
 **[▶ Play the demo](https://synapsekit.github.io/media/)** &nbsp;·&nbsp; watch every LLM call, tool, retrieval, DB write, knowledge-graph update, cost, and human approval stream live.
 
-*SynapseKit Live — a zero-dependency, real-time dashboard built into the framework. Just run `SYNAPSEKIT_LIVE=1 python your_agent.py`.*
+*SynapseKit Live — a zero-dependency, real-time dashboard built into the framework.*
 
 </div>
+
+**Run the live dashboard locally** — three ways, no extra dependencies (it uses only the Python standard library):
+
+```bash
+# 1. Zero-touch: set one env var and run your program as usual.
+#    The dashboard auto-starts on the first agent/RAG/graph call and opens your browser.
+SYNAPSEKIT_LIVE=1 python your_agent.py
+
+# 2. From the CLI — start it, then run your code in another shell.
+synapsekit ui --live            # serves http://127.0.0.1:7900
+
+# 3. From code.
+python -c "from synapsekit.live import enable; enable()"   # opens the tab; keep the process alive
+```
+
+Or try a ready-made demo that exercises everything (loader → embeddings → retrieval → tools/MCP → memory/DB → knowledge graph → LLM, with logs, a flame graph, and a human approval):
+
+```bash
+python examples/live_showcase.py          # set ANTHROPIC_API_KEY first for real Claude calls
+```
+
+It opens **http://127.0.0.1:7900** and stays live while your process runs — bound to `localhost`, token-gated, and a no-op when the env var isn't set (zero overhead in production).
 
 ---
 
