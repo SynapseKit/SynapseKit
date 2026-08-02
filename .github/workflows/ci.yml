@@ -73,6 +73,16 @@ jobs:
       - run: uv sync --group dev --group bench
       - run: uv run pytest benchmarks/test_agent_swarm_bench.py -v
 
+  # Neuro-symbolic acceptance gate (#733): routing arithmetic through the symbolic
+  # solver beats answering directly by >=25pp. Needs the `symbolic` extra (sympy).
+  neuro-symbolic-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --group dev --group bench --extra symbolic
+      - run: uv run pytest benchmarks/test_neuro_symbolic_bench.py -v
+
   # Harness-correctness check for the edge local-vs-cloud benchmark (#736). Runs
   # against stub LLMs -- no GGUF file or ANTHROPIC_API_KEY in CI -- so it can
   # only assert the graders and runner are right, not real model quality.
