@@ -275,7 +275,14 @@ def test_parse_constraint_response_rejects_bare_invalid_json() -> None:
 
 
 def test_z3_unsat_returns_unverified_trace() -> None:
-    pytest.importorskip("z3")
+    # importorskip only catches ImportError; a z3 whose *native* libz3 can't load
+    # (e.g. an arch-mismatched wheel) raises z3types.Z3Exception on import/first
+    # use. That is an environment problem, not a code defect, so skip explicitly —
+    # on a correctly-installed z3 (CI) neither branch triggers and the test runs.
+    try:
+        import z3  # noqa: F401
+    except Exception as exc:  # ImportError, or Z3Exception from a broken native lib
+        pytest.skip(f"z3 unavailable in this environment: {exc}")
     import asyncio
 
     from synapsekit.symbolic.backends import Z3Backend

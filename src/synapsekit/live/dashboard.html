@@ -244,7 +244,8 @@
 
   var ICONS={span:"◆","llm.call":"🧠","llm.generate":"🧠",llm:"🧠","retriever.search":"🔍",retrieval:"🔍","tool.call":"🔧",tool:"🔧",mcp:"🔌",
     "memory.read":"🗃","memory.write":"🗃",memory:"🗃","graph.query":"🕸","graph.ingest":"🕸",graph:"🕸","mesh.query":"🪢","mesh.ingest":"🪢",mesh:"🪢",
-    "loader.load":"📄",loader:"📄","embeddings.embed":"🧬",embeddings:"🧬",budget:"💰",audit:"🔐",swarm:"🐝",log:"🪵","run.complete":"✅"};
+    "loader.load":"📄",loader:"📄","embeddings.embed":"🧬",embeddings:"🧬",budget:"💰",audit:"🔐",swarm:"🐝",
+    "agent.evolve":"🧬","agent.rollback":"↩️",log:"🪵","run.complete":"✅"};
   function iconFor(ev){if(ev.kind==="log")return ev.level==="error"?"⛔":ev.level==="warning"?"⚠️":"🪵";
     var k=(ev.kind||ev.name||"").toLowerCase();for(var key in ICONS){if(k.indexOf(key)>-1)return ICONS[key];}return (k.indexOf("search")>-1?"🔍":"◆");}
   function esc(s){return String(s==null?"":s).replace(/[&<>]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;"}[c]});}
@@ -261,6 +262,8 @@
     if(k.indexOf("budget")>-1)return "Recorded spend"+(a.limit?(" — $"+Number(a.spent||0).toFixed(4)+" of $"+a.limit+" daily"):"")+dur;
     if(k.indexOf("audit")>-1)return "Signed audit entry"+(a.model?(" — <code>"+esc(a.model)+"</code>"):"")+dur;
     if(k.indexOf("swarm")>-1)return "Agent swarm auction"+dur;
+    if(k.indexOf("agent.evolve")>-1){var st=a.patch_status||ev.status;var d=a.directive?(" — +<code>"+esc(a.directive)+"</code>"):"";var sc=(a.eval_score!=null?(" (eval "+Math.round(a.eval_score*100)+"%)"):"");return "Agent evolved: <b>"+esc(st||"cycle")+"</b>"+d+sc+dur;}
+    if(k.indexOf("agent.rollback")>-1)return "Agent rolled back <code>"+esc(a.rolled_back||"")+"</code>"+(a.reason?(" — "+esc(a.reason)):"")+dur;
     return "<b>"+esc(name)+"</b>"+dur+(ev.status&&ev.status!=="ok"?(" — "+esc(ev.status)):"");}
   function trace(ev){var a=ev.attributes||{};var bits=[ev.name||ev.kind];Object.keys(a).slice(0,8).forEach(function(kk){if(kk!=="traceback"&&kk!=="llm.input"&&kk!=="llm.output"&&kk!=="tree")bits.push(kk+"="+JSON.stringify(a[kk]));});if(ev.duration_ms!=null)bits.push(Math.round(ev.duration_ms)+"ms");return esc(bits.join(" "));}
   function detailHTML(ev){var a=ev.attributes||{},h="";

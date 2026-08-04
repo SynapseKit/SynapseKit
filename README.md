@@ -87,7 +87,7 @@ Token-level streaming is the default,<br/>not an afterthought.<br/>Works across 
 <tr>
 <td align="center" width="33%">
 <h3>🔌 One interface</h3>
-33 LLM providers and 22 vector stores<br/>behind the same API.<br/>Swap without rewriting.
+35 LLM providers and 22 vector stores<br/>behind the same API.<br/>Swap without rewriting.
 </td>
 <td align="center" width="33%">
 <h3>🧩 Composable</h3>
@@ -165,9 +165,11 @@ Version 2.0 is about **trust and autonomy in production** — provable behavior,
 - **[WorldModelRAG](https://synapsekit.github.io/synapsekit-docs/docs/rag/world-model)** — temporal knowledge-graph RAG with causal links and validity windows.
 - **[Personal Knowledge Mesh](https://synapsekit.github.io/synapsekit-docs/docs/mesh/)** — local-first, incremental indexing across every project on your machine, with a `synapsekit mesh` CLI and MCP tools.
 - **[AgentSwarm](https://synapsekit.github.io/synapsekit-docs/docs/agents/swarm)** — market-based agent routing (sealed-bid, Vickrey, English, coalition auctions) with reputation learning.
-- **[SelfImprovingAgent](https://synapsekit.github.io/synapsekit-docs/docs/agents/self-improving)** — eval-gated agent config evolution with signed patches and canary rollout.
+- **[SelfImprovingAgent](https://synapsekit.github.io/synapsekit-docs/docs/agents/self-improving)** — eval-gated agent config evolution with signed patches and canary rollout. Run the offline [`self_evolving_agent.ipynb`](examples/self_evolving_agent.ipynb) notebook to watch held-out accuracy climb 40% → 100% while every bad patch is blocked by the gate.
 - **[NeuroSymbolicAgent](https://synapsekit.github.io/synapsekit-docs/docs/agents/neuro-symbolic)** — LLM-extracted constraints verified by Z3 / SymPy / MiniZinc / Prolog backends.
 - **[EdgeRuntime](https://synapsekit.github.io/synapsekit-docs/docs/edge/)** — local-first inference with policy-gated cloud fallback and PII redaction before any data leaves the device.
+
+**2.0.1** is a security and close-out patch: an OSV audit of the full dependency graph bumped 8 packages off known-vulnerable versions (`cryptography`, `pillow`, `aiohttp`, `gitpython`, `mcp`, `pyasn1`, `httplib2`, `setuptools`) so a fresh install resolves to **0 known vulnerabilities**, and the last open acceptance criteria on Self-Evolving Agents and the Neuro-Symbolic layer are closed. No public API changed — upgrade with `pip install --upgrade synapsekit`.
 
 Upgrading from 1.x? See the **[Migrating to 2.0 guide](https://synapsekit.github.io/synapsekit-docs/docs/getting-started/migration-2.0)** — there are a few breaking changes (the top-level `AgentMemory` export, audit `verify()` trust anchoring, bundle schema 1.2, and default LLM retries).
 
