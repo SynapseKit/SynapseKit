@@ -73,6 +73,17 @@ jobs:
       - run: uv sync --group dev --group bench
       - run: uv run pytest benchmarks/test_agent_swarm_bench.py -v
 
+  # Enforces the #732 self-evolving acceptance targets: a SelfImprovingAgent must
+  # lift its own held-out accuracy from a fallible baseline (<=50%) to >=90% over 5
+  # evolution cycles, never regressing, with every decoy candidate blocked by the gate.
+  self-evolving-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --group dev --group bench
+      - run: uv run pytest benchmarks/test_self_evolving_bench.py -v
+
   # Neuro-symbolic acceptance gate (#733): routing arithmetic through the symbolic
   # solver beats answering directly by >=25pp. Needs the `symbolic` extra (sympy).
   neuro-symbolic-gate:
