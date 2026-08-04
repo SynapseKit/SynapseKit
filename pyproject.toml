@@ -101,6 +101,7 @@ voice-deepgram = ["deepgram-sdk>=3.0"]
 voice-silero = []
 training = ["openai>=1.0"]
 cron = ["croniter>=2.0", "tzdata>=2024.1; sys_platform == 'win32'"]
+ambient = ["plyer>=2.1"]
 excel = ["openpyxl>=3.1"]
 pptx = ["python-pptx>=0.6"]
 docx = ["python-docx>=1.0"]
@@ -215,6 +216,7 @@ all = [
     "asyncpg>=0.29",
     "groq>=0.9",
     "croniter>=2.0",
+    "plyer>=2.1",
     "erniebot>=0.5",
     "wolframalpha>=5.0",
     "discord.py>=2.0",

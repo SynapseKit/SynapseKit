@@ -172,6 +172,12 @@ def _add_mesh_parser(subparsers: argparse._SubParsersAction) -> None:  # type: i
     build_mesh_parser(subparsers)
 
 
+def _add_ambient_parser(subparsers: argparse._SubParsersAction) -> None:  # type: ignore[type-arg]
+    from .ambient import build_ambient_parser
+
+    build_ambient_parser(subparsers)
+
+
 def _add_agent_parser(subparsers: argparse._SubParsersAction) -> None:  # type: ignore[type-arg]
     p = subparsers.add_parser("agent", help="Inspect and manage SynapseKit agents")
     agent_sub = p.add_subparsers(dest="agent_command")
@@ -321,6 +327,7 @@ def main(argv: list[str] | None = None) -> None:
     _add_bench_parser(subparsers)
     _add_edge_parser(subparsers)
     _add_mesh_parser(subparsers)
+    _add_ambient_parser(subparsers)
     _add_agent_parser(subparsers)
     _add_memory_parser(subparsers)
     _add_ui_parser(subparsers)
@@ -371,6 +378,10 @@ def main(argv: list[str] | None = None) -> None:
         from .mesh import run_mesh
 
         run_mesh(args)
+    elif args.command == "ambient":
+        from .ambient import run_ambient
+
+        run_ambient(args)
     elif args.command == "agent":
         from .agent import run_agent
 
