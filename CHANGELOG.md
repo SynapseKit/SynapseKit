@@ -9,6 +9,8 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-08-04
+
 ### Security
 
 - **Bumped 8 dependencies off known-vulnerable versions** — a full OSV audit of the resolved dependency graph (all extras + all groups, 534 packages) flagged 8 packages carrying active advisories; all are now floored at their patched releases and the lockfile re-resolves to 0 known vulnerabilities. Direct-dependency floors raised: `cryptography` → `>=50.0.0` (PYSEC-2026-3552), `pillow` → `>=12.3.0`, `pyasn1` → `>=0.6.4`, `aiohttp` (`http` extra) → `>=3.14.3`, `gitpython` (`git` extra) → `>=3.1.57`, `mcp` (`mcp` extra) → `>=1.28.1`. Transitive floors: `httplib2` → `>=0.32.0` (added to the `gdrive`/`gsheets`/`gcal-tool` extras that pull `google-api-python-client`, and to the `all` extra) and `setuptools` → `>=83.0.0` (build-time); both are also pinned via `[tool.uv] constraint-dependencies` so CI and the Docker images can't regress. No SynapseKit public API changed.
