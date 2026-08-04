@@ -27,12 +27,12 @@ dependencies = [
     "numpy>=1.26",
     "rank-bm25>=0.2.2",
     # Pin to patched versions for high-severity advisories
-    "pillow>=12.2.0",
-    "pyasn1>=0.6.3",
+    "pillow>=12.3.0",
+    "pyasn1>=0.6.4",
     # Ed25519 is the default (and only always-available) audit-bundle
     # signing algorithm — it must work out of the box, not only via an
-    # opt-in extra.
-    "cryptography>=42",
+    # opt-in extra. Floor raised to 50.0.0 for PYSEC-2026-3552.
+    "cryptography>=50.0.0",
 ]
 
 [project.urls]
@@ -84,7 +84,7 @@ cohere = ["cohere>=5.0"]
 mistral = ["mistralai>=1.0"]
 gemini = ["google-generativeai>=0.7"]
 bedrock = ["boto3>=1.34"]
-gcal-tool = ["google-api-python-client>=2.0"]
+gcal-tool = ["google-api-python-client>=2.0", "httplib2>=0.32.0"]
 aws-lambda = ["boto3>=1.34"]
 rss = ["feedparser>=6.0"]
 groq = ["groq>=0.9"]
@@ -107,7 +107,7 @@ docx = ["python-docx>=1.0"]
 yaml = ["PyYAML>=6.0"]
 okf = ["PyYAML>=6.0"]
 teams = ["httpx>=0.27"]
-http = ["aiohttp>=3.14.1"]
+http = ["aiohttp>=3.14.3"]
 search = ["duckduckgo-search>=6.0"]
 huggingface = ["huggingface-hub>=0.20"]
 transformers = ["transformers>=4.0"]
@@ -115,7 +115,7 @@ tiktoken = ["tiktoken>=0.12"]
 google-search = ["google-search-results>=2.4"]
 tavily = ["tavily-python>=0.3"]
 youtube = ["youtube-search-python>=1.6"]
-mcp = ["mcp>=1.0", "python-multipart>=0.0.31", "starlette>=1.3.1"]
+mcp = ["mcp>=1.28.1", "python-multipart>=0.0.31", "starlette>=1.3.1"]
 redis = ["redis>=5.0"]
 memcached = ["aiomcache>=0.8"]
 vertex = ["google-cloud-aiplatform>=1.38"]
@@ -145,9 +145,9 @@ dynamodb = ["boto3>=1.34"]
 discord = ["discord.py>=2.0"]
 gcs = ["google-cloud-storage>=2.0"]
 bigquery = ["google-cloud-bigquery>=3.0"]
-gdrive = ["google-api-python-client>=2.0", "google-auth>=2.0"]
-git = ["gitpython>=3.1.50"]
-gsheets = ["google-api-python-client>=2.0", "google-auth>=2.0"]
+gdrive = ["google-api-python-client>=2.0", "google-auth>=2.0", "httplib2>=0.32.0"]
+git = ["gitpython>=3.1.57"]
+gsheets = ["google-api-python-client>=2.0", "google-auth>=2.0", "httplib2>=0.32.0"]
 jira = ["httpx>=0.27"]
 hubspot = ["hubspot-api-client>=8.0"]
 sql = ["sqlalchemy>=2.0"]
@@ -204,7 +204,7 @@ all = [
     "tavily-python>=0.3",
     "youtube-search-python>=1.6",
     "PyYAML>=6.0",
-    "mcp>=1.0",
+    "mcp>=1.28.1",
     "redis>=5.0",
     "aiomcache>=0.8",
     "google-cloud-aiplatform>=1.38",
@@ -220,9 +220,10 @@ all = [
     "discord.py>=2.0",
     "google-api-python-client>=2.0",
     "google-auth>=2.0",
+    "httplib2>=0.32.0",
     "google-cloud-bigquery>=3.0",
     "feedparser>=6.0",
-    "gitpython>=3.1.50",
+    "gitpython>=3.1.57",
     "hubspot-api-client>=8.0",
     "supabase>=2.0",
     "pymongo>=4.0",
@@ -306,6 +307,17 @@ integration = [
     # API version; pin to a range Azurite accepts so the loader integration test runs.
     "azure-storage-blob>=12.0,<12.20",
     "ollama>=0.3",
+]
+
+[tool.uv]
+# Security floors for transitive dependencies. These keep our resolved
+# lock / CI / Docker images off vulnerable versions even when a direct
+# dependency's own constraints would otherwise permit them.
+#   httplib2  <0.32.0  — pulled via google-api-python-client (gdrive/gsheets)
+#   setuptools <83.0.0 — build-time transitive
+constraint-dependencies = [
+    "httplib2>=0.32.0",
+    "setuptools>=83.0.0",
 ]
 
 [tool.hatch.build.targets.wheel]
