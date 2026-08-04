@@ -13,7 +13,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
-      - run: uv sync --group dev --group bench
+      # --extra symbolic: benchmarks/ includes the neuro-symbolic gate, which
+      # imports SympyBackend. Mirrors the neuro-symbolic-gate job in ci.yml.
+      - run: uv sync --group dev --group bench --extra symbolic
 
       - name: Cache benchmark baselines
         uses: actions/cache@v4
