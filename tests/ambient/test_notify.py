@@ -11,9 +11,7 @@ from synapsekit.ambient.notify import notify_windows_toast
 def test_notify_calls_plyer_with_expected_args(monkeypatch) -> None:
     calls = []
 
-    fake_notification = types.SimpleNamespace(
-        notify=lambda **kwargs: calls.append(kwargs)
-    )
+    fake_notification = types.SimpleNamespace(notify=lambda **kwargs: calls.append(kwargs))
     fake_plyer = types.ModuleType("plyer")
     fake_plyer.notification = fake_notification
     monkeypatch.setitem(sys.modules, "plyer", fake_plyer)

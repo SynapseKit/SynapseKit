@@ -9,6 +9,7 @@ into the user's ``$PROFILE`` — out of scope for this source.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 from datetime import UTC, datetime
@@ -53,7 +54,9 @@ class TerminalSourcePlugin(AmbientSourcePlugin):
         path = self._configured_path or _default_history_path()
         if path is None or not path.exists():
             if not self._warned_unavailable:
-                logger.warning("ambient: no PSReadLine history file found, terminal source disabled")
+                logger.warning(
+                    "ambient: no PSReadLine history file found, terminal source disabled"
+                )
                 self._warned_unavailable = True
             return []
 
@@ -63,10 +66,7 @@ class TerminalSourcePlugin(AmbientSourcePlugin):
             self._offset = path.stat().st_size
             return []
 
-        with open(path, encoding="utf-8", errors="replace") as f:
-            f.seek(self._offset)
-            new_text = f.read()
-            self._offset = f.tell()
+        new_text, self._offset = await asyncio.to_thread(self._read_new_text, path, self._offset)
 
         lines = [line.strip() for line in new_text.splitlines() if line.strip()]
         now = datetime.now(UTC)
@@ -74,3 +74,10 @@ class TerminalSourcePlugin(AmbientSourcePlugin):
             AmbientEvent(source=self.name, kind="command", text=line, timestamp=now)
             for line in lines
         ]
+
+    @staticmethod
+    def _read_new_text(path: Path, offset: int) -> tuple[str, int]:
+        with open(path, encoding="utf-8", errors="replace") as f:
+            f.seek(offset)
+            new_text = f.read()
+            return new_text, f.tell()

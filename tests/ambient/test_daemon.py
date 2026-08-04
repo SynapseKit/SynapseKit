@@ -28,7 +28,9 @@ class _FakeSource(AmbientSourcePlugin):
 
 
 def _event(source: str, kind: str, text: str, **metadata: object) -> AmbientEvent:
-    return AmbientEvent(source=source, kind=kind, text=text, timestamp=datetime.now(UTC), metadata=metadata)
+    return AmbientEvent(
+        source=source, kind=kind, text=text, timestamp=datetime.now(UTC), metadata=metadata
+    )
 
 
 @pytest.mark.asyncio
@@ -74,7 +76,9 @@ async def test_low_confidence_intervention_is_suppressed(tmp_path: Path, monkeyp
         lambda title, message: notified.append((title, message)) or True,
     )
 
-    dirty_event = _event("git", "git_status", "1 file", dirty=True, dirty_files=["foo.py"], branch="main")
+    dirty_event = _event(
+        "git", "git_status", "1 file", dirty=True, dirty_files=["foo.py"], branch="main"
+    )
     risky_event = _event("terminal", "command", "git clean -fd")
 
     git_source = _FakeSource("git", [[dirty_event]])

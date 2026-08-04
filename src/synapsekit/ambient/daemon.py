@@ -143,7 +143,10 @@ class AmbientDaemon:
                     self._state.apply_git_status(event)
                     continue
                 intervention = evaluate(event, self._state)
-                if intervention is not None and intervention.confidence >= self.config.min_confidence:
+                if (
+                    intervention is not None
+                    and intervention.confidence >= self.config.min_confidence
+                ):
                     self._fire(intervention)
 
     def _fire(self, intervention: Intervention) -> None:
