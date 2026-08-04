@@ -9,6 +9,10 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- **`Benchmarks` workflow no longer fails on the `symbolic` extra** (#919) — `benchmarks.yml` ran `make bench` (the full `benchmarks/` suite, including the neuro-symbolic gate that imports `SympyBackend`) without installing the `symbolic` extra, so the nightly and `v*`-tag runs errored with `ImportError: sympy is required`. Added `--extra symbolic` to its `uv sync`, mirroring the `neuro-symbolic-gate` job in `ci.yml`.
+
 ## [2.0.1] - 2026-08-04
 
 ### Security
