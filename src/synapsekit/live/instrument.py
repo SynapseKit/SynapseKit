@@ -325,6 +325,41 @@ def instrument_all() -> None:
 
         _patch(PrometheusMetrics, "record_swarm_win", "swarm", _const(event="win"))
 
+    # -- Self-evolving agent: each evolution cycle and rollback --
+    def agent_evolution() -> None:
+        from ..agents.self_improving import SelfImprovingAgent
+
+        def evolve_attrs(self: Any, a: tuple[Any, ...], k: dict[str, Any]) -> dict[str, Any]:
+            # attrs are read after the cycle, so the newest audit entry is the
+            # patch this cycle produced (accepted canary, or the last blocked decoy).
+            attrs: dict[str, Any] = {"agent_id": getattr(self, "agent_id", "?")}
+            hist = self.evolution_history(limit=1)
+            if hist:
+                p = hist[0]
+                attrs.update(
+                    {
+                        "patch_id": p.patch_id[:8],
+                        "patch_status": p.status,
+                        "directive": p.metadata.get("directive"),
+                        "eval_score": p.eval_score,
+                        "baseline_score": p.baseline_score,
+                        "block_reason": p.metadata.get("block_reason"),
+                    }
+                )
+            return {kk: vv for kk, vv in attrs.items() if vv is not None}
+
+        _patch(SelfImprovingAgent, "evolve", "agent.evolve", evolve_attrs)
+        _patch(
+            SelfImprovingAgent,
+            "rollback",
+            "agent.rollback",
+            lambda self, a, k: {
+                "agent_id": getattr(self, "agent_id", "?"),
+                "rolled_back": (a[0][:8] if a and isinstance(a[0], str) else k.get("patch_id", "")),
+                "reason": k.get("reason", "manual"),
+            },
+        )
+
     for step in (
         tools,
         memory,
@@ -336,5 +371,6 @@ def instrument_all() -> None:
         budget,
         audit,
         swarm,
+        agent_evolution,
     ):
         _try(step)
