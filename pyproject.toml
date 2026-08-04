@@ -271,6 +271,7 @@ dev = [
     "respx>=0.21",
     "openai>=1.40",
     "anthropic>=0.39",
+    "nbformat>=5.9",
 ]
 
 bench = [
