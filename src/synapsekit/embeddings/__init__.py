@@ -1,9 +1,30 @@
 from .backend import SynapsekitEmbeddings
 
-__all__ = ["ONNXEmbeddings", "SynapsekitEmbeddings"]
+__all__ = [
+    "ONNXEmbeddings",
+    "SynapsekitEmbeddings",
+    "CohereEmbeddings",
+    "GeminiEmbeddings",
+    "HuggingFaceEmbeddings",
+    "JinaEmbeddings",
+    "MistralEmbeddings",
+    "MixedbreadEmbeddings",
+    "NomicEmbeddings",
+    "OpenAIEmbeddings",
+    "VoyageEmbeddings",
+]
 
 _BACKENDS = {
     "ONNXEmbeddings": ".onnx",
+    "OpenAIEmbeddings": ".openai",
+    "CohereEmbeddings": ".cohere",
+    "VoyageEmbeddings": ".voyage",
+    "JinaEmbeddings": ".jina",
+    "GeminiEmbeddings": ".gemini",
+    "MistralEmbeddings": ".mistral",
+    "NomicEmbeddings": ".nomic",
+    "MixedbreadEmbeddings": ".mixedbread",
+    "HuggingFaceEmbeddings": ".huggingface",
 }
 
 
