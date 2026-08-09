@@ -1,17 +1,34 @@
+"""Local sentence-transformers embeddings backend."""
+
 from __future__ import annotations
 
 import numpy as np
 
+from .base import BaseEmbeddings
 
-class SynapsekitEmbeddings:
+
+class SynapsekitEmbeddings(BaseEmbeddings):
     """
     Async embeddings using sentence-transformers.
     Lazy-loads the model on first use.
     """
 
-    def __init__(self, model: str = "all-MiniLM-L6-v2", use_gpu: bool = False) -> None:
+    dimensions: int | None = 384
+
+    def __init__(
+        self,
+        model: str = "all-MiniLM-L6-v2",
+        use_gpu: bool = False,
+        *,
+        batch_size: int = 64,
+        normalize: bool = True,
+        dimensions: int | None = None,
+    ) -> None:
+        super().__init__(batch_size=batch_size, normalize=normalize)
         self.model = model
         self.use_gpu = use_gpu
+        if dimensions is not None:
+            self.dimensions = dimensions
         self._backend = None
 
     def _get_backend(self):
@@ -26,8 +43,8 @@ class SynapsekitEmbeddings:
             self._backend = SentenceTransformer(self.model, device=device)
         return self._backend
 
-    async def embed(self, texts: list[str]) -> np.ndarray:
-        """Embed a list of texts, returns (N, D) float32 array."""
+    async def _embed_raw(self, texts: list[str]) -> np.ndarray:
+        """Run the sentence-transformer model on ``texts``."""
         import asyncio
 
         from ..observe.runtime import end_span, record_exception, start_span
@@ -44,10 +61,7 @@ class SynapsekitEmbeddings:
             backend = self._get_backend()
             loop = asyncio.get_event_loop()
             vecs = await loop.run_in_executor(None, backend.encode, texts)
-            arr = np.array(vecs, dtype=np.float32)
-            norms = np.linalg.norm(arr, axis=1, keepdims=True)
-            norms = np.where(norms == 0, 1.0, norms)
-            return arr / norms
+            return np.array(vecs, dtype=np.float32)
         except Exception as exc:
             record_exception(span, exc)
             raise
