@@ -44,6 +44,8 @@ Discord = "https://discord.gg/PSuAXHRywJ"
 [project.scripts]
 synapsekit = "synapsekit.cli.main:main"
 
+synshell = "synapsekit.cli.shell:main"
+
 [project.optional-dependencies]
 graph = ["networkx>=3.0", "neo4j>=5.0"]
 openai = ["openai>=1.0"]
