@@ -322,6 +322,9 @@ def main(argv: list[str] | None = None) -> None:
     _add_edge_parser(subparsers)
     _add_mesh_parser(subparsers)
     _add_agent_parser(subparsers)
+    from .hive import build_hive_parser
+
+    build_hive_parser(subparsers)
     _add_memory_parser(subparsers)
     _add_ui_parser(subparsers)
     _add_plugin_parser(subparsers)
@@ -375,6 +378,10 @@ def main(argv: list[str] | None = None) -> None:
         from .agent import run_agent
 
         run_agent(args)
+    elif args.command == "hive":
+        from .hive import run_hive
+
+        run_hive(args)
     elif args.command == "memory":
         from .memory import run_memory
 
