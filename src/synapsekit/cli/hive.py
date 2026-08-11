@@ -60,6 +60,7 @@ def run_hive(args: Any) -> None:
     from ..hive import (
         HiveAggregator,
         HiveClient,
+        HiveTransport,
         HttpHiveTransport,
         InProcessHiveTransport,
         PrivacyConfig,
@@ -69,7 +70,7 @@ def run_hive(args: Any) -> None:
     cache_path = Path(args.cache) if args.cache else Path.home() / ".synapsekit" / "hive.json"
     local_store = None
     if args.service_url:
-        transport = HttpHiveTransport(args.service_url, api_key=args.api_key)
+        transport: HiveTransport = HttpHiveTransport(args.service_url, api_key=args.api_key)
     else:
         database_path = (
             Path(args.aggregator_db) if args.aggregator_db else cache_path.with_suffix(".sqlite3")
@@ -92,17 +93,19 @@ def run_hive(args: Any) -> None:
     try:
         command = getattr(args, "hive_command", None)
         if command == "contribute":
-            result = asyncio.run(client.contribute(args.roots))
-            print(json.dumps({"contribution_id": result, "scope": client.scope_id}, indent=2))
+            contribution_id = asyncio.run(client.contribute(args.roots))
+            print(
+                json.dumps({"contribution_id": contribution_id, "scope": client.scope_id}, indent=2)
+            )
         elif command == "suggestions":
-            result = asyncio.run(client.suggestions_for(args.query, limit=args.limit))
-            print(json.dumps([item.to_dict() for item in result], indent=2))
+            suggestion_items = asyncio.run(client.suggestions_for(args.query, limit=args.limit))
+            print(json.dumps([item.to_dict() for item in suggestion_items], indent=2))
         elif command == "withdraw":
-            result = asyncio.run(client.withdraw())
-            print(json.dumps({"revoked": result}, indent=2))
+            revoked = asyncio.run(client.withdraw())
+            print(json.dumps({"revoked": revoked}, indent=2))
         elif command == "status":
-            result = asyncio.run(client.transparency())
-            print(json.dumps(result.to_dict(), indent=2))
+            report = asyncio.run(client.transparency())
+            print(json.dumps(report.to_dict(), indent=2))
         else:
             raise SystemExit(
                 "Missing hive subcommand. Use contribute, suggestions, status, or withdraw."
