@@ -14,7 +14,9 @@ from .full_context import FullContextRetriever
 from .graphrag import GraphRAGRetriever, KnowledgeGraph
 from .hybrid_search import HybridSearchRetriever
 from .hyde import HyDERetriever
+from .jina_reranker import JinaReranker
 from .late_chunking import LateChunkingRetriever
+from .mixedbread_reranker import MixedbreadReranker
 from .mongodb_atlas import MongoDBAtlasVectorStore
 from .multi_step import MultiStepRetriever
 from .parent_document import ParentDocumentRetriever
@@ -31,6 +33,7 @@ from .property_graph import (
 )
 from .query_decomposition import QueryDecompositionRetriever
 from .raptor import RAPTORRetriever
+from .reranker import Reranker
 from .retriever import Retriever
 from .self_query import SelfQueryRetriever
 from .self_rag import SelfRAGRetriever
@@ -38,6 +41,7 @@ from .step_back import StepBackRetriever
 from .strategies.colbert import ColBERTRetriever
 from .token_counting import TokenCounter
 from .vectorstore import InMemoryVectorStore
+from .voyage_reranker import VoyageReranker
 from .world_model import (
     CausalLinker,
     EntityMention,
@@ -86,6 +90,7 @@ __all__ = [
     "HybridSearchRetriever",
     "HyDERetriever",
     "InMemoryVectorStore",
+    "JinaReranker",
     "KnowledgeGraph",
     "KnowledgeGraphExtraction",
     "KnowledgeGraphExtractor",
@@ -93,6 +98,7 @@ __all__ = [
     "MarqoVectorStore",
     "MilvusVectorStore",
     "MongoDBAtlasVectorStore",
+    "MixedbreadReranker",
     "MultiStepRetriever",
     "Neo4jPropertyGraphBackend",
     "NetworkXPropertyGraphBackend",
@@ -105,6 +111,7 @@ __all__ = [
     "QdrantVectorStore",
     "QueryDecompositionRetriever",
     "RedisVectorStore",
+    "Reranker",
     "Retriever",
     "SelfQueryRetriever",
     "SelfRAGRetriever",
@@ -115,6 +122,7 @@ __all__ = [
     "TypesenseVectorStore",
     "VectorStore",
     "VespaVectorStore",
+    "VoyageReranker",
     "WeaviateVectorStore",
     "CausalLinker",
     "EntityMention",

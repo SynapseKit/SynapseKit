@@ -290,6 +290,30 @@ def instrument_all() -> None:
 
             _patch(ONNXEmbeddings, "embed", "embeddings.embed", _const(backend="onnx"))
 
+    # -- Embeddings & reranker provider layer (#886): every hosted/local
+    #    provider subclasses one base, so patching the base covers them all --
+    def embedding_providers() -> None:
+        from ..embeddings.base import BaseEmbeddings
+
+        _instrument_hierarchy(
+            BaseEmbeddings,
+            "embed",
+            "embeddings.embed",
+            lambda self, a, k: {
+                "provider": type(self).__name__,
+                **({"count": len(a[0])} if a and hasattr(a[0], "__len__") else {}),
+            },
+        )
+        from ..retrieval.reranker import Reranker
+
+        for method in ("retrieve", "retrieve_with_scores"):
+            _instrument_hierarchy(
+                Reranker,
+                method,
+                "rerank",
+                lambda self, a, k: {"reranker": type(self).__name__},
+            )
+
     # -- Budget guard → live budget gauge --
     def budget() -> None:
         from ..observability.budget_guard import BudgetGuard
@@ -360,6 +384,23 @@ def instrument_all() -> None:
             },
         )
 
+    # -- Hive Mode: pooled-memory contribute / withdraw / suggestions --
+    def hive() -> None:
+        from ..hive.client import HiveClient
+
+        scope = lambda self, a, k: {"scope_id": getattr(self, "scope_id", "?")}  # noqa: E731
+        _patch(HiveClient, "contribute", "hive.contribute", scope)
+        _patch(HiveClient, "withdraw", "hive.withdraw", scope)
+        _patch(HiveClient, "suggestions_for", "hive.suggestions", scope)
+
+    # -- Agent OS Shell: each plan + execution --
+    def shell() -> None:
+        from ..shell.session import ShellSession
+
+        cmd = lambda self, a, k: {"input": str(a[0])[:120]} if a else {}  # noqa: E731
+        _patch(ShellSession, "plan", "shell.plan", cmd)
+        _patch(ShellSession, "run", "shell.run", cmd)
+
     for step in (
         tools,
         memory,
@@ -368,9 +409,12 @@ def instrument_all() -> None:
         mesh,
         loaders,
         embeddings,
+        embedding_providers,
         budget,
         audit,
         swarm,
         agent_evolution,
+        hive,
+        shell,
     ):
         _try(step)
