@@ -5,10 +5,11 @@ from __future__ import annotations
 import os
 from typing import Any
 
+from .reranker import Reranker
 from .retriever import Retriever
 
 
-class CohereReranker:
+class CohereReranker(Reranker):
     """Rerank retrieval results using Cohere's rerank models.
 
     Usage::
@@ -26,10 +27,7 @@ class CohereReranker:
         api_key: str | None = None,
         fetch_k: int = 20,
     ) -> None:
-        self._retriever = retriever
-        self._model = model
-        self._api_key = api_key
-        self._fetch_k = fetch_k
+        super().__init__(retriever, model, api_key=api_key, fetch_k=fetch_k)
         self._client: Any = None
 
     def _get_client(self):

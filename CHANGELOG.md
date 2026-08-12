@@ -9,8 +9,13 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- **First-class embeddings & reranker provider layer** (#886) — closes the standout ecosystem gap (35+ LLMs but a single embedder). A uniform async `BaseEmbeddings` contract (`embed`/`embed_one`/`embed_batch`, L2-normalized `(N, D)` float32) with **9 providers** — OpenAI, Cohere, Mistral, Voyage, Jina, Nomic, mixedbread, Hugging Face (Inference API), and Gemini — plus a `Reranker` contract with three new hosted rerankers (Jina, Voyage, mixedbread) alongside the existing Cohere/cross-encoder. Hosted providers use lazy async clients and are covered by `respx` HTTP-contract tests; each extra reuses the provider's existing SDK dependency. **Wired into SynapseKit Live** — `BaseEmbeddings.embed` and every `Reranker` publish `embeddings.embed` / `rerank` events (with provider + count), so the glass-box dashboard shows embedding and rerank activity for the whole provider layer, current and future subclasses alike. Contributed by [@DhruvGarg111](https://github.com/DhruvGarg111).
+
 ### Fixed
 
+- **`GeminiEmbeddings` no longer raises `TypeError` against the real API** (#926) — it awaited `client.models.embed_content`, which is *synchronous* in `google-genai`; switched to the async `client.aio.models.embed_content` surface (matching every other Gemini path in the repo). The provider test had made the sync method awaitable with `AsyncMock`, hiding the bug — replaced with a hand-written async fake that asserts the `.aio` surface and the coroutine contract.
 - **`Benchmarks` workflow no longer fails on the `symbolic` extra** (#919) — `benchmarks.yml` ran `make bench` (the full `benchmarks/` suite, including the neuro-symbolic gate that imports `SympyBackend`) without installing the `symbolic` extra, so the nightly and `v*`-tag runs errored with `ImportError: sympy is required`. Added `--extra symbolic` to its `uv sync`, mirroring the `neuro-symbolic-gate` job in `ci.yml`.
 
 ## [2.0.1] - 2026-08-04

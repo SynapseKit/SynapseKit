@@ -390,6 +390,8 @@ from .retrieval.flare import FLARERetriever
 from .retrieval.graphrag import GraphRAGRetriever, KnowledgeGraph
 from .retrieval.hybrid_search import HybridSearchRetriever
 from .retrieval.hyde import HyDERetriever
+from .retrieval.jina_reranker import JinaReranker
+from .retrieval.mixedbread_reranker import MixedbreadReranker
 from .retrieval.mongodb_atlas import MongoDBAtlasVectorStore
 from .retrieval.multi_step import MultiStepRetriever
 from .retrieval.okf_graph import okf_to_world_model
@@ -413,6 +415,7 @@ from .retrieval.self_rag import SelfRAGRetriever
 from .retrieval.sentence_window import SentenceWindowRetriever
 from .retrieval.step_back import StepBackRetriever
 from .retrieval.vectorstore import InMemoryVectorStore
+from .retrieval.voyage_reranker import VoyageReranker
 from .retrieval.world_model import (
     CausalLinker,
     EntityMention,
@@ -582,6 +585,15 @@ __all__ = [
     # Embeddings
     "SynapsekitEmbeddings",
     "ONNXEmbeddings",
+    "OpenAIEmbeddings",
+    "CohereEmbeddings",
+    "VoyageEmbeddings",
+    "JinaEmbeddings",
+    "GeminiEmbeddings",
+    "MistralEmbeddings",
+    "NomicEmbeddings",
+    "MixedbreadEmbeddings",
+    "HuggingFaceEmbeddings",
     # Vector stores
     "VectorStore",
     "InMemoryVectorStore",
@@ -603,6 +615,8 @@ __all__ = [
     "AdaptiveRAGRetriever",
     "CohereReranker",
     "HybridSearchRetriever",
+    "JinaReranker",
+    "MixedbreadReranker",
     "MultiStepRetriever",
     "RAGFusionRetriever",
     "ContextualRetriever",
@@ -617,6 +631,7 @@ __all__ = [
     "SelfQueryRetriever",
     "SelfRAGRetriever",
     "SentenceWindowRetriever",
+    "VoyageReranker",
     "GraphRAGRetriever",
     "KnowledgeGraph",
     "KnowledgeGraphExtraction",
@@ -1177,6 +1192,15 @@ _LAZY_IMPORTS = {
     "WeaviateVectorStore": "retrieval.weaviate",
     "SQLiteVecStore": "retrieval.sqlite_vec",
     "ONNXEmbeddings": "embeddings.onnx",
+    "OpenAIEmbeddings": "embeddings.openai",
+    "CohereEmbeddings": "embeddings.cohere",
+    "VoyageEmbeddings": "embeddings.voyage",
+    "JinaEmbeddings": "embeddings.jina",
+    "GeminiEmbeddings": "embeddings.gemini",
+    "MistralEmbeddings": "embeddings.mistral",
+    "NomicEmbeddings": "embeddings.nomic",
+    "MixedbreadEmbeddings": "embeddings.mixedbread",
+    "HuggingFaceEmbeddings": "embeddings.huggingface",
     # LLM providers
     "AsyncLRUCache": "llm._cache",
     "DynamoDBCacheBackend": "llm._cache_dynamodb",

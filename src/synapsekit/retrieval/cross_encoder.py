@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+from .reranker import Reranker
 from .retriever import Retriever
 
 
-class CrossEncoderReranker:
+class CrossEncoderReranker(Reranker):
     """Rerank retrieval results using a cross-encoder model for higher precision.
 
     Cross-encoders score query-document pairs jointly, giving much more
@@ -28,9 +29,9 @@ class CrossEncoderReranker:
         model: str = "cross-encoder/ms-marco-MiniLM-L-6-v2",
         fetch_k: int = 20,
     ) -> None:
-        self._retriever = retriever
+        super().__init__(retriever, model, fetch_k=fetch_k)
+        # Backwards-compatible alias used by `_get_cross_encoder`.
         self._model_name = model
-        self._fetch_k = fetch_k
         self._cross_encoder = None
 
     def _get_cross_encoder(self):
