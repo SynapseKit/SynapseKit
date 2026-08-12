@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import os
 import shlex
 import subprocess
@@ -109,7 +110,7 @@ class DirectShellExecutor:
         argv = list(command.argv)
         try:
             process = await self._start(argv, context)
-            stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=self.timeout)
+            stdout, stderr, _ = await asyncio.wait_for(self._drain(process), timeout=self.timeout)
         except asyncio.TimeoutError:
             if "process" in locals() and process.returncode is None:
                 process.kill()
@@ -147,7 +148,9 @@ class DirectShellExecutor:
 
         Stages are intentionally bounded and run sequentially. This is a
         conservative implementation that preserves the observable pipeline
-        result while avoiding a shell interpreter and unbounded pipe pumps.
+        result while avoiding a shell interpreter and unbounded pipe pumps:
+        each stage's output is streamed under a hard byte cap so an unbounded
+        producer (``yes | head``) is terminated at the cap rather than hanging.
         """
 
         input_data = b""
@@ -156,8 +159,8 @@ class DirectShellExecutor:
             started = time.monotonic()
             try:
                 process = await self._start(list(command.argv), context, pipe_stdin=True)
-                stdout, stderr = await asyncio.wait_for(
-                    process.communicate(input=input_data), timeout=self.timeout
+                stdout, stderr, truncated = await asyncio.wait_for(
+                    self._drain(process, input_data), timeout=self.timeout
                 )
             except asyncio.TimeoutError:
                 if "process" in locals() and process.returncode is None:
@@ -197,9 +200,66 @@ class DirectShellExecutor:
                 )
             )
             input_data = stdout[: self.max_output_bytes]
-            if process.returncode != 0:
+            # A stage killed for exceeding the output cap is expected, not a
+            # genuine failure: feed its (truncated) output to the next stage
+            # instead of aborting the pipeline.
+            if process.returncode != 0 and not truncated:
                 break
         return results
+
+    async def _drain(
+        self,
+        process: asyncio.subprocess.Process,
+        input_data: bytes = b"",
+    ) -> tuple[bytes, bytes, bool]:
+        """Feed stdin and read stdout/stderr under a hard byte cap.
+
+        Unlike ``Process.communicate`` (which buffers the child's entire
+        output into memory before any limit is applied), this reads
+        incrementally and kills the child as soon as either stream exceeds
+        ``max_output_bytes``. That keeps memory bounded and prevents an
+        unbounded producer from hanging a pipeline. Returns
+        ``(stdout, stderr, overflowed)`` where ``overflowed`` is ``True`` when
+        the cap terminated the process.
+        """
+
+        limit = self.max_output_bytes
+        overflowed = False
+
+        async def _read(stream: asyncio.StreamReader | None) -> bytes:
+            nonlocal overflowed
+            if stream is None:
+                return b""
+            chunks: list[bytes] = []
+            total = 0
+            while True:
+                chunk = await stream.read(65536)
+                if not chunk:
+                    break
+                chunks.append(chunk)
+                total += len(chunk)
+                if total > limit:
+                    overflowed = True
+                    with contextlib.suppress(ProcessLookupError):
+                        process.kill()
+                    break
+            return b"".join(chunks)
+
+        async def _feed() -> None:
+            stdin = process.stdin
+            if stdin is None:
+                return
+            with contextlib.suppress(BrokenPipeError, ConnectionResetError, RuntimeError, OSError):
+                if input_data:
+                    stdin.write(input_data)
+                    await stdin.drain()
+                stdin.close()
+
+        stdout, stderr, _ = await asyncio.gather(
+            _read(process.stdout), _read(process.stderr), _feed()
+        )
+        await process.wait()
+        return stdout, stderr, overflowed
 
     async def _start(
         self,

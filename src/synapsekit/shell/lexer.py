@@ -17,12 +17,19 @@ def _looks_like_natural_language(value: str, *, at_line_start: bool) -> bool:
     text = value.strip()
     if not text:
         return False
+    # Explicit sentinels are always natural language, wherever they appear.
     if text.casefold().startswith(("nl:", "ask:", "natural language:")):
         return True
+    # The cue-word and bare-phrase heuristics only apply to a quote that opens
+    # a command (line start or right after a connector). A quoted argument in
+    # the middle of a command — e.g. ``git commit -m "find and fix the bug"``
+    # or ``grep "search term" file`` — is an ordinary shell token, never NL.
+    if not at_line_start:
+        return False
     if _NL_CUES.match(text):
         return True
     # A standalone quoted phrase with whitespace is the documented shorthand.
-    return at_line_start and any(char.isspace() for char in text)
+    return any(char.isspace() for char in text)
 
 
 def lex_input(raw: str) -> ParsedInput:
