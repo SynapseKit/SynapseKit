@@ -384,6 +384,15 @@ def instrument_all() -> None:
             },
         )
 
+    # -- Hive Mode: pooled-memory contribute / withdraw / suggestions --
+    def hive() -> None:
+        from ..hive.client import HiveClient
+
+        scope = lambda self, a, k: {"scope_id": getattr(self, "scope_id", "?")}  # noqa: E731
+        _patch(HiveClient, "contribute", "hive.contribute", scope)
+        _patch(HiveClient, "withdraw", "hive.withdraw", scope)
+        _patch(HiveClient, "suggestions_for", "hive.suggestions", scope)
+
     for step in (
         tools,
         memory,
@@ -397,5 +406,6 @@ def instrument_all() -> None:
         audit,
         swarm,
         agent_evolution,
+        hive,
     ):
         _try(step)
