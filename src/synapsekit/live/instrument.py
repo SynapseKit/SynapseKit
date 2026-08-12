@@ -290,6 +290,30 @@ def instrument_all() -> None:
 
             _patch(ONNXEmbeddings, "embed", "embeddings.embed", _const(backend="onnx"))
 
+    # -- Embeddings & reranker provider layer (#886): every hosted/local
+    #    provider subclasses one base, so patching the base covers them all --
+    def embedding_providers() -> None:
+        from ..embeddings.base import BaseEmbeddings
+
+        _instrument_hierarchy(
+            BaseEmbeddings,
+            "embed",
+            "embeddings.embed",
+            lambda self, a, k: {
+                "provider": type(self).__name__,
+                **({"count": len(a[0])} if a and hasattr(a[0], "__len__") else {}),
+            },
+        )
+        from ..retrieval.reranker import Reranker
+
+        for method in ("retrieve", "retrieve_with_scores"):
+            _instrument_hierarchy(
+                Reranker,
+                method,
+                "rerank",
+                lambda self, a, k: {"reranker": type(self).__name__},
+            )
+
     # -- Budget guard → live budget gauge --
     def budget() -> None:
         from ..observability.budget_guard import BudgetGuard
@@ -368,6 +392,7 @@ def instrument_all() -> None:
         mesh,
         loaders,
         embeddings,
+        embedding_providers,
         budget,
         audit,
         swarm,
