@@ -9,8 +9,14 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- **Hive Mode — privacy-first pooled memory** (#748) — an opt-in way for a team (or a self-hosted community) to learn shared conventions without sharing raw memory. A local `HiveClient` mines only safe, vocabulary-level pattern *keys* (never filenames, paths, or excerpts), applies differential-privacy noise, Ed25519-signs each contribution, and (optionally) AES-GCM-encrypts the payload before it leaves the machine. A self-hostable `HiveAggregator` (stdlib SQLite reference store, optional FastAPI service) validates signatures, enforces a `minimum_cohort` suppression threshold, and returns aggregate `Suggestion`s with prevalence/confidence. Full transparency + withdrawal (`transparency()` / `withdraw()`), a per-day privacy budget, an offline suggestion cache, and a `synapsekit hive` CLI. New `hive` extra. **Wired into SynapseKit Live** — contribute/withdraw/suggestions publish `hive.contribute` / `hive.withdraw` / `hive.suggestions` events (with scope), so pooled-memory activity shows in the glass-box dashboard. Contributed by [@DhruvGarg111](https://github.com/DhruvGarg111).
+
 ### Fixed
 
+- **Hive `SQLiteHiveStore` is now thread-safe** (#927) — the single `check_same_thread=False` connection was shared across the worker threads `asyncio.to_thread` dispatches store calls onto, with no mutex — a data race under concurrent submit/suggestions. All access is now serialized through a `threading.RLock`, with a concurrent-`to_thread` regression test.
+- **Hive suggestion `contributor_count` counts distinct contributors** (#928) — it previously counted observations (`len(values)`), so a single contributor submitting several envelopes/day inflated both the count and the derived `confidence` (a user-facing trust signal). It now tracks distinct `contributor_id`s per pattern key, with a regression test.
 - **`Benchmarks` workflow no longer fails on the `symbolic` extra** (#919) — `benchmarks.yml` ran `make bench` (the full `benchmarks/` suite, including the neuro-symbolic gate that imports `SympyBackend`) without installing the `symbolic` extra, so the nightly and `v*`-tag runs errored with `ImportError: sympy is required`. Added `--extra symbolic` to its `uv sync`, mirroring the `neuro-symbolic-gate` job in `ci.yml`.
 
 ## [2.0.1] - 2026-08-04
