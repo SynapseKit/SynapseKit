@@ -9,8 +9,14 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- **Agent OS Shell** (#750) — a local-first hybrid shell that mixes ordinary shell syntax with quoted natural-language requests (`git status && "why did that fail?"`). Commands run **argv-only** (never `shell=True`), a **fail-closed** safety gate blocks destructive commands unless they carry an Ed25519 signature, and every run writes a signed, verifiable audit receipt. Ships with an LLM planner, a rule planner, bounded subprocess execution, and a `synapsekit shell` / `synshell` entry point. **Wired into SynapseKit Live** — each `plan` and `run` publishes `shell.plan` / `shell.run` events (with the input), so shell activity streams to the glass-box dashboard. Contributed by [@DhruvGarg111](https://github.com/DhruvGarg111).
+
 ### Fixed
 
+- **Agent OS Shell no longer OOMs or hangs on unbounded output** (#929) — the executor buffered a child's entire stdout/stderr via `communicate()` before `max_output_bytes` was applied, so `cat /dev/zero`/`yes` could exhaust RAM and `yes | head -1` hung (the producer never got SIGPIPE). Output is now streamed under a hard byte cap that terminates the child at the cap; a capped producer still feeds the next pipeline stage. Regression tests cover bounded output and a non-hanging pipeline.
+- **Agent OS Shell no longer drops quoted args that start with a cue word** (#930) — `git commit -m "find and fix the bug"` and `grep "search term" file` silently lost the quoted argument because the lexer treated any quoted span beginning with a cue word (find/run/search/…) as natural language regardless of position. The cue-word/bare-phrase heuristics are now gated on the quote opening a command; only the explicit `nl:`/`ask:` sentinels stay unconditional. Regression tests cover both cases.
 - **`Benchmarks` workflow no longer fails on the `symbolic` extra** (#919) — `benchmarks.yml` ran `make bench` (the full `benchmarks/` suite, including the neuro-symbolic gate that imports `SympyBackend`) without installing the `symbolic` extra, so the nightly and `v*`-tag runs errored with `ImportError: sympy is required`. Added `--extra symbolic` to its `uv sync`, mirroring the `neuro-symbolic-gate` job in `ci.yml`.
 
 ## [2.0.1] - 2026-08-04

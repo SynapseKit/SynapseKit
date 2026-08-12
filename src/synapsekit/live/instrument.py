@@ -360,6 +360,14 @@ def instrument_all() -> None:
             },
         )
 
+    # -- Agent OS Shell: each plan + execution --
+    def shell() -> None:
+        from ..shell.session import ShellSession
+
+        cmd = lambda self, a, k: {"input": str(a[0])[:120]} if a else {}  # noqa: E731
+        _patch(ShellSession, "plan", "shell.plan", cmd)
+        _patch(ShellSession, "run", "shell.run", cmd)
+
     for step in (
         tools,
         memory,
@@ -372,5 +380,6 @@ def instrument_all() -> None:
         audit,
         swarm,
         agent_evolution,
+        shell,
     ):
         _try(step)
