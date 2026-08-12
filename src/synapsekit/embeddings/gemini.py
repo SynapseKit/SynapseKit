@@ -50,7 +50,9 @@ class GeminiEmbeddings(BaseEmbeddings):
 
     async def _embed_raw(self, texts: list[str]) -> np.ndarray:
         client = self._get_client()
-        resp = await client.models.embed_content(
+        # ``client.models.embed_content`` is synchronous in google-genai;
+        # the awaitable surface lives under ``client.aio``.
+        resp = await client.aio.models.embed_content(
             model=self.model,
             contents=texts,
         )
