@@ -393,6 +393,14 @@ def instrument_all() -> None:
         _patch(HiveClient, "withdraw", "hive.withdraw", scope)
         _patch(HiveClient, "suggestions_for", "hive.suggestions", scope)
 
+    # -- Agent OS Shell: each plan + execution --
+    def shell() -> None:
+        from ..shell.session import ShellSession
+
+        cmd = lambda self, a, k: {"input": str(a[0])[:120]} if a else {}  # noqa: E731
+        _patch(ShellSession, "plan", "shell.plan", cmd)
+        _patch(ShellSession, "run", "shell.run", cmd)
+
     for step in (
         tools,
         memory,
@@ -407,5 +415,6 @@ def instrument_all() -> None:
         swarm,
         agent_evolution,
         hive,
+        shell,
     ):
         _try(step)

@@ -172,6 +172,12 @@ def _add_mesh_parser(subparsers: argparse._SubParsersAction) -> None:  # type: i
     build_mesh_parser(subparsers)
 
 
+def _add_shell_parser(subparsers: argparse._SubParsersAction) -> None:  # type: ignore[type-arg]
+    from .shell import build_shell_parser
+
+    build_shell_parser(subparsers)
+
+
 def _add_agent_parser(subparsers: argparse._SubParsersAction) -> None:  # type: ignore[type-arg]
     p = subparsers.add_parser("agent", help="Inspect and manage SynapseKit agents")
     agent_sub = p.add_subparsers(dest="agent_command")
@@ -321,6 +327,7 @@ def main(argv: list[str] | None = None) -> None:
     _add_bench_parser(subparsers)
     _add_edge_parser(subparsers)
     _add_mesh_parser(subparsers)
+    _add_shell_parser(subparsers)
     _add_agent_parser(subparsers)
     from .hive import build_hive_parser
 
@@ -374,6 +381,10 @@ def main(argv: list[str] | None = None) -> None:
         from .mesh import run_mesh
 
         run_mesh(args)
+    elif args.command == "shell":
+        from .shell import run_shell
+
+        run_shell(args)
     elif args.command == "agent":
         from .agent import run_agent
 
