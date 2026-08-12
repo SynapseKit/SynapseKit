@@ -8,6 +8,7 @@ import threading
 import time
 from collections import defaultdict
 from collections.abc import Callable, Mapping
+from dataclasses import replace
 from pathlib import Path
 from typing import Protocol
 
@@ -103,14 +104,23 @@ class SQLiteHiveStore:
             return cursor.rowcount == 1
 
     def list(self, *, scope_id: str, include_revoked: bool = False) -> list[ContributionEnvelope]:
-        query = "SELECT envelope_json FROM hive_contributions WHERE scope_id = ?"
+        query = "SELECT envelope_json, revoked FROM hive_contributions WHERE scope_id = ?"
         params: list[object] = [scope_id]
         if not include_revoked:
             query += " AND revoked = 0"
         query += " ORDER BY received_at ASC"
         with self._lock:
             rows = self._connection.execute(query, params).fetchall()
-        return [ContributionEnvelope.from_dict(json.loads(row["envelope_json"])) for row in rows]
+        envelopes: list[ContributionEnvelope] = []
+        for row in rows:
+            envelope = ContributionEnvelope.from_dict(json.loads(row["envelope_json"]))
+            # The revoked column is the source of truth (revoke() updates it,
+            # not the stored JSON blob), so overlay it onto the envelope.
+            revoked = bool(row["revoked"])
+            if revoked != envelope.revoked:
+                envelope = replace(envelope, revoked=revoked)
+            envelopes.append(envelope)
+        return envelopes
 
     def revoke(self, *, contributor_id: str, scope_id: str) -> int:
         with self._lock:
