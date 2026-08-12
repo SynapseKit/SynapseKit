@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import threading
 import time
 from collections import defaultdict
 from collections.abc import Callable, Mapping
@@ -43,55 +44,63 @@ class SQLiteHiveStore:
         self.path = str(path)
         if self.path != ":memory:":
             Path(self.path).expanduser().parent.mkdir(parents=True, exist_ok=True)
+        # ``check_same_thread=False`` lets the single connection be used from the
+        # worker threads that ``asyncio.to_thread`` dispatches store calls onto,
+        # but sqlite3 is not internally thread-safe for concurrent use of one
+        # connection, so every access is serialized through this lock.
+        self._lock = threading.RLock()
         self._connection = sqlite3.connect(self.path, check_same_thread=False)
         self._connection.row_factory = sqlite3.Row
         self._ensure_schema()
 
     def close(self) -> None:
-        self._connection.close()
+        with self._lock:
+            self._connection.close()
 
     def _ensure_schema(self) -> None:
-        self._connection.executescript(
-            """
-            CREATE TABLE IF NOT EXISTS hive_contributions (
-                contribution_id TEXT PRIMARY KEY,
-                schema_version TEXT NOT NULL,
-                scope_id TEXT NOT NULL,
-                contributor_id TEXT NOT NULL,
-                envelope_json TEXT NOT NULL,
-                received_at REAL NOT NULL,
-                revoked INTEGER NOT NULL DEFAULT 0
-            );
-            CREATE INDEX IF NOT EXISTS hive_scope_idx
-              ON hive_contributions(scope_id, revoked, received_at);
-            CREATE INDEX IF NOT EXISTS hive_contributor_idx
-              ON hive_contributions(scope_id, contributor_id);
-            """
-        )
-        self._connection.commit()
+        with self._lock:
+            self._connection.executescript(
+                """
+                CREATE TABLE IF NOT EXISTS hive_contributions (
+                    contribution_id TEXT PRIMARY KEY,
+                    schema_version TEXT NOT NULL,
+                    scope_id TEXT NOT NULL,
+                    contributor_id TEXT NOT NULL,
+                    envelope_json TEXT NOT NULL,
+                    received_at REAL NOT NULL,
+                    revoked INTEGER NOT NULL DEFAULT 0
+                );
+                CREATE INDEX IF NOT EXISTS hive_scope_idx
+                  ON hive_contributions(scope_id, revoked, received_at);
+                CREATE INDEX IF NOT EXISTS hive_contributor_idx
+                  ON hive_contributions(scope_id, contributor_id);
+                """
+            )
+            self._connection.commit()
 
     def put(self, envelope: ContributionEnvelope) -> bool:
         payload = envelope.payload
         if payload is None:
             raise HiveAggregatorError("SQLiteHiveStore requires a decrypted envelope")
-        cursor = self._connection.execute(
-            """
-            INSERT OR IGNORE INTO hive_contributions
-            (contribution_id, schema_version, scope_id, contributor_id, envelope_json, received_at, revoked)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                envelope.contribution_id,
-                HIVE_SCHEMA_VERSION,
-                payload.scope_id,
-                envelope.contributor_id,
-                json.dumps(envelope.to_dict(), sort_keys=True),
-                envelope.received_at,
-                int(envelope.revoked),
-            ),
-        )
-        self._connection.commit()
-        return cursor.rowcount == 1
+        with self._lock:
+            cursor = self._connection.execute(
+                """
+                INSERT OR IGNORE INTO hive_contributions
+                (contribution_id, schema_version, scope_id, contributor_id, envelope_json, received_at, revoked)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    envelope.contribution_id,
+                    HIVE_SCHEMA_VERSION,
+                    payload.scope_id,
+                    envelope.contributor_id,
+                    json.dumps(envelope.to_dict(), sort_keys=True),
+                    envelope.received_at,
+                    int(envelope.revoked),
+                ),
+            )
+            self._connection.commit()
+            return cursor.rowcount == 1
 
     def list(self, *, scope_id: str, include_revoked: bool = False) -> list[ContributionEnvelope]:
         query = "SELECT envelope_json FROM hive_contributions WHERE scope_id = ?"
@@ -99,16 +108,18 @@ class SQLiteHiveStore:
         if not include_revoked:
             query += " AND revoked = 0"
         query += " ORDER BY received_at ASC"
-        rows = self._connection.execute(query, params).fetchall()
+        with self._lock:
+            rows = self._connection.execute(query, params).fetchall()
         return [ContributionEnvelope.from_dict(json.loads(row["envelope_json"])) for row in rows]
 
     def revoke(self, *, contributor_id: str, scope_id: str) -> int:
-        cursor = self._connection.execute(
-            "UPDATE hive_contributions SET revoked = 1 WHERE contributor_id = ? AND scope_id = ?",
-            (contributor_id, scope_id),
-        )
-        self._connection.commit()
-        return cursor.rowcount
+        with self._lock:
+            cursor = self._connection.execute(
+                "UPDATE hive_contributions SET revoked = 1 WHERE contributor_id = ? AND scope_id = ?",
+                (contributor_id, scope_id),
+            )
+            self._connection.commit()
+            return cursor.rowcount
 
 
 class HiveAuthorizer(Protocol):
@@ -182,18 +193,22 @@ class HiveAggregator:
         if len(contributors) < minimum_cohort:
             return []
         observations: dict[str, list[float]] = defaultdict(list)
+        pattern_contributors: dict[str, set[str]] = defaultdict(set)
         categories: dict[str, str] = {}
         for envelope in envelopes:
             assert envelope.payload is not None
             for pattern in envelope.payload.patterns:
                 observations[pattern.key].append(pattern.value)
+                pattern_contributors[pattern.key].add(envelope.contributor_id)
                 categories[pattern.key] = pattern.category
         query_terms = {term.lower() for term in (query or "").split() if term}
         ranked: list[Suggestion] = []
         for key, values in observations.items():
             if query_terms and not query_terms.intersection({key.lower(), *key.lower().split(":")}):
                 continue
-            contributor_count = len(values)
+            # Distinct contributors exhibiting the pattern, not raw observation
+            # count — a single contributor may submit several envelopes per day.
+            contributor_count = len(pattern_contributors[key])
             prevalence = min(
                 1.0, max(0.0, sum(min(1.0, max(0.0, v)) for v in values) / len(contributors))
             )
