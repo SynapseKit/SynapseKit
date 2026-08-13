@@ -169,6 +169,21 @@ from .audit import (
 )
 from .audit import PIIRedactor as AuditPIIRedactor
 from .audit import verify as verify_audit_bundle
+from .dream import (
+    DEFAULT_TASKS,
+    DreamConfig,
+    DreamMode,
+    DreamRunResult,
+    DreamSchedule,
+    DreamScheduler,
+    DreamStateStore,
+    Lesson,
+    MeshConsolidation,
+    PowerStatus,
+    StaleMemory,
+    TraceWindow,
+)
+
 from .embeddings.backend import SynapsekitEmbeddings
 from .evaluation import (
     EmailAlertSink,
@@ -691,6 +706,18 @@ __all__ = [
     "WorldModelNode",
     "WorldModelQueryResult",
     "KnowledgeMesh",
+    "DEFAULT_TASKS",
+    "DreamConfig",
+    "DreamMode",
+    "DreamRunResult",
+    "DreamSchedule",
+    "DreamScheduler",
+    "DreamStateStore",
+    "Lesson",
+    "MeshConsolidation",
+    "PowerStatus",
+    "StaleMemory",
+    "TraceWindow",
     "MeshConfig",
     "MeshDaemon",
     "MeshHit",
