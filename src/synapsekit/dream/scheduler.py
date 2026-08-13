@@ -13,7 +13,7 @@ import sys
 from dataclasses import dataclass
 from datetime import datetime, time
 from pathlib import Path
-from typing import Protocol
+from typing import Any, Protocol, cast
 
 from .types import PowerStatus
 
@@ -128,7 +128,7 @@ class SystemPowerMonitor:
 
         value = _SystemPowerStatus()
         try:
-            ok = ctypes.windll.kernel32.GetSystemPowerStatus(ctypes.byref(value))
+            ok = cast(Any, ctypes.windll).kernel32.GetSystemPowerStatus(ctypes.byref(value))
         except (AttributeError, OSError):
             return PowerStatus(plugged_in=False, known=False)
         if not ok or value.ACLineStatus == 255:
@@ -170,9 +170,9 @@ class SystemIdleMonitor:
 
         info = _LastInputInfo(ctypes.sizeof(_LastInputInfo), 0)
         try:
-            if not ctypes.windll.user32.GetLastInputInfo(ctypes.byref(info)):
+            if not cast(Any, ctypes.windll).user32.GetLastInputInfo(ctypes.byref(info)):
                 return 0.0
-            tick = ctypes.windll.kernel32.GetTickCount()
+            tick = cast(Any, ctypes.windll).kernel32.GetTickCount()
         except (AttributeError, OSError):
             return 0.0
         elapsed_ms = (int(tick) - int(info.dwTime)) & 0xFFFFFFFF

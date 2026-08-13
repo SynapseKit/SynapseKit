@@ -183,7 +183,6 @@ from .dream import (
     StaleMemory,
     TraceWindow,
 )
-
 from .embeddings.backend import SynapsekitEmbeddings
 from .evaluation import (
     EmailAlertSink,

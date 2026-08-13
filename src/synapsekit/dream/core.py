@@ -90,6 +90,7 @@ class DreamMode:
         self._owns_state = state_store is None
         self._stop_event = asyncio.Event()
 
+        self.memory: LivingMemory | None
         if memory is not None:
             self.memory = memory
         elif self.memory_paths:

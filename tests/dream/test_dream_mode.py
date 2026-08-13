@@ -38,7 +38,7 @@ def test_schedule_parses_idle_and_clock() -> None:
     schedule = DreamSchedule.parse("idle_30m or 02:00")
     now = datetime.now().astimezone().replace(hour=2, minute=0, second=0, microsecond=0)
     assert schedule.due(now, idle_seconds=0)
-    assert schedule.trigger_key(now, idle_seconds=0) == "clock:2026-08-13:02:00"
+    assert schedule.trigger_key(now, idle_seconds=0) == f"clock:{now.strftime('%Y-%m-%d')}:02:00"
     assert schedule.due(now, idle_seconds=1800)
 
 

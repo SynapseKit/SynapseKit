@@ -66,7 +66,7 @@ class EvolutionIndex:
         max_count: int | None = None,
     ) -> list[EvolutionEntry]:
         """Build evolution entries by traversing commit history."""
-        target_paths = paths if paths else [None]
+        target_paths: list[str | None] = list(paths) if paths else [None]
         all_entries: list[EvolutionEntry] = []
 
         for p in target_paths:
