@@ -13,7 +13,7 @@ import sys
 from dataclasses import dataclass
 from datetime import datetime, time
 from pathlib import Path
-from typing import Any, Protocol, cast
+from typing import Protocol
 
 from .types import PowerStatus
 
@@ -116,6 +116,10 @@ class SystemPowerMonitor:
 
     @staticmethod
     def _windows_status() -> PowerStatus:
+        windll = getattr(ctypes, "windll", None)
+        if windll is None:
+            return PowerStatus(plugged_in=False, known=False)
+
         class _SystemPowerStatus(ctypes.Structure):
             _fields_ = [
                 ("ACLineStatus", ctypes.c_ubyte),
@@ -128,7 +132,7 @@ class SystemPowerMonitor:
 
         value = _SystemPowerStatus()
         try:
-            ok = cast(Any, ctypes.windll).kernel32.GetSystemPowerStatus(ctypes.byref(value))
+            ok = windll.kernel32.GetSystemPowerStatus(ctypes.byref(value))
         except (AttributeError, OSError):
             return PowerStatus(plugged_in=False, known=False)
         if not ok or value.ACLineStatus == 255:
@@ -165,14 +169,18 @@ class SystemIdleMonitor:
         if sys.platform != "win32":
             return 0.0
 
+        windll = getattr(ctypes, "windll", None)
+        if windll is None:
+            return 0.0
+
         class _LastInputInfo(ctypes.Structure):
             _fields_ = [("cbSize", ctypes.c_uint), ("dwTime", ctypes.c_uint)]
 
         info = _LastInputInfo(ctypes.sizeof(_LastInputInfo), 0)
         try:
-            if not cast(Any, ctypes.windll).user32.GetLastInputInfo(ctypes.byref(info)):
+            if not windll.user32.GetLastInputInfo(ctypes.byref(info)):
                 return 0.0
-            tick = cast(Any, ctypes.windll).kernel32.GetTickCount()
+            tick = windll.kernel32.GetTickCount()
         except (AttributeError, OSError):
             return 0.0
         elapsed_ms = (int(tick) - int(info.dwTime)) & 0xFFFFFFFF
