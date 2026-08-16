@@ -51,6 +51,12 @@ class DreamConfig:
     require_plugged_in: bool = True
     state_path: str | Path = "~/.synapsekit/dream/state.sqlite3"
     audit_dir: str | Path = "~/.synapsekit/dream/audit"
+    # Path to a persisted Ed25519 signing key. When ``None`` (the default),
+    # DreamMode uses ``<state_path parent>/signing_key`` so every night's
+    # bundle is signed by the same, pinnable per-install key (attestable).
+    # Pass an explicit ``signing_policy`` to DreamMode to override entirely
+    # (BYOK/KMS, or an ephemeral key).
+    signing_key_path: str | Path | None = None
 
     def __post_init__(self) -> None:
         if self.budget_tokens <= 0:
@@ -124,6 +130,8 @@ class DreamRunResult:
     stale_memories: list[StaleMemory] = field(default_factory=list)
     estimated_tokens: int = 0
     audit_path: str | None = None
+    audit_key_id: str | None = None
+    audit_attestable: bool = False
     warnings: list[str] = field(default_factory=list)
     skipped_reason: str | None = None
 

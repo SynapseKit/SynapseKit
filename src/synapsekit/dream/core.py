@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import os
 import uuid
 from collections import defaultdict
 from collections.abc import Iterable, Sequence
@@ -16,6 +17,7 @@ from ..audit import (
     GENESIS_HASH,
     AuditRecord,
     AuditTracer,
+    Ed25519SigningProvider,
     EventKind,
     PIIRedactor,
     ReplayEngine,
@@ -53,6 +55,31 @@ from .types import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _load_or_create_signing_key(path: Path) -> bytes:
+    """Load a raw Ed25519 private key from ``path``, creating it if absent.
+
+    The file holds the 32-byte raw seed and is created with ``0600``
+    permissions via ``O_EXCL`` so a concurrent creator can't be clobbered —
+    if two processes race, the loser re-reads the winner's key. Raises
+    ``OSError`` if the key cannot be read or persisted (the caller falls
+    back to a non-attestable ephemeral key).
+    """
+
+    if path.exists():
+        return path.read_bytes()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    raw = Ed25519SigningProvider().private_key_bytes()
+    try:
+        fd = os.open(str(path), os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    except FileExistsError:
+        return path.read_bytes()
+    try:
+        os.write(fd, raw)
+    finally:
+        os.close(fd)
+    return raw
 
 
 def _publish_live_run(result: DreamRunResult) -> None:
@@ -113,7 +140,16 @@ def render_briefing(report: DreamRunResult | None) -> str:
         f"  stale memories flagged: {len(report.stale_memories)}",
     ]
     if report.audit_path:
-        lines.append(f"  signed audit: {report.audit_path}")
+        if report.audit_attestable:
+            lines.append(
+                f"  signed audit: {report.audit_path} "
+                f"(attestable — verify with key {report.audit_key_id})"
+            )
+        else:
+            lines.append(
+                f"  signed audit: {report.audit_path} "
+                "— NOT attestable (ephemeral key; set signing_key_path to persist)"
+            )
     lines.extend(f"  warning: {warning}" for warning in report.warnings)
     return "\n".join(lines)
 
@@ -147,7 +183,8 @@ class DreamMode:
         self.state = state_store or DreamStateStore(self.config.state_path)
         self.power_monitor = power_monitor or SystemPowerMonitor()
         self.idle_monitor = idle_monitor or SystemIdleMonitor()
-        self.signing_policy = signing_policy or SigningPolicy.ed25519()
+        self.signing_policy, self._attestable = self._resolve_signing_policy(signing_policy)
+        self.signing_key_id = self.signing_policy.provider.key_id
         self.scheduler = DreamScheduler(
             DreamSchedule.parse(
                 self.config.schedule,
@@ -175,6 +212,48 @@ class DreamMode:
             )
         else:
             self.memory = None
+
+    def _resolve_signing_policy(
+        self, signing_policy: SigningPolicy | None
+    ) -> tuple[SigningPolicy, bool]:
+        """Resolve the bundle-signing policy and whether bundles are attestable.
+
+        A caller-supplied policy is used as-is (they own a pinnable key). By
+        default a per-install Ed25519 key is persisted at
+        ``config.signing_key_path`` (or ``<state parent>/signing_key``) so
+        every night's bundle is signed by the *same* key and can be verified
+        against a pinned trusted-key set. If the key cannot be persisted, fall
+        back to an ephemeral key and mark bundles non-attestable.
+        """
+
+        if signing_policy is not None:
+            return signing_policy, True
+        key_path = self.config.signing_key_path
+        if key_path is None:
+            key_path = Path(self.config.state_path).expanduser().with_name("signing_key")
+        try:
+            raw = _load_or_create_signing_key(Path(key_path).expanduser())
+        except OSError as exc:
+            logger.warning(
+                "dream: could not persist signing key at %s (%s); falling back to a "
+                "non-attestable ephemeral key — pass signing_key_path or a signing_policy",
+                key_path,
+                exc,
+            )
+            return SigningPolicy.ed25519(), False
+        return SigningPolicy.ed25519(raw), True
+
+    def trusted_keys(self) -> dict[str, bytes]:
+        """Return ``{key_id: public_key_bytes}`` for verifying this instance's bundles.
+
+        Pass to :func:`synapsekit.audit.verify` as ``trusted_keys=...`` for a
+        real ``MATCH`` (non-repudiation) instead of the ``UNVERIFIABLE`` an
+        unpinned verification returns. Stable across processes when a
+        persisted ``signing_key_path`` is used.
+        """
+
+        provider = self.signing_policy.provider
+        return {provider.key_id: provider.public_key_bytes()}
 
     def close(self) -> None:
         """Close the local state database when the caller owns it."""
@@ -332,6 +411,9 @@ class DreamMode:
             actor="dream-mode",
         )
         result.audit_path = await self._export_audit(tracer, run_id)
+        if result.audit_path is not None:
+            result.audit_key_id = self.signing_key_id
+            result.audit_attestable = self._attestable
         await asyncio.to_thread(self.state.save_run, result)
         _publish_live_run(result)
         return result
