@@ -54,9 +54,7 @@ def test_fire_stays_a_coroutine_after_instrumentation() -> None:
 async def test_ambient_intervention_publishes_event(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr("synapsekit.ambient.daemon.notify_windows_toast", lambda *a: True)
 
-    dirty = _event(
-        "git", "git_status", "1 file", dirty=True, dirty_files=["foo.py"], branch="main"
-    )
+    dirty = _event("git", "git_status", "1 file", dirty=True, dirty_files=["foo.py"], branch="main")
     # Raw command carries a secret; the Live event must not leak it.
     risky = _event("terminal", "command", "rm -rf build; export API_KEY=sk-secret-123")
 
