@@ -147,9 +147,14 @@ class AmbientDaemon:
                     intervention is not None
                     and intervention.confidence >= self.config.min_confidence
                 ):
-                    self._fire(intervention)
+                    await self._fire(intervention)
 
-    def _fire(self, intervention: Intervention) -> None:
+    async def _fire(self, intervention: Intervention) -> None:
+        # The toast backend and the jsonl audit write both block; keep them
+        # off the event loop (async-first).
+        await asyncio.to_thread(self._emit, intervention)
+
+    def _emit(self, intervention: Intervention) -> None:
         notify_windows_toast("SynapseKit ambient", intervention.message)
         self.audit_log.record(
             model=intervention.rule,

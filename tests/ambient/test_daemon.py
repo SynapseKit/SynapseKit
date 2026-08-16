@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import inspect
 import os
 from datetime import UTC, datetime
 from pathlib import Path
@@ -116,3 +117,10 @@ async def test_start_records_pid_and_stop_marks_stopped(tmp_path: Path) -> None:
         await asyncio.wait_for(task, timeout=5)
 
     assert daemon.status().state == "stopped"
+
+
+def test_fire_is_async_so_blocking_io_stays_off_the_loop() -> None:
+    # The toast + jsonl audit write block; _fire must remain a coroutine
+    # that offloads them, or the poll loop stalls (async-first guarantee).
+    assert inspect.iscoroutinefunction(AmbientDaemon._fire)
+    assert inspect.iscoroutinefunction(AmbientDaemon._tick)
