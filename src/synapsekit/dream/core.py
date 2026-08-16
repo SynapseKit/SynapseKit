@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import uuid
 from collections import defaultdict
 from collections.abc import Iterable, Sequence
@@ -12,6 +13,7 @@ from pathlib import Path
 from typing import Any, cast
 
 from ..audit import (
+    GENESIS_HASH,
     AuditRecord,
     AuditTracer,
     EventKind,
@@ -49,6 +51,8 @@ from .types import (
     StaleMemory,
     TraceWindow,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class DreamMode:
@@ -325,17 +329,67 @@ class DreamMode:
         return self._valid_trace_groups(list(unique.values()))
 
     @staticmethod
+    def _order_chain(group: list[AuditRecord]) -> list[AuditRecord] | None:
+        """Reconstruct a run's records in true hash-chain order.
+
+        Records may arrive in any order (the store sorts by
+        ``(timestamp, event_id)``, and two events sharing a timestamp are
+        then ordered by a random ``event_id`` — which does *not* match the
+        chain's ``prev_hash``/``hash`` linkage). ``verify_chain`` requires
+        exact linkage order, so we relink here before verifying rather than
+        trusting the incoming sort. Returns ``None`` if the group does not
+        form a single, complete genesis-rooted chain (missing links, a
+        fork, a cycle, or duplicate hashes).
+        """
+
+        by_prev: dict[str, AuditRecord] = {}
+        for record in group:
+            if record.prev_hash in by_prev:
+                # Two records claim the same predecessor — a fork; not a
+                # single verifiable chain.
+                return None
+            by_prev[record.prev_hash] = record
+
+        ordered: list[AuditRecord] = []
+        seen: set[str] = set()
+        cursor = by_prev.get(GENESIS_HASH)
+        while cursor is not None:
+            if cursor.hash in seen:  # cycle guard
+                return None
+            ordered.append(cursor)
+            seen.add(cursor.hash)
+            cursor = by_prev.get(cursor.hash)
+
+        if len(ordered) != len(group):
+            return None
+        return ordered
+
+    @staticmethod
     def _valid_trace_groups(records: list[AuditRecord]) -> list[AuditRecord]:
         grouped: dict[str, list[AuditRecord]] = defaultdict(list)
         for record in records:
             grouped[record.run_id].append(record)
         valid: list[AuditRecord] = []
-        for group in grouped.values():
-            try:
-                AuditTracer.verify_chain(group)
-            except Exception:
+        for run_id, group in grouped.items():
+            ordered = DreamMode._order_chain(group)
+            if ordered is None:
+                logger.warning(
+                    "dream: dropping run %s — records do not form a single "
+                    "verifiable hash chain (%d records)",
+                    run_id,
+                    len(group),
+                )
                 continue
-            valid.extend(group)
+            try:
+                AuditTracer.verify_chain(ordered)
+            except Exception as exc:
+                logger.warning(
+                    "dream: dropping run %s — chain verification failed: %s",
+                    run_id,
+                    exc,
+                )
+                continue
+            valid.extend(ordered)
         return sorted(valid, key=lambda record: (record.timestamp, record.event_id))
 
     async def _distill(self, records: list[AuditRecord]) -> list[Lesson]:

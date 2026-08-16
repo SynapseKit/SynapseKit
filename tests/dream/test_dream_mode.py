@@ -34,6 +34,44 @@ def _trace(at: datetime) -> AuditTracer:
     return tracer
 
 
+def _multi_record_trace(at: datetime, *, run_id: str = "chain-run") -> AuditTracer:
+    """A run whose records all share one timestamp — so a (timestamp,
+    event_id) sort scrambles them out of hash-chain order."""
+
+    tracer = AuditTracer(run_id=run_id)
+    tracer.record(EventKind.DECISION, {"message": "start retrieval"}, timestamp=at)
+    tracer.record(
+        EventKind.ERROR,
+        {"message": "retrieval failed; should retry with mesh"},
+        timestamp=at,
+    )
+    tracer.record(EventKind.DECISION, {"message": "retry with mesh"}, timestamp=at)
+    return tracer
+
+
+def test_valid_trace_groups_reconstructs_scrambled_chain() -> None:
+    # Records arriving out of chain order (the store sorts by
+    # (timestamp, event_id); a random event_id scrambles tied timestamps).
+    # Reversed order would fail verify_chain if trusted verbatim; the fix
+    # relinks by prev_hash/hash before verifying, so nothing is dropped.
+    tracer = _multi_record_trace(datetime.now(UTC))
+    scrambled = list(reversed(tracer.records))
+
+    kept = DreamMode._valid_trace_groups(scrambled)
+
+    assert len(kept) == len(tracer.records)
+    assert {r.event_id for r in kept} == {r.event_id for r in tracer.records}
+
+
+def test_valid_trace_groups_drops_incomplete_chain() -> None:
+    # A run missing an interior link is not a single verifiable chain and
+    # must be dropped (rather than silently accepted).
+    tracer = _multi_record_trace(datetime.now(UTC))
+    broken = [tracer.records[0], tracer.records[2]]  # drop the middle link
+
+    assert DreamMode._valid_trace_groups(broken) == []
+
+
 def test_schedule_parses_idle_and_clock() -> None:
     schedule = DreamSchedule.parse("idle_30m or 02:00")
     now = datetime.now().astimezone().replace(hour=2, minute=0, second=0, microsecond=0)
