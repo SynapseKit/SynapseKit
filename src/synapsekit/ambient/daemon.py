@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 
+from synapsekit.mesh import MeshPrivacyFilter
 from synapsekit.observability import AuditLog
 
 from .._compat import run_sync
@@ -60,6 +61,9 @@ class AmbientDaemon:
         self._stop_event = asyncio.Event()
         self._signal_handlers_installed = False
         self._audit_log: AuditLog | None = None
+        # Command text often contains secrets (tokens, passwords). Redact
+        # before it is persisted to the on-disk audit log.
+        self._redactor = MeshPrivacyFilter(ignore_file=None)
 
     def _build_default_sources(self) -> list[AmbientSourcePlugin]:
         disabled = load_disabled_sources(self.config.privacy_file)
@@ -182,7 +186,7 @@ class AmbientDaemon:
         notify_windows_toast("SynapseKit ambient", intervention.message)
         self.audit_log.record(
             model=intervention.rule,
-            input_text=intervention.event.text,
+            input_text=self._redactor.redact_text(intervention.event.text),
             output_text=intervention.message,
             user=_current_user(),
             metadata={"confidence": intervention.confidence, "source": intervention.event.source},

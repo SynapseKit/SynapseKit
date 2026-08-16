@@ -71,6 +71,37 @@ async def test_tick_fires_notification_and_records_audit(tmp_path: Path, monkeyp
 
 
 @pytest.mark.asyncio
+async def test_secret_in_command_is_redacted_in_audit(tmp_path: Path, monkeypatch) -> None:
+    # A risky command may also carry a secret; it must not be persisted
+    # verbatim to the on-disk audit log.
+    monkeypatch.setattr(
+        "synapsekit.ambient.daemon.notify_windows_toast", lambda *args: True
+    )
+
+    dirty_event = _event(
+        "git", "git_status", "1 file", dirty=True, dirty_files=["foo.py"], branch="main"
+    )
+    risky_event = _event("terminal", "command", "rm -rf build; export API_KEY=sk-secret-123")
+
+    git_source = _FakeSource("git", [[dirty_event]])
+    terminal_source = _FakeSource("terminal", [[], [risky_event]])
+
+    config = AmbientDaemonConfig(
+        status_path=tmp_path / "status.json",
+        audit_path=tmp_path / "audit.jsonl",
+    )
+    daemon = AmbientDaemon(config=config, sources=[git_source, terminal_source])
+
+    await daemon._tick()
+    await daemon._tick()
+
+    entries = daemon.audit_log.query()
+    assert len(entries) == 1
+    assert "sk-secret-123" not in entries[0].input_text
+    assert "REDACTED" in entries[0].input_text
+
+
+@pytest.mark.asyncio
 async def test_low_confidence_intervention_is_suppressed(tmp_path: Path, monkeypatch) -> None:
     notified = []
     monkeypatch.setattr(
