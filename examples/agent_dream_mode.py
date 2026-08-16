@@ -25,7 +25,7 @@ async def main() -> None:
         ),
         memory_paths=["MEMORY.md"],
     )
-    dream.ingest_traces(tracer.records)
+    await dream.ingest_traces(tracer.records)
     report = await dream.run_once(
         force=True,
         power=PowerStatus(plugged_in=True, battery_percent=100),

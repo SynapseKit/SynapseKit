@@ -120,7 +120,7 @@ def test_end_to_end_run_proposes_pending_patch_and_signed_audit(tmp_path: Path) 
         memory_paths=[memory_path],
     )
     try:
-        assert mode.ingest_traces(_trace(now - timedelta(hours=1)).records) == 1
+        assert asyncio.run(mode.ingest_traces(_trace(now - timedelta(hours=1)).records)) == 1
         result = asyncio.run(
             mode.run_once(
                 now=now,
@@ -151,7 +151,7 @@ def test_state_store_last_run_round_trips_typed_report(tmp_path: Path) -> None:
     )
     try:
         tracer = _trace(datetime.now(UTC) - timedelta(minutes=10))
-        mode.ingest_traces(tracer.records)
+        asyncio.run(mode.ingest_traces(tracer.records))
         result = asyncio.run(
             mode.run_once(force=True, power=PowerStatus(plugged_in=True, battery_percent=100))
         )

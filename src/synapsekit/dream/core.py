@@ -124,12 +124,16 @@ class DreamMode:
 
         self._stop_event.set()
 
-    def ingest_traces(self, records: Iterable[AuditRecord]) -> int:
-        """Persist completed local audit traces for a future dream run."""
+    async def ingest_traces(self, records: Iterable[AuditRecord]) -> int:
+        """Persist completed local audit traces for a future dream run.
+
+        The SQLite writes are offloaded to a worker thread so this stays
+        non-blocking when awaited from an event loop (async-first).
+        """
 
         records_list = list(records)
-        inserted = self.state.append_traces(records_list)
-        self.state.update_memory_reads(records_list)
+        inserted = await asyncio.to_thread(self.state.append_traces, records_list)
+        await asyncio.to_thread(self.state.update_memory_reads, records_list)
         return inserted
 
     async def run_once(

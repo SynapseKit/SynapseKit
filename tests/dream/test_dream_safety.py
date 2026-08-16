@@ -45,7 +45,7 @@ def test_budget_guard_uses_deterministic_path_without_model_call(tmp_path: Path)
         backend=backend,
     )
     try:
-        mode.ingest_traces(tracer.records)
+        asyncio.run(mode.ingest_traces(tracer.records))
         result = asyncio.run(
             mode.run_once(
                 force=True,

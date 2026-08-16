@@ -16,7 +16,7 @@ dream = DreamMode(
     memory_paths=["CLAUDE.md", "MEMORY.md"],
     backend=edge_runtime,  # EdgeRuntime keeps inference local by default
 )
-dream.ingest_traces(tracer.records)
+await dream.ingest_traces(tracer.records)
 report = await dream.run_once(
     force=True,
     power=PowerStatus(plugged_in=True, battery_percent=100),
