@@ -13,6 +13,7 @@ import pytest
 from synapsekit.ambient.daemon import AmbientDaemon, AmbientDaemonConfig
 from synapsekit.ambient.events import AmbientEvent
 from synapsekit.ambient.sources.base import AmbientSourcePlugin
+from synapsekit.ambient.status import write_status
 
 
 class _FakeSource(AmbientSourcePlugin):
@@ -117,6 +118,35 @@ async def test_start_records_pid_and_stop_marks_stopped(tmp_path: Path) -> None:
         await asyncio.wait_for(task, timeout=5)
 
     assert daemon.status().state == "stopped"
+
+
+@pytest.mark.asyncio
+async def test_stop_keeps_status_running_when_target_process_survives(
+    tmp_path: Path, monkeypatch
+) -> None:
+    # If the signaled process is still alive after the timeout, stop() must
+    # NOT lie by marking it stopped with pid=None (that orphans a live
+    # daemon and discards the pid needed to signal it again).
+    monkeypatch.setattr("synapsekit.ambient.daemon._STOP_TIMEOUT_SECONDS", 0.15)
+
+    class _NoKillDaemon(AmbientDaemon):
+        # Pretend we signaled the pid, but never actually kill it, so the
+        # target "survives" the stop request.
+        @staticmethod
+        def _signal_pid(pid: int) -> bool:
+            return True
+
+    status_path = tmp_path / "status.json"
+    live_pid = os.getppid()  # a real, alive process that is not this test
+    write_status(status_path, state="running", pid=live_pid)
+
+    config = AmbientDaemonConfig(status_path=status_path, audit_path=tmp_path / "a.jsonl")
+    daemon = _NoKillDaemon(config=config, sources=[])
+
+    result = await daemon.stop()
+
+    assert result.state == "running"
+    assert result.pid == live_pid
 
 
 def test_fire_is_async_so_blocking_io_stays_off_the_loop() -> None:

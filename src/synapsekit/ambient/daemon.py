@@ -121,13 +121,28 @@ class AmbientDaemon:
         self._stop_event.set()
 
         status = await self._read_status()
-        if status.pid and status.pid != os.getpid() and self._signal_pid(status.pid):
-            await self._wait_for_stopped()
+        remote_pid = status.pid if (status.pid and status.pid != os.getpid()) else None
+        if remote_pid is not None and self._signal_pid(remote_pid):
+            await self._wait_for_stopped(remote_pid)
 
         status = await self._read_status()
-        if status.state != "stopped":
-            status = await self._write_status(state="stopped", pid=None)
-        return status
+        if status.state == "stopped":
+            return status
+
+        # The signaled process is still alive and did not update its own
+        # status in time. Do NOT mark it stopped: that would orphan a live
+        # daemon and discard the pid needed to signal it again. Report the
+        # real state so a later `stop` can retry.
+        if remote_pid is not None and _pid_alive(remote_pid):
+            logger.warning(
+                "ambient: pid %s did not stop within %.0fs; leaving status running",
+                remote_pid,
+                _STOP_TIMEOUT_SECONDS,
+            )
+            return status
+
+        # In-process stop, or the process has exited — reflect stopped.
+        return await self._write_status(state="stopped", pid=None)
 
     def stop_sync(self) -> AmbientStatus:
         """Sync wrapper for ``stop``."""
@@ -205,13 +220,27 @@ class AmbientDaemon:
             return False
         return True
 
-    async def _wait_for_stopped(self) -> None:
+    async def _wait_for_stopped(self, pid: int) -> None:
         elapsed = 0.0
         while elapsed < _STOP_TIMEOUT_SECONDS:
             if (await self._read_status()).state == "stopped":
                 return
+            if not _pid_alive(pid):
+                return
             await asyncio.sleep(_STOP_POLL_SECONDS)
             elapsed += _STOP_POLL_SECONDS
+
+
+def _pid_alive(pid: int) -> bool:
+    """Return whether ``pid`` refers to a live process (best-effort)."""
+
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
 
 
 def _current_user() -> str:
