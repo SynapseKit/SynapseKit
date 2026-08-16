@@ -55,6 +55,42 @@ from .types import (
 logger = logging.getLogger(__name__)
 
 
+def _publish_live_run(result: DreamRunResult) -> None:
+    """Stream a finished Dream run to SynapseKit Live.
+
+    Published directly (rather than via the central auto-instrumenter) because
+    the meaningful telemetry is the *result* — including the skipped/completed/
+    failed outcome — which a method wrapper can't see. Additive and near-free:
+    ``_maybe_autostart`` early-returns after the first call and ``bus.publish``
+    is a single attribute read when Live is disabled.
+    """
+
+    from ..live import _maybe_autostart
+    from ..live.bus import bus
+
+    _maybe_autostart()
+    if not bus.enabled:
+        return
+    attrs = {
+        "run_status": result.status,
+        "skipped_reason": result.skipped_reason,
+        "traces_replayed": result.traces_replayed,
+        "lessons": len(result.lessons),
+        "patches_proposed": len(result.patch_ids),
+        "mesh_reindexed": result.mesh_reindexed,
+        "stale_flagged": len(result.stale_memories),
+        "audit_path": result.audit_path,
+    }
+    bus.publish(
+        {
+            "kind": "dream.run",
+            "name": "dream.run",
+            "status": "error" if result.status == "failed" else "ok",
+            "attributes": {k: v for k, v in attrs.items() if v is not None},
+        }
+    )
+
+
 def render_briefing(report: DreamRunResult | None) -> str:
     """Render a concise, actionable terminal briefing from a run report.
 
@@ -180,9 +216,11 @@ class DreamMode:
         if power is None:
             power = await asyncio.to_thread(self.power_monitor.status)
         if self.config.require_plugged_in and (not power.known or not power.plugged_in):
-            return DreamRunResult.skipped(
+            skipped = DreamRunResult.skipped(
                 "Dream Mode requires a known plugged-in power source", now=started
             )
+            _publish_live_run(skipped)
+            return skipped
         if not force:
             observed_idle = idle_seconds
             if observed_idle is None:
@@ -194,7 +232,9 @@ class DreamMode:
                 require_plugged_in=self.config.require_plugged_in,
             )
             if not due:
-                return DreamRunResult.skipped(reason, now=started)
+                skipped = DreamRunResult.skipped(reason, now=started)
+                _publish_live_run(skipped)
+                return skipped
 
         run_id = uuid.uuid4().hex
         tracer = AuditTracer(run_id=run_id, redactor=PIIRedactor())
@@ -293,6 +333,7 @@ class DreamMode:
         )
         result.audit_path = await self._export_audit(tracer, run_id)
         await asyncio.to_thread(self.state.save_run, result)
+        _publish_live_run(result)
         return result
 
     async def run_forever(self) -> None:
