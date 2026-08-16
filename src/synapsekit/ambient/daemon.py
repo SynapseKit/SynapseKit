@@ -101,9 +101,7 @@ class AmbientDaemon:
         """
 
         names = [source.name for source in self._sources]
-        lines = [
-            f"synapsekit ambient: observing {', '.join(names) or '(no sources enabled)'}"
-        ]
+        lines = [f"synapsekit ambient: observing {', '.join(names) or '(no sources enabled)'}"]
         if any(source.name == "terminal" for source in self._sources):
             ignore = self.config.privacy_file or DEFAULT_AMBIENT_IGNORE
             lines.append(

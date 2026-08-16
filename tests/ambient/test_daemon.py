@@ -76,9 +76,7 @@ async def test_tick_fires_notification_and_records_audit(tmp_path: Path, monkeyp
 async def test_secret_in_command_is_redacted_in_audit(tmp_path: Path, monkeypatch) -> None:
     # A risky command may also carry a secret; it must not be persisted
     # verbatim to the on-disk audit log.
-    monkeypatch.setattr(
-        "synapsekit.ambient.daemon.notify_windows_toast", lambda *args: True
-    )
+    monkeypatch.setattr("synapsekit.ambient.daemon.notify_windows_toast", lambda *args: True)
 
     dirty_event = _event(
         "git", "git_status", "1 file", dirty=True, dirty_files=["foo.py"], branch="main"
