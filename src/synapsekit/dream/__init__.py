@@ -1,6 +1,6 @@
 """Local-first overnight self-reflection for SynapseKit agents."""
 
-from .core import DreamMode, load_dream_report
+from .core import DreamMode, load_dream_report, render_briefing
 from .scheduler import DreamSchedule, DreamScheduler, SystemIdleMonitor, SystemPowerMonitor
 from .store import DreamStateStore
 from .types import (
@@ -32,4 +32,5 @@ __all__ = [
     "SystemPowerMonitor",
     "TraceWindow",
     "load_dream_report",
+    "render_briefing",
 ]

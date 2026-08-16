@@ -55,6 +55,33 @@ from .types import (
 logger = logging.getLogger(__name__)
 
 
+def render_briefing(report: DreamRunResult | None) -> str:
+    """Render a concise, actionable terminal briefing from a run report.
+
+    A module-level formatter so read-only callers (e.g. ``dream status``)
+    can render a briefing without constructing a full :class:`DreamMode`
+    (which would generate a throwaway signing key).
+    """
+
+    if report is None:
+        return "Dream Mode: no run has completed."
+    if report.status == "skipped":
+        return f"Dream Mode skipped: {report.skipped_reason or 'not eligible'}."
+    lines = [
+        f"Dream Mode {report.status} ({report.completed_at})",
+        f"  traces replayed: {report.traces_replayed}",
+        f"  lessons distilled: {len(report.lessons)}",
+        f"  memory patches proposed: {len(report.patch_ids)} (human review required)",
+        f"  mesh reindexed: {'yes' if report.mesh_reindexed else 'no'}",
+        f"  entity candidates: {len(report.mesh_consolidations)}",
+        f"  stale memories flagged: {len(report.stale_memories)}",
+    ]
+    if report.audit_path:
+        lines.append(f"  signed audit: {report.audit_path}")
+    lines.extend(f"  warning: {warning}" for warning in report.warnings)
+    return "\n".join(lines)
+
+
 class DreamMode:
     """Run bounded, local-first overnight reflection.
 
@@ -289,24 +316,7 @@ class DreamMode:
     def morning_briefing(self, result: DreamRunResult | None = None) -> str:
         """Render a concise, actionable terminal briefing."""
 
-        report = result or self.state.last_run()
-        if report is None:
-            return "Dream Mode: no run has completed."
-        if report.status == "skipped":
-            return f"Dream Mode skipped: {report.skipped_reason or 'not eligible'}."
-        lines = [
-            f"Dream Mode {report.status} ({report.completed_at})",
-            f"  traces replayed: {report.traces_replayed}",
-            f"  lessons distilled: {len(report.lessons)}",
-            f"  memory patches proposed: {len(report.patch_ids)} (human review required)",
-            f"  mesh reindexed: {'yes' if report.mesh_reindexed else 'no'}",
-            f"  entity candidates: {len(report.mesh_consolidations)}",
-            f"  stale memories flagged: {len(report.stale_memories)}",
-        ]
-        if report.audit_path:
-            lines.append(f"  signed audit: {report.audit_path}")
-        lines.extend(f"  warning: {warning}" for warning in report.warnings)
-        return "\n".join(lines)
+        return render_briefing(result or self.state.last_run())
 
     async def _collect_records(
         self,

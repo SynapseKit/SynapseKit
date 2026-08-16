@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from ..dream import DreamConfig, DreamMode
+from ..dream import DreamConfig, DreamMode, DreamStateStore, render_briefing
 from ..mesh import KnowledgeMesh, MeshConfig
 
 
@@ -40,16 +40,18 @@ def build_dream_parser(subparsers: argparse._SubParsersAction) -> None:  # type:
 def run_dream(args: Any) -> None:
     state_path = Path(args.state_path).expanduser()
     if args.dream_command == "status":
-        mode = DreamMode(config=DreamConfig(state_path=state_path))
+        # Read-only: use the store directly so we never generate a signing
+        # key or otherwise touch the write path just to print a briefing.
+        store = DreamStateStore(state_path)
         try:
-            result = mode.state.last_run()
+            result = store.last_run()
             print(
                 json.dumps(result.to_dict() if result else None, indent=2)
                 if args.json_output
-                else mode.morning_briefing(result)
+                else render_briefing(result)
             )
         finally:
-            mode.close()
+            store.close()
         return
 
     if args.dream_command != "run":
