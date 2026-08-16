@@ -78,6 +78,16 @@ class AmbientDaemon:
             self._audit_log = AuditLog(backend="jsonl", path=str(audit_path))
         return self._audit_log
 
+    async def _write_status(self, **kwargs: object) -> AmbientStatus:
+        """Offload the status-file write (mkdir + read + write) off the loop."""
+
+        return await asyncio.to_thread(write_status, self.config.status_path, **kwargs)
+
+    async def _read_status(self) -> AmbientStatus:
+        """Offload the status-file read off the loop."""
+
+        return await asyncio.to_thread(read_status, self.config.status_path)
+
     async def start(self) -> AmbientStatus:
         """Start the daemon: load sources, then poll until stopped."""
 
@@ -86,8 +96,7 @@ class AmbientDaemon:
         for source in self._sources:
             await source.on_load()
 
-        write_status(
-            self.config.status_path,
+        await self._write_status(
             state="running",
             pid=os.getpid(),
             started_at=datetime.now(UTC).isoformat(),
@@ -99,7 +108,7 @@ class AmbientDaemon:
             self._remove_signal_handlers()
             for source in self._sources:
                 await source.on_unload()
-        return read_status(self.config.status_path)
+        return await self._read_status()
 
     def start_sync(self) -> AmbientStatus:
         """Sync wrapper for ``start``."""
@@ -111,13 +120,13 @@ class AmbientDaemon:
 
         self._stop_event.set()
 
-        status = read_status(self.config.status_path)
+        status = await self._read_status()
         if status.pid and status.pid != os.getpid() and self._signal_pid(status.pid):
             await self._wait_for_stopped()
 
-        status = read_status(self.config.status_path)
+        status = await self._read_status()
         if status.state != "stopped":
-            status = write_status(self.config.status_path, state="stopped", pid=None)
+            status = await self._write_status(state="stopped", pid=None)
         return status
 
     def stop_sync(self) -> AmbientStatus:
@@ -134,7 +143,7 @@ class AmbientDaemon:
         while not self._stop_event.is_set():
             await self._tick()
             await asyncio.sleep(self.config.poll_interval)
-        write_status(self.config.status_path, state="stopped", pid=None)
+        await self._write_status(state="stopped", pid=None)
 
     async def _tick(self) -> None:
         for source in self._sources:
@@ -199,7 +208,7 @@ class AmbientDaemon:
     async def _wait_for_stopped(self) -> None:
         elapsed = 0.0
         while elapsed < _STOP_TIMEOUT_SECONDS:
-            if read_status(self.config.status_path).state == "stopped":
+            if (await self._read_status()).state == "stopped":
                 return
             await asyncio.sleep(_STOP_POLL_SECONDS)
             elapsed += _STOP_POLL_SECONDS
