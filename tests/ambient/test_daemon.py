@@ -5,6 +5,8 @@ from __future__ import annotations
 import asyncio
 import inspect
 import os
+import subprocess
+import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -178,6 +180,21 @@ async def test_stop_keeps_status_running_when_target_process_survives(
 
     assert result.state == "running"
     assert result.pid == live_pid
+
+
+def test_status_reports_stopped_when_recorded_pid_is_dead(tmp_path: Path) -> None:
+    # A daemon killed with SIGKILL leaves a stale "running" status file;
+    # status() must reconcile it against process liveness.
+    proc = subprocess.Popen([sys.executable, "-c", "pass"])
+    proc.wait()
+    dead_pid = proc.pid  # reaped: no longer a live process
+
+    status_path = tmp_path / "status.json"
+    write_status(status_path, state="running", pid=dead_pid)
+
+    daemon = AmbientDaemon(config=AmbientDaemonConfig(status_path=status_path), sources=[])
+
+    assert daemon.status().state == "stopped"
 
 
 def test_fire_is_async_so_blocking_io_stays_off_the_loop() -> None:

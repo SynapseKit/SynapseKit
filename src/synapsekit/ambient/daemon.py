@@ -154,9 +154,22 @@ class AmbientDaemon:
         return run_sync(self.stop())
 
     def status(self) -> AmbientStatus:
-        """Return current daemon status."""
+        """Return current daemon status, reconciled against process liveness.
 
-        return read_status(self.config.status_path)
+        If the status file says ``running`` but the recorded pid is no
+        longer alive (e.g. the daemon was ``kill -9``'d), report
+        ``stopped`` rather than a stale ``running``.
+        """
+
+        status = read_status(self.config.status_path)
+        if (
+            status.state == "running"
+            and status.pid
+            and status.pid != os.getpid()
+            and not _pid_alive(status.pid)
+        ):
+            return AmbientStatus(state="stopped", pid=None, started_at=status.started_at)
+        return status
 
     async def _poll_loop(self) -> None:
         while not self._stop_event.is_set():
