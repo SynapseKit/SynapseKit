@@ -401,6 +401,23 @@ def instrument_all() -> None:
         _patch(ShellSession, "plan", "shell.plan", cmd)
         _patch(ShellSession, "run", "shell.run", cmd)
 
+    # -- Ambient daemon: each fired intervention (rule/confidence/source only,
+    #    never the raw command text — that may contain secrets) --
+    def ambient() -> None:
+        from ..ambient.daemon import AmbientDaemon
+
+        def intervene_attrs(self: Any, a: tuple[Any, ...], k: dict[str, Any]) -> dict[str, Any]:
+            iv = a[0] if a else k.get("intervention")
+            if iv is None:
+                return {}
+            return {
+                "rule": getattr(iv, "rule", None),
+                "confidence": getattr(iv, "confidence", None),
+                "source": getattr(getattr(iv, "event", None), "source", None),
+            }
+
+        _patch(AmbientDaemon, "_fire", "ambient.intervene", intervene_attrs)
+
     for step in (
         tools,
         memory,
@@ -416,5 +433,6 @@ def instrument_all() -> None:
         agent_evolution,
         hive,
         shell,
+        ambient,
     ):
         _try(step)
