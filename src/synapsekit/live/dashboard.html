@@ -245,7 +245,7 @@
   var ICONS={span:"◆","llm.call":"🧠","llm.generate":"🧠",llm:"🧠","retriever.search":"🔍",retrieval:"🔍","tool.call":"🔧",tool:"🔧",mcp:"🔌",
     "memory.read":"🗃","memory.write":"🗃",memory:"🗃","graph.query":"🕸","graph.ingest":"🕸",graph:"🕸","mesh.query":"🪢","mesh.ingest":"🪢",mesh:"🪢",
     "loader.load":"📄",loader:"📄","embeddings.embed":"🧬",embeddings:"🧬",budget:"💰",audit:"🔐",swarm:"🐝",
-    "agent.evolve":"🧬","agent.rollback":"↩️",log:"🪵","run.complete":"✅"};
+    "agent.evolve":"🧬","agent.rollback":"↩️","dream.run":"🌙","ambient.intervene":"🛎️",log:"🪵","run.complete":"✅"};
   function iconFor(ev){if(ev.kind==="log")return ev.level==="error"?"⛔":ev.level==="warning"?"⚠️":"🪵";
     var k=(ev.kind||ev.name||"").toLowerCase();for(var key in ICONS){if(k.indexOf(key)>-1)return ICONS[key];}return (k.indexOf("search")>-1?"🔍":"◆");}
   function esc(s){return String(s==null?"":s).replace(/[&<>]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;"}[c]});}
@@ -264,6 +264,8 @@
     if(k.indexOf("swarm")>-1)return "Agent swarm auction"+dur;
     if(k.indexOf("agent.evolve")>-1){var st=a.patch_status||ev.status;var d=a.directive?(" — +<code>"+esc(a.directive)+"</code>"):"";var sc=(a.eval_score!=null?(" (eval "+Math.round(a.eval_score*100)+"%)"):"");return "Agent evolved: <b>"+esc(st||"cycle")+"</b>"+d+sc+dur;}
     if(k.indexOf("agent.rollback")>-1)return "Agent rolled back <code>"+esc(a.rolled_back||"")+"</code>"+(a.reason?(" — "+esc(a.reason)):"")+dur;
+    if(k.indexOf("dream")>-1){if(a.run_status==="skipped")return "Dream Mode skipped — "+esc(a.skipped_reason||"not eligible")+dur;return "Dream Mode "+esc(a.run_status||"run")+" — "+(a.traces_replayed||0)+" traces, "+(a.lessons||0)+" lessons, "+(a.patches_proposed||0)+" patches proposed"+dur;}
+    if(k.indexOf("ambient")>-1)return "Ambient flagged <code>"+esc(a.rule||"risky command")+"</code>"+(a.source?(" ("+esc(a.source)+")"):"")+(a.confidence!=null?(" · "+Math.round(a.confidence*100)+"%"):"")+dur;
     return "<b>"+esc(name)+"</b>"+dur+(ev.status&&ev.status!=="ok"?(" — "+esc(ev.status)):"");}
   function trace(ev){var a=ev.attributes||{};var bits=[ev.name||ev.kind];Object.keys(a).slice(0,8).forEach(function(kk){if(kk!=="traceback"&&kk!=="llm.input"&&kk!=="llm.output"&&kk!=="tree")bits.push(kk+"="+JSON.stringify(a[kk]));});if(ev.duration_ms!=null)bits.push(Math.round(ev.duration_ms)+"ms");return esc(bits.join(" "));}
   function detailHTML(ev){var a=ev.attributes||{},h="";
