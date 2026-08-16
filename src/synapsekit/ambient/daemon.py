@@ -92,11 +92,31 @@ class AmbientDaemon:
 
         return await asyncio.to_thread(read_status, self.config.status_path)
 
+    def _startup_notice(self) -> str:
+        """Human-readable notice printed at startup.
+
+        When the ``terminal`` source is active this explicitly discloses
+        that shell history is read (consent-by-notice) and how to opt out,
+        since a background daemon cannot prompt interactively.
+        """
+
+        names = [source.name for source in self._sources]
+        lines = [
+            f"synapsekit ambient: observing {', '.join(names) or '(no sources enabled)'}"
+        ]
+        if any(source.name == "terminal" for source in self._sources):
+            ignore = self.config.privacy_file or DEFAULT_AMBIENT_IGNORE
+            lines.append(
+                "synapsekit ambient: the 'terminal' source reads your shell history; "
+                "command text is redacted before auditing. Disable it by adding "
+                f"'terminal' to {ignore}."
+            )
+        return "\n".join(lines)
+
     async def start(self) -> AmbientStatus:
         """Start the daemon: load sources, then poll until stopped."""
 
-        names = [source.name for source in self._sources]
-        print(f"synapsekit ambient: observing {', '.join(names) or '(no sources enabled)'}")
+        print(self._startup_notice())
         for source in self._sources:
             await source.on_load()
 

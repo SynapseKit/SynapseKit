@@ -197,6 +197,18 @@ def test_status_reports_stopped_when_recorded_pid_is_dead(tmp_path: Path) -> Non
     assert daemon.status().state == "stopped"
 
 
+def test_startup_notice_discloses_shell_history_reading() -> None:
+    daemon = AmbientDaemon(sources=[_FakeSource("git", []), _FakeSource("terminal", [])])
+    notice = daemon._startup_notice()
+    assert "shell history" in notice
+    assert "Disable it" in notice
+
+
+def test_startup_notice_omits_terminal_warning_when_disabled() -> None:
+    daemon = AmbientDaemon(sources=[_FakeSource("git", [])])
+    assert "shell history" not in daemon._startup_notice()
+
+
 def test_fire_is_async_so_blocking_io_stays_off_the_loop() -> None:
     # The toast + jsonl audit write block; _fire must remain a coroutine
     # that offloads them, or the poll loop stalls (async-first guarantee).
