@@ -21,6 +21,7 @@ resolution-markers = [
 
 [manifest]
 constraints = [
+    { name = "h2", specifier = ">=4.4.1" },
     { name = "httplib2", specifier = ">=0.32.0" },
     { name = "setuptools", specifier = ">=83.0.0" },
 ]
@@ -2605,15 +2606,15 @@ wheels = [
 
 [[package]]
 name = "h2"
-version = "4.3.0"
+version = "4.4.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "hpack" },
     { name = "hyperframe" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/1d/17/afa56379f94ad0fe8defd37d6eb3f89a25404ffc71d4d848893d270325fc/h2-4.3.0.tar.gz", hash = "sha256:6c59efe4323fa18b47a632221a1888bd7fde6249819beda254aeca909f221bf1", size = 2152026, upload-time = "2025-08-23T18:12:19.778Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e7/85/7c366e69d84c17bb778fe41419e1fbcce3033d5b7ce29bbffff0a98b859f/h2-4.4.1.tar.gz", hash = "sha256:4e866ffb1a869ae14dd9b5e6beb5c24a13da0495ad72b65925ded182521c1516", size = 2157281, upload-time = "2026-08-03T11:45:09.509Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/69/b2/119f6e6dcbd96f9069ce9a2665e0146588dc9f88f29549711853645e736a/h2-4.3.0-py3-none-any.whl", hash = "sha256:c438f029a25f7945c69e0ccf0fb951dc3f73a5f6412981daee861431b70e2bdd", size = 61779, upload-time = "2025-08-23T18:12:17.779Z" },
+    { url = "https://files.pythonhosted.org/packages/7e/22/e85faf23bd72a92d1921e37d674ca56eb298a3c8be31fdecef0ff2b3aaac/h2-4.4.1-py3-none-any.whl", hash = "sha256:0e25f1462b23c9cb82d9eb02e28bc706dac2a68cb457c6a0d74d63c8a2a5d0e6", size = 62636, upload-time = "2026-08-03T11:44:59.164Z" },
 ]
 
 [[package]]
@@ -2665,11 +2666,11 @@ wheels = [
 
 [[package]]
 name = "hpack"
-version = "4.1.0"
+version = "4.2.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/2c/48/71de9ed269fdae9c8057e5a4c0aa7402e8bb16f2c6e90b3aa53327b113f8/hpack-4.1.0.tar.gz", hash = "sha256:ec5eca154f7056aa06f196a557655c5b009b382873ac8d1e66e79e87535f1dca", size = 51276, upload-time = "2025-01-22T21:44:58.347Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/26/5b/fcabf6028144a8723726318b07a32c2f3314acdff6265743cf08a344b18e/hpack-4.2.0.tar.gz", hash = "sha256:0895cfa3b5531fc65fe439c05eb65144f123bf7a394fcaa56aa423548d8e45c0", size = 51300, upload-time = "2026-06-23T18:34:46.667Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/07/c6/80c95b1b2b94682a72cbdbfb85b81ae2daffa4291fbfa1b1464502ede10d/hpack-4.1.0-py3-none-any.whl", hash = "sha256:157ac792668d995c657d93111f46b4535ed114f0c9c8d672271bbec7eae1b496", size = 34357, upload-time = "2025-01-22T21:44:56.92Z" },
+    { url = "https://files.pythonhosted.org/packages/71/b4/4a9fcfb2aef6ba44d9073ecd301443aa00b3dac95de5619f2a7de7ec8a91/hpack-4.2.0-py3-none-any.whl", hash = "sha256:858ac0b02280fa582b5080d68db0899c62a80375e0e5413a74970c5e518b6986", size = 34246, upload-time = "2026-06-23T18:34:45.472Z" },
 ]
 
 [[package]]
@@ -4813,6 +4814,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/e5/69/882ee5c9d017149285cab114ebeab373308ef0f874fcdac9beb90e0ac4da/ply-3.11.tar.gz", hash = "sha256:00c7c1aaa88358b9c765b6d3000c6eec0ba42abca5351b095321aef446081da3", size = 159130, upload-time = "2018-02-15T19:01:31.097Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a3/58/35da89ee790598a0700ea49b2a66594140f44dec458c07e8e3d4979137fc/ply-3.11-py2.py3-none-any.whl", hash = "sha256:096f9b8350b65ebd2fd1346b12452efe5b9607f7482813ffca50c22722a807ce", size = 49567, upload-time = "2018-02-15T19:01:27.172Z" },
+]
+
+[[package]]
+name = "plyer"
+version = "2.1.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/20/85/f61425aa9be1f9108eec1c13861c1e11c9a04eb786eb4832a8f7188317df/plyer-2.1.0.tar.gz", hash = "sha256:65b7dfb7e11e07af37a8487eb2aa69524276ef70dad500b07228ce64736baa61", size = 121371, upload-time = "2022-11-12T13:36:48.978Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d3/89/a41c2643fc8eabeb84791acb9d0e4d139b1e4b53473cc4dae947b5fa33ed/plyer-2.1.0-py2.py3-none-any.whl", hash = "sha256:1b1772060df8b3045ed4f08231690ec8f7de30f5a004aa1724665a9074eed113", size = 142266, upload-time = "2022-11-12T13:36:47.181Z" },
 ]
 
 [[package]]
@@ -8542,11 +8552,11 @@ wheels = [
 
 [[package]]
 name = "pypdf"
-version = "6.14.2"
+version = "6.16.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/03/72/7dfd5ff1c9c37de97a731701f51af091325f123d9d4270361c9c69e4431f/pypdf-6.14.2.tar.gz", hash = "sha256:7873f502fe4385e79539b21d872392dc0c4e3714327c15881cbc7fbfd1f95b25", size = 6491182, upload-time = "2026-06-23T14:18:30.859Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b6/5a/df92d1c1ef8806ca28f20f978ee059894868d93de797a7e2edebe7fe1a43/pypdf-6.16.1.tar.gz", hash = "sha256:c4d1b43ddae921387321cf63936cd16a7743b91d2da92f165c149a195c972ba9", size = 7003737, upload-time = "2026-08-14T12:24:04.531Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/49/e6/136aa8993a2ae7214e0b0ef2edaa0d2e08d1d4e4982635b08a835ff31ec8/pypdf-6.14.2-py3-none-any.whl", hash = "sha256:3f07891af76dc002657e04993ab9b4de81de29f9013b9761d0b7968bff12e946", size = 349514, upload-time = "2026-06-23T14:18:28.867Z" },
+    { url = "https://files.pythonhosted.org/packages/33/a1/724b18d6757ab7253a8fecd3a430eb8d980ed26872ba16651e7b5ddfc63f/pypdf-6.16.1-py3-none-any.whl", hash = "sha256:63fec31c4092ae50b6729beedcb469055b60d20c834bde1c402df241f371f644", size = 382924, upload-time = "2026-08-14T12:24:02.854Z" },
 ]
 
 [[package]]
@@ -9845,6 +9855,7 @@ all = [
     { name = "google-auth" },
     { name = "google-cloud-aiplatform" },
     { name = "google-cloud-bigquery" },
+    { name = "google-genai" },
     { name = "google-generativeai" },
     { name = "google-search-results" },
     { name = "gpt4all" },
@@ -9865,6 +9876,7 @@ all = [
     { name = "pgvector" },
     { name = "pinecone" },
     { name = "playwright" },
+    { name = "plyer" },
     { name = "psycopg", extra = ["binary"] },
     { name = "pyairtable" },
     { name = "pyarrow" },
@@ -9891,6 +9903,9 @@ all = [
     { name = "wolframalpha" },
     { name = "youtube-search-python" },
     { name = "youtube-transcript-api" },
+]
+ambient = [
+    { name = "plyer" },
 ]
 anthropic = [
     { name = "anthropic" },
@@ -9991,6 +10006,7 @@ gdrive = [
     { name = "httplib2" },
 ]
 gemini = [
+    { name = "google-genai" },
     { name = "google-generativeai" },
 ]
 git = [
@@ -10019,6 +10035,11 @@ gsheets = [
     { name = "google-auth" },
     { name = "httplib2" },
 ]
+hive = [
+    { name = "fastapi" },
+    { name = "starlette" },
+    { name = "uvicorn", extra = ["standard"] },
+]
 html = [
     { name = "beautifulsoup4" },
     { name = "lxml" },
@@ -10030,7 +10051,11 @@ hubspot = [
     { name = "hubspot-api-client" },
 ]
 huggingface = [
+    { name = "httpx" },
     { name = "huggingface-hub" },
+]
+jina = [
+    { name = "httpx" },
 ]
 jira = [
     { name = "httpx" },
@@ -10068,6 +10093,9 @@ minimax = [
 mistral = [
     { name = "mistralai" },
 ]
+mixedbread = [
+    { name = "httpx" },
+]
 mlx = [
     { name = "mlx-lm", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
 ]
@@ -10076,6 +10104,9 @@ mongodb = [
 ]
 mongodb-vector = [
     { name = "pymongo" },
+]
+nomic = [
+    { name = "httpx" },
 ]
 notion = [
     { name = "httpx" },
@@ -10226,6 +10257,9 @@ voice-stream = [
     { name = "sounddevice" },
     { name = "soundfile" },
 ]
+voyage = [
+    { name = "httpx" },
+]
 weaviate = [
     { name = "weaviate-client" },
 ]
@@ -10360,6 +10394,7 @@ requires-dist = [
     { name = "faiss-cpu", marker = "extra == 'faiss'", specifier = ">=1.7" },
     { name = "fastapi", marker = "extra == 'all'", specifier = ">=0.110" },
     { name = "fastapi", marker = "extra == 'graph-ui'", specifier = ">=0.110" },
+    { name = "fastapi", marker = "extra == 'hive'", specifier = ">=0.110" },
     { name = "fastapi", marker = "extra == 'serve'", specifier = ">=0.110" },
     { name = "faster-whisper", marker = "extra == 'voice-local'", specifier = ">=1.0" },
     { name = "feedparser", marker = "extra == 'all'", specifier = ">=6.0" },
@@ -10378,6 +10413,8 @@ requires-dist = [
     { name = "google-cloud-bigquery", marker = "extra == 'all'", specifier = ">=3.0" },
     { name = "google-cloud-bigquery", marker = "extra == 'bigquery'", specifier = ">=3.0" },
     { name = "google-cloud-storage", marker = "extra == 'gcs'", specifier = ">=2.0" },
+    { name = "google-genai", marker = "extra == 'all'", specifier = ">=1.0" },
+    { name = "google-genai", marker = "extra == 'gemini'", specifier = ">=1.0" },
     { name = "google-generativeai", marker = "extra == 'all'", specifier = ">=0.7" },
     { name = "google-generativeai", marker = "extra == 'gemini'", specifier = ">=0.7" },
     { name = "google-search-results", marker = "extra == 'all'", specifier = ">=2.4" },
@@ -10392,10 +10429,15 @@ requires-dist = [
     { name = "httplib2", marker = "extra == 'gsheets'", specifier = ">=0.32.0" },
     { name = "httpx", marker = "extra == 'all'", specifier = ">=0.27" },
     { name = "httpx", marker = "extra == 'cloudflare'", specifier = ">=0.27" },
+    { name = "httpx", marker = "extra == 'huggingface'", specifier = ">=0.27" },
+    { name = "httpx", marker = "extra == 'jina'", specifier = ">=0.27" },
     { name = "httpx", marker = "extra == 'jira'", specifier = ">=0.27" },
     { name = "httpx", marker = "extra == 'minimax'", specifier = ">=0.27" },
+    { name = "httpx", marker = "extra == 'mixedbread'", specifier = ">=0.27" },
+    { name = "httpx", marker = "extra == 'nomic'", specifier = ">=0.27" },
     { name = "httpx", marker = "extra == 'notion'", specifier = ">=0.27" },
     { name = "httpx", marker = "extra == 'teams'", specifier = ">=0.27" },
+    { name = "httpx", marker = "extra == 'voyage'", specifier = ">=0.27" },
     { name = "httpx", marker = "extra == 'web'", specifier = ">=0.27" },
     { name = "hubspot-api-client", marker = "extra == 'all'", specifier = ">=8.0" },
     { name = "hubspot-api-client", marker = "extra == 'hubspot'", specifier = ">=8.0" },
@@ -10444,6 +10486,8 @@ requires-dist = [
     { name = "playwright", marker = "extra == 'all'", specifier = ">=1.40" },
     { name = "playwright", marker = "extra == 'browser'", specifier = ">=1.40" },
     { name = "playwright", marker = "extra == 'computer-use'", specifier = ">=1.40" },
+    { name = "plyer", marker = "extra == 'all'", specifier = ">=2.1" },
+    { name = "plyer", marker = "extra == 'ambient'", specifier = ">=2.1" },
     { name = "prometheus-client", marker = "extra == 'observe'", specifier = ">=0.20" },
     { name = "psycopg", extras = ["binary"], marker = "extra == 'all'", specifier = ">=3.1" },
     { name = "psycopg", extras = ["binary"], marker = "extra == 'pgvector'", specifier = ">=3.1" },
@@ -10461,7 +10505,7 @@ requires-dist = [
     { name = "pymongo", marker = "extra == 'mongodb'", specifier = ">=4.0" },
     { name = "pymongo", marker = "extra == 'mongodb-vector'", specifier = ">=4.0" },
     { name = "pypdf", marker = "extra == 'all'", specifier = ">=6.13.3" },
-    { name = "pypdf", marker = "extra == 'pdf'", specifier = ">=6.13.3" },
+    { name = "pypdf", marker = "extra == 'pdf'", specifier = ">=6.15.0" },
     { name = "python-docx", marker = "extra == 'docx'", specifier = ">=1.0" },
     { name = "python-multipart", marker = "extra == 'mcp'", specifier = ">=0.0.31" },
     { name = "python-pptx", marker = "extra == 'pptx'", specifier = ">=0.6" },
@@ -10497,6 +10541,7 @@ requires-dist = [
     { name = "sqlite-vec", marker = "extra == 'sqlite-vec'", specifier = ">=0.1" },
     { name = "starlette", marker = "extra == 'all'", specifier = ">=1.3.1" },
     { name = "starlette", marker = "extra == 'graph-ui'", specifier = ">=1.3.1" },
+    { name = "starlette", marker = "extra == 'hive'", specifier = ">=1.3.1" },
     { name = "starlette", marker = "extra == 'mcp'", specifier = ">=1.3.1" },
     { name = "starlette", marker = "extra == 'serve'", specifier = ">=1.3.1" },
     { name = "striprtf", marker = "extra == 'all'", specifier = ">=0.0.26" },
@@ -10511,6 +10556,7 @@ requires-dist = [
     { name = "tzdata", marker = "sys_platform == 'win32' and extra == 'cron'", specifier = ">=2024.1" },
     { name = "uvicorn", extras = ["standard"], marker = "extra == 'all'", specifier = ">=0.29" },
     { name = "uvicorn", extras = ["standard"], marker = "extra == 'graph-ui'", specifier = ">=0.29" },
+    { name = "uvicorn", extras = ["standard"], marker = "extra == 'hive'", specifier = ">=0.29" },
     { name = "uvicorn", extras = ["standard"], marker = "extra == 'serve'", specifier = ">=0.29" },
     { name = "uvloop", marker = "sys_platform != 'win32' and extra == 'performance'", specifier = ">=0.19" },
     { name = "weaviate-client", marker = "extra == 'all'", specifier = ">=4.0" },
@@ -10526,7 +10572,7 @@ requires-dist = [
     { name = "youtube-transcript-api", marker = "extra == 'youtube-transcript'", specifier = ">=0.6" },
     { name = "z3-solver", marker = "extra == 'symbolic'", specifier = ">=4.13" },
 ]
-provides-extras = ["graph", "openai", "anthropic", "semantic", "colbert", "pdf", "wikipedia", "arxiv", "html", "web", "chroma", "faiss", "qdrant", "pinecone", "weaviate", "milvus", "lancedb", "sqlite-vec", "kuzu", "mesh", "cassandra", "clickhouse", "duckdb-vector", "marqo", "opensearch", "vespa", "replicate", "ollama", "lmstudio", "vllm", "ai21", "cohere", "mistral", "gemini", "bedrock", "gcal-tool", "aws-lambda", "rss", "groq", "audio", "video", "voice", "voice-local", "voice-stream", "voice-piper", "voice-cartesia", "voice-elevenlabs", "voice-deepgram", "voice-silero", "training", "cron", "excel", "pptx", "docx", "yaml", "okf", "teams", "http", "search", "huggingface", "transformers", "tiktoken", "google-search", "tavily", "youtube", "mcp", "redis", "memcached", "vertex", "cloudflare", "aleph-alpha", "llamacpp", "gpt4all", "onnx", "mlx", "edge", "ernie", "minimax", "serve", "graph-ui", "observe", "postgres", "pgvector", "wolfram", "dynamodb", "discord", "gcs", "bigquery", "gdrive", "git", "gsheets", "jira", "hubspot", "sql", "snowflake", "mongodb", "mongodb-vector", "salesforce", "azure", "s3", "onedrive", "slack", "supabase", "notion", "confluence", "dropbox", "symbolic", "rtf", "epub", "parquet", "elasticsearch", "browser", "computer-use", "youtube-transcript", "airtable", "performance", "all"]
+provides-extras = ["graph", "openai", "anthropic", "semantic", "colbert", "pdf", "wikipedia", "arxiv", "html", "web", "chroma", "faiss", "qdrant", "pinecone", "weaviate", "milvus", "lancedb", "sqlite-vec", "kuzu", "mesh", "cassandra", "clickhouse", "duckdb-vector", "marqo", "opensearch", "vespa", "replicate", "ollama", "lmstudio", "vllm", "ai21", "cohere", "mistral", "gemini", "voyage", "jina", "nomic", "mixedbread", "bedrock", "gcal-tool", "aws-lambda", "rss", "groq", "audio", "video", "voice", "voice-local", "voice-stream", "voice-piper", "voice-cartesia", "voice-elevenlabs", "voice-deepgram", "voice-silero", "training", "cron", "ambient", "excel", "pptx", "docx", "yaml", "okf", "teams", "http", "search", "huggingface", "transformers", "tiktoken", "google-search", "tavily", "youtube", "mcp", "redis", "memcached", "vertex", "cloudflare", "aleph-alpha", "llamacpp", "gpt4all", "onnx", "mlx", "edge", "ernie", "minimax", "serve", "hive", "graph-ui", "observe", "postgres", "pgvector", "wolfram", "dynamodb", "discord", "gcs", "bigquery", "gdrive", "git", "gsheets", "jira", "hubspot", "sql", "snowflake", "mongodb", "mongodb-vector", "salesforce", "azure", "s3", "onedrive", "slack", "supabase", "notion", "confluence", "dropbox", "symbolic", "rtf", "epub", "parquet", "elasticsearch", "browser", "computer-use", "youtube-transcript", "airtable", "performance", "all"]
 
 [package.metadata.requires-dev]
 bench = [

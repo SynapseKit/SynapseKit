@@ -54,7 +54,7 @@ anthropic = ["anthropic>=0.25"]
 # torch-backed semantic/ColBERT extras are temporarily manual installs.
 semantic = []
 colbert = []
-pdf = ["pypdf>=6.13.3"]
+pdf = ["pypdf>=6.15.0"]
 wikipedia = ["wikipedia-api>=0.6"]
 arxiv = ["arxiv>=2.0"]
 html = ["beautifulsoup4>=4.12", "lxml>=6.1.0"]
@@ -328,9 +328,11 @@ integration = [
 # dependency's own constraints would otherwise permit them.
 #   httplib2  <0.32.0  — pulled via google-api-python-client (gdrive/gsheets)
 #   setuptools <83.0.0 — build-time transitive
+#   h2        <=4.4.0  — pulled via httpx[http2] (GHSA-6hr6-w5qg-qmwg, request smuggling)
 constraint-dependencies = [
     "httplib2>=0.32.0",
     "setuptools>=83.0.0",
+    "h2>=4.4.1",
 ]
 
 [tool.hatch.build.targets.wheel]

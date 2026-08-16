@@ -27,6 +27,10 @@ SynapseKit uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **Agent OS Shell no longer drops quoted args that start with a cue word** (#930) — `git commit -m "find and fix the bug"` and `grep "search term" file` silently lost the quoted argument because the lexer treated any quoted span beginning with a cue word (find/run/search/…) as natural language regardless of position. The cue-word/bare-phrase heuristics are now gated on the quote opening a command; only the explicit `nl:`/`ask:` sentinels stay unconditional. Regression tests cover both cases.
 - **`Benchmarks` workflow no longer fails on the `symbolic` extra** (#919) — `benchmarks.yml` ran `make bench` (the full `benchmarks/` suite, including the neuro-symbolic gate that imports `SympyBackend`) without installing the `symbolic` extra, so the nightly and `v*`-tag runs errored with `ImportError: sympy is required`. Added `--extra symbolic` to its `uv sync`, mirroring the `neuro-symbolic-gate` job in `ci.yml`.
 
+### Security
+
+- **Bumped 2 dependencies off known-vulnerable versions** — cleared all 3 open Dependabot alerts (an OSV audit of the full resolved graph, 538 packages, now reports 0 known vulnerabilities). `pypdf` floored to `>=6.15.0` (was resolving 6.14.2) to fix two DoS advisories on malformed `/ToUnicode` / CID-font streams (GHSA-fp3f-mc75-235c, GHSA-fwg2-594c-jp42); `h2` (transitive via `httpx[http2]`) floored to `>=4.4.1` via `[tool.uv] constraint-dependencies` to fix the duplicate-`Host`-header request-smuggling advisory (GHSA-6hr6-w5qg-qmwg). The re-lock also adds the previously-unlocked `plyer` (the `ambient` extra) to `uv.lock`. No SynapseKit public API changed.
+
 ## [2.0.1] - 2026-08-04
 
 ### Security
