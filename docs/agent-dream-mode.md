@@ -32,6 +32,26 @@ synapsekit dream run --force --trace-bundle ./day.audit.zip --memory-path ./MEMO
 synapsekit dream status
 ```
 
+## Attestable audit bundles
+
+By default DreamMode persists a per-install Ed25519 signing key (at
+`<state dir>/signing_key`, or `DreamConfig.signing_key_path`), so every night's
+bundle is signed by the **same, pinnable** key. Verify a bundle against that
+key for a real, non-repudiable `MATCH`:
+
+```python
+from synapsekit.audit import verify, Verdict
+
+verdict = verify(report.audit_path, trusted_keys=dream.trusted_keys()).verdict
+assert verdict == Verdict.MATCH
+```
+
+Without a pinned key an unpinned `verify(path)` returns `UNVERIFIABLE` by design
+(a self-signed bundle could be a self-consistent forgery). The morning briefing
+notes the key id when a bundle is attestable, and warns when it is not (e.g. the
+key could not be persisted). Pass an explicit `signing_policy` (BYOK/KMS, or an
+ephemeral key) to `DreamMode(...)` to override the default entirely.
+
 Safety boundaries:
 
 - Trace input is local and replay-checked; malformed or broken chains are not
