@@ -5,7 +5,7 @@ from __future__ import annotations
 import subprocess
 from datetime import UTC, datetime
 from pathlib import Path
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -264,3 +264,109 @@ async def test_timeline_email_events(tmp_path: Path):
         assert len(events) == 1
         assert events[0].source_type == "email"
         assert "Proposal: AgentRegistry" in events[0].summary
+
+
+from collections.abc import AsyncGenerator
+from synapsekit.llm.base import BaseLLM, LLMConfig
+from synapsekit.archaeology.causal_linker import CausalLinker
+
+
+class FakeLLM(BaseLLM):
+    def __init__(self, response: str = "") -> None:
+        super().__init__(LLMConfig(model="fake", api_key="", provider="fake"))
+        self.response = response
+
+    async def stream(self, prompt: str, **kw) -> AsyncGenerator[str]:
+        yield self.response
+
+
+async def test_causal_linker_parses_claims():
+    llm_response = (
+        "CAUSE: PR #718 introduced AgentRegistry\n"
+        "EFFECT: Agents could be dynamically dispatched\n"
+        "CONFIDENCE: 0.9\n"
+        "REASONING: Commit message explicitly states purpose\n"
+        "---\n"
+        "CAUSE: Feature request for multi-agent systems\n"
+        "EFFECT: AgentRegistry added register method\n"
+        "CONFIDENCE: 0.7\n"
+        "REASONING: Follow-up PR extended the class\n"
+        "---"
+    )
+    llm = FakeLLM(response=llm_response)
+    linker = CausalLinker(llm, min_citations=0)
+
+    c = Citation(source_type="git", reference="commit abc", content_preview="AgentRegistry")
+    events = [
+        TimelineEvent(
+            timestamp=datetime(2024, 1, 1, tzinfo=UTC),
+            source_type="git",
+            summary="Created AgentRegistry (#718)",
+            citations=[c],
+        ),
+    ]
+    claims = await linker.link(events, "AgentRegistry")
+    assert len(claims) == 2
+    assert claims[0].cause == "PR #718 introduced AgentRegistry"
+    assert claims[0].confidence == 0.9
+
+
+async def test_causal_linker_min_citations_filter():
+    llm_response = (
+        "CAUSE: Unknown cause\n"
+        "EFFECT: Unknown effect\n"
+        "CONFIDENCE: 0.3\n"
+        "REASONING: Weak evidence\n"
+        "---"
+    )
+    llm = FakeLLM(response=llm_response)
+    linker = CausalLinker(llm, min_citations=2)
+
+    events = [
+        TimelineEvent(
+            timestamp=datetime(2024, 1, 1, tzinfo=UTC),
+            source_type="git",
+            summary="Some event",
+            citations=[],
+        ),
+    ]
+    claims = await linker.link(events, "test")
+    assert len(claims) == 0  # Filtered out due to insufficient citations
+
+
+async def test_causal_linker_empty_events():
+    llm = FakeLLM()
+    linker = CausalLinker(llm)
+    claims = await linker.link([], "test")
+    assert claims == []
+
+
+async def test_causal_linker_with_verifier():
+    llm_response = (
+        "CAUSE: Issue #718 required dynamic agents\n"
+        "EFFECT: AgentRegistry was created\n"
+        "CONFIDENCE: 0.95\n"
+        "REASONING: Strong evidence from issue discussion\n"
+        "---"
+    )
+    llm = FakeLLM(response=llm_response)
+    
+    mock_verifier = MagicMock()
+    mock_result = MagicMock()
+    mock_result.verified = True
+    mock_verifier.solve = AsyncMock(return_value=mock_result)
+
+    linker = CausalLinker(llm, verifier=mock_verifier, min_citations=0)
+    c = Citation(source_type="git", reference="commit abc", content_preview="Issue #718 required dynamic agents")
+    events = [
+        TimelineEvent(
+            timestamp=datetime(2024, 1, 1, tzinfo=UTC),
+            source_type="git",
+            summary="AgentRegistry created for #718",
+            citations=[c],
+        ),
+    ]
+    claims = await linker.link(events, "AgentRegistry")
+    assert len(claims) == 1
+    assert claims[0].verified is True
+
