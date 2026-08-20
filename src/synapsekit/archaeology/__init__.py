@@ -1,5 +1,6 @@
 """Code Archaeology Agent — reconstruct why code decisions were made."""
 
+from .timeline_reconstructor import TimelineReconstructor
 from .types import (
     ArchaeologyResult,
     CausalClaim,
@@ -16,4 +17,5 @@ __all__ = [
     "EvolutionSnapshot",
     "SourceConfig",
     "TimelineEvent",
+    "TimelineReconstructor",
 ]
