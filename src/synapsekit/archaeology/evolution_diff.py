@@ -12,6 +12,7 @@ from .types import Citation, EvolutionSnapshot
 
 if TYPE_CHECKING:
     from ..llm.base import BaseLLM
+    from ..timetravel.evolution_index import EvolutionEntry
 
 logger = logging.getLogger(__name__)
 
@@ -30,18 +31,35 @@ class EvolutionDiff:
         until: str | datetime | None = None,
         llm: BaseLLM | None = None,
     ) -> list[EvolutionSnapshot]:
-        """Build a chronological evolution trace for a file or symbol."""
+        """Build a chronological evolution trace for a file, symbol, or question."""
         from ..timetravel.evolution_index import EvolutionIndex
         from ..timetravel.git_backend import GitBackend
 
         backend = GitBackend(self.repo_path)
         index = EvolutionIndex(backend)
-        entries = await asyncio.to_thread(
-            index.timeline,
-            file_or_symbol,
-            since=since,
-            until=until,
-        )
+        all_entries = await asyncio.to_thread(index.build, since=since, until=until)
+
+        # Extract search terms from file_or_symbol
+        terms = [t.strip("?,.'\"`") for t in file_or_symbol.split() if len(t) > 2]
+        matching_entries: list[EvolutionEntry] = []
+        for term in terms:
+            res = index.query(term, since=since, until=until)
+            if res:
+                matching_entries.extend(res)
+
+        if not matching_entries:
+            matching_entries = index.query(file_or_symbol, since=since, until=until)
+        if not matching_entries:
+            matching_entries = all_entries
+
+        # Deduplicate and sort chronologically
+        seen = set()
+        entries: list[EvolutionEntry] = []
+        for e in sorted(matching_entries, key=lambda x: x.commit.date):
+            key = (e.commit.hash, e.file_path, e.symbol)
+            if key not in seen:
+                seen.add(key)
+                entries.append(e)
 
         snapshots: list[EvolutionSnapshot] = []
         for entry in entries:

@@ -150,6 +150,17 @@ from .agents import (
     requires_human_confirmation,
     tool,
 )
+from .archaeology import (
+    ArchaeologyAgent,
+    ArchaeologyResult,
+    CausalClaim,
+    Citation,
+    EvolutionDiff,
+    EvolutionSnapshot,
+    SourceConfig,
+    TimelineEvent,
+    TimelineReconstructor,
+)
 from .audit import (
     AuditMetrics,
     AuditRecord,
@@ -766,6 +777,16 @@ __all__ = [
     "EvolutionEntry",
     "EvolutionIndex",
     "GitBackend",
+    # Code Archaeology
+    "ArchaeologyAgent",
+    "ArchaeologyResult",
+    "CausalClaim",
+    "Citation",
+    "EvolutionDiff",
+    "EvolutionSnapshot",
+    "SourceConfig",
+    "TimelineEvent",
+    "TimelineReconstructor",
     # Cost intelligence
     "CostTracker",
     "CostRecord",

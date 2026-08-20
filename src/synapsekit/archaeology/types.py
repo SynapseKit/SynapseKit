@@ -37,7 +37,7 @@ class CausalClaim:
 
     cause: str
     effect: str
-    confidence: float  # 0.0–1.0
+    confidence: float  # 0.0-1.0
     citations: list[Citation] = field(default_factory=list)
     verified: bool = False  # True if NeuroSymbolicAgent plausibility check passed
     reasoning: str = ""

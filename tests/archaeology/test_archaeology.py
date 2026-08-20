@@ -3,22 +3,37 @@
 from __future__ import annotations
 
 import subprocess
+from collections.abc import AsyncGenerator
 from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from synapsekit.archaeology.timeline_reconstructor import TimelineReconstructor
-from synapsekit.archaeology.types import (
+import synapsekit
+from synapsekit.archaeology import (
+    ArchaeologyAgent,
     ArchaeologyResult,
     CausalClaim,
+    CausalLinker,
     Citation,
+    EvolutionDiff,
     EvolutionSnapshot,
     SourceConfig,
     TimelineEvent,
+    TimelineReconstructor,
 )
+from synapsekit.llm.base import BaseLLM, LLMConfig
 from synapsekit.loaders.base import Document
+
+
+class FakeLLM(BaseLLM):
+    def __init__(self, response: str = "") -> None:
+        super().__init__(LLMConfig(model="fake", api_key="", provider="fake"))
+        self.response = response
+
+    async def stream(self, prompt: str, **kw) -> AsyncGenerator[str]:
+        yield self.response
 
 
 def test_citation_construction():
@@ -266,20 +281,6 @@ async def test_timeline_email_events(tmp_path: Path):
         assert "Proposal: AgentRegistry" in events[0].summary
 
 
-from collections.abc import AsyncGenerator
-from synapsekit.llm.base import BaseLLM, LLMConfig
-from synapsekit.archaeology.causal_linker import CausalLinker
-
-
-class FakeLLM(BaseLLM):
-    def __init__(self, response: str = "") -> None:
-        super().__init__(LLMConfig(model="fake", api_key="", provider="fake"))
-        self.response = response
-
-    async def stream(self, prompt: str, **kw) -> AsyncGenerator[str]:
-        yield self.response
-
-
 async def test_causal_linker_parses_claims():
     llm_response = (
         "CAUSE: PR #718 introduced AgentRegistry\n"
@@ -350,14 +351,18 @@ async def test_causal_linker_with_verifier():
         "---"
     )
     llm = FakeLLM(response=llm_response)
-    
+
     mock_verifier = MagicMock()
     mock_result = MagicMock()
     mock_result.verified = True
     mock_verifier.solve = AsyncMock(return_value=mock_result)
 
     linker = CausalLinker(llm, verifier=mock_verifier, min_citations=0)
-    c = Citation(source_type="git", reference="commit abc", content_preview="Issue #718 required dynamic agents")
+    c = Citation(
+        source_type="git",
+        reference="commit abc",
+        content_preview="Issue #718 required dynamic agents",
+    )
     events = [
         TimelineEvent(
             timestamp=datetime(2024, 1, 1, tzinfo=UTC),
@@ -369,9 +374,6 @@ async def test_causal_linker_with_verifier():
     claims = await linker.link(events, "AgentRegistry")
     assert len(claims) == 1
     assert claims[0].verified is True
-
-
-from synapsekit.archaeology.evolution_diff import EvolutionDiff
 
 
 async def test_evolution_diff_trace(git_repo: Path):
@@ -386,9 +388,6 @@ async def test_evolution_diff_trace_empty(git_repo: Path):
     ed = EvolutionDiff(repo_path=git_repo)
     snapshots = await ed.trace("nonexistent_file.py")
     assert isinstance(snapshots, list)
-
-
-from synapsekit.archaeology.agent import ArchaeologyAgent
 
 
 async def test_archaeology_agent_explain_git_only(git_repo: Path):
@@ -431,4 +430,15 @@ async def test_archaeology_agent_result_markdown(git_repo: Path):
     assert "# Code Archaeology:" in md
 
 
-
+def test_archaeology_exports():
+    """Verify archaeology classes are accessible from top-level synapsekit."""
+    assert hasattr(synapsekit, "ArchaeologyAgent")
+    assert hasattr(synapsekit, "ArchaeologyResult")
+    assert hasattr(synapsekit, "CausalClaim")
+    assert hasattr(synapsekit, "Citation")
+    assert hasattr(synapsekit, "TimelineEvent")
+    assert hasattr(synapsekit, "SourceConfig")
+    assert hasattr(synapsekit, "TimelineReconstructor")
+    assert hasattr(synapsekit, "EvolutionDiff")
+    assert hasattr(synapsekit, "EvolutionSnapshot")
+    assert hasattr(synapsekit.archaeology, "CausalLinker")
