@@ -1,6 +1,7 @@
 """Code Archaeology Agent — reconstruct why code decisions were made."""
 
 from .causal_linker import CausalLinker
+from .evolution_diff import EvolutionDiff
 from .timeline_reconstructor import TimelineReconstructor
 from .types import (
     ArchaeologyResult,
@@ -16,6 +17,7 @@ __all__ = [
     "CausalClaim",
     "CausalLinker",
     "Citation",
+    "EvolutionDiff",
     "EvolutionSnapshot",
     "SourceConfig",
     "TimelineEvent",

@@ -370,3 +370,21 @@ async def test_causal_linker_with_verifier():
     assert len(claims) == 1
     assert claims[0].verified is True
 
+
+from synapsekit.archaeology.evolution_diff import EvolutionDiff
+
+
+async def test_evolution_diff_trace(git_repo: Path):
+    ed = EvolutionDiff(repo_path=git_repo)
+    snapshots = await ed.trace("agent.py")
+    assert len(snapshots) >= 1
+    assert all(isinstance(s, EvolutionSnapshot) for s in snapshots)
+    assert snapshots[0].version_hash
+
+
+async def test_evolution_diff_trace_empty(git_repo: Path):
+    ed = EvolutionDiff(repo_path=git_repo)
+    snapshots = await ed.trace("nonexistent_file.py")
+    assert isinstance(snapshots, list)
+
+
