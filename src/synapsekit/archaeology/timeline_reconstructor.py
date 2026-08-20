@@ -40,9 +40,7 @@ class TimelineReconstructor:
 
         if slack_bot_token and slack_channel_ids:
             tasks.append(
-                asyncio.create_task(
-                    self._slack_events(query, slack_bot_token, slack_channel_ids)
-                )
+                asyncio.create_task(self._slack_events(query, slack_bot_token, slack_channel_ids))
             )
 
         if email_imap_server and email_address and email_password:
@@ -60,9 +58,7 @@ class TimelineReconstructor:
 
         if markdown_roots:
             tasks.append(
-                asyncio.create_task(
-                    self._markdown_events(query, [Path(r) for r in markdown_roots])
-                )
+                asyncio.create_task(self._markdown_events(query, [Path(r) for r in markdown_roots]))
             )
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -235,9 +231,7 @@ class TimelineReconstructor:
             md_files = list(root.rglob("*.md"))
             for md_file in md_files:
                 try:
-                    content = await asyncio.to_thread(
-                        md_file.read_text, encoding="utf-8"
-                    )
+                    content = await asyncio.to_thread(md_file.read_text, encoding="utf-8")
                 except Exception:
                     continue
                 if not any(term in content.lower() for term in terms):

@@ -73,11 +73,7 @@ class EvolutionDiff:
                     f"commit {entry.commit.hash[:8]}"
                     + (f" (PR #{entry.pr_number})" if entry.pr_number else "")
                 ),
-                content_preview=(
-                    entry.diff_snippet[:200]
-                    if entry.diff_snippet
-                    else reason
-                ),
+                content_preview=(entry.diff_snippet[:200] if entry.diff_snippet else reason),
                 timestamp=entry.commit.date,
                 metadata={
                     "author": entry.commit.author,
