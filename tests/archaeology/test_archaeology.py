@@ -388,3 +388,47 @@ async def test_evolution_diff_trace_empty(git_repo: Path):
     assert isinstance(snapshots, list)
 
 
+from synapsekit.archaeology.agent import ArchaeologyAgent
+
+
+async def test_archaeology_agent_explain_git_only(git_repo: Path):
+    """Full integration test with git-only sources."""
+    llm = FakeLLM(response="AgentRegistry was created for dynamic agent dispatch.")
+    sources = SourceConfig(repo_path=str(git_repo), include_git=True, min_citations_per_claim=0)
+    agent = ArchaeologyAgent(sources=sources, llm=llm)
+    result = await agent.explain("Why does AgentRegistry exist?")
+
+    assert isinstance(result, ArchaeologyResult)
+    assert result.query == "Why does AgentRegistry exist?"
+    assert len(result.timeline) >= 1
+    assert len(result.evolution) >= 1
+    assert isinstance(result.narrative, str)
+    assert len(result.narrative) > 0
+
+
+async def test_archaeology_agent_no_llm(git_repo: Path):
+    """Agent works without LLM (causal linking and narrative disabled)."""
+    sources = SourceConfig(repo_path=str(git_repo))
+    agent = ArchaeologyAgent(sources=sources, llm=None)
+    # Force llm to None to test graceful degradation
+    agent.llm = None
+    agent.causal_linker = None
+    result = await agent.explain("AgentRegistry")
+
+    assert isinstance(result, ArchaeologyResult)
+    assert len(result.timeline) >= 1
+    assert result.narrative == ""
+    assert result.causes == []
+
+
+async def test_archaeology_agent_result_markdown(git_repo: Path):
+    """Verify the result can be rendered as markdown."""
+    llm = FakeLLM(response="Test narrative.")
+    sources = SourceConfig(repo_path=str(git_repo), min_citations_per_claim=0)
+    agent = ArchaeologyAgent(sources=sources, llm=llm)
+    result = await agent.explain("AgentRegistry")
+    md = result.to_markdown()
+    assert "# Code Archaeology:" in md
+
+
+
