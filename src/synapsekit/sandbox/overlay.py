@@ -61,12 +61,11 @@ def _could_contain_include(path: str, includes: tuple[str, ...]) -> bool:
 
 
 def _ensure_inside(root: Path, candidate: Path) -> None:
+    resolved = candidate.resolve(strict=False)
     try:
-        candidate.resolve(strict=False).relative_to(root.resolve())
+        resolved.relative_to(root.resolve())
     except ValueError as exc:
-        raise SandboxSecurityError(
-            f"Symlink escapes sandbox base: {candidate.relative_to(root)!s}"
-        ) from exc
+        raise SandboxSecurityError(f"Symlink escapes sandbox base: {resolved!s}") from exc
 
 
 def _entry_item(root: Path, path: Path, relative: str) -> dict[str, object]:
