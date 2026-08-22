@@ -8,11 +8,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from ._terms import extract_terms
 from .types import Citation, EvolutionSnapshot
 
 if TYPE_CHECKING:
     from ..llm.base import BaseLLM
-    from ..timetravel.evolution_index import EvolutionEntry
+    from ..timetravel.evolution_index import EvolutionEntry, EvolutionIndex
 
 logger = logging.getLogger(__name__)
 
@@ -20,8 +21,14 @@ logger = logging.getLogger(__name__)
 class EvolutionDiff:
     """Tracks how a file or symbol evolved over time, extracting rationale from commits."""
 
-    def __init__(self, repo_path: str | Path = ".") -> None:
+    def __init__(
+        self,
+        repo_path: str | Path = ".",
+        *,
+        evolution_index: EvolutionIndex | None = None,
+    ) -> None:
         self.repo_path = Path(repo_path).resolve()
+        self._evolution_index = evolution_index
 
     async def trace(
         self,
@@ -35,12 +42,19 @@ class EvolutionDiff:
         from ..timetravel.evolution_index import EvolutionIndex
         from ..timetravel.git_backend import GitBackend
 
-        backend = GitBackend(self.repo_path)
-        index = EvolutionIndex(backend)
-        all_entries = await asyncio.to_thread(index.build, since=since, until=until)
+        if self._evolution_index is not None:
+            # A shared, already-built index ignores since/until scoping at the
+            # git-log level (it was built once, unscoped) but `query()` still
+            # applies since/until filtering in-memory, so results stay correct.
+            index = self._evolution_index
+            await asyncio.to_thread(index.ensure_built)
+        else:
+            index = EvolutionIndex(GitBackend(self.repo_path))
+            await asyncio.to_thread(index.build, since=since, until=until)
 
-        # Extract search terms from file_or_symbol
-        terms = [t.strip("?,.'\"`") for t in file_or_symbol.split() if len(t) > 2]
+        # Extract search terms from file_or_symbol (case preserved: EvolutionIndex.query
+        # matches file paths/symbols case-sensitively).
+        terms = extract_terms(file_or_symbol, lower=False)
         matching_entries: list[EvolutionEntry] = []
         for term in terms:
             res = index.query(term, since=since, until=until)
@@ -48,9 +62,12 @@ class EvolutionDiff:
                 matching_entries.extend(res)
 
         if not matching_entries:
+            # Whole-string fallback only (e.g. a bare file path) — do NOT fall
+            # back further to the full unfiltered history: for natural-language
+            # queries (the common case via ArchaeologyAgent.explain()) that
+            # would silently return every commit in the repo instead of an
+            # empty, honest "nothing matched" result.
             matching_entries = index.query(file_or_symbol, since=since, until=until)
-        if not matching_entries:
-            matching_entries = all_entries
 
         # Deduplicate and sort chronologically
         seen = set()
