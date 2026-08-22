@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import subprocess
 from collections.abc import AsyncGenerator
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -34,6 +34,31 @@ class FakeLLM(BaseLLM):
 
     async def stream(self, prompt: str, **kw) -> AsyncGenerator[str]:
         yield self.response
+
+
+class FakeLoader:
+    """Hand-written stand-in for a loader's `.aload()` boundary."""
+
+    def __init__(self, docs: list[Document]) -> None:
+        self._docs = docs
+
+    async def aload(self) -> list[Document]:
+        return self._docs
+
+
+@dataclass
+class FakeVerificationResult:
+    verified: bool
+
+
+class FakeVerifier:
+    """Hand-written stand-in for a NeuroSymbolicAgent-shaped verifier."""
+
+    def __init__(self, verified: bool) -> None:
+        self._verified = verified
+
+    async def solve(self, problem: str) -> FakeVerificationResult:
+        return FakeVerificationResult(verified=self._verified)
 
 
 def test_citation_construction():
@@ -233,52 +258,53 @@ async def test_timeline_empty_query(git_repo: Path):
     assert isinstance(events, list)
 
 
-async def test_timeline_slack_events(tmp_path: Path):
+async def test_timeline_slack_events(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     tr = TimelineReconstructor(repo_path=tmp_path)
-    mock_slack_doc = Document(
+    slack_doc = Document(
         text="Discussing why AgentRegistry was introduced in architecture review",
         metadata={"timestamp": "1700000000.0", "channel": "C123", "user": "U456"},
     )
-    with patch(
+    monkeypatch.setattr(
         "synapsekit.loaders.slack.SlackLoader.aload",
-        new=AsyncMock(return_value=[mock_slack_doc]),
-    ):
-        events = await tr.reconstruct(
-            "AgentRegistry",
-            include_git=False,
-            slack_bot_token="xoxb-fake",
-            slack_channel_ids=["C123"],
-        )
-        assert len(events) == 1
-        assert events[0].source_type == "slack"
-        assert "architecture review" in events[0].summary
+        FakeLoader([slack_doc]).aload,
+    )
+    events = await tr.reconstruct(
+        "AgentRegistry",
+        include_git=False,
+        slack_bot_token="xoxb-fake",
+        slack_channel_ids=["C123"],
+    )
+    assert len(events) == 1
+    assert events[0].source_type == "slack"
+    assert "architecture review" in events[0].summary
 
 
-async def test_timeline_email_events(tmp_path: Path):
+async def test_timeline_email_events(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     tr = TimelineReconstructor(repo_path=tmp_path)
-    mock_email_doc = Document(
+    email_doc = Document(
         text="AgentRegistry proposal thread body text",
         metadata={
             "subject": "Proposal: AgentRegistry",
             "from": "alice@synapsekit.dev",
-            "date": "2024-01-15T10:00:00+00:00",
+            "date": "Mon, 15 Jan 2024 10:00:00 +0000",
             "email_id": "101",
         },
     )
-    with patch(
+    monkeypatch.setattr(
         "synapsekit.loaders.email.EmailLoader.aload",
-        new=AsyncMock(return_value=[mock_email_doc]),
-    ):
-        events = await tr.reconstruct(
-            "AgentRegistry",
-            include_git=False,
-            email_imap_server="imap.fake.com",
-            email_address="me@fake.com",
-            email_password="fake",
-        )
-        assert len(events) == 1
-        assert events[0].source_type == "email"
-        assert "Proposal: AgentRegistry" in events[0].summary
+        FakeLoader([email_doc]).aload,
+    )
+    events = await tr.reconstruct(
+        "AgentRegistry",
+        include_git=False,
+        email_imap_server="imap.fake.com",
+        email_address="me@fake.com",
+        email_password="fake",
+    )
+    assert len(events) == 1
+    assert events[0].source_type == "email"
+    assert events[0].timestamp == datetime(2024, 1, 15, 10, 0, 0, tzinfo=UTC)
+    assert "Proposal: AgentRegistry" in events[0].summary
 
 
 async def test_causal_linker_parses_claims():
@@ -352,12 +378,7 @@ async def test_causal_linker_with_verifier():
     )
     llm = FakeLLM(response=llm_response)
 
-    mock_verifier = MagicMock()
-    mock_result = MagicMock()
-    mock_result.verified = True
-    mock_verifier.solve = AsyncMock(return_value=mock_result)
-
-    linker = CausalLinker(llm, verifier=mock_verifier, min_citations=0)
+    linker = CausalLinker(llm, verifier=FakeVerifier(verified=True), min_citations=0)
     c = Citation(
         source_type="git",
         reference="commit abc",
@@ -387,7 +408,16 @@ async def test_evolution_diff_trace(git_repo: Path):
 async def test_evolution_diff_trace_empty(git_repo: Path):
     ed = EvolutionDiff(repo_path=git_repo)
     snapshots = await ed.trace("nonexistent_file.py")
-    assert isinstance(snapshots, list)
+    assert snapshots == []
+
+
+async def test_evolution_diff_trace_unmatched_nl_query_returns_empty(git_repo: Path):
+    """Regression: an unmatched natural-language query must not fall back to
+    returning the entire unfiltered repo history (the path ArchaeologyAgent.explain()
+    exercises for every query)."""
+    ed = EvolutionDiff(repo_path=git_repo)
+    snapshots = await ed.trace("why does something totally unrelated exist")
+    assert snapshots == []
 
 
 async def test_archaeology_agent_explain_git_only(git_repo: Path):
