@@ -5,9 +5,15 @@ from __future__ import annotations
 import asyncio
 import logging
 from datetime import UTC, datetime
+from email.utils import parsedate_to_datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
 
+from ._terms import extract_terms, matches
 from .types import Citation, TimelineEvent
+
+if TYPE_CHECKING:
+    from ..timetravel.evolution_index import EvolutionIndex
 
 logger = logging.getLogger(__name__)
 
@@ -15,8 +21,14 @@ logger = logging.getLogger(__name__)
 class TimelineReconstructor:
     """Collects events from git, Slack, email, and markdown, then merges chronologically."""
 
-    def __init__(self, repo_path: str | Path = ".") -> None:
+    def __init__(
+        self,
+        repo_path: str | Path = ".",
+        *,
+        evolution_index: EvolutionIndex | None = None,
+    ) -> None:
         self.repo_path = Path(repo_path).resolve()
+        self._evolution_index = evolution_index
 
     async def reconstruct(
         self,
@@ -74,23 +86,21 @@ class TimelineReconstructor:
 
     async def _git_events(self, query: str, max_events: int) -> list[TimelineEvent]:
         """Extract timeline events from git history."""
-        from ..timetravel.evolution_index import EvolutionIndex
-        from ..timetravel.git_backend import GitBackend
+        if self._evolution_index is not None:
+            index = self._evolution_index
+        else:
+            from ..timetravel.evolution_index import EvolutionIndex
+            from ..timetravel.git_backend import GitBackend
 
-        backend = GitBackend(self.repo_path)
-        index = EvolutionIndex(backend)
+            index = EvolutionIndex(GitBackend(self.repo_path))
 
-        entries = await asyncio.to_thread(index.build)
-        terms = [t.strip("?,.'\"`") for t in query.split() if len(t) > 2]
+        entries = await asyncio.to_thread(index.ensure_built)
+        terms = extract_terms(query)
 
         matching = [
             e
             for e in entries
-            if any(
-                term.lower()
-                in (e.file_path + " " + (e.symbol or "") + " " + e.commit.subject).lower()
-                for term in terms
-            )
+            if matches(e.file_path + " " + (e.symbol or "") + " " + e.commit.subject, terms)
         ] or entries[:max_events]
 
         events: list[TimelineEvent] = []
@@ -133,14 +143,13 @@ class TimelineReconstructor:
         from ..loaders.slack import SlackLoader
 
         events: list[TimelineEvent] = []
-        terms = [t.lower().strip("?,.'\"`") for t in query.split() if len(t) > 2]
+        terms = extract_terms(query)
 
         for channel_id in channel_ids:
             loader = SlackLoader(bot_token=bot_token, channel_id=channel_id)
             docs = await loader.aload()
             for doc in docs:
-                text_lower = doc.text.lower()
-                if not any(term in text_lower for term in terms):
+                if not matches(doc.text, terms):
                     continue
                 ts_str = str(doc.metadata.get("timestamp", ""))
                 try:
@@ -183,17 +192,16 @@ class TimelineReconstructor:
             folder=folder,
         )
         docs = await loader.aload()
-        terms = [t.lower().strip("?,.'\"`") for t in query.split() if len(t) > 2]
+        terms = extract_terms(query)
         events: list[TimelineEvent] = []
 
         for doc in docs:
-            text_lower = (doc.text + " " + doc.metadata.get("subject", "")).lower()
-            if not any(term in text_lower for term in terms):
+            if not matches(doc.text + " " + doc.metadata.get("subject", ""), terms):
                 continue
             date_str = doc.metadata.get("date", "")
             try:
-                ts = datetime.fromisoformat(date_str) if date_str else datetime.now(UTC)
-            except ValueError:
+                ts = parsedate_to_datetime(date_str) if date_str else datetime.now(UTC)
+            except (ValueError, TypeError):
                 ts = datetime.now(UTC)
             if ts.tzinfo is None:
                 ts = ts.replace(tzinfo=UTC)
@@ -221,7 +229,7 @@ class TimelineReconstructor:
         roots: list[Path],
     ) -> list[TimelineEvent]:
         """Extract timeline events from local markdown notes."""
-        terms = [t.lower().strip("?,.'\"`") for t in query.split() if len(t) > 2]
+        terms = extract_terms(query)
         events: list[TimelineEvent] = []
 
         for root in roots:
@@ -234,7 +242,7 @@ class TimelineReconstructor:
                     content = await asyncio.to_thread(md_file.read_text, encoding="utf-8")
                 except Exception:
                     continue
-                if not any(term in content.lower() for term in terms):
+                if not matches(content, terms):
                     continue
                 stat = md_file.stat()
                 ts = datetime.fromtimestamp(stat.st_mtime, tz=UTC)
