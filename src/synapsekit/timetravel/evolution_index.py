@@ -154,6 +154,16 @@ class EvolutionIndex:
         self._entries = deduped
         return deduped
 
+    def ensure_built(self) -> list[EvolutionEntry]:
+        """Build entries if not already built, otherwise return the cached entries.
+
+        Lets callers share one `EvolutionIndex` across multiple consumers
+        without repeating the underlying `git log`/`git diff`/AST-parse walk.
+        """
+        if not self._entries:
+            self.build()
+        return self._entries
+
     def query(
         self,
         file_or_symbol: str,
