@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import TYPE_CHECKING
 
@@ -164,35 +165,58 @@ class CausalLinker:
         self,
         claims: list[CausalClaim],
     ) -> list[CausalClaim]:
-        """Verify causal claims using NeuroSymbolicAgent for plausibility."""
+        """Best-effort claim verification via NeuroSymbolicAgent.
+
+        NeuroSymbolicAgent.solve() formalizes its input into an SMT/Prolog/
+        MiniZinc/Sympy constraint program and checks it with a solver — it was
+        built for problems with decidable formal structure, not prose
+        plausibility judgments. Free-text causal claims have no reliable
+        formalization, so `verified` here is a best-effort signal, not a
+        formal proof; treat it as informational rather than authoritative.
+        """
         if self.verifier is None:
             return claims
 
+        logger.info(
+            "CausalLinker verifying %d claim(s) via NeuroSymbolicAgent — "
+            "verdicts are best-effort, not formal proofs, since causal claims "
+            "are prose rather than a decidable constraint problem.",
+            len(claims),
+        )
+
+        results = await asyncio.gather(
+            *(self._verify_claim(claim) for claim in claims),
+            return_exceptions=True,
+        )
+
         verified_claims: list[CausalClaim] = []
-        for claim in claims:
-            try:
-                evidence = [c.content_preview for c in claim.citations]
-                problem = (
-                    f"Verify this causal claim: '{claim.cause}' caused '{claim.effect}'. "
-                    f"Evidence: {'; '.join(evidence[:3])}"
-                )
-                result = await self.verifier.solve(problem)
-                verified_claims.append(
-                    CausalClaim(
-                        cause=claim.cause,
-                        effect=claim.effect,
-                        confidence=claim.confidence,
-                        citations=claim.citations,
-                        verified=bool(getattr(result, "verified", False)),
-                        reasoning=claim.reasoning,
-                    )
-                )
-            except Exception:
+        for claim, result in zip(claims, results, strict=True):
+            if isinstance(result, BaseException):
                 logger.warning(
-                    "Verification failed for claim: %s -> %s",
+                    "Verification failed for claim: %s -> %s (%s)",
                     claim.cause,
                     claim.effect,
+                    result,
                 )
                 verified_claims.append(claim)
+            else:
+                verified_claims.append(result)
 
         return verified_claims
+
+    async def _verify_claim(self, claim: CausalClaim) -> CausalClaim:
+        assert self.verifier is not None
+        evidence = [c.content_preview for c in claim.citations]
+        problem = (
+            f"Verify this causal claim: '{claim.cause}' caused '{claim.effect}'. "
+            f"Evidence: {'; '.join(evidence[:3])}"
+        )
+        result = await self.verifier.solve(problem)
+        return CausalClaim(
+            cause=claim.cause,
+            effect=claim.effect,
+            confidence=claim.confidence,
+            citations=claim.citations,
+            verified=bool(getattr(result, "verified", False)),
+            reasoning=claim.reasoning,
+        )
