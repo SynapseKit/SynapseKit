@@ -84,11 +84,25 @@ class ArchaeologyAgent:
                     2048,
                 )
             except Exception:
+                logger.warning(
+                    "ArchaeologyAgent could not construct an LLM (model=%r, provider=%r) — "
+                    "falling back to timeline-only mode with no causal linking or narrative.",
+                    model,
+                    provider,
+                    exc_info=True,
+                )
                 self.llm = None
 
         repo_path = Path(self.sources.repo_path).resolve()
-        self.timeline_reconstructor = TimelineReconstructor(repo_path)
-        self.evolution_diff = EvolutionDiff(repo_path)
+        from ..timetravel.evolution_index import EvolutionIndex
+        from ..timetravel.git_backend import GitBackend
+
+        # Shared across timeline + evolution so `explain()` walks git history once.
+        evolution_index = EvolutionIndex(GitBackend(repo_path))
+        self.timeline_reconstructor = TimelineReconstructor(
+            repo_path, evolution_index=evolution_index
+        )
+        self.evolution_diff = EvolutionDiff(repo_path, evolution_index=evolution_index)
         self.causal_linker: CausalLinker | None = None
         if self.llm is not None:
             self.causal_linker = CausalLinker(
