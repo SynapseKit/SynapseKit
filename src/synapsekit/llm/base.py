@@ -1,4 +1,5 @@
 import asyncio
+import inspect
 from abc import ABC, abstractmethod
 from collections.abc import AsyncGenerator
 from dataclasses import dataclass
@@ -266,6 +267,24 @@ class BaseLLM(ABC):
     def _reset_tokens(self) -> None:
         self._input_tokens = 0
         self._output_tokens = 0
+
+    async def aclose(self) -> None:
+        """Close a lazily-created async provider client, when present."""
+        client = getattr(self, "_client", None)
+        if client is None:
+            return
+        close = getattr(client, "aclose", None) or getattr(client, "close", None)
+        if close is not None:
+            result = close()
+            if inspect.isawaitable(result):
+                await result
+        self._client = None
+
+    async def __aenter__(self) -> "BaseLLM":
+        return self
+
+    async def __aexit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
+        await self.aclose()
 
 
 def _messages_to_prompt(messages: list[dict[str, Any]]) -> str:

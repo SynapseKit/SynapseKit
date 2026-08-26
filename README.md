@@ -25,7 +25,7 @@ Async-native RAG, Agents, and Graph workflows — no magic, no SaaS, no bloat.
 
 > *"LangChain for people who hate LangChain."*
 
-SynapseKit is the minimal, async-first Python framework for LLM applications. 35 providers · 50 tools · 66 loaders · 22 vector stores. Every abstraction is plain Python you can read, debug, and extend. No hidden chains. No global state. No lock-in.
+SynapseKit is the minimal, async-first Python framework for LLM applications. 46 providers · 50 tools · 66 loaders · 22 vector stores. Every abstraction is plain Python you can read, debug, and extend. No hidden chains. No global state. No lock-in.
 
 ---
 
@@ -87,7 +87,7 @@ Token-level streaming is the default,<br/>not an afterthought.<br/>Works across 
 <tr>
 <td align="center" width="33%">
 <h3>🔌 One interface</h3>
-35 LLM providers and 22 vector stores<br/>behind the same API.<br/>Swap without rewriting.
+46 LLM providers and 22 vector stores<br/>behind the same API.<br/>Swap without rewriting.
 </td>
 <td align="center" width="33%">
 <h3>🧩 Composable</h3>
@@ -145,7 +145,7 @@ print(my_agent.run("What's the weather in Tokyo?"))
 | Observability | **✅ Prometheus + Grafana** | ❌ No | ❌ No |
 | Verifiable audit trails | **✅ Signed, hash-chained** | ❌ No | ❌ No |
 | Type safety | **✅ Strict dataclasses** | ⚠️ Partial | ⚠️ Partial |
-| LLM providers | **35** | 38+ | 20+ |
+| LLM providers | **46** | 38+ | 20+ |
 | Stack traces | **Your code** | Framework internals | Framework internals |
 | License | **Apache 2.0** | MIT | MIT |
 
@@ -465,7 +465,7 @@ verification uses the `swipl` executable when `PrologBackend` is selected.
 
 | 🧠 LLM Providers | 🗄 Vector Stores | 📂 Data Loaders | 🔧 Agent Tools |
 |:---:|:---:|:---:|:---:|
-| **35** | **22** | **66** | **50** |
+| **46** | **22** | **66** | **50** |
 
 Every integration is `pip install synapsekit[name]` — nothing else. Swap providers, vector stores, or loaders without touching your application code.
 
@@ -473,7 +473,7 @@ Every integration is `pip install synapsekit[name]` — nothing else. Swap provi
 
 > Icons use [Google Favicons](https://google.com/s2/favicons) for reliability across light and dark themes.
 
-### 🧠 LLM Providers — 35 supported
+### 🧠 LLM Providers — 46 supported
 
 > Every provider implements the same `BaseLLM` interface. Auto-detected from model name — `gpt-4o` → OpenAI, `claude-*` → Anthropic, `gemini-*` → Google. **Swap without rewriting.**
 
@@ -522,6 +522,21 @@ Every integration is `pip install synapsekit[name]` — nothing else. Swap provi
     <td align="center" width="90"><img src="https://www.google.com/s2/favicons?domain=docs.vllm.ai&sz=128" height="40" alt="vLLM"/><br/><sub><b>vLLM</b></sub></td>
     <td align="center" width="90"><img src="https://www.google.com/s2/favicons?domain=gpt4all.io&sz=128" height="40" alt="GPT4All"/><br/><sub><b>GPT4All</b></sub></td>
     <td align="center" width="90"><img src="https://www.google.com/s2/favicons?domain=ml-explore.github.io&sz=128" height="40" alt="MLX"/><br/><sub><b>MLX</b></sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="90"><img src="https://www.google.com/s2/favicons?domain=nvidia.com&sz=128" height="40" alt="NVIDIA NIM"/><br/><sub><b>NVIDIA NIM</b></sub></td>
+    <td align="center" width="90"><img src="https://www.google.com/s2/favicons?domain=ibm.com&sz=128" height="40" alt="watsonx.ai"/><br/><sub><b>watsonx.ai</b></sub></td>
+    <td align="center" width="90"><img src="https://www.google.com/s2/favicons?domain=snowflake.com&sz=128" height="40" alt="Snowflake Cortex"/><br/><sub><b>Cortex</b></sub></td>
+    <td align="center" width="90"><img src="https://www.google.com/s2/favicons?domain=deepinfra.com&sz=128" height="40" alt="DeepInfra"/><br/><sub><b>DeepInfra</b></sub></td>
+    <td align="center" width="90"><img src="https://www.google.com/s2/favicons?domain=nebius.ai&sz=128" height="40" alt="Nebius"/><br/><sub><b>Nebius</b></sub></td>
+    <td align="center" width="90"><img src="https://www.google.com/s2/favicons?domain=baseten.co&sz=128" height="40" alt="Baseten"/><br/><sub><b>Baseten</b></sub></td>
+    <td align="center" width="90"><img src="https://www.google.com/s2/favicons?domain=upstage.ai&sz=128" height="40" alt="Upstage"/><br/><sub><b>Upstage</b></sub></td>
+    <td align="center" width="90"><img src="https://www.google.com/s2/favicons?domain=reka.ai&sz=128" height="40" alt="Reka"/><br/><sub><b>Reka</b></sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="90"><img src="https://www.google.com/s2/favicons?domain=hyperbolic.xyz&sz=128" height="40" alt="Hyperbolic"/><br/><sub><b>Hyperbolic</b></sub></td>
+    <td align="center" width="90"><img src="https://www.google.com/s2/favicons?domain=friendli.ai&sz=128" height="40" alt="FriendliAI"/><br/><sub><b>FriendliAI</b></sub></td>
+    <td align="center" width="90"><img src="https://www.google.com/s2/favicons?domain=clarifai.com&sz=128" height="40" alt="Clarifai"/><br/><sub><b>Clarifai</b></sub></td>
   </tr>
 </table>
 
@@ -819,7 +834,7 @@ Everything you need to get started and go deep is in the docs.
 | 🗂 [RAG](https://synapsekit.github.io/synapsekit-docs/docs/rag/pipeline) | Pipelines, loaders, retrieval, vector stores |
 | 🤖 [Agents](https://synapsekit.github.io/synapsekit-docs/docs/agents/overview) | ReAct, function calling, tools, executor |
 | 🔀 [Graph Workflows](https://synapsekit.github.io/synapsekit-docs/docs/graph/overview) | DAG pipelines, conditional routing, parallel execution |
-| 🧠 [LLM Providers](https://synapsekit.github.io/synapsekit-docs/docs/llms/overview) | All 35 providers + ReasoningLLM with examples |
+| 🧠 [LLM Providers](https://synapsekit.github.io/synapsekit-docs/docs/llms/overview) | All 46 providers + ReasoningLLM with examples |
 | 🧪 [EvalCI](https://synapsekit.github.io/synapsekit-docs/docs/evalci/overview) | LLM quality gates on every PR — GitHub Action |
 | 📖 [API Reference](https://synapsekit.github.io/synapsekit-docs/docs/api/llm) | Full class and method reference |
 
