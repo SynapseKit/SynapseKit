@@ -30,6 +30,7 @@ class DeepInfraLLM(BaseLLM):
             self._client = AsyncOpenAI(
                 api_key=self.config.api_key,
                 base_url=self._base_url,
+                **({"timeout": self.config.timeout} if self.config.timeout is not None else {}),
             )
         return self._client
 
