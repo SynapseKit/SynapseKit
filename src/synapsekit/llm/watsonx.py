@@ -14,6 +14,9 @@ _IAM_URL = "https://iam.cloud.ibm.com/identity/token"
 _DEFAULT_BASE_URL = "https://us-south.ml.cloud.ibm.com"
 _DEFAULT_VERSION = "2024-10-01"
 _GRANT_TYPE = "urn:ibm:params:oauth:grant-type:apikey"
+# Refresh the IAM token slightly before it expires so a request can't 401 on a
+# token that lapses in flight.
+_TOKEN_REFRESH_MARGIN = 60.0
 
 
 def _load_httpx() -> Any:
@@ -205,7 +208,8 @@ class WatsonxLLM(BaseLLM):
         if not isinstance(access_token, str) or not access_token:
             raise ValueError("watsonx IAM response did not contain an access_token")
         self._access_token = access_token
-        self._token_expires_at = time.monotonic() + self._token_ttl(payload)
+        ttl = max(self._token_ttl(payload) - _TOKEN_REFRESH_MARGIN, 0.0)
+        self._token_expires_at = time.monotonic() + ttl
         return access_token
 
     @staticmethod
