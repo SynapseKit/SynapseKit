@@ -156,8 +156,11 @@ class WatsonxLLM(BaseLLM):
             )
         return api_key, project_id, space_id
 
-    def _endpoint(self) -> str:
-        return f"{self._resolved_base_url()}/ml/v1/text/chat?version={self._version}"
+    def _endpoint(self, stream: bool = False) -> str:
+        # watsonx.ai streams from a dedicated ``chat_stream`` endpoint; the plain
+        # ``chat`` endpoint returns a single JSON body and ignores ``stream``.
+        path = "chat_stream" if stream else "chat"
+        return f"{self._resolved_base_url()}/ml/v1/text/{path}?version={self._version}"
 
     def _get_client(self) -> Any:
         self._validate_config()
@@ -257,7 +260,6 @@ class WatsonxLLM(BaseLLM):
                     "max_new_tokens", kw.get("max_tokens", self.config.max_tokens)
                 ),
             },
-            "stream": True,
         }
         if self.config.top_p is not None or "top_p" in kw:
             payload["parameters"]["top_p"] = kw.get("top_p", self.config.top_p)
@@ -270,7 +272,7 @@ class WatsonxLLM(BaseLLM):
         client = self._get_client()
         async with client.stream(
             "POST",
-            self._endpoint(),
+            self._endpoint(stream=True),
             headers={
                 "Accept": "application/json",
                 "Authorization": f"Bearer {access_token}",

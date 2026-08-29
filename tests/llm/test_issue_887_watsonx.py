@@ -14,8 +14,10 @@ from synapsekit.llm.base import LLMConfig  # noqa: E402
 from synapsekit.llm.watsonx import WatsonxLLM  # noqa: E402
 
 IAM_URL = "https://iam.cloud.ibm.com/identity/token"
-DEFAULT_API_URL = "https://us-south.ml.cloud.ibm.com/ml/v1/text/chat?version=2024-10-01"
-CUSTOM_API_URL = "https://watson.example.test/ml/v1/text/chat?version=2025-01-15"
+# watsonx.ai streams from the dedicated ``chat_stream`` endpoint (plain ``chat``
+# is non-streaming and ignores a ``stream`` body field).
+DEFAULT_API_URL = "https://us-south.ml.cloud.ibm.com/ml/v1/text/chat_stream?version=2024-10-01"
+CUSTOM_API_URL = "https://watson.example.test/ml/v1/text/chat_stream?version=2025-01-15"
 
 
 def _config(*, api_key: str = "ibm-api-key") -> LLMConfig:
@@ -90,9 +92,10 @@ async def test_watsonx_exchanges_iam_token_and_posts_documented_payload():
         ],
         "project_id": "project-123",
         "parameters": {"temperature": 0.6, "max_new_tokens": 44},
-        "stream": True,
     }
     assert api_route.calls[0].request.headers["authorization"] == "Bearer iam-token"
+    # Streaming must target the dedicated chat_stream endpoint, not plain chat.
+    assert api_route.calls[0].request.url.path == "/ml/v1/text/chat_stream"
 
 
 @pytest.mark.asyncio
