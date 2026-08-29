@@ -49,6 +49,17 @@ synshell = "synapsekit.cli.shell:main"
 [project.optional-dependencies]
 graph = ["networkx>=3.0", "neo4j>=5.0"]
 openai = ["openai>=1.0"]
+nvidia-nim = ["httpx>=0.27"]
+watsonx = ["httpx>=0.27"]
+snowflake-cortex = ["httpx>=0.27"]
+deepinfra = ["openai>=1.40"]
+nebius = ["openai>=1.40"]
+baseten = ["openai>=1.40"]
+upstage = ["openai>=1.40"]
+reka = ["openai>=1.40"]
+hyperbolic = ["openai>=1.40"]
+friendli = ["openai>=1.40"]
+clarifai = ["openai>=1.40"]
 anthropic = ["anthropic>=0.25"]
 # Upstream torch has no patched release for GHSA-rrmf-rvhw-rf47 yet, so
 # torch-backed semantic/ColBERT extras are temporarily manual installs.
@@ -260,7 +271,6 @@ all = [
     "striprtf>=0.0.26",
     "ebooklib>=0.18",
     "gpt4all>=2.0",
-    "httpx>=0.27",
 ]
 
 [dependency-groups]
@@ -474,6 +484,17 @@ module = [
     "synapsekit.retrieval.document_augmentation",
     "synapsekit.retrieval.agentic_rag",
     "synapsekit.llm.replicate",
+    "synapsekit.llm.nvidia_nim",
+    "synapsekit.llm.watsonx",
+    "synapsekit.llm.snowflake_cortex",
+    "synapsekit.llm.deepinfra",
+    "synapsekit.llm.nebius",
+    "synapsekit.llm.baseten",
+    "synapsekit.llm.upstage",
+    "synapsekit.llm.reka",
+    "synapsekit.llm.hyperbolic",
+    "synapsekit.llm.friendli",
+    "synapsekit.llm.clarifai",
 ]
 warn_return_any = false
 # from __future__ import annotations causes mypy to misinterpret
