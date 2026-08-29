@@ -187,7 +187,10 @@ class NvidiaNIMLLM(BaseLLM):
                     continue
                 arguments = function.get("arguments", {})
                 if isinstance(arguments, str):
-                    arguments = json.loads(arguments)
+                    try:
+                        arguments = json.loads(arguments)
+                    except json.JSONDecodeError:
+                        arguments = {}
                 normalized.append(
                     {
                         "id": tool_call.get("id"),
