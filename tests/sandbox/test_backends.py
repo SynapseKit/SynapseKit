@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from types import SimpleNamespace
 
 from synapsekit.computer_use.agent import ComputerUseAgent
@@ -104,6 +105,60 @@ def test_computer_use_agent_uses_environment_screen_without_closing_it() -> None
 
     asyncio.run(scenario())
     assert screen.closed is False
+
+
+def test_computer_use_audit_records_text_length_not_secret_text() -> None:
+    secret_typed = "hunter2-TYPED-secret"
+    secret_screen = "on-screen-SECRET-abc"
+
+    class Screen:
+        async def observe(self):
+            return ComputerObservation(text=secret_screen, app="editor")
+
+        async def execute(self, action):
+            return "typed"
+
+        async def close(self):
+            pass
+
+    class Provider:
+        def __init__(self):
+            self.calls = 0
+
+        async def next_action(self, task, observation, history):
+            self.calls += 1
+            if self.calls == 1:
+                return ComputerAction(type=ComputerActionType.TYPE_TEXT, text=secret_typed)
+            return ComputerAction(type=ComputerActionType.DONE, reason="done")
+
+    class RecordingTracer:
+        def __init__(self):
+            self.payloads: list[dict] = []
+
+        def record(self, kind, payload, *, actor=None):
+            self.payloads.append(payload)
+
+    tracer = RecordingTracer()
+    environment = SimpleNamespace(screen=Screen(), tracer=tracer, session_id="s1")
+
+    async def scenario() -> None:
+        agent = ComputerUseAgent(provider=Provider(), screen=Screen())
+        await agent.run("edit a file", env=environment)
+
+    asyncio.run(scenario())
+
+    blob = json.dumps(tracer.payloads)
+    assert secret_typed not in blob
+    assert secret_screen not in blob
+    assert any(
+        payload.get("action", {}).get("text_length") == len(secret_typed)
+        for payload in tracer.payloads
+    )
+    assert any(
+        payload.get("event") == "computer.observe"
+        and payload.get("text_length") == len(secret_screen)
+        for payload in tracer.payloads
+    )
 
 
 def test_apply_rolls_back_when_a_later_operation_is_invalid(tmp_path) -> None:
