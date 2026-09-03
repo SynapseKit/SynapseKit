@@ -30,6 +30,8 @@ The `CAGRouter` wraps a standard `Retriever` and decides whether to route the re
 Currently, only the `LlamaCppLLM` backend supports saving and loading model KV cache states via `llama_cpp.Llama.save_state()` / `load_state()`.
 Other backends, such as cloud APIs (Anthropic, OpenAI) or client-only local libraries (`vllm`, `mlx`), do not provide direct KV cache serialization mechanisms and will automatically route requests to RAG.
 
+**KV-cache reuse depends on an exact prompt prefix.** On the CAG path the router loads the cached state and returns the corpus as context; the loaded state only accelerates a *subsequent* generation whose prompt begins with the exact same `corpus_text` tokens. If you wrap that context in a system prompt or chat template before generating (as a typical pipeline does), the token prefix diverges and llama.cpp re-evaluates from the point of divergence, so the warm-cache speedup is reduced or lost. To get the full benefit, generate directly against the corpus-prefixed prompt (see `LlamaCppCAGBackend.generate_with_cache`, which the benchmark uses). Wiring generation through the router is planned.
+
 ## Usage Example
 
 ```python
