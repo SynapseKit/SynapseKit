@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 from collections.abc import AsyncGenerator
 from typing import Any
 
@@ -8,7 +7,7 @@ import pytest
 
 from synapsekit.llm.base import LLMConfig
 from synapsekit.llm.llamacpp import LlamaCppLLM
-from synapsekit.rag.cag_router import CAGBackend, CAGRouter
+from synapsekit.rag.cag_router import CAGBackend, CAGRouter, CorpusAnalyzer, model_cache_id
 from synapsekit.rag.kv_cache_store import CacheKey, KVCacheStore
 from synapsekit.retrieval.token_counting import TokenCounter
 
@@ -95,16 +94,34 @@ def cache_store(tmp_path) -> KVCacheStore:
     return KVCacheStore(cache_dir=str(tmp_path / "cag_cache"))
 
 
-def _cache_key(llm: LlamaCppLLM, texts: list[str]) -> CacheKey:
-    """Recompute the store key the router derives for ``texts``."""
-    hasher = hashlib.sha256()
-    for text in sorted(texts):
-        hasher.update(text.encode("utf-8"))
+def _cache_key(llm: LlamaCppLLM, texts: list[str], token_counter: TokenCounter) -> CacheKey:
+    """Recompute the store key the router derives for ``texts``.
+
+    Uses the real analyzer/identity helpers so the test cannot drift from the
+    router's own key derivation.
+    """
+    profile = CorpusAnalyzer(token_counter).analyze(texts)
     return CacheKey(
-        corpus_fingerprint=hasher.hexdigest(),
-        model_id=llm.config.model,
+        corpus_fingerprint=profile.fingerprint,
+        model_id=model_cache_id(llm),
         n_ctx=getattr(llm, "_n_ctx", 2048),
     )
+
+
+def test_corpus_fingerprint_is_order_sensitive(token_counter: TokenCounter) -> None:
+    # The KV cache is order-dependent, so reordering the corpus must change the
+    # fingerprint (otherwise a persisted cache is loaded for the wrong ordering).
+    analyzer = CorpusAnalyzer(token_counter)
+    assert analyzer.analyze(["A", "B"]).fingerprint != analyzer.analyze(["B", "A"]).fingerprint
+
+
+def test_model_cache_id_distinguishes_model_files() -> None:
+    # Same config.model label, different weights file -> different cache identity,
+    # so a state built by one GGUF is never loaded into another.
+    a = LlamaCppLLM(make_config(), model_path="/models/llama-q4.gguf")
+    b = LlamaCppLLM(make_config(), model_path="/models/llama-q8.gguf")
+    assert model_cache_id(a) != model_cache_id(b)
+    assert make_config().model in model_cache_id(a)
 
 
 @pytest.mark.asyncio
@@ -116,7 +133,9 @@ async def test_router_cag_route_when_supported_stable_and_cached(
 ) -> None:
     backend = FakeCAGBackend(supported=True)
     # Seed the real cache store so the routing decision finds a hit.
-    cache_store.save(_cache_key(llm, ["corpus content"]), b"state_bytes", {"metadata": {}})
+    cache_store.save(
+        _cache_key(llm, ["corpus content"], token_counter), b"state_bytes", {"metadata": {}}
+    )
 
     router = CAGRouter(
         retriever=retriever,
@@ -251,7 +270,7 @@ async def test_router_cache_miss_rebuild(
     assert backend.build_cache_calls == [(llm, "corpus content")]
     assert backend.load_state_calls == [(llm, b"new_state")]
     # The rebuilt cache was persisted to the real store and reloads.
-    loaded = cache_store.load(_cache_key(llm, ["corpus content"]))
+    loaded = cache_store.load(_cache_key(llm, ["corpus content"], token_counter))
     assert loaded is not None
     assert loaded[0] == b"new_state"
 

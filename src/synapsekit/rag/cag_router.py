@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import os
 from abc import ABC, abstractmethod
 from collections.abc import AsyncGenerator
 from dataclasses import dataclass
@@ -13,6 +14,26 @@ from ..retrieval.token_counting import TokenCounter
 from .kv_cache_store import CacheKey, KVCacheStore
 
 logger = logging.getLogger(__name__)
+
+
+def model_cache_id(llm: BaseLLM) -> str:
+    """Stable identity of the model *weights* used for KV-cache keying.
+
+    A saved llama.cpp KV state is only valid for the exact weights/quantization
+    it was built with, so the config name (e.g. ``"llama-3.1-8b"``) is not
+    enough — two different GGUF files can share it. Incorporate the model file
+    path and size so a cache built by one file is never loaded into another.
+    """
+
+    model_id = getattr(getattr(llm, "config", None), "model", "") or ""
+    model_path = getattr(llm, "_model_path", None)
+    if not model_path:
+        return model_id
+    try:
+        size = os.stat(model_path).st_size
+    except OSError:
+        return f"{model_id}:{model_path}"
+    return f"{model_id}:{model_path}:{size}"
 
 
 @dataclass
@@ -28,10 +49,15 @@ class CorpusAnalyzer:
     def analyze(self, texts: list[str]) -> CorpusProfile:
         total_tokens = sum(self._counter.count_cached(t) for t in texts)
 
-        # Stable fingerprint: sort to ensure order-independence
+        # Order-preserving fingerprint: the KV cache is built over the corpus
+        # in insertion order, so the key MUST depend on order too — otherwise a
+        # reordered corpus collides on the key and loads a mismatched state.
+        # Length-prefix each text so different splits can't collide.
         hasher = hashlib.sha256()
-        for t in sorted(texts):
-            hasher.update(t.encode("utf-8"))
+        for t in texts:
+            encoded = t.encode("utf-8")
+            hasher.update(len(encoded).to_bytes(8, "big"))
+            hasher.update(encoded)
         fingerprint = hasher.hexdigest()
 
         return CorpusProfile(estimated_tokens=total_tokens, fingerprint=fingerprint)
@@ -195,7 +221,7 @@ class CAGRouter:
                 return "rag"
 
             # 4. Check persisted cache existence
-            model_id = self._llm.config.model
+            model_id = model_cache_id(self._llm)
             n_ctx = getattr(self._llm, "_n_ctx", 2048)
             key = CacheKey(
                 corpus_fingerprint=profile.fingerprint,
