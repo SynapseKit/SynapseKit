@@ -1,0 +1,69 @@
+{
+    "machine_info": {
+        "node": "MacBookPro",
+        "processor": "i386",
+        "machine": "x86_64",
+        "python_compiler": "Clang 21.1.4 ",
+        "python_implementation": "CPython",
+        "python_implementation_version": "3.13.12",
+        "python_version": "3.13.12",
+        "python_build": [
+            "main",
+            "Mar  3 2026 15:00:53"
+        ],
+        "release": "25.5.0",
+        "system": "Darwin",
+        "cpu": "i386",
+        "git_sha": "fad8630c1b5d7b041a5e16fb19babe249aaee541",
+        "python": "3.13.12",
+        "os": "macOS-26.5.2-x86_64-i386-64bit-Mach-O",
+        "ram_gb": 16.0
+    },
+    "commit_info": {
+        "id": "fad8630c1b5d7b041a5e16fb19babe249aaee541",
+        "time": "2026-08-04T19:25:05+02:00",
+        "author_time": "2026-08-04T19:25:05+02:00",
+        "dirty": true,
+        "project": "SynapseKit",
+        "branch": "fix/benchmarks-symbolic-extra"
+    },
+    "benchmarks": [
+        {
+            "group": null,
+            "name": "test_smoke_sort",
+            "fullname": "test_smoke_benchmark.py::test_smoke_sort",
+            "params": null,
+            "param": null,
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": 1
+            },
+            "stats": {
+                "min": 6.662914529442787e-06,
+                "max": 0.000134594039991498,
+                "mean": 7.862872530482671e-06,
+                "stddev": 4.2123446921867e-06,
+                "rounds": 132223,
+                "median": 7.077120244503021e-06,
+                "iqr": 1.2458767741918564e-06,
+                "q1": 6.776070222258568e-06,
+                "q3": 8.021946996450424e-06,
+                "iqr_outliers": 4067,
+                "stddev_outliers": 3535,
+                "outliers": "3535;4067",
+                "ld15iqr": 6.662914529442787e-06,
+                "hd15iqr": 9.890878573060036e-06,
+                "ops": 127179.98366668345,
+                "total": 1.0396525945980102,
+                "iterations": 1
+            }
+        }
+    ],
+    "datetime": "2026-08-04T18:56:48.313448+00:00",
+    "version": "5.2.3"
+}

@@ -148,6 +148,10 @@ Mobile Swift/Kotlin wrappers are intentionally left for a future PR. The
 runtime added here is the Python policy and provider foundation those bindings
 can call into later.
 
+## Cache-Augmented Generation (CAG)
+
+For stable, local datasets, SynapseKit supports Cache-Augmented Generation (CAG) which persists the KV cache of a document corpus. See the full [CAG documentation](file:///c:/Users/depak/Synapse%20kit/SynapseKit/docs/rag/cag.md) for more details.
+
 ## Local vs. cloud tradeoffs
 
 `benchmarks/edge_local_vs_cloud_bench.py` runs a 200-task suite (extraction,
