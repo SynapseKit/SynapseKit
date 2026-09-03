@@ -105,6 +105,13 @@
       "avatar_url": "https://avatars.githubusercontent.com/u/48736988?v=4",
       "profile": "https://github.com/acorello",
       "contributions": ["code", "bugfix"]
+    },
+    {
+      "login": "Premvkmishra",
+      "name": "Prem Mishra",
+      "avatar_url": "https://avatars.githubusercontent.com/u/138608347?v=4",
+      "profile": "https://github.com/Premvkmishra",
+      "contributions": ["code"]
     }
   ],
   "contributorsPerLine": 7
