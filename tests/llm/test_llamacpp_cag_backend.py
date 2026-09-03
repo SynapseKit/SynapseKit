@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
+from synapsekit.llm._llamacpp_cag_backend import LlamaCppCAGBackend
 from synapsekit.llm.base import LLMConfig
 from synapsekit.llm.llamacpp import LlamaCppLLM
-from synapsekit.llm._llamacpp_cag_backend import LlamaCppCAGBackend
 
 
 def make_config() -> LLMConfig:
@@ -24,12 +24,14 @@ class TestLlamaCppCAGBackend:
 
     def test_supports(self, backend: LlamaCppCAGBackend, llm: LlamaCppLLM) -> None:
         assert backend.supports(llm) is True
-        
+
         # Test unsupported LLM provider
         unsupported = MagicMock()
         assert backend.supports(unsupported) is False
 
-    def test_import_error_without_llama_cpp(self, backend: LlamaCppCAGBackend, llm: LlamaCppLLM) -> None:
+    def test_import_error_without_llama_cpp(
+        self, backend: LlamaCppCAGBackend, llm: LlamaCppLLM
+    ) -> None:
         with patch.dict("sys.modules", {"llama_cpp": None}):
             with pytest.raises(ImportError, match="llama-cpp-python"):
                 # Importing / retrieving model should trigger ImportError
@@ -40,11 +42,11 @@ class TestLlamaCppCAGBackend:
         mock_model = MagicMock()
         mock_model.tokenize.return_value = [1, 2, 3]
         mock_model.save_state.return_value = b"serialized state bytes"
-        
+
         llm._model = mock_model
 
         res = await backend.build_cache(llm, "corpus text here")
-        
+
         assert res["corpus_text"] == "corpus text here"
         assert res["state"] == b"serialized state bytes"
         mock_model.reset.assert_called_once()
@@ -60,7 +62,7 @@ class TestLlamaCppCAGBackend:
             {"choices": [{"text": "Hello"}]},
             {"choices": [{"text": " world"}]},
         ]
-        
+
         llm._model = mock_model
 
         cache_handle = {

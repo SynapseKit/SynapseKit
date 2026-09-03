@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import json
-import os
 import shutil
 import tempfile
+
 import pytest
 
 from synapsekit.rag.kv_cache_store import CacheKey, KVCacheStore

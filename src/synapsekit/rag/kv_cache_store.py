@@ -30,8 +30,9 @@ class KVCacheStore:
     def _get_filename_base(self, key: CacheKey) -> str:
         # Use a safe hash of the key tuple for the filenames
         import hashlib
+
         h = hashlib.sha256(
-            f"{key.corpus_fingerprint}:{key.model_id}:{key.n_ctx}".encode("utf-8")
+            f"{key.corpus_fingerprint}:{key.model_id}:{key.n_ctx}".encode()
         ).hexdigest()
         return os.path.join(self._cache_dir, h)
 

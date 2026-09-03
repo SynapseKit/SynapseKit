@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from synapsekit.llm.base import LLMConfig
 from synapsekit.llm.llamacpp import LlamaCppLLM
-from synapsekit.rag.cag_router import CAGRouter, CorpusAnalyzer
-from synapsekit.rag.kv_cache_store import CacheKey, KVCacheStore
+from synapsekit.rag.cag_router import CAGRouter
+from synapsekit.rag.kv_cache_store import KVCacheStore
 from synapsekit.retrieval.token_counting import TokenCounter
 
 
@@ -23,9 +23,9 @@ def token_counter() -> TokenCounter:
 
 @pytest.fixture
 def llm() -> LlamaCppLLM:
-    l = LlamaCppLLM(make_config(), model_path="/models/test.gguf")
-    l._model = MagicMock()
-    return l
+    instance = LlamaCppLLM(make_config(), model_path="/models/test.gguf")
+    instance._model = MagicMock()
+    return instance
 
 
 @pytest.fixture

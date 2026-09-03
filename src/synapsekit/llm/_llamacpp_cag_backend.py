@@ -55,6 +55,7 @@ class LlamaCppCAGBackend(CAGBackend):
         if isinstance(state, bytes):
             try:
                 from llama_cpp import LlamaState
+
                 state = LlamaState(data=state)
             except Exception:
                 pass
@@ -117,6 +118,7 @@ class LlamaCppCAGBackend(CAGBackend):
         if isinstance(state, bytes):
             try:
                 from llama_cpp import LlamaState
+
                 state = LlamaState(data=state)
             except Exception:
                 pass

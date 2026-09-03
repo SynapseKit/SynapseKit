@@ -27,13 +27,13 @@ class CorpusAnalyzer:
 
     def analyze(self, texts: list[str]) -> CorpusProfile:
         total_tokens = sum(self._counter.count_cached(t) for t in texts)
-        
+
         # Stable fingerprint: sort to ensure order-independence
         hasher = hashlib.sha256()
         for t in sorted(texts):
             hasher.update(t.encode("utf-8"))
         fingerprint = hasher.hexdigest()
-        
+
         return CorpusProfile(estimated_tokens=total_tokens, fingerprint=fingerprint)
 
 
@@ -47,10 +47,12 @@ class CAGBackend(ABC):
         pass
 
     @abstractmethod
-    async def generate_with_cache(
+    def generate_with_cache(
         self, llm: BaseLLM, cache_handle: Any, query: str
     ) -> AsyncGenerator[str]:
-        pass
+        # An async-generator implementation (``async def`` with ``yield``)
+        # satisfies this plain ``def`` returning an ``AsyncGenerator``.
+        ...
 
     @abstractmethod
     def load_state(self, llm: BaseLLM, state_bytes: bytes) -> None:
@@ -82,16 +84,18 @@ class CAGRouter:
         self._analyzer = CorpusAnalyzer(token_counter)
 
         # Auto-resolve cag_backend if None
+        self._cag_backend: CAGBackend | None
         if cag_backend is None:
+            resolved: CAGBackend | None = None
             try:
                 from ..llm._llamacpp_cag_backend import LlamaCppCAGBackend
+
                 backend = LlamaCppCAGBackend()
                 if backend.supports(llm):
-                    self._cag_backend = backend
-                else:
-                    self._cag_backend = None
+                    resolved = backend
             except Exception:
-                self._cag_backend = None
+                resolved = None
+            self._cag_backend = resolved
         else:
             self._cag_backend = cag_backend
 
@@ -123,9 +127,7 @@ class CAGRouter:
         on_cache_miss: Literal["rebuild", "rag_fallback"] | None = None,
         **kwargs: Any,
     ) -> list[str]:
-        route = await self._determine_route(
-            stable=stable, on_cache_miss=on_cache_miss
-        )
+        route = await self._determine_route(stable=stable, on_cache_miss=on_cache_miss)
         self._last_route = route
 
         if route == "rag":
@@ -145,9 +147,7 @@ class CAGRouter:
         on_cache_miss: Literal["rebuild", "rag_fallback"] | None = None,
         **kwargs: Any,
     ) -> list[dict[str, Any]]:
-        route = await self._determine_route(
-            stable=stable, on_cache_miss=on_cache_miss
-        )
+        route = await self._determine_route(stable=stable, on_cache_miss=on_cache_miss)
         self._last_route = route
 
         if route == "rag":
@@ -183,7 +183,7 @@ class CAGRouter:
 
             # 3. Analyze corpus size/tokens
             profile = self._analyzer.analyze(self._corpus_texts)
-            
+
             # Determine threshold
             if self._max_cag_tokens is not None:
                 max_tokens = self._max_cag_tokens
@@ -215,12 +215,12 @@ class CAGRouter:
                 # Build the cache
                 corpus_text = "\n\n".join(self._corpus_texts)
                 cache_handle = await self._cag_backend.build_cache(self._llm, corpus_text)
-                
+
                 # Save cache to store
                 # cache_handle is {"state": state, "corpus_text": corpus_text}
                 meta = {k: v for k, v in cache_handle.items() if k != "state"}
                 self._cache_store.save(key, cache_handle["state"], meta)
-                
+
                 # load the state into LLM
                 self._cag_backend.load_state(self._llm, cache_handle["state"])
                 return "cag"
