@@ -94,6 +94,15 @@ kuzu = ["kuzu>=0.8"]
 mesh = ["sqlite-vec>=0.1", "kuzu>=0.8"]
 cassandra = ["astrapy>=1.0", "cassandra-driver>=3.28"]
 clickhouse = ["clickhouse-connect>=0.7"]
+turbopuffer = ["turbopuffer>=0.1"]
+azure-ai-search = ["azure-search-documents>=11.4"]
+vertex-vector = ["google-cloud-aiplatform>=1.38"]
+singlestore = ["singlestoredb>=1.0"]
+tidb = ["pymysql>=1.1"]
+couchbase = ["couchbase>=4.2"]
+surrealdb = ["surrealdb>=1.0"]
+deeplake = ["deeplake>=4.0"]
+myscale = ["clickhouse-connect>=0.7"]
 duckdb-vector = ["duckdb>=0.10"]
 marqo = ["marqo>=3.0"]
 opensearch = ["opensearch-py>=2.0"]
@@ -269,7 +278,14 @@ all = [
     "youtube-transcript-api>=0.6",
     "astrapy>=1.0",
     "clickhouse-connect>=0.7",
+    "turbopuffer>=0.1",
+    "azure-search-documents>=11.4",
     "duckdb>=0.10",
+    "singlestoredb>=1.0",
+    "pymysql>=1.1",
+    "couchbase>=4.2",
+    "surrealdb>=1.0",
+    "deeplake>=4.0",
     "marqo>=3.0",
     "opensearch-py>=2.0",
     "requests>=2.33.0",
@@ -539,6 +555,8 @@ gitpython = "git"
 simple-salesforce = "simple_salesforce"
 hubspot-api-client = "hubspot"
 azure-storage-blob = "azure"
+turbopuffer = "turbopuffer"
+azure-search-documents = "azure"
 sqlite-vec = "sqlite_vec"
 snowflake-connector-python = "snowflake"
 "cassandra-driver" = "cassandra"

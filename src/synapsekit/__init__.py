@@ -1,5 +1,5 @@
 """
-SynapseKit — lightweight, async-first RAG framework.
+SynapseKit â€” lightweight, async-first RAG framework.
 
 3-line happy path:
 
@@ -661,6 +661,15 @@ __all__ = [
     # Vector stores
     "VectorStore",
     "InMemoryVectorStore",
+    "TurbopufferVectorStore",
+    "AzureAISearchVectorStore",
+    "VertexAIVectorStore",
+    "SingleStoreVectorStore",
+    "TiDBVectorStore",
+    "CouchbaseVectorStore",
+    "SurrealDBVectorStore",
+    "DeepLakeVectorStore",
+    "MyScaleVectorStore",
     "GraphVectorStore",
     "GroundedSignal",
     "SignalSource",
@@ -1295,7 +1304,10 @@ __all__ = [
 # Lazy imports for optional backends
 _LAZY_IMPORTS = {
     # Vector stores
+    "AzureAISearchVectorStore": "retrieval.azure_ai_search",
     "ChromaVectorStore": "retrieval.chroma",
+    "CouchbaseVectorStore": "retrieval.couchbase_vector",
+    "DeepLakeVectorStore": "retrieval.deeplake",
     "FAISSVectorStore": "retrieval.faiss",
     "LanceDBVectorStore": "retrieval.lancedb",
     "MilvusVectorStore": "retrieval.milvus",
@@ -1304,6 +1316,12 @@ _LAZY_IMPORTS = {
     "PineconeVectorStore": "retrieval.pinecone",
     "WeaviateVectorStore": "retrieval.weaviate",
     "SQLiteVecStore": "retrieval.sqlite_vec",
+    "SingleStoreVectorStore": "retrieval.singlestore_vector",
+    "SurrealDBVectorStore": "retrieval.surrealdb_vector",
+    "TiDBVectorStore": "retrieval.tidb_vector",
+    "TurbopufferVectorStore": "retrieval.turbopuffer",
+    "VertexAIVectorStore": "retrieval.vertex_ai_vector",
+    "MyScaleVectorStore": "retrieval.myscale_vector",
     "ONNXEmbeddings": "embeddings.onnx",
     "OpenAIEmbeddings": "embeddings.openai",
     "CohereEmbeddings": "embeddings.cohere",
@@ -1436,3 +1454,33 @@ def __getattr__(name: str):
         globals()[name] = cls
         return cls
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+_LAZY_IMPORTS.update(
+    {
+        "ApplyConflictError": "sandbox",
+        "BackendUnavailableError": "sandbox",
+        "CallableEvalGate": "sandbox",
+        "CommandEvalGate": "sandbox",
+        "DiffBundle": "sandbox",
+        "EvalReceipt": "sandbox",
+        "FsOverlay": "sandbox",
+        "PCSandbox": "sandbox",
+        "SandboxConfig": "sandbox",
+        "SandboxState": "sandbox",
+    }
+)
+__all__.extend(
+    [
+        "ApplyConflictError",
+        "BackendUnavailableError",
+        "CallableEvalGate",
+        "CommandEvalGate",
+        "DiffBundle",
+        "EvalReceipt",
+        "FsOverlay",
+        "PCSandbox",
+        "SandboxConfig",
+        "SandboxState",
+    ]
+)
