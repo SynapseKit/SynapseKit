@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import sys
 
 import pytest
@@ -125,3 +126,41 @@ async def test_generate_with_cache(backend: LlamaCppCAGBackend, llm: LlamaCppLLM
             "top_p": llm._top_p,
         }
     ]
+
+
+@pytest.mark.asyncio
+async def test_generate_with_cache_stops_producer_on_early_break(
+    backend: LlamaCppCAGBackend, llm: LlamaCppLLM
+) -> None:
+    produced = 0
+
+    class StreamingModel(FakeLlamaModel):
+        def create_completion(self, **kwargs: object) -> object:
+            self.create_completion_calls.append(kwargs)
+
+            def gen():
+                nonlocal produced
+                index = 0
+                while True:  # unbounded stream
+                    produced += 1
+                    yield {"choices": [{"text": f"tok{index}"}]}
+                    index += 1
+
+            return gen()
+
+    llm._model = StreamingModel()
+    cache_handle = {"state": b"state", "corpus_text": "corpus"}
+
+    gen = backend.generate_with_cache(llm, cache_handle, " query")
+    first = await asyncio.wait_for(gen.__anext__(), timeout=5.0)
+    assert first == "tok0"
+
+    # Closing the consumer must stop the background producer promptly.
+    await asyncio.wait_for(gen.aclose(), timeout=5.0)
+    produced_at_close = produced
+    await asyncio.sleep(0.05)
+
+    # The producer stopped (count frozen) and never ran unbounded ahead of the
+    # consumer (bounded by the queue size, not the infinite stream).
+    assert produced == produced_at_close
+    assert produced <= 512
