@@ -164,11 +164,57 @@ def make_llm(
         from .mlx import MLXLLM
 
         return MLXLLM(config)
+    elif provider == "nvidia-nim":
+        from .nvidia_nim import NvidiaNIMLLM
+
+        return NvidiaNIMLLM(config)
+    elif provider == "watsonx":
+        from .watsonx import WatsonxLLM
+
+        return WatsonxLLM(config)
+    elif provider == "snowflake-cortex":
+        from .snowflake_cortex import SnowflakeCortexLLM
+
+        return SnowflakeCortexLLM(config)
+    elif provider == "deepinfra":
+        from .deepinfra import DeepInfraLLM
+
+        return DeepInfraLLM(config)
+    elif provider == "nebius":
+        from .nebius import NebiusLLM
+
+        return NebiusLLM(config)
+    elif provider == "baseten":
+        from .baseten import BasetenLLM
+
+        return BasetenLLM(config)
+    elif provider == "upstage":
+        from .upstage import UpstageLLM
+
+        return UpstageLLM(config)
+    elif provider == "reka":
+        from .reka import RekaLLM
+
+        return RekaLLM(config)
+    elif provider == "hyperbolic":
+        from .hyperbolic import HyperbolicLLM
+
+        return HyperbolicLLM(config)
+    elif provider == "friendli":
+        from .friendli import FriendliLLM
+
+        return FriendliLLM(config)
+    elif provider == "clarifai":
+        from .clarifai import ClarifaiLLM
+
+        return ClarifaiLLM(config)
     else:
         raise ValueError(
             f"Unknown provider: {provider!r}. "
             "Use 'openai', 'anthropic', 'ollama', 'ai21', 'cohere', 'mistral', 'gemini', "
             "'bedrock', 'groq', 'deepseek', 'openrouter', 'together', 'fireworks', "
             "'moonshot', 'minimax', 'zhipu', 'cloudflare', 'databricks', 'ernie', 'sambanova', "
-            "'aleph-alpha', 'llamacpp', 'vllm', 'gpt4all', or 'mlx'."
+            "'aleph-alpha', 'llamacpp', 'vllm', 'gpt4all', 'mlx', 'nvidia-nim', 'watsonx', "
+            "'snowflake-cortex', 'deepinfra', 'nebius', 'baseten', 'upstage', 'reka', "
+            "'hyperbolic', 'friendli', or 'clarifai'."
         )

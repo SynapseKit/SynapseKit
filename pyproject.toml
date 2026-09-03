@@ -49,6 +49,17 @@ synshell = "synapsekit.cli.shell:main"
 [project.optional-dependencies]
 graph = ["networkx>=3.0", "neo4j>=5.0"]
 openai = ["openai>=1.0"]
+nvidia-nim = ["httpx>=0.27"]
+watsonx = ["httpx>=0.27"]
+snowflake-cortex = ["httpx>=0.27"]
+deepinfra = ["openai>=1.40"]
+nebius = ["openai>=1.40"]
+baseten = ["openai>=1.40"]
+upstage = ["openai>=1.40"]
+reka = ["openai>=1.40"]
+hyperbolic = ["openai>=1.40"]
+friendli = ["openai>=1.40"]
+clarifai = ["openai>=1.40"]
 anthropic = ["anthropic>=0.25"]
 # Upstream torch has no patched release for GHSA-rrmf-rvhw-rf47 yet, so
 # torch-backed semantic/ColBERT extras are temporarily manual installs.
@@ -59,8 +70,18 @@ wikipedia = ["wikipedia-api>=0.6"]
 arxiv = ["arxiv>=2.0"]
 html = ["beautifulsoup4>=4.12", "lxml>=6.1.0"]
 web = ["httpx>=0.27", "beautifulsoup4>=4.12"]
-# CVE-2026-45829 affects chromadb >=1.0.0, <=1.5.9 and has no patched
-# release yet. Stay on the pre-1.0 embedded-client line until upstream fixes it.
+# chromadb has no patched release for its open advisories (latest PyPI is
+# 1.5.9, the top of every vulnerable range) so a version bump is impossible.
+# All open advisories require running the chromadb *server* with auth enabled:
+#   - GHSA-36p7-vc44-83pf / CVE-2026-45833 (critical, code injection via
+#     trust_remote_code on UPDATE_COLLECTION) — server endpoint only
+#   - GHSA-2wm9-hf6c-p5cr (cross-tenant read/write) — server multi-tenancy
+#   - GHSA-xph7-9rjv-w5fr (SimpleRBACAuthorizationProvider scoping) — server RBAC
+#   - CVE-2026-45829 (>=1.0.0) — server, also why we cap below 1.0.0
+# SynapseKit uses chromadb embedded-only (PersistentClient/EphemeralClient in
+# retrieval/chroma.py), which per each advisory does not expose the vulnerable
+# endpoints, so users are not affected. Stay on the pre-1.0 embedded-client line
+# until upstream ships a fix.
 chroma = ["chromadb>=0.5,<1.0.0"]
 faiss = ["faiss-cpu>=1.7"]
 qdrant = ["qdrant-client>=1.9"]
@@ -73,6 +94,15 @@ kuzu = ["kuzu>=0.8"]
 mesh = ["sqlite-vec>=0.1", "kuzu>=0.8"]
 cassandra = ["astrapy>=1.0", "cassandra-driver>=3.28"]
 clickhouse = ["clickhouse-connect>=0.7"]
+turbopuffer = ["turbopuffer>=0.1"]
+azure-ai-search = ["azure-search-documents>=11.4"]
+vertex-vector = ["google-cloud-aiplatform>=1.38"]
+singlestore = ["singlestoredb>=1.0"]
+tidb = ["pymysql>=1.1"]
+couchbase = ["couchbase>=4.2"]
+surrealdb = ["surrealdb>=1.0"]
+deeplake = ["deeplake>=4.0"]
+myscale = ["clickhouse-connect>=0.7"]
 duckdb-vector = ["duckdb>=0.10"]
 marqo = ["marqo>=3.0"]
 opensearch = ["opensearch-py>=2.0"]
@@ -248,7 +278,14 @@ all = [
     "youtube-transcript-api>=0.6",
     "astrapy>=1.0",
     "clickhouse-connect>=0.7",
+    "turbopuffer>=0.1",
+    "azure-search-documents>=11.4",
     "duckdb>=0.10",
+    "singlestoredb>=1.0",
+    "pymysql>=1.1",
+    "couchbase>=4.2",
+    "surrealdb>=1.0",
+    "deeplake>=4.0",
     "marqo>=3.0",
     "opensearch-py>=2.0",
     "requests>=2.33.0",
@@ -260,7 +297,6 @@ all = [
     "striprtf>=0.0.26",
     "ebooklib>=0.18",
     "gpt4all>=2.0",
-    "httpx>=0.27",
 ]
 
 [dependency-groups]
@@ -474,6 +510,17 @@ module = [
     "synapsekit.retrieval.document_augmentation",
     "synapsekit.retrieval.agentic_rag",
     "synapsekit.llm.replicate",
+    "synapsekit.llm.nvidia_nim",
+    "synapsekit.llm.watsonx",
+    "synapsekit.llm.snowflake_cortex",
+    "synapsekit.llm.deepinfra",
+    "synapsekit.llm.nebius",
+    "synapsekit.llm.baseten",
+    "synapsekit.llm.upstage",
+    "synapsekit.llm.reka",
+    "synapsekit.llm.hyperbolic",
+    "synapsekit.llm.friendli",
+    "synapsekit.llm.clarifai",
 ]
 warn_return_any = false
 # from __future__ import annotations causes mypy to misinterpret
@@ -508,6 +555,8 @@ gitpython = "git"
 simple-salesforce = "simple_salesforce"
 hubspot-api-client = "hubspot"
 azure-storage-blob = "azure"
+turbopuffer = "turbopuffer"
+azure-search-documents = "azure"
 sqlite-vec = "sqlite_vec"
 snowflake-connector-python = "snowflake"
 "cassandra-driver" = "cassandra"
