@@ -25,7 +25,7 @@ Async-native RAG, Agents, and Graph workflows — no magic, no SaaS, no bloat.
 
 > *"LangChain for people who hate LangChain."*
 
-SynapseKit is the minimal, async-first Python framework for LLM applications. 46 providers · 50 tools · 66 loaders · 22 vector stores. Every abstraction is plain Python you can read, debug, and extend. No hidden chains. No global state. No lock-in.
+SynapseKit is the minimal, async-first Python framework for LLM applications. 46 providers · 50 tools · 66 loaders · 31 vector stores. Every abstraction is plain Python you can read, debug, and extend. No hidden chains. No global state. No lock-in.
 
 ---
 
@@ -87,7 +87,7 @@ Token-level streaming is the default,<br/>not an afterthought.<br/>Works across 
 <tr>
 <td align="center" width="33%">
 <h3>🔌 One interface</h3>
-46 LLM providers and 22 vector stores<br/>behind the same API.<br/>Swap without rewriting.
+46 LLM providers and 31 vector stores<br/>behind the same API.<br/>Swap without rewriting.
 </td>
 <td align="center" width="33%">
 <h3>🧩 Composable</h3>
@@ -263,7 +263,7 @@ OpenAI, Anthropic, Ollama, Gemini, Cohere, Mistral, Bedrock, Azure OpenAI, Groq,
 <td width="50%">
 
 **🗄 Vector Stores**<br/>
-InMemory (built-in, `.npz` persistence), ChromaDB, FAISS, Qdrant, Pinecone, Weaviate, PGVector, Milvus, LanceDB, SQLiteVec, MongoDB Atlas, Redis, Elasticsearch, OpenSearch, Supabase, Cassandra, DuckDB, ClickHouse, Marqo, Typesense, Vespa, Zilliz. One interface for all 22 backends.
+InMemory (built-in, `.npz` persistence), ChromaDB, FAISS, Qdrant, Pinecone, Weaviate, PGVector, Milvus, LanceDB, SQLiteVec, MongoDB Atlas, Redis, Elasticsearch, OpenSearch, Supabase, Cassandra, DuckDB, ClickHouse, Marqo, Typesense, Vespa, Zilliz, Turbopuffer, Azure AI Search, Vertex AI Vector Search, SingleStore, TiDB Vector, Couchbase, SurrealDB, Deep Lake, MyScale. One interface for all 31 backends.
 
 </td>
 <td width="50%">
@@ -465,7 +465,7 @@ verification uses the `swipl` executable when `PrologBackend` is selected.
 
 | 🧠 LLM Providers | 🗄 Vector Stores | 📂 Data Loaders | 🔧 Agent Tools |
 |:---:|:---:|:---:|:---:|
-| **46** | **22** | **66** | **50** |
+| **46** | **31** | **66** | **50** |
 
 Every integration is `pip install synapsekit[name]` — nothing else. Swap providers, vector stores, or loaders without touching your application code.
 
@@ -542,7 +542,7 @@ Every integration is `pip install synapsekit[name]` — nothing else. Swap provi
 
 ---
 
-### 🗄 Vector Stores — 22 backends
+### 🗄 Vector Stores — 31 backends
 
 > All implement `VectorStore` with `add()`, `search()`, `search_mmr()`, `save()`, and `load()`. Built-in `InMemoryVectorStore` needs zero extra deps. Everything else is `pip install synapsekit[name]`.
 
@@ -575,6 +575,30 @@ Every integration is `pip install synapsekit[name]` — nothing else. Swap provi
     <td align="center" width="90"><img src="https://www.google.com/s2/favicons?domain=zilliz.com&sz=128" height="40" alt="Zilliz"/><br/><sub><b>Zilliz</b></sub></td>
   </tr>
 </table>
+
+#### Vector-store integration validation
+
+The issue #888 adapters use the same async contract and have provider-SDK
+contract tests. Their live services require credentials or a provider-managed
+endpoint, so they are intentionally not started by the default CI job:
+
+| Backend | Live integration status |
+|---|---|
+| Turbopuffer | Cloud-only; set `TURBOPUFFER_API_KEY` and run against a namespace |
+| Azure AI Search | Azure service; requires an endpoint, admin key, and index |
+| Vertex AI Vector Search | Google Cloud service; requires project credentials and a deployed index |
+| SingleStore | Managed/self-hosted SQL service; requires a customer endpoint |
+| TiDB Vector | TiDB Cloud/self-hosted SQL service; requires a customer endpoint |
+| Couchbase | Capella/self-hosted Search service; requires a Search Vector Index |
+| SurrealDB | SurrealDB server; requires a running instance and credentials |
+| Deep Lake | Local or Activeloop dataset; requires a dataset path or cloud token |
+| MyScale | MyScale Cloud service; requires a service endpoint and credentials |
+
+Use the corresponding `synapsekit[...]` extra and provider setup before running
+live checks. Search-before-add and persistence-after-reconnect are covered by
+provider adapters; Vertex AI additionally requires `document_store_path` because
+its nearest-neighbour response returns IDs only. The local `save()`/`load()`
+contract is a JSON snapshot that replays documents into the selected backend.
 
 ---
 

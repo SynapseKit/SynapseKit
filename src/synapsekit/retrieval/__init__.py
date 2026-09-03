@@ -66,9 +66,18 @@ from .world_model import (
 __all__ = [
     "AdaptiveRAGRetriever",
     "AgenticRAGRetriever",
+    "AzureAISearchVectorStore",
     "DocumentAugmentationRetriever",
+    "CouchbaseVectorStore",
+    "DeepLakeVectorStore",
     "LateChunkingRetriever",
     "RAPTORRetriever",
+    "SingleStoreVectorStore",
+    "SurrealDBVectorStore",
+    "TiDBVectorStore",
+    "TurbopufferVectorStore",
+    "VertexAIVectorStore",
+    "MyScaleVectorStore",
     "CassandraVectorStore",
     "ChromaVectorStore",
     "ClickHouseVectorStore",
@@ -148,9 +157,12 @@ __all__ = [
 ]
 
 _BACKENDS = {
+    "AzureAISearchVectorStore": ".azure_ai_search",
     "CassandraVectorStore": ".cassandra_vector",
     "ChromaVectorStore": ".chroma",
     "ClickHouseVectorStore": ".clickhouse_vector",
+    "CouchbaseVectorStore": ".couchbase_vector",
+    "DeepLakeVectorStore": ".deeplake",
     "DuckDBVectorStore": ".duckdb_vector",
     "ElasticsearchVectorStore": ".elasticsearch_vector",
     "FAISSVectorStore": ".faiss",
@@ -162,12 +174,18 @@ _BACKENDS = {
     "PineconeVectorStore": ".pinecone",
     "QdrantVectorStore": ".qdrant",
     "RedisVectorStore": ".redis_vector",
+    "SingleStoreVectorStore": ".singlestore_vector",
     "SQLiteVecStore": ".sqlite_vec",
+    "SurrealDBVectorStore": ".surrealdb_vector",
     "SupabaseVectorStore": ".supabase_vector",
+    "TiDBVectorStore": ".tidb_vector",
+    "TurbopufferVectorStore": ".turbopuffer",
     "TypesenseVectorStore": ".typesense_vector",
+    "VertexAIVectorStore": ".vertex_ai_vector",
     "VespaVectorStore": ".vespa",
     "WeaviateVectorStore": ".weaviate",
     "ZillizVectorStore": ".zilliz_vector",
+    "MyScaleVectorStore": ".myscale_vector",
 }
 
 
