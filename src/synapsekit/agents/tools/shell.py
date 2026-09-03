@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 import shlex
 from typing import Any
 
@@ -10,6 +11,32 @@ from ..base import BaseTool, ToolResult
 # If any appear while an allow-list is enforced, the command is rejected rather
 # than executed, closing the ``echo hi & curl evil`` allow-list bypass.
 _SHELL_METACHARACTERS = ("&", "|", ";", "`", "$(", "${", ">", "<", "\n", "\r", "(", ")")
+
+
+def _portable_builtin(argv: list[str]) -> ToolResult | None:
+    """Implement the few POSIX shell builtins used as direct commands on Windows.
+
+    ``create_subprocess_exec`` deliberately avoids a shell, so Windows cannot
+    resolve ``echo``, ``true``, or ``false``. Emulating those commands keeps
+    direct execution and the allow-list boundary intact; no user-provided text
+    is ever passed to ``cmd.exe``.
+    """
+
+    if os.name != "nt":
+        return None
+    command = argv[0].casefold()
+    if command == "echo":
+        values = argv[1:]
+        newline = True
+        if values and values[0] == "-n":
+            values = values[1:]
+            newline = False
+        return ToolResult(output=" ".join(values) + ("\n" if newline else ""))
+    if command == "true":
+        return ToolResult(output="")
+    if command == "false":
+        return ToolResult(output="", error="Exit code 1:")
+    return None
 
 
 class ShellTool(BaseTool):
@@ -42,6 +69,7 @@ class ShellTool(BaseTool):
 
     async def run(self, command: str = "", **kwargs: Any) -> ToolResult:
         """Execute the shell command."""
+
         target = command or kwargs.get("input", "")
         if not target:
             return ToolResult(output="", error="No command provided.")
@@ -73,6 +101,10 @@ class ShellTool(BaseTool):
                         f"{metachar!r} while an allow-list is enforced."
                     ),
                 )
+
+        builtin_result = _portable_builtin(argv)
+        if builtin_result is not None:
+            return builtin_result
 
         try:
             # Always exec the parsed argv (never shell=True). This runs the

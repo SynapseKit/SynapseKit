@@ -1,5 +1,5 @@
 """
-SynapseKit — lightweight, async-first RAG framework.
+SynapseKit â€” lightweight, async-first RAG framework.
 
 3-line happy path:
 
@@ -1454,3 +1454,33 @@ def __getattr__(name: str):
         globals()[name] = cls
         return cls
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+_LAZY_IMPORTS.update(
+    {
+        "ApplyConflictError": "sandbox",
+        "BackendUnavailableError": "sandbox",
+        "CallableEvalGate": "sandbox",
+        "CommandEvalGate": "sandbox",
+        "DiffBundle": "sandbox",
+        "EvalReceipt": "sandbox",
+        "FsOverlay": "sandbox",
+        "PCSandbox": "sandbox",
+        "SandboxConfig": "sandbox",
+        "SandboxState": "sandbox",
+    }
+)
+__all__.extend(
+    [
+        "ApplyConflictError",
+        "BackendUnavailableError",
+        "CallableEvalGate",
+        "CommandEvalGate",
+        "DiffBundle",
+        "EvalReceipt",
+        "FsOverlay",
+        "PCSandbox",
+        "SandboxConfig",
+        "SandboxState",
+    ]
+)
