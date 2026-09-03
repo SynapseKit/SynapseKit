@@ -200,6 +200,13 @@ async def test_couchbase_add_and_search():
 
     search_module = types.ModuleType("couchbase.search")
     vector_module = types.ModuleType("couchbase.vector_search")
+    options_module = types.ModuleType("couchbase.options")
+
+    class SearchOptions:
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+
+    options_module.SearchOptions = SearchOptions
 
     class VectorQuery:
         @classmethod
@@ -226,13 +233,18 @@ async def test_couchbase_add_and_search():
     vector_module.__package__ = "couchbase"
 
     class Row:
+        # Real couchbase 4.x SearchRow exposes ``fields`` as a dict attribute,
+        # populated only when SearchOptions(fields=...) is requested.
         score = 0.9
-
-        def fields(self):
-            return {"text": "alpha", "metadata": {"kind": "a"}}
+        fields = {"text": "alpha", "metadata": {"kind": "a"}}
 
     class Scope:
-        def search(self, _index, _request):
+        def __init__(self):
+            self.options = None
+
+        def search(self, _index, _request, options=None):
+            self.options = options
+
             class Result:
                 def rows(self):
                     return [Row()]
@@ -247,12 +259,20 @@ async def test_couchbase_add_and_search():
     monkeypatch.setitem(sys.modules, "couchbase", couchbase_module)
     monkeypatch.setitem(sys.modules, "couchbase.search", search_module)
     monkeypatch.setitem(sys.modules, "couchbase.vector_search", vector_module)
+    monkeypatch.setitem(sys.modules, "couchbase.options", options_module)
     try:
+        scope = Scope()
         store = CouchbaseVectorStore(
-            Embeddings(), cluster=object(), collection=Collection(), search_scope=Scope()
+            Embeddings(), cluster=object(), collection=Collection(), search_scope=scope
         )
         await store.add(["alpha"], [{"kind": "a"}])
-        assert (await store.search("alpha"))[0]["text"] == "alpha"
+        result = (await store.search("alpha"))[0]
+        assert result["text"] == "alpha"
+        assert result["metadata"] == {"kind": "a"}
+        # Regression: fields must be requested or the real SDK returns no
+        # document text/metadata (only id + score).
+        assert scope.options is not None
+        assert scope.options.kwargs.get("fields") == ["*"]
     finally:
         monkeypatch.undo()
 

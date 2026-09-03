@@ -70,14 +70,18 @@ class CouchbaseVectorStore(RemoteVectorStoreSupport, VectorStore):
     def _search_sync(
         self, vector: list[float], top_k: int, metadata_filter: dict[str, Any] | None
     ) -> list[dict[str, Any]]:
+        from couchbase.options import SearchOptions
         from couchbase.search import SearchRequest
         from couchbase.vector_search import VectorQuery, VectorSearch
 
         limit = max(top_k * 10, 100) if metadata_filter else top_k
         query = VectorQuery.create("embedding", vector, num_candidates=limit)
         request = SearchRequest.create(VectorSearch(query))
+        # Couchbase FTS returns only id + score unless fields are explicitly
+        # requested; without this the document text/metadata come back empty.
+        options = SearchOptions(fields=["*"], limit=limit)
         try:
-            result = self._search_scope.search(self._index_name, request)
+            result = self._search_scope.search(self._index_name, request, options)
         except Exception as exc:
             if "not found" in str(exc).lower() or "does not exist" in str(exc).lower():
                 return []
@@ -85,8 +89,10 @@ class CouchbaseVectorStore(RemoteVectorStoreSupport, VectorStore):
         rows = result.rows() if callable(getattr(result, "rows", None)) else result
         output = []
         for row in rows or []:
-            fields = row.fields() if callable(getattr(row, "fields", None)) else row
-            fields = fields or {}
+            raw_fields = getattr(row, "fields", None)
+            if callable(raw_fields):
+                raw_fields = raw_fields()
+            fields = raw_fields if isinstance(raw_fields, dict) else {}
             metadata = fields.get("metadata", {})
             if not isinstance(metadata, dict):
                 metadata = {}
