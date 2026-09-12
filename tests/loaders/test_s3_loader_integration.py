@@ -18,7 +18,9 @@ _container_mod = pytest.importorskip("testcontainers.core.container")
 
 from synapsekit.loaders.s3 import S3Loader  # noqa: E402
 
-_MINIO_IMAGE = "minio/minio:latest"
+# MinIO removed its community images from Docker Hub (minio/minio has no tags
+# there anymore); pull from their current registry on quay.io instead. See #1039.
+_MINIO_IMAGE = "quay.io/minio/minio:latest"
 _ACCESS_KEY = "minioadmin"
 _SECRET_KEY = "minioadmin"
 _BUCKET = "test-bucket"
