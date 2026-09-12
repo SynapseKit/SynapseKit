@@ -1512,3 +1512,50 @@ __all__.extend(
         "SandboxState",
     ]
 )
+
+_LAZY_IMPORTS.update(
+    {
+        "CitationRequiredGuard": "guardrails",
+        "Guard": "guardrails",
+        "GuardContext": "guardrails",
+        "GuardFinding": "guardrails",
+        "GuardedLLM": "guardrails",
+        "GuardrailBlockedError": "guardrails",
+        "GuardrailPolicy": "guardrails",
+        "GuardrailReport": "guardrails",
+        "JailbreakGuard": "guardrails",
+        "MaxCostGuard": "guardrails",
+        "PIIRedactionGuard": "guardrails",
+        "PromptInjectionGuard": "guardrails",
+        "Rulepack": "guardrails",
+        "SchemaGuard": "guardrails",
+        "TopicGuard": "guardrails",
+        "ToxicityGuard": "guardrails",
+        "gdpr_rulepack": "guardrails",
+        "hipaa_rulepack": "guardrails",
+        "pci_rulepack": "guardrails",
+    }
+)
+__all__.extend(
+    [
+        "CitationRequiredGuard",
+        "Guard",
+        "GuardContext",
+        "GuardFinding",
+        "GuardedLLM",
+        "GuardrailBlockedError",
+        "GuardrailPolicy",
+        "GuardrailReport",
+        "JailbreakGuard",
+        "MaxCostGuard",
+        "PIIRedactionGuard",
+        "PromptInjectionGuard",
+        "Rulepack",
+        "SchemaGuard",
+        "TopicGuard",
+        "ToxicityGuard",
+        "gdpr_rulepack",
+        "hipaa_rulepack",
+        "pci_rulepack",
+    ]
+)
