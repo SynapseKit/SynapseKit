@@ -126,9 +126,7 @@ class CitationRequiredGuard(Guard):
     ) -> None:
         super().__init__(mode=mode, name=name)
         self._min_length = min_length
-        self._compiled = [
-            re.compile(p, re.IGNORECASE) for p in (patterns or _CITATION_PATTERNS)
-        ]
+        self._compiled = [re.compile(p, re.IGNORECASE) for p in (patterns or _CITATION_PATTERNS)]
 
     async def inspect(self, text: str, context: GuardContext) -> GuardFinding:
         # Trivially short answers (acknowledgements, refusals) are exempt.

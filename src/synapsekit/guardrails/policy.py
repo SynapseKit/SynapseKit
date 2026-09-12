@@ -51,21 +51,15 @@ class GuardrailPolicy:
         self.tracer = tracer
 
     # -- public API -------------------------------------------------------
-    async def check_input(
-        self, text: str, context: GuardContext | None = None
-    ) -> GuardrailReport:
+    async def check_input(self, text: str, context: GuardContext | None = None) -> GuardrailReport:
         """Run the input guards over ``text`` and return the rolled-up report."""
         return await self._run(self.input_guards, text, Stage.INPUT, context)
 
-    async def check_output(
-        self, text: str, context: GuardContext | None = None
-    ) -> GuardrailReport:
+    async def check_output(self, text: str, context: GuardContext | None = None) -> GuardrailReport:
         """Run the output guards over ``text`` and return the rolled-up report."""
         return await self._run(self.output_guards, text, Stage.OUTPUT, context)
 
-    def export_audit_bundle(
-        self, path: str, signing_policy: SigningPolicy | None = None
-    ) -> str:
+    def export_audit_bundle(self, path: str, signing_policy: SigningPolicy | None = None) -> str:
         """Drain the audit trail and write a signed, verifiable bundle to ``path``.
 
         ``signing_policy`` is a :class:`~synapsekit.audit.SigningPolicy`; when

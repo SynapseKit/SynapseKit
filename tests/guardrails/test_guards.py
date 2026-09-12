@@ -130,9 +130,7 @@ async def test_max_cost_guard():
 @pytest.mark.asyncio
 async def test_pii_redaction_guard_redacts():
     guard = PIIRedactionGuard(mode=Mode.REDACT)
-    finding = await guard.inspect(
-        "Email john@example.com or call 555-123-4567", _ctx(Stage.OUTPUT)
-    )
+    finding = await guard.inspect("Email john@example.com or call 555-123-4567", _ctx(Stage.OUTPUT))
     assert finding.triggered
     assert finding.redacted_text is not None
     assert "john@example.com" not in finding.redacted_text
