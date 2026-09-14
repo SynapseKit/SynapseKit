@@ -4,6 +4,7 @@ import os
 import re
 import time
 import uuid
+import warnings
 from collections.abc import Iterator
 from datetime import datetime, timezone
 
@@ -209,6 +210,34 @@ async def test_firestore_memory_and_checkpointer_survive_reconnect(firestore_hos
     await checkpointer.asave("firestore-graph", 5, {"ok": True})
     assert await checkpointer.aload("firestore-graph") == (5, {"ok": True})
     checkpointer.close()
+
+
+@pytest.mark.asyncio
+async def test_firestore_memory_query_methods_use_field_filter(firestore_host: str) -> None:
+    """Regression test for #1032: positional `.where()` args are deprecated and
+    a future google-cloud-firestore major will raise instead of warn."""
+    del firestore_host
+    suffix = uuid.uuid4().hex
+    now = datetime.now(timezone.utc)
+    agent_id = f"firestore-agent-{suffix}"
+    record = MemoryRecord(
+        id=f"firestore-record-{suffix}",
+        agent_id=agent_id,
+        content="persisted",
+        memory_type="episodic",
+        embedding=[1.0, 1.0],
+        created_at=now,
+        accessed_at=now,
+        metadata={},
+    )
+    backend = FirestoreMemoryBackend(project_id="synapsekit-test", collection=f"memory-{suffix}")
+    await backend.store(record)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        assert await backend.count(agent_id) == 1
+        assert len(await backend.fetch(agent_id)) == 1
+        assert await backend.clear(agent_id) == 1
+    await backend.aclose()
 
 
 @pytest.fixture(scope="module")

@@ -12,6 +12,12 @@ from ._common import memory_record_document_id
 from ._serialization import memory_record_from_payload, memory_record_to_payload
 
 
+def _agent_id_filter(agent_id: str) -> Any:
+    from google.cloud.firestore_v1.base_query import FieldFilter
+
+    return FieldFilter("agent_id", "==", agent_id)
+
+
 class FirestoreMemoryBackend(BaseMemoryBackend):
     """Persist memory records with Firestore's asynchronous client."""
 
@@ -102,7 +108,7 @@ class FirestoreMemoryBackend(BaseMemoryBackend):
     ) -> list[MemoryRecord]:
         collection = await self._ensure_collection()
         records: list[MemoryRecord] = []
-        async for snapshot in collection.where("agent_id", "==", agent_id).stream():
+        async for snapshot in collection.where(filter=_agent_id_filter(agent_id)).stream():
             record = self._from_document(snapshot.to_dict())
             if memory_type is None or record.memory_type == memory_type:
                 records.append(record)
@@ -144,7 +150,7 @@ class FirestoreMemoryBackend(BaseMemoryBackend):
     async def clear(self, agent_id: str, memory_type: MemoryType | None = None) -> int:
         collection = await self._ensure_collection()
         references: list[Any] = []
-        async for snapshot in collection.where("agent_id", "==", agent_id).stream():
+        async for snapshot in collection.where(filter=_agent_id_filter(agent_id)).stream():
             data = snapshot.to_dict()
             if memory_type is None or data.get("memory_type") == memory_type:
                 references.append(snapshot.reference)
@@ -155,7 +161,7 @@ class FirestoreMemoryBackend(BaseMemoryBackend):
     async def count(self, agent_id: str, memory_type: MemoryType | None = None) -> int:
         collection = await self._ensure_collection()
         count = 0
-        async for snapshot in collection.where("agent_id", "==", agent_id).stream():
+        async for snapshot in collection.where(filter=_agent_id_filter(agent_id)).stream():
             if memory_type is None or snapshot.to_dict().get("memory_type") == memory_type:
                 count += 1
         return count
