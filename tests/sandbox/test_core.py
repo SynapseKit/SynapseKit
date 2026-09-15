@@ -150,6 +150,29 @@ def test_snapshot_rejects_escape_symlink(tmp_path: Path) -> None:
         capture_manifest(root)
 
 
+def test_attach_restores_max_output_bytes(tmp_path: Path) -> None:
+    """Regression test for #1035: a custom max_output_bytes must round-trip
+    through attach(), matching the existing command_timeout parity."""
+
+    async def scenario() -> None:
+        base = tmp_path / "host"
+        base.mkdir()
+        (base / "file.txt").write_text("before", encoding="utf-8")
+        state_dir = tmp_path / "sessions"
+        sandbox = PCSandbox(
+            base=base,
+            backend="fake",
+            state_dir=state_dir,
+            max_output_bytes=2_000_000,
+        )
+        await sandbox.start()
+        assert sandbox.session_id is not None
+        reattached = await PCSandbox.attach(sandbox.session_id, state_dir=state_dir)
+        assert reattached.config.max_output_bytes == 2_000_000
+
+    _run(scenario())
+
+
 def test_cli_spawn_and_diff_use_persisted_session(tmp_path: Path, capsys) -> None:
     from synapsekit.cli.main import main
 
