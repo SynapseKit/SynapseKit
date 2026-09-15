@@ -47,7 +47,44 @@ async def test_turbopuffer_add_search_and_filter():
     store = TurbopufferVectorStore(Embeddings(), client=Client())
     await store.add(["alpha"], [{"kind": "a"}])
     results = await store.search("alpha", metadata_filter={"kind": "a"})
-    assert results == [{"text": "alpha", "score": 0.9, "metadata": {"kind": "a"}}]
+    # cosine_distance (the default) converts to a similarity: 1 - dist.
+    assert results == [{"text": "alpha", "score": pytest.approx(0.1), "metadata": {"kind": "a"}}]
+
+
+@pytest.mark.asyncio
+async def test_turbopuffer_score_is_metric_aware():
+    """Regression test for #1014: score must convert cosine distance to a
+    similarity (consistent with every other store) but leave non-cosine
+    distances (e.g. euclidean_squared) as-is, since there is no 1:1 mapping."""
+    from synapsekit.retrieval.turbopuffer import TurbopufferVectorStore
+
+    class Namespace:
+        def write(self, **kwargs):
+            self.rows = kwargs["upsert_rows"]
+
+        def query(self, **_kwargs):
+            return {"rows": [{"distance": 0.3, "attributes": {"text": "alpha", "metadata": "{}"}}]}
+
+    class Client:
+        def __init__(self):
+            self.ns = Namespace()
+
+        def namespace(self, _name):
+            return self.ns
+
+    cosine_store = TurbopufferVectorStore(
+        Embeddings(), client=Client(), distance_metric="cosine_distance"
+    )
+    await cosine_store.add(["alpha"], [{}])
+    cosine_results = await cosine_store.search("alpha")
+    assert cosine_results[0]["score"] == pytest.approx(0.7)
+
+    euclidean_store = TurbopufferVectorStore(
+        Embeddings(), client=Client(), distance_metric="euclidean_squared"
+    )
+    await euclidean_store.add(["alpha"], [{}])
+    euclidean_results = await euclidean_store.search("alpha")
+    assert euclidean_results[0]["score"] == pytest.approx(0.3)
 
 
 @pytest.mark.asyncio

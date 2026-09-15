@@ -39,6 +39,15 @@ class TurbopufferVectorStore(RemoteVectorStoreSupport, VectorStore):
         self._namespace = client.namespace(namespace)
         self._init_remote_state()
 
+    def _score_from_distance(self, dist: float) -> float:
+        # Turbopuffer returns a distance (lower is better); every other
+        # SynapseKit store returns a cosine similarity (higher is better).
+        # Only cosine_distance has a well-defined 1:1 conversion; other
+        # metrics (e.g. euclidean_squared) are left as a raw distance.
+        if self._distance_metric == "cosine_distance":
+            return 1.0 - dist
+        return dist
+
     @staticmethod
     def _row_value(row: Any, key: str, default: Any = None) -> Any:
         if isinstance(row, dict):
@@ -98,7 +107,7 @@ class TurbopufferVectorStore(RemoteVectorStoreSupport, VectorStore):
                 metadata.get(key) == value for key, value in metadata_filter.items()
             ):
                 continue
-            score = self._row_value(
+            dist = self._row_value(
                 row,
                 "dist",
                 self._row_value(row, "distance", self._row_value(row, "score", 0.0)),
@@ -106,7 +115,7 @@ class TurbopufferVectorStore(RemoteVectorStoreSupport, VectorStore):
             results.append(
                 {
                     "text": attributes.get("text", "") if isinstance(attributes, dict) else "",
-                    "score": float(score),
+                    "score": self._score_from_distance(float(dist)),
                     "metadata": metadata,
                 }
             )
