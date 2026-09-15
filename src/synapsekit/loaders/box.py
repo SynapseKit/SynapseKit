@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 from typing import Any
 from urllib.parse import quote
 
@@ -85,25 +86,37 @@ class BoxLoader:
                 )
                 content_response.raise_for_status()
                 content = getattr(content_response, "content", b"")
-                if isinstance(content, bytes):
-                    text = content.decode("utf-8", errors="replace")
-                else:
-                    text = str(content)
-                documents.append(
-                    Document(
-                        text=text,
-                        metadata={
-                            # Spread the Box entry first so its fields can never
-                            # clobber the loader's own reserved metadata keys
-                            # (a Box field literally named "source"/"row"/etc.).
-                            **file_data,
-                            "source": "box",
-                            "row": index,
-                            "file_id": file_data.get("id"),
-                        },
-                    )
+                content_type = content_response.headers.get("Content-Type")
+                text, raw_content = self._extract_text(
+                    file_data.get("name", ""), content, content_type
                 )
+                metadata = {
+                    # Spread the Box entry first so its fields can never
+                    # clobber the loader's own reserved metadata keys
+                    # (a Box field literally named "source"/"row"/etc.).
+                    **file_data,
+                    "source": "box",
+                    "row": index,
+                    "file_id": file_data.get("id"),
+                    "content_type": content_type,
+                }
+                if raw_content is not None:
+                    metadata["raw_content"] = raw_content
+                documents.append(Document(text=text, metadata=metadata))
         return documents
+
+    @staticmethod
+    def _extract_text(
+        name: str, content: Any, content_type: str | None
+    ) -> tuple[str, bytes | None]:
+        if not isinstance(content, bytes):
+            return str(content), None
+        try:
+            return content.decode("utf-8"), None
+        except UnicodeDecodeError:
+            ext = os.path.splitext(name)[1].lower()
+            descriptor = content_type or ext or "unknown"
+            return f"[Binary file: {descriptor}]", content
 
     async def aload(self) -> list[Document]:
         loop = asyncio.get_running_loop()

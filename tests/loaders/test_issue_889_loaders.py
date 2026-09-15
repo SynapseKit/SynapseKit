@@ -357,6 +357,26 @@ def test_box_loader_loads_file_content() -> None:
     assert docs[0].metadata["name"] == "notes.txt"
 
 
+def test_box_loader_does_not_mangle_binary_content() -> None:
+    """Regression test for #1030: binary files must not be decoded as UTF-8
+    with errors="replace" (mojibake); they should get a placeholder + the
+    raw bytes kept in metadata, matching S3Loader's pattern."""
+    from synapsekit.loaders.box import BoxLoader
+
+    png_bytes = b"\x89PNG\r\n\x1a\n\x00\x01\x02\xff\xfe"
+    client = FakeHTTPClient(
+        [
+            FakeResponse({"entries": [{"id": "f1", "name": "photo.png", "type": "file"}]}),
+            FakeResponse(png_bytes, headers={"Content-Type": "image/png"}),
+        ]
+    )
+    docs = BoxLoader(access_token="token", folder_id="0", client=client).load()
+
+    assert docs[0].text == "[Binary file: image/png]"
+    assert docs[0].metadata["raw_content"] == png_bytes
+    assert docs[0].metadata["content_type"] == "image/png"
+
+
 def test_box_loader_follows_folder_pagination() -> None:
     from synapsekit.loaders.box import BoxLoader
 
