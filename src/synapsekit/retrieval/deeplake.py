@@ -115,6 +115,45 @@ class DeepLakeVectorStore(RemoteVectorStoreSupport, VectorStore):
             )
         return output
 
+    def _hydrate_local_state(self) -> None:
+        """Populate the in-process fallback cache from persisted dataset rows.
+
+        ``_documents``/``_local_vectors`` are normally built up by ``add()``
+        calls in this process. After a reconnect (constructing a new instance
+        against an existing, already-populated dataset) those caches start
+        empty, so the cosine-similarity fallback below would silently return
+        no results even though the dataset holds real data. Read the
+        persisted rows back in before falling back, when the dataset
+        supports row-style access.
+        """
+        if self._documents or self._local_vectors:
+            return
+        try:
+            length = len(self._dataset)
+        except (TypeError, AttributeError):
+            return
+        documents: list[tuple[str, dict[str, Any]]] = []
+        vectors: list[list[float]] = []
+        for index in range(length):
+            try:
+                row = self._dataset[index]
+                text = row["text"]
+                metadata = row["metadata"]
+                embedding = row["embedding"]
+            except Exception:
+                return
+            if isinstance(metadata, str):
+                try:
+                    metadata = json.loads(metadata)
+                except json.JSONDecodeError:
+                    metadata = {}
+            if not isinstance(metadata, dict):
+                metadata = {}
+            documents.append((str(text), metadata))
+            vectors.append(self._as_float_list(embedding))
+        self._documents = documents
+        self._local_vectors = vectors
+
     def _search_sync(
         self, vector: list[float], top_k: int, metadata_filter: dict[str, Any] | None
     ) -> list[dict[str, Any]]:
@@ -123,6 +162,7 @@ class DeepLakeVectorStore(RemoteVectorStoreSupport, VectorStore):
         if dataset_results is not None:
             results = dataset_results
         else:
+            self._hydrate_local_state()
             results = []
             for (text, metadata), candidate in zip(
                 self._documents,

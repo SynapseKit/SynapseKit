@@ -349,3 +349,31 @@ async def test_deeplake_and_myscale_smoke():
     myscale = MyScaleVectorStore(Embeddings(), client=Client())
     await myscale.add(["alpha"], [{"kind": "a"}])
     assert (await myscale.search("alpha"))[0]["metadata"] == {"kind": "a"}
+
+
+@pytest.mark.asyncio
+async def test_deeplake_fallback_hydrates_from_dataset_after_reconnect():
+    """Regression test for #1015: a freshly-constructed instance attached to
+    an already-populated dataset (simulating a reconnect) must not return []
+    from the in-process cosine fallback just because _documents/
+    _local_vectors start out empty in this process."""
+    from synapsekit.retrieval.deeplake import DeepLakeVectorStore
+
+    class ReconnectedDataset:
+        """No `search` method -> forces the in-process fallback path."""
+
+        rows = [
+            {"text": "alpha", "metadata": {"kind": "a"}, "embedding": [1.0, 0.0]},
+            {"text": "beta", "metadata": {"kind": "b"}, "embedding": [0.0, 1.0]},
+        ]
+
+        def __len__(self):
+            return len(self.rows)
+
+        def __getitem__(self, index):
+            return self.rows[index]
+
+    deep_lake = DeepLakeVectorStore(Embeddings(), dataset=ReconnectedDataset())
+    results = await deep_lake.search("alpha")
+    assert results[0]["text"] == "alpha"
+    assert results[0]["metadata"] == {"kind": "a"}
