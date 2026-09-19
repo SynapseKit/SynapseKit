@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import re
 import time
 import uuid
 import warnings
@@ -240,8 +239,17 @@ async def test_firestore_memory_query_methods_use_field_filter(firestore_host: s
     await backend.aclose()
 
 
+# The emulator's master key is a fixed, publicly documented value (see
+# Microsoft's Cosmos DB emulator docs); it only differs if the container is
+# started with the CLI /Key option, which this fixture does not use.
+_COSMOS_EMULATOR_KEY = (
+    "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=="
+)
+
+
 @pytest.fixture(scope="module")
 def cosmos_config() -> Iterator[tuple[str, str]]:
+    from azure.cosmos import CosmosClient
     from testcontainers.core.container import DockerContainer
 
     with (
@@ -251,13 +259,32 @@ def cosmos_config() -> Iterator[tuple[str, str]]:
         .with_env("AZURE_COSMOS_EMULATOR_PARTITION_COUNT", "1")
         .with_exposed_ports(8081, 1234)
     ) as container:
-        stdout, stderr = container.get_logs()
-        logs = (stdout + stderr).decode("utf-8", errors="replace")
-        match = re.search(r"Master Key:\s*(\S+)", logs)
-        if match is None:
-            pytest.skip("Cosmos emulator did not expose a startup master key")
-        endpoint = f"https://{container.get_container_host_ip()}:{container.get_exposed_port(1234)}"
-        key = match.group(1)
+        # Port 8081 is the Gateway/API endpoint clients connect to; 1234 is a
+        # secondary port unrelated to the data-plane API (the original fixture
+        # used 1234 here, which was never actually reachable -- masked because
+        # the fixture always skipped before attempting a real connection).
+        endpoint = f"https://{container.get_container_host_ip()}:{container.get_exposed_port(8081)}"
+        key = _COSMOS_EMULATOR_KEY
+
+        # This image has no reliable log-based or health-check readiness signal
+        # (see Azure/azure-cosmos-db-emulator-docker#154): its API port accepts
+        # connections before the backing schema is initialized, and it does not
+        # log a startup master key at all. Poll with a real client call instead
+        # of trusting logs, mirroring the Cassandra fixture's real-connection
+        # retry above -- a missing/never-ready backend is a real failure, not
+        # something to skip past (see #1033).
+        last_error: Exception | None = None
+        for _ in range(180):
+            try:
+                client = CosmosClient(endpoint, credential=key, connection_verify=False)
+                client.get_database_account()
+                break
+            except Exception as exc:
+                last_error = exc
+                time.sleep(1)
+        else:
+            raise RuntimeError(f"Cosmos emulator was not ready: {last_error}")
+
         yield endpoint, key
 
 

@@ -369,6 +369,12 @@ integration = [
     "elasticsearch>=8.0,<9",
     "pymongo>=4.0",
     "google-cloud-firestore>=2.13",
+    # azure.cosmos.aio.CosmosClient (used by CosmosDBMemoryBackend/CosmosDBCheckpointer
+    # and by the cosmos_config test fixture's readiness probe) requires an async
+    # HTTP transport; aiohttp is azure-core's default and was previously missing
+    # from this group, masked because the Cosmos test always skipped before ever
+    # reaching a real connection attempt.
+    "aiohttp>=3.14.3",
     "azure-cosmos>=4.0",
     "qdrant-client>=1.9",
     "weaviate-client>=4.0",

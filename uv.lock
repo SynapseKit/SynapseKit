@@ -10919,6 +10919,7 @@ dev = [
     { name = "tzdata" },
 ]
 integration = [
+    { name = "aiohttp" },
     { name = "asyncpg" },
     { name = "azure-cosmos" },
     { name = "azure-storage-blob" },
@@ -11266,6 +11267,7 @@ dev = [
     { name = "tzdata", specifier = ">=2024.1" },
 ]
 integration = [
+    { name = "aiohttp", specifier = ">=3.14.3" },
     { name = "asyncpg", specifier = ">=0.29" },
     { name = "azure-cosmos", specifier = ">=4.0" },
     { name = "azure-storage-blob", specifier = ">=12.0,<12.20" },
