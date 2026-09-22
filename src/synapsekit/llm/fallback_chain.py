@@ -41,8 +41,10 @@ class FallbackChain(BaseLLM):
         """Stream from first model that produces an adequate response."""
         last_exc: Exception | None = None
         min_len = self._chain_config.min_response_length
+        allowed_models = kw.pop("_synapsekit_allowed_models", None)
+        models = allowed_models if allowed_models is not None else self._chain_config.models
 
-        for llm in self._chain_config.models:
+        for llm in models:
             try:
                 # Buffer the response to check min_response_length
                 tokens: list[str] = []
@@ -69,8 +71,10 @@ class FallbackChain(BaseLLM):
         """Generate from first model that produces an adequate response."""
         last_exc: Exception | None = None
         min_len = self._chain_config.min_response_length
+        allowed_models = kw.pop("_synapsekit_allowed_models", None)
+        models = allowed_models if allowed_models is not None else self._chain_config.models
 
-        for llm in self._chain_config.models:
+        for llm in models:
             try:
                 result = await llm.generate(prompt, **kw)
                 if len(result.strip()) < min_len:

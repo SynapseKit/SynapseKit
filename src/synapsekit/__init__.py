@@ -298,6 +298,24 @@ from .llm.cost_quality_router import CostQualityRouter
 from .llm.cost_router import QUALITY_TABLE, CostRouter, CostRouterConfig, RouterModelSpec
 from .llm.edge import EdgeFallbackBlockedError, EdgeRouteMetadata, EdgeRuntime, FallbackPolicy
 from .llm.fallback_chain import FallbackChain, FallbackChainConfig
+from .llm.finops import (
+    BudgetAlert,
+    BudgetLedger,
+    BudgetPolicy,
+    BudgetReservation,
+    CarbonEstimator,
+    CostArbitrageSimulator,
+    ModelPricing,
+    PricingEntry,
+    PricingSource,
+    PricingTable,
+    RequestClassPolicy,
+    RequestPolicy,
+    SimulationModel,
+    SimulationResult,
+    SimulationTask,
+    SpendAttribution,
+)
 from .llm.multimodal import AudioContent, ImageContent, MultimodalMessage
 from .llm.reasoning import (
     BaseReasoningProvider,
@@ -625,6 +643,22 @@ __all__ = [
     "FallbackPolicy",
     "FallbackChain",
     "FallbackChainConfig",
+    "BudgetAlert",
+    "BudgetLedger",
+    "BudgetPolicy",
+    "BudgetReservation",
+    "CarbonEstimator",
+    "CostArbitrageSimulator",
+    "ModelPricing",
+    "PricingEntry",
+    "PricingSource",
+    "PricingTable",
+    "RequestClassPolicy",
+    "RequestPolicy",
+    "SimulationModel",
+    "SimulationResult",
+    "SimulationTask",
+    "SpendAttribution",
     "BaseReasoningProvider",
     "AlephAlphaLLM",
     "AzureOpenAILLM",

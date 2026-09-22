@@ -600,7 +600,7 @@ class TestCostQualityRouterStream:
         assert router._stats["model-z"]["calls"] == 1
 
     @pytest.mark.asyncio
-    async def test_stream_exception_returns_empty(self):
+    async def test_stream_exception_raises_when_no_candidate_succeeds(self):
         from synapsekit.llm.base import LLMConfig
         from synapsekit.llm.cost_quality_router import CostQualityRouter
 
@@ -616,11 +616,9 @@ class TestCostQualityRouterStream:
         llm.stream = _broken_stream
         router = CostQualityRouter(candidates=[llm], explore_n=5)
 
-        tokens = []
-        async for tok in router.stream("prompt"):
-            tokens.append(tok)
-
-        assert tokens == []  # exception swallowed, empty result
+        with pytest.raises(RuntimeError, match="provider dead"):
+            async for _ in router.stream("prompt"):
+                pass
 
     @pytest.mark.asyncio
     async def test_stream_uses_exploit_ordering(self):

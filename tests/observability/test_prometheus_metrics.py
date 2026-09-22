@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 import synapsekit.observe as observe
 from synapsekit.observability.metrics import PrometheusMetrics
 
@@ -65,3 +67,24 @@ def test_agent_evolution_metrics_disabled_noop():
 
     # All calls are no-ops when disabled; if they raised the test would fail
     assert metrics.enabled is False
+
+
+def test_finops_gauges_record_expected_metric_names():
+    prometheus = pytest.importorskip("prometheus_client")
+    registry = prometheus.CollectorRegistry()
+    metrics = PrometheusMetrics(enabled=True, registry=registry)
+
+    metrics.record_budget_remaining(
+        tenant_id="tenant-a",
+        api_key_id="key-a",
+        remaining_usd=4.25,
+    )
+    metrics.record_arbitrage_savings(
+        provider="economy-provider",
+        model="economy-model",
+        savings_usd=1.75,
+    )
+
+    names = {metric.name for metric in registry.collect()}
+    assert "synapsekit_budget_remaining_usd" in names
+    assert "synapsekit_arbitrage_savings_usd" in names

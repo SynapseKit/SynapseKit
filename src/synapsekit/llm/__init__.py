@@ -4,6 +4,24 @@ from .cost_quality_router import CostQualityRouter
 from .cost_router import QUALITY_TABLE, CostRouter, CostRouterConfig, RouterModelSpec
 from .edge import EdgeFallbackBlockedError, EdgeRouteMetadata, EdgeRuntime, FallbackPolicy
 from .fallback_chain import FallbackChain, FallbackChainConfig
+from .finops import (
+    BudgetAlert,
+    BudgetLedger,
+    BudgetPolicy,
+    BudgetReservation,
+    CarbonEstimator,
+    CostArbitrageSimulator,
+    ModelPricing,
+    PricingEntry,
+    PricingSource,
+    PricingTable,
+    RequestClassPolicy,
+    RequestPolicy,
+    SimulationModel,
+    SimulationResult,
+    SimulationTask,
+    SpendAttribution,
+)
 from .structured import generate_structured
 
 __all__ = [
@@ -32,6 +50,12 @@ __all__ = [
     "FallbackChain",
     "FallbackChainConfig",
     "FallbackPolicy",
+    "BudgetAlert",
+    "BudgetLedger",
+    "BudgetPolicy",
+    "BudgetReservation",
+    "CarbonEstimator",
+    "CostArbitrageSimulator",
     "FireworksLLM",
     "GeminiLLM",
     "GPT4AllLLM",
@@ -54,6 +78,12 @@ __all__ = [
     "OpenAILLM",
     "OpenRouterLLM",
     "PerplexityLLM",
+    "ModelPricing",
+    "PricingEntry",
+    "PricingSource",
+    "PricingTable",
+    "RequestClassPolicy",
+    "RequestPolicy",
     "QUALITY_TABLE",
     "ReasoningLLM",
     "ReasoningResponse",
@@ -61,6 +91,10 @@ __all__ = [
     "ReplicateLLM",
     "RekaLLM",
     "RouterModelSpec",
+    "SimulationModel",
+    "SimulationResult",
+    "SimulationTask",
+    "SpendAttribution",
     "SambaNovaLLM",
     "TogetherLLM",
     "SnowflakeCortexLLM",

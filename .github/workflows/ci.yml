@@ -73,6 +73,18 @@ jobs:
       - run: uv sync --group dev --group bench
       - run: uv run pytest benchmarks/test_agent_swarm_bench.py -v
 
+  # Enforces the #893 FinOps acceptance target: replayed cost-arbitrage routing
+  # must save at least 40% against always-best-model spend without reducing mean
+  # quality, using a deterministic provider-free trace.
+  cost-arbitrage-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --group dev --group bench --extra observe
+      - run: uv run pytest tests/llm/test_finops.py tests/observability/test_prometheus_metrics.py -v
+      - run: uv run pytest benchmarks/test_cost_arbitrage_bench.py -v
+
   # Enforces the #732 self-evolving acceptance targets: a SelfImprovingAgent must
   # lift its own held-out accuracy from a fallible baseline (<=50%) to >=90% over 5
   # evolution cycles, never regressing, with every decoy candidate blocked by the gate.

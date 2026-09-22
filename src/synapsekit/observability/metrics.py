@@ -13,6 +13,9 @@ try:  # pragma: no cover - optional dependency
         Counter as PromCounter,
     )
     from prometheus_client import (
+        Gauge as PromGauge,
+    )
+    from prometheus_client import (
         Histogram as PromHistogram,
     )
     from prometheus_client import (
@@ -24,6 +27,7 @@ except Exception:  # pragma: no cover - optional dependency
     PromCollectorRegistry = None  # type: ignore[assignment,misc]
     PromCounter = None  # type: ignore[assignment,misc]
     PromHistogram = None  # type: ignore[assignment,misc]
+    PromGauge = None  # type: ignore[assignment,misc]
     prom_start_http_server = None  # type: ignore[assignment,misc]
     _PROMETHEUS_AVAILABLE = False
 
@@ -66,6 +70,8 @@ class PrometheusMetrics:
         self._cost_counter: Any | None = None
         self._token_counter: Any | None = None
         self._latency_hist: Any | None = None
+        self._budget_remaining_gauge: Any | None = None
+        self._arbitrage_savings_gauge: Any | None = None
         self._swarm_bid_counter: Any | None = None
         self._swarm_win_counter: Any | None = None
         self._swarm_reward_hist: Any | None = None
@@ -100,6 +106,20 @@ class PrometheusMetrics:
                 namespace=self._namespace,
                 registry=self._registry,
                 buckets=(0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10),
+            )
+            self._budget_remaining_gauge = PromGauge(
+                "budget_remaining_usd",
+                "Remaining configured LLM budget in USD.",
+                ["tenant_id", "api_key_id"],
+                namespace=self._namespace,
+                registry=self._registry,
+            )
+            self._arbitrage_savings_gauge = PromGauge(
+                "arbitrage_savings_usd",
+                "Cumulative USD savings from cost-arbitrage routing.",
+                ["model", "provider"],
+                namespace=self._namespace,
+                registry=self._registry,
             )
             self._swarm_bid_counter = PromCounter(
                 "swarm_bids_total",
@@ -225,6 +245,37 @@ class PrometheusMetrics:
         if latency_ms is not None and self._latency_hist is not None:
             with suppress(Exception):
                 self._latency_hist.labels(**labels).observe(float(latency_ms) / 1000.0)
+
+    def record_budget_remaining(
+        self,
+        *,
+        tenant_id: str | None,
+        api_key_id: str | None,
+        remaining_usd: float,
+    ) -> None:
+        """Set remaining budget for a tenant/key scope."""
+        if not self.enabled or self._budget_remaining_gauge is None:
+            return
+        labels = {
+            "tenant_id": str(tenant_id) if tenant_id is not None else "unknown",
+            "api_key_id": str(api_key_id) if api_key_id is not None else "unknown",
+        }
+        with suppress(Exception):
+            self._budget_remaining_gauge.labels(**labels).set(max(0.0, float(remaining_usd)))
+
+    def record_arbitrage_savings(
+        self,
+        *,
+        provider: str,
+        model: str,
+        savings_usd: float,
+    ) -> None:
+        """Set cumulative arbitrage savings for a provider/model route."""
+        if not self.enabled or self._arbitrage_savings_gauge is None:
+            return
+        labels = {"model": str(model), "provider": str(provider)}
+        with suppress(Exception):
+            self._arbitrage_savings_gauge.labels(**labels).set(float(savings_usd))
 
     def record_swarm_bid(
         self,
