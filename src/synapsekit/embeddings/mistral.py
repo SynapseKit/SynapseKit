@@ -41,7 +41,12 @@ class MistralEmbeddings(BaseEmbeddings):
             try:
                 from mistralai import Mistral
             except ImportError:
-                raise ImportError("mistralai required: pip install synapsekit[mistral]") from None
+                try:
+                    from mistralai.client import Mistral  # type: ignore[no-redef]  # mistralai 2.x
+                except ImportError:
+                    raise ImportError(
+                        "mistralai required: pip install synapsekit[mistral]"
+                    ) from None
             key = self._api_key or os.environ.get("MISTRAL_API_KEY")
             if not key:
                 raise ValueError("MISTRAL_API_KEY is not set")
@@ -50,6 +55,6 @@ class MistralEmbeddings(BaseEmbeddings):
 
     async def _embed_raw(self, texts: list[str]) -> np.ndarray:
         client = self._get_client()
-        resp = await client.embeddings_async(model=self.model, inputs=texts)
+        resp = await client.embeddings.create_async(model=self.model, inputs=texts)
         ordered = sorted(resp.data, key=lambda item: item.index)
         return np.asarray([item.embedding for item in ordered], dtype=np.float32)

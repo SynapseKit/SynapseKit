@@ -37,7 +37,7 @@ async def test_embed_parses_response():
     assert vecs.shape == (2, 4)
     body = json.loads(route.calls[0].request.content)
     assert body["model"] == "mistral-embed"
-    assert body["inputs"] == ["a", "b"]
+    assert body["input"] == ["a", "b"]
 
 
 @pytest.mark.asyncio

@@ -139,7 +139,7 @@ class TestCohereLLM:
 
 class TestMistralLLM:
     def test_import_error_without_mistralai(self):
-        with patch.dict("sys.modules", {"mistralai": None}):
+        with patch.dict("sys.modules", {"mistralai": None, "mistralai.client": None}):
             from synapsekit.llm.mistral import MistralLLM
 
             llm = MistralLLM(make_config("mistral", "mistral-small"))
@@ -157,7 +157,10 @@ class TestMistralLLM:
         chunk.data = chunk_data
 
         async def mock_stream_async(**kw):
-            yield chunk
+            async def _gen():
+                yield chunk
+
+            return _gen()
 
         mock_chat = MagicMock()
         mock_chat.stream_async = mock_stream_async
