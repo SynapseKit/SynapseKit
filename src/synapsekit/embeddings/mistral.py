@@ -55,6 +55,6 @@ class MistralEmbeddings(BaseEmbeddings):
 
     async def _embed_raw(self, texts: list[str]) -> np.ndarray:
         client = self._get_client()
-        resp = await client.embeddings_async(model=self.model, inputs=texts)
+        resp = await client.embeddings.create_async(model=self.model, inputs=texts)
         ordered = sorted(resp.data, key=lambda item: item.index)
         return np.asarray([item.embedding for item in ordered], dtype=np.float32)
