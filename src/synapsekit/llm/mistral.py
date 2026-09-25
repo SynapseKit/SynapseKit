@@ -38,7 +38,7 @@ class MistralLLM(BaseLLM):
 
     async def stream_with_messages(self, messages: list[dict], **kw) -> AsyncGenerator[str]:
         client = self._get_client()
-        async for chunk in client.chat.stream_async(
+        async for chunk in await client.chat.stream_async(
             model=self.config.model,
             messages=messages,
             temperature=kw.get("temperature", self.config.temperature),

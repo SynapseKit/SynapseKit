@@ -157,7 +157,10 @@ class TestMistralLLM:
         chunk.data = chunk_data
 
         async def mock_stream_async(**kw):
-            yield chunk
+            async def _gen():
+                yield chunk
+
+            return _gen()
 
         mock_chat = MagicMock()
         mock_chat.stream_async = mock_stream_async
