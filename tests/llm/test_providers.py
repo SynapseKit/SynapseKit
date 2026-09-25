@@ -139,7 +139,7 @@ class TestCohereLLM:
 
 class TestMistralLLM:
     def test_import_error_without_mistralai(self):
-        with patch.dict("sys.modules", {"mistralai": None}):
+        with patch.dict("sys.modules", {"mistralai": None, "mistralai.client": None}):
             from synapsekit.llm.mistral import MistralLLM
 
             llm = MistralLLM(make_config("mistral", "mistral-small"))
