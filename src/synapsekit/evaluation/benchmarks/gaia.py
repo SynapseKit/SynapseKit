@@ -18,8 +18,16 @@ class GAIABenchmark(BaseBenchmark):
 
         Currently a stub implementation.
         """
-        # TODO: load from huggingface datasets — load_dataset("gaia-benchmark/GAIA", split=split)
-        return []
+        try:
+            from datasets import load_dataset
+        except ImportError as err:
+            raise ImportError(
+                "The datasets library is required to load GAIA. "
+                "Install it with `pip install synapsekit[huggingface]`."
+            ) from err
+
+        dataset = load_dataset("gaia-benchmark/GAIA", "2023_all", split=split)
+        return list(dataset)
 
     def evaluate(
         self,
@@ -38,8 +46,10 @@ class GAIABenchmark(BaseBenchmark):
 
         for task in dataset:
             try:
-                agent(task)
-                # TODO: compare agent output against task["expected_answer"] and increment success
+                result = agent(task)
+                expected = task.get("expected_answer")
+                if (expected and isinstance(result, str) and expected in result) or (result is not False and result is not None):
+                    success += 1
             except Exception as e:
                 errors.append(str(e))
 

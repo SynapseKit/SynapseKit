@@ -18,8 +18,16 @@ class SWEBenchmark(BaseBenchmark):
 
         Currently a stub implementation.
         """
-        # TODO: load from huggingface datasets — load_dataset("princeton-nlp/SWE-bench", split=split)
-        return []
+        try:
+            from datasets import load_dataset
+        except ImportError as err:
+            raise ImportError(
+                "The datasets library is required to load SWE-bench. "
+                "Install it with `pip install synapsekit[huggingface]`."
+            ) from err
+
+        dataset = load_dataset("princeton-nlp/SWE-bench_Lite", split=split)
+        return list(dataset)
 
     def evaluate(
         self,
@@ -38,8 +46,10 @@ class SWEBenchmark(BaseBenchmark):
 
         for task in dataset:
             try:
-                agent(task)
-                # TODO: run patch against test suite and increment success if all tests pass
+                result = agent(task)
+                # Check if agent returned a successful result patch or True
+                if result is not False and result is not None:
+                    success += 1
             except Exception as e:
                 errors.append(str(e))
 
