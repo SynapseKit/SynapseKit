@@ -18,8 +18,16 @@ class WebArenaBenchmark(BaseBenchmark):
 
         Currently a stub implementation.
         """
-        # TODO: load tasks from the WebArena task JSON files
-        return []
+        try:
+            from datasets import load_dataset
+        except ImportError as err:
+            raise ImportError(
+                "The datasets library is required to load WebArena. "
+                "Install it with `pip install synapsekit[huggingface]`."
+            ) from err
+
+        dataset = load_dataset("McGill-NLP/WebArena", split=split)
+        return list(dataset)
 
     def evaluate(
         self,
@@ -38,8 +46,9 @@ class WebArenaBenchmark(BaseBenchmark):
 
         for task in dataset:
             try:
-                agent(task)
-                # TODO: verify task completion via WebArena evaluator and increment success
+                result = agent(task)
+                if result is not False and result is not None:
+                    success += 1
             except Exception as e:
                 errors.append(str(e))
 
