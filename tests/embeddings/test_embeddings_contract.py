@@ -40,7 +40,15 @@ def test_lazy_import_error_message(cls_name, module_name):
     import importlib
     from unittest.mock import patch
 
-    with patch.dict("sys.modules", {module_name: None}):
+    # The sys.modules key is the SDK package name, which differs from the
+    # synapsekit submodule name for some providers. Mistral's SDK is
+    # ``mistralai`` (2.x also exposes it as ``mistralai.client``); block both so
+    # the ImportError path is exercised even with the SDK installed in CI.
+    sdk_block: dict[str, None] = {module_name: None}
+    if module_name == "mistral":
+        sdk_block = {"mistralai": None, "mistralai.client": None}
+
+    with patch.dict("sys.modules", sdk_block):
         mod = importlib.import_module(f"synapsekit.embeddings.{module_name}")
         cls = getattr(mod, cls_name)
         obj = cls(api_key="test-key")
