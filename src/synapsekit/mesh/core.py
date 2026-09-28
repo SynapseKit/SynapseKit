@@ -614,12 +614,12 @@ class KnowledgeMesh:
             pid=self.store.status_value("pid"),
         )
 
-    def as_mcp_tools(self) -> list[Any]:
+    def as_mcp_tools(self, memory_config: Any | None = None) -> list[Any]:
         """Return MCP-compatible tools for this mesh."""
 
         from .mcp import build_mesh_tools
 
-        return build_mesh_tools(self)
+        return build_mesh_tools(self, memory_config)
 
     def _build_rag(
         self,
