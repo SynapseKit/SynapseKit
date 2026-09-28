@@ -19,7 +19,12 @@ class MistralLLM(BaseLLM):
             try:
                 from mistralai import Mistral
             except ImportError:
-                raise ImportError("mistralai required: pip install synapsekit[mistral]") from None
+                try:
+                    from mistralai.client import Mistral  # type: ignore[no-redef]  # mistralai 2.x
+                except ImportError:
+                    raise ImportError(
+                        "mistralai required: pip install synapsekit[mistral]"
+                    ) from None
             self._client = Mistral(api_key=self.config.api_key)
         return self._client
 
@@ -33,7 +38,7 @@ class MistralLLM(BaseLLM):
 
     async def stream_with_messages(self, messages: list[dict], **kw) -> AsyncGenerator[str]:
         client = self._get_client()
-        async for chunk in client.chat.stream_async(
+        async for chunk in await client.chat.stream_async(
             model=self.config.model,
             messages=messages,
             temperature=kw.get("temperature", self.config.temperature),
