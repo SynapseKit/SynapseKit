@@ -63,6 +63,25 @@ def test_diff_bundle_rejects_duplicate_paths() -> None:
         )
 
 
+def test_diff_bundle_rejects_invalid_integer_formats() -> None:
+    manifest = {
+        "schema_version": "1.0",
+        "host_root": "/tmp",
+        "base_fingerprint": "base",
+        "sandbox_id": "sandbox",
+        "changes": [
+            {
+                "kind": "add",
+                "path": "file.txt",
+                "size": "invalid_size",
+                "mode": 0
+            }
+        ]
+    }
+    with pytest.raises(SandboxSecurityError, match="Invalid integer format"):
+        DiffBundle.from_dict(manifest)
+
+
 def test_diff_bundle_read_rejects_digest_tamper(tmp_path: Path) -> None:
     bundle = DiffBundle(
         host_root=str(tmp_path),
