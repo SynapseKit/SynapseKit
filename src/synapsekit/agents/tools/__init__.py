@@ -13,6 +13,7 @@ from .file_list import FileListTool
 from .file_read import FileReadTool
 from .file_write import FileWriteTool
 from .github_api import GitHubAPITool
+from .gitlab_api import GitLabAPITool
 from .google_calendar import GoogleCalendarTool
 from .google_search import GoogleSearchTool
 from .graphql import GraphQLTool
@@ -65,6 +66,7 @@ __all__ = [
     "FileReadTool",
     "FileWriteTool",
     "GitHubAPITool",
+    "GitLabAPITool",
     "GoogleCalendarTool",
     "GoogleSearchTool",
     "GraphQLTool",
