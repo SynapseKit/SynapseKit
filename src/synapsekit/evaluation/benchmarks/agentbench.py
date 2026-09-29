@@ -14,12 +14,14 @@ class AgentBenchBenchmark(BaseBenchmark):
     name: ClassVar[str] = "AgentBench"
 
     def load_dataset(self, split: str = "test") -> list[dict[str, Any]]:
-        """Load the AgentBench dataset.
+        """Load the AgentBench dataset from HuggingFace."""
+        try:
+            import datasets
+        except ImportError as e:
+            raise ImportError("The 'datasets' package is required for AgentBench. Run `pip install datasets`.") from e
 
-        Currently a stub implementation.
-        """
-        # TODO: load from the AgentBench task configs
-        return []
+        ds = datasets.load_dataset("THUDM/AgentBench", split=split)
+        return [dict(row) for row in ds]
 
     def evaluate(
         self,
@@ -38,8 +40,13 @@ class AgentBenchBenchmark(BaseBenchmark):
 
         for task in dataset:
             try:
-                agent(task)
-                # TODO: check agent output against expected result and increment success
+                result = agent(task)
+
+                # Simple exact match fallback; actual AgentBench is multi-turn interaction
+                expected = str(task.get("reference", "")).strip().casefold()
+                prediction = str(result).strip().casefold() if result is not None else ""
+                if prediction and expected and (expected == prediction or expected in prediction):
+                    success += 1
             except Exception as e:
                 errors.append(str(e))
 
