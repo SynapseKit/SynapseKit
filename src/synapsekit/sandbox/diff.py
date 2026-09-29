@@ -105,9 +105,9 @@ class DiffBundle:
             raise ValueError(f"Unsupported diff bundle schema: {self.schema_version!r}.")
         if not self.created_at:
             object.__setattr__(self, "created_at", datetime.now(timezone.utc).isoformat())
-        paths = [normalize_relative_path(change.path) for change in self.changes]
+        paths = [normalize_relative_path(change.path).casefold() for change in self.changes]
         if len(paths) != len(set(paths)):
-            raise SandboxSecurityError("Diff bundle contains duplicate paths.")
+            raise SandboxSecurityError("Diff bundle contains duplicate or case-clashing paths.")
 
     @classmethod
     def from_manifests(
