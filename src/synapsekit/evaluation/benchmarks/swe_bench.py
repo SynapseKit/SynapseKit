@@ -14,12 +14,17 @@ class SWEBenchmark(BaseBenchmark):
     name: ClassVar[str] = "SWE-bench"
 
     def load_dataset(self, split: str = "test") -> list[dict[str, Any]]:
-        """Load the SWE-bench dataset.
-
-        Currently a stub implementation.
-        """
-        # TODO: load from huggingface datasets — load_dataset("princeton-nlp/SWE-bench", split=split)
-        return []
+        """Load the SWE-bench dataset using the datasets library."""
+        try:
+            from datasets import load_dataset
+        except ImportError:
+            raise ImportError(
+                "The 'datasets' package is required to load the SWE-bench dataset. "
+                "Please install it with `pip install datasets`."
+            )
+            
+        dataset = load_dataset("princeton-nlp/SWE-bench", split=split)
+        return [dict(item) for item in dataset]
 
     def evaluate(
         self,

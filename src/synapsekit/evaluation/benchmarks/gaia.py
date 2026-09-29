@@ -14,12 +14,17 @@ class GAIABenchmark(BaseBenchmark):
     name: ClassVar[str] = "GAIA"
 
     def load_dataset(self, split: str = "validation") -> list[dict[str, Any]]:
-        """Load the GAIA dataset.
-
-        Currently a stub implementation.
-        """
-        # TODO: load from huggingface datasets — load_dataset("gaia-benchmark/GAIA", split=split)
-        return []
+        """Load the GAIA dataset using the datasets library."""
+        try:
+            from datasets import load_dataset
+        except ImportError:
+            raise ImportError(
+                "The 'datasets' package is required to load the GAIA dataset. "
+                "Please install it with `pip install datasets`."
+            )
+            
+        dataset = load_dataset("gaia-benchmark/GAIA", "2023_all", split=split)
+        return [dict(item) for item in dataset]
 
     def evaluate(
         self,
