@@ -224,6 +224,10 @@ def _add_memory_parser(subparsers: argparse._SubParsersAction) -> None:  # type:
     )
     log_cmd.add_argument("--store-path", default=".synapsekit_memory_patches.jsonl")
 
+    clear_cmd = mem_sub.add_parser("clear", aliases=["prune"], help="Clear all memory patches")
+    clear_cmd.add_argument("--store-path", default=".synapsekit_memory_patches.jsonl")
+    clear_cmd.add_argument("--force", action="store_true", help="Force clear without confirmation")
+
 
 def main(argv: list[str] | None = None) -> None:
     """CLI entry point."""

@@ -18,8 +18,10 @@ def run_memory(args: argparse.Namespace) -> None:
         _run_revert(args)
     elif cmd == "log":
         _run_log(args)
+    elif cmd == "clear" or cmd == "prune":
+        _run_clear(args)
     else:
-        print("Usage: synapsekit memory {review,apply,revert,log}", file=sys.stderr)
+        print("Usage: synapsekit memory {review,apply,revert,log,clear}", file=sys.stderr)
         sys.exit(1)
 
 
@@ -141,6 +143,25 @@ def _run_log(args: argparse.Namespace) -> None:
             f"{p.patch_id:<18} {p.status:<12} {p.file_path:<30} "
             f"{p.created_at[:19]:<22} {rationale_preview}"
         )
+
+
+def _run_clear(args: argparse.Namespace) -> None:
+    from ..memory.patch_store import PatchStore
+
+    store = PatchStore(args.store_path)
+    count = store.count()
+    if count == 0:
+        print("No memory patches to clear.")
+        return
+
+    if not getattr(args, "force", False):
+        confirm = input(f"Are you sure you want to delete all {count} patches? [y/N] ")
+        if confirm.lower() not in ("y", "yes"):
+            print("Aborted.")
+            sys.exit(0)
+
+    store.clear()
+    print(f"Cleared {count} memory patches.")
 
 
 def _display_patch(patch) -> None:  # type: ignore[no-untyped-def]

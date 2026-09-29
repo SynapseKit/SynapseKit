@@ -77,6 +77,12 @@ class PatchStore:
         """Count patches, optionally filtered by status."""
         return len(self.list_by_status(status))
 
+    def clear(self) -> None:
+        """Clear all patches by emptying the file and internal list."""
+        self._patches.clear()
+        if self._path.exists():
+            self._path.unlink()
+
     def _append_line(self, data: dict[str, Any]) -> None:
         self._path.parent.mkdir(parents=True, exist_ok=True)
         with self._path.open("a", encoding="utf-8") as f:
