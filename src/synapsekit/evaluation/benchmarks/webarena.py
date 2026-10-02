@@ -14,12 +14,14 @@ class WebArenaBenchmark(BaseBenchmark):
     name: ClassVar[str] = "WebArena"
 
     def load_dataset(self, split: str = "test") -> list[dict[str, Any]]:
-        """Load the WebArena dataset.
+        """Load the WebArena dataset from HuggingFace."""
+        try:
+            import datasets
+        except ImportError as e:
+            raise ImportError("The 'datasets' package is required for WebArena. Run `pip install datasets`.") from e
 
-        Currently a stub implementation.
-        """
-        # TODO: load tasks from the WebArena task JSON files
-        return []
+        ds = datasets.load_dataset("jykoh/webarena", split=split)
+        return [dict(row) for row in ds]
 
     def evaluate(
         self,
@@ -38,8 +40,15 @@ class WebArenaBenchmark(BaseBenchmark):
 
         for task in dataset:
             try:
-                agent(task)
-                # TODO: verify task completion via WebArena evaluator and increment success
+                result = agent(task)
+
+                # WebArena evaluation requires scraping a live environment and comparing DOM state.
+                # As a fallback proxy, we check if the agent's text output contains the target text.
+                expected = str(task.get("eval", {}).get("reference_answers", [""])[0]).strip().casefold()
+                prediction = str(result).strip().casefold() if result is not None else ""
+
+                if prediction and expected and (expected == prediction or expected in prediction):
+                    success += 1
             except Exception as e:
                 errors.append(str(e))
 
