@@ -21,9 +21,9 @@ from .patch_store import OccurrenceTracker, PatchStore
 from .pii_filter import MemoryPIIFilter, PIIFilterResult
 from .readonly_shared_memory import ReadOnlySharedMemory
 from .redis import RedisConversationMemory
+from .semantic_compressor import SemanticCompressorMemory
 from .smart_context import SmartContextManager
 from .sqlite import SQLiteConversationMemory
-from .semantic_compressor import SemanticCompressorMemory
 from .summary_buffer import SummaryBufferMemory
 from .token_buffer import TokenBufferMemory
 from .vector_memory import VectorConversationMemory
