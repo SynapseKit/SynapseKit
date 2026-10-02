@@ -16,7 +16,8 @@ class GAIABenchmark(BaseBenchmark):
     def load_dataset(self, split: str = "validation") -> list[dict[str, Any]]:
         """Load the GAIA dataset.
 
-        Currently a stub implementation.
+        Loads raw task records; some GAIA tasks also require fetching
+        attached files, which isn't handled here.
         """
         try:
             from datasets import load_dataset
@@ -48,7 +49,14 @@ class GAIABenchmark(BaseBenchmark):
             try:
                 result = agent(task)
                 expected = task.get("expected_answer")
-                if (expected and isinstance(result, str) and expected in result) or (result is not False and result is not None):
+                if expected:
+                    # When ground truth is available, require a real match
+                    # rather than just any non-null response.
+                    is_success = isinstance(result, str) and expected in result
+                else:
+                    # Placeholder grading: no expected answer to check against.
+                    is_success = result is not False and result is not None
+                if is_success:
                     success += 1
             except Exception as e:
                 errors.append(str(e))

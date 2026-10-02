@@ -16,7 +16,8 @@ class SWEBenchmark(BaseBenchmark):
     def load_dataset(self, split: str = "test") -> list[dict[str, Any]]:
         """Load the SWE-bench dataset.
 
-        Currently a stub implementation.
+        Loads raw task records; running the actual grading still requires
+        applying the patch and executing the task's test suite.
         """
         try:
             from datasets import load_dataset
@@ -47,7 +48,8 @@ class SWEBenchmark(BaseBenchmark):
         for task in dataset:
             try:
                 result = agent(task)
-                # Check if agent returned a successful result patch or True
+                # Placeholder grading: no patch-apply + test-suite evaluator
+                # is wired up yet, so any non-null response counts.
                 if result is not False and result is not None:
                     success += 1
             except Exception as e:

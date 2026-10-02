@@ -16,7 +16,8 @@ class WebArenaBenchmark(BaseBenchmark):
     def load_dataset(self, split: str = "test") -> list[dict[str, Any]]:
         """Load the WebArena dataset.
 
-        Currently a stub implementation.
+        Loads raw task records; a real WebArena run also needs the hosted
+        environment snapshots, which aren't provisioned here.
         """
         try:
             from datasets import load_dataset
@@ -47,6 +48,8 @@ class WebArenaBenchmark(BaseBenchmark):
         for task in dataset:
             try:
                 result = agent(task)
+                # Placeholder grading: no WebArena task-completion evaluator
+                # is wired up yet, so any non-null response counts.
                 if result is not False and result is not None:
                     success += 1
             except Exception as e:

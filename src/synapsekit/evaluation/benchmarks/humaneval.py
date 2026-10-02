@@ -16,7 +16,8 @@ class HumanEvalBenchmark(BaseBenchmark):
     def load_dataset(self, split: str = "test") -> list[dict[str, Any]]:
         """Load the HumanEval dataset.
 
-        Currently a stub implementation.
+        Loads raw task records; grading still requires executing the
+        generated code against each task's unit tests.
         """
         try:
             from datasets import load_dataset
@@ -47,6 +48,8 @@ class HumanEvalBenchmark(BaseBenchmark):
         for task in dataset:
             try:
                 result = agent(task)
+                # Placeholder grading: no code-execution/unit-test harness is
+                # wired up yet, so any non-null response counts.
                 if result is not False and result is not None:
                     success += 1
             except Exception as e:

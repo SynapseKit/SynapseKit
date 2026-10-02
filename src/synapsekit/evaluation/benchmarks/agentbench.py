@@ -16,7 +16,8 @@ class AgentBenchBenchmark(BaseBenchmark):
     def load_dataset(self, split: str = "test") -> list[dict[str, Any]]:
         """Load the AgentBench dataset.
 
-        Currently a stub implementation.
+        Only loads the "os" sub-task; AgentBench also ships web/db/kg/etc.
+        environments that aren't wired up here yet.
         """
         try:
             from datasets import load_dataset
@@ -47,6 +48,8 @@ class AgentBenchBenchmark(BaseBenchmark):
         for task in dataset:
             try:
                 result = agent(task)
+                # Placeholder grading: no real AgentBench action-trajectory
+                # evaluator is wired up yet, so any non-null response counts.
                 if result is not False and result is not None:
                     success += 1
             except Exception as e:
