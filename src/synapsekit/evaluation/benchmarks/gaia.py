@@ -14,12 +14,14 @@ class GAIABenchmark(BaseBenchmark):
     name: ClassVar[str] = "GAIA"
 
     def load_dataset(self, split: str = "validation") -> list[dict[str, Any]]:
-        """Load the GAIA dataset.
+        """Load the GAIA dataset from HuggingFace."""
+        try:
+            import datasets
+        except ImportError as e:
+            raise ImportError("The 'datasets' package is required for the GAIA benchmark. Run `pip install datasets`.") from e
 
-        Currently a stub implementation.
-        """
-        # TODO: load from huggingface datasets — load_dataset("gaia-benchmark/GAIA", split=split)
-        return []
+        ds = datasets.load_dataset("gaia-benchmark/GAIA", "2023_all", split=split)
+        return [dict(row) for row in ds]
 
     def evaluate(
         self,
@@ -38,8 +40,12 @@ class GAIABenchmark(BaseBenchmark):
 
         for task in dataset:
             try:
-                agent(task)
-                # TODO: compare agent output against task["expected_answer"] and increment success
+                result = agent(task)
+                expected = str(task.get("Final answer", "")).strip().casefold()
+                prediction = str(result).strip().casefold() if result is not None else ""
+
+                if prediction and expected and (expected == prediction or expected in prediction):
+                    success += 1
             except Exception as e:
                 errors.append(str(e))
 
