@@ -156,7 +156,7 @@ okf = ["PyYAML>=6.0"]
 teams = ["httpx>=0.27"]
 http = ["aiohttp>=3.14.3"]
 search = ["duckduckgo-search>=6.0"]
-huggingface = ["huggingface-hub>=0.20", "httpx>=0.27"]
+huggingface = ["huggingface-hub>=0.20", "httpx>=0.27", "datasets>=2.16.0"]
 # transformers floored to >=5.10.0: fixes CVE-2026-9856 (save_pretrained chat-
 # template path traversal → arbitrary file write), fixed upstream in 5.10.0 with
 # no back-port to older lines. The lockfile already resolved 5.9.0, so this

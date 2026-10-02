@@ -1,4 +1,4 @@
-"""SWE-bench benchmark integration."""
+"""HumanEval benchmark integration."""
 
 from __future__ import annotations
 
@@ -8,26 +8,26 @@ from typing import Any, ClassVar
 from .base import BaseBenchmark, BenchmarkResult
 
 
-class SWEBenchmark(BaseBenchmark):
-    """SWE-bench evaluation suite."""
+class HumanEvalBenchmark(BaseBenchmark):
+    """HumanEval evaluation suite."""
 
-    name: ClassVar[str] = "SWE-bench"
+    name: ClassVar[str] = "HumanEval"
 
     def load_dataset(self, split: str = "test") -> list[dict[str, Any]]:
-        """Load the SWE-bench dataset.
+        """Load the HumanEval dataset.
 
-        Loads raw task records; running the actual grading still requires
-        applying the patch and executing the task's test suite.
+        Loads raw task records; grading still requires executing the
+        generated code against each task's unit tests.
         """
         try:
             from datasets import load_dataset
         except ImportError as err:
             raise ImportError(
-                "The datasets library is required to load SWE-bench. "
+                "The datasets library is required to load HumanEval. "
                 "Install it with `pip install synapsekit[huggingface]`."
             ) from err
 
-        dataset = load_dataset("princeton-nlp/SWE-bench_Lite", split=split)
+        dataset = load_dataset("openai_humaneval", split=split)
         return list(dataset)
 
     def evaluate(
@@ -36,7 +36,7 @@ class SWEBenchmark(BaseBenchmark):
         split: str = "test",
         limit: int | None = None,
     ) -> BenchmarkResult:
-        """Run the SWE-bench evaluation."""
+        """Run the HumanEval evaluation."""
         dataset = self.load_dataset(split)
         if limit is not None:
             dataset = dataset[:limit]
@@ -48,8 +48,8 @@ class SWEBenchmark(BaseBenchmark):
         for task in dataset:
             try:
                 result = agent(task)
-                # Placeholder grading: no patch-apply + test-suite evaluator
-                # is wired up yet, so any non-null response counts.
+                # Placeholder grading: no code-execution/unit-test harness is
+                # wired up yet, so any non-null response counts.
                 if result is not False and result is not None:
                     success += 1
             except Exception as e:
