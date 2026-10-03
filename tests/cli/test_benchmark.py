@@ -1,9 +1,20 @@
 import argparse
+import sys
+import types
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from synapsekit.cli.benchmark import run_benchmark
+
+
+@pytest.fixture
+def fake_datasets(monkeypatch):
+    """Install a minimal fake `datasets` module so the GAIA benchmark used
+    below doesn't need the real `datasets` package or network access."""
+    fake_module = types.ModuleType("datasets")
+    fake_module.load_dataset = lambda *args, **kwargs: [{"input": "task-1"}]
+    monkeypatch.setitem(sys.modules, "datasets", fake_module)
 
 
 def test_run_benchmark_list(capsys):
@@ -26,7 +37,7 @@ def test_run_benchmark_run_unknown_suite():
 
 
 @patch("importlib.import_module")
-def test_run_benchmark_run_success(mock_import_module, capsys):
+def test_run_benchmark_run_success(mock_import_module, capsys, fake_datasets):
     mock_module = MagicMock()
 
     def mock_agent(task):

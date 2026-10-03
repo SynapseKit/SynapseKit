@@ -1,4 +1,4 @@
-"""Real S3Loader integration tests against MinIO (S3-compatible) via testcontainers.
+"""Real S3Loader integration tests against S3Mock (S3-compatible) via testcontainers.
 
 Boots a real MinIO server and exercises the real boto3 path: list + download +
 text extraction into Documents, prefix filtering, extension filtering, max_files,
@@ -18,11 +18,13 @@ _container_mod = pytest.importorskip("testcontainers.core.container")
 
 from synapsekit.loaders.s3 import S3Loader  # noqa: E402
 
-# MinIO removed its community images from Docker Hub (minio/minio has no tags
-# there anymore); pull from their current registry on quay.io instead. See #1039.
-_MINIO_IMAGE = "quay.io/minio/minio:latest"
-_ACCESS_KEY = "minioadmin"
-_SECRET_KEY = "minioadmin"
+# MinIO discontinued pre-built community binaries/images entirely (community
+# edition is now source-only), so quay.io/minio/minio (our #1039 fix) also
+# stopped serving anonymous pulls. Switched to adobe/s3mock, a maintained
+# S3-compatible mock with a public Docker Hub image and no auth requirement.
+_S3MOCK_IMAGE = "adobe/s3mock:5.2.3"
+_ACCESS_KEY = "test-access-key"
+_SECRET_KEY = "test-secret-key"
 _BUCKET = "test-bucket"
 
 
@@ -42,16 +44,10 @@ def _s3_client(endpoint: str):
 
 @pytest.fixture(scope="module")
 def s3_endpoint():
-    container = (
-        _container_mod.DockerContainer(_MINIO_IMAGE)
-        .with_env("MINIO_ROOT_USER", _ACCESS_KEY)
-        .with_env("MINIO_ROOT_PASSWORD", _SECRET_KEY)
-        .with_command("server /data")
-        .with_exposed_ports(9000)
-    )
+    container = _container_mod.DockerContainer(_S3MOCK_IMAGE).with_exposed_ports(9090)
     with container as c:
         host = c.get_container_host_ip()
-        port = c.get_exposed_port(9000)
+        port = c.get_exposed_port(9090)
         endpoint = f"http://{host}:{port}"
         last_err: Exception | None = None
         for _ in range(60):
@@ -63,7 +59,7 @@ def s3_endpoint():
                 last_err = exc
                 time.sleep(1)
         else:
-            raise RuntimeError(f"minio not ready: {last_err}")
+            raise RuntimeError(f"s3mock not ready: {last_err}")
 
         client.create_bucket(Bucket=_BUCKET)
         client.put_object(Bucket=_BUCKET, Key="a.txt", Body=b"hello world")
