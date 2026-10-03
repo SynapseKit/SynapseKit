@@ -7,6 +7,12 @@ from typing import Any
 from ..agents.base import BaseTool, ToolResult
 
 
+def _field(obj: Any, name: str, v2_name: str, default: Any = None) -> Any:
+    # mcp 2.x renamed these attributes to snake_case.
+    value = getattr(obj, name, None)
+    return getattr(obj, v2_name, default) if value is None else value
+
+
 class MCPToolAdapter(BaseTool):
     """Wraps an MCP tool as a SynapseKit BaseTool."""
 
@@ -14,7 +20,7 @@ class MCPToolAdapter(BaseTool):
         self._mcp_tool = mcp_tool
         self.name = mcp_tool.name
         self.description = mcp_tool.description or f"MCP tool: {mcp_tool.name}"
-        self.parameters = mcp_tool.inputSchema if hasattr(mcp_tool, "inputSchema") else {}
+        self.parameters = _field(mcp_tool, "inputSchema", "input_schema") or {}
 
     async def run(self, **kwargs: Any) -> ToolResult:
         return ToolResult(output="", error="Tool not connected to an MCP session.")
@@ -105,7 +111,7 @@ class MCPClient:
                         output = (
                             "\n".join(output_parts) if output_parts else str(call_result.content)
                         )
-                        if call_result.isError:
+                        if _field(call_result, "isError", "is_error", False):
                             return ToolResult(output="", error=output)
                         return ToolResult(output=output)
                     except Exception as e:
