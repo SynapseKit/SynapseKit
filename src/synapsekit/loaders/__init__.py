@@ -113,6 +113,7 @@ __all__ = [
     "YAMLLoader",
     "YouTubeLoader",
     "ZendeskLoader",
+    "VisionPDFLoader",
 ]
 
 _LOADERS = {
@@ -203,6 +204,7 @@ _LOADERS = {
     "TrelloLoader": ".trello",
     "TwitterLoader": ".twitter",
     "ZendeskLoader": ".zendesk",
+    "VisionPDFLoader": ".vision_pdf",
 }
 
 
