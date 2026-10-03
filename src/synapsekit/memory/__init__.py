@@ -21,6 +21,7 @@ from .patch_store import OccurrenceTracker, PatchStore
 from .pii_filter import MemoryPIIFilter, PIIFilterResult
 from .readonly_shared_memory import ReadOnlySharedMemory
 from .redis import RedisConversationMemory
+from .semantic_compressor import SemanticCompressorMemory
 from .smart_context import SmartContextManager
 from .sqlite import SQLiteConversationMemory
 from .summary_buffer import SummaryBufferMemory
@@ -54,6 +55,7 @@ __all__ = [
     "SmartContextManager",
     "SQLiteConversationMemory",
     "SummaryBufferMemory",
+    "SemanticCompressorMemory",
     "TokenBufferMemory",
     "VectorConversationMemory",
     "LivingMemory",
