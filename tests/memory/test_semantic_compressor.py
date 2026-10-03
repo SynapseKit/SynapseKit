@@ -11,13 +11,14 @@ def mock_llm():
     llm.generate.return_value = "Compressed summary: User wants a feature and likes apples."
     return llm
 
+
 @pytest.mark.asyncio
 async def test_semantic_compressor_basic(mock_llm):
     memory = SemanticCompressorMemory(
         llm=mock_llm,
         max_tokens=1000,
-        compression_threshold=0.8, # Threshold = 800 tokens
-        chars_per_token=4
+        compression_threshold=0.8,  # Threshold = 800 tokens
+        chars_per_token=4,
     )
 
     assert len(memory) == 0
@@ -56,6 +57,7 @@ async def test_semantic_compressor_basic(mock_llm):
     memory.clear()
     assert len(memory) == 0
     assert memory.summary == ""
+
 
 def test_semantic_compressor_invalid_tokens():
     with pytest.raises(ValueError):
