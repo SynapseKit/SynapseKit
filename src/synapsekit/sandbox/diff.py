@@ -43,6 +43,18 @@ def _sha256(value: bytes) -> str:
     return hashlib.sha256(value).hexdigest()
 
 
+def _parse_int(value: Any, default: Any = None) -> Any:
+    if value is None:
+        return default
+    if not isinstance(value, (int, str)):
+        return default
+    try:
+        return int(value)
+    except (ValueError, TypeError) as exc:
+        raise SandboxSecurityError(f"Invalid integer format: {value!r}") from exc
+
+
+
 def _change_to_dict(change: FileChange, *, include_payload: bool) -> dict[str, Any]:
     data: dict[str, Any] = {
         "kind": change.kind.value,
@@ -61,14 +73,17 @@ def _change_to_dict(change: FileChange, *, include_payload: bool) -> dict[str, A
 
 def _change_from_dict(data: dict[str, Any]) -> FileChange:
     payload_value = data.get("payload")
-    payload = base64.b64decode(payload_value) if payload_value is not None else None
+    try:
+        payload = base64.b64decode(payload_value) if payload_value is not None else None
+    except (ValueError, TypeError) as exc:
+        raise SandboxSecurityError("Invalid base64 payload in diff bundle.") from exc
     return FileChange(
         kind=FileChangeKind(str(data["kind"])),
         path=normalize_relative_path(str(data["path"])),
         before_sha256=data.get("before_sha256"),
         after_sha256=data.get("after_sha256"),
-        size=int(data.get("size", 0)),
-        mode=None if data.get("mode") is None else int(data["mode"]),
+        size=_parse_int(data.get("size"), 0),
+        mode=_parse_int(data.get("mode"), None),
         payload=payload,
     )
 
@@ -90,9 +105,9 @@ class DiffBundle:
             raise ValueError(f"Unsupported diff bundle schema: {self.schema_version!r}.")
         if not self.created_at:
             object.__setattr__(self, "created_at", datetime.now(timezone.utc).isoformat())
-        paths = [normalize_relative_path(change.path) for change in self.changes]
+        paths = [normalize_relative_path(change.path).casefold() for change in self.changes]
         if len(paths) != len(set(paths)):
-            raise SandboxSecurityError("Diff bundle contains duplicate paths.")
+            raise SandboxSecurityError("Diff bundle contains duplicate or case-clashing paths.")
 
     @classmethod
     def from_manifests(
@@ -227,7 +242,7 @@ def _make_change(
         if item_kind != "file":
             raise SandboxSecurityError(f"Only regular files can be deleted from diffs: {path!r}")
         size_value = item.get("size", 0)
-        size = int(size_value) if isinstance(size_value, (int, str)) else 0
+        size = _parse_int(size_value, 0)
         return FileChange(
             kind=kind,
             path=path,
@@ -237,7 +252,7 @@ def _make_change(
     if item_kind != "file":
         if item_kind == "dir" and kind == FileChangeKind.ADD:
             mode_value = item.get("mode")
-            mode = int(mode_value) if isinstance(mode_value, (int, str)) else None
+            mode = _parse_int(mode_value, None)
             return FileChange(kind=FileChangeKind.MKDIR, path=path, mode=mode)
         if item_kind == "dir" and kind == FileChangeKind.RMDIR:
             return FileChange(kind=FileChangeKind.RMDIR, path=path)
@@ -250,9 +265,9 @@ def _make_change(
     if not isinstance(after_hash, str):
         raise SandboxSecurityError(f"Changed file has no content hash: {path!r}")
     mode_value = item.get("mode")
-    mode = int(mode_value) if isinstance(mode_value, (int, str)) else None
+    mode = _parse_int(mode_value, None)
     size_value = payload_item.get("size", 0)
-    size = int(size_value) if isinstance(size_value, (int, str)) else 0
+    size = _parse_int(size_value, 0)
     return FileChange(
         kind=kind,
         path=path,
