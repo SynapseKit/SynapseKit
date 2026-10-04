@@ -77,7 +77,7 @@ class SwarmAgent:
     async def _score_complexity(self, task: str) -> float:
         prompt = _COMPLEXITY_PROMPT.format(task=task)
         raw = await self._llm.generate(prompt)
-        
+
         cleaned = raw.strip()
         if cleaned.startswith("```"):
             lines = cleaned.split("\n")
@@ -86,7 +86,7 @@ class SwarmAgent:
             if lines and lines[-1].startswith("```"):
                 lines = lines[:-1]
             cleaned = "\n".join(lines).strip()
-            
+
         try:
             data = json.loads(cleaned)
             score = float(data.get("score", 0.5))
@@ -101,7 +101,7 @@ class SwarmAgent:
     async def _decompose(self, task: str) -> list[str]:
         prompt = _DECOMPOSE_PROMPT.format(task=task, max_subtasks=self._max_agents)
         raw = await self._llm.generate(prompt)
-        
+
         cleaned = raw.strip()
         if cleaned.startswith("```"):
             lines = cleaned.split("\n")

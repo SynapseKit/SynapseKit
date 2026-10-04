@@ -25,7 +25,7 @@ class RSSLoader:
         scheme = urlparse(self._url).scheme.lower()
         if len(scheme) == 1:
             scheme = ""
-            
+
         if scheme in ("http", "https"):
             validate_public_url(self._url)
         elif scheme:
