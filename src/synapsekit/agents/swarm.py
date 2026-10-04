@@ -77,8 +77,18 @@ class SwarmAgent:
     async def _score_complexity(self, task: str) -> float:
         prompt = _COMPLEXITY_PROMPT.format(task=task)
         raw = await self._llm.generate(prompt)
+        
+        cleaned = raw.strip()
+        if cleaned.startswith("```"):
+            lines = cleaned.split("\n")
+            if lines and lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines and lines[-1].startswith("```"):
+                lines = lines[:-1]
+            cleaned = "\n".join(lines).strip()
+            
         try:
-            data = json.loads(raw.strip())
+            data = json.loads(cleaned)
             score = float(data.get("score", 0.5))
         except (json.JSONDecodeError, ValueError, TypeError):
             # Attempt to extract a bare float from the response
@@ -91,8 +101,18 @@ class SwarmAgent:
     async def _decompose(self, task: str) -> list[str]:
         prompt = _DECOMPOSE_PROMPT.format(task=task, max_subtasks=self._max_agents)
         raw = await self._llm.generate(prompt)
+        
+        cleaned = raw.strip()
+        if cleaned.startswith("```"):
+            lines = cleaned.split("\n")
+            if lines and lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines and lines[-1].startswith("```"):
+                lines = lines[:-1]
+            cleaned = "\n".join(lines).strip()
+
         try:
-            subtasks: Any = json.loads(raw.strip())
+            subtasks: Any = json.loads(cleaned)
             if isinstance(subtasks, list):
                 return [str(s) for s in subtasks][: self._max_agents]
         except (json.JSONDecodeError, ValueError):

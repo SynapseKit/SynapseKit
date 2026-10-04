@@ -23,6 +23,9 @@ class RSSLoader:
         (no scheme) is still allowed so existing local usage keeps working.
         """
         scheme = urlparse(self._url).scheme.lower()
+        if len(scheme) == 1:
+            scheme = ""
+            
         if scheme in ("http", "https"):
             validate_public_url(self._url)
         elif scheme:

@@ -94,37 +94,42 @@ class DebateOrchestrator:
         )
 
         # Round 1: Proposer makes the opening statement
-        prompt = f"The topic is: {self._topic}\nPlease make your opening argument."
+        prompt = (
+            f"You are {self._proposer.name}, acting as: {self._proposer.role}.\n"
+            f"The topic is: {self._topic}\nPlease make your opening argument."
+        )
         proposer_response = await proposer_executor.run(prompt)
         transcript.append(f"{self._proposer.name} (Proposer):\n{proposer_response}")
-
-        current_argument = proposer_response
 
         # Subsequent rounds of debate
         for _ in range(self._rounds):
             # Opponent rebuts
+            transcript_text = "\n\n---\n\n".join(transcript)
             rebuttal_prompt = (
+                f"You are {self._opponent.name}, acting as: {self._opponent.role}.\n"
                 f"The topic is: {self._topic}\n\n"
-                f"Your opponent argued:\n{current_argument}\n\n"
-                f"Please provide your rebuttal and counter-arguments."
+                f"Here is the debate so far:\n\n{transcript_text}\n\n"
+                f"It is your turn. Please provide your rebuttal and counter-arguments."
             )
             opponent_response = await opponent_executor.run(rebuttal_prompt)
             transcript.append(f"{self._opponent.name} (Opponent):\n{opponent_response}")
 
             # Proposer defends
+            transcript_text = "\n\n---\n\n".join(transcript)
             defense_prompt = (
+                f"You are {self._proposer.name}, acting as: {self._proposer.role}.\n"
                 f"The topic is: {self._topic}\n\n"
-                f"Your opponent replied:\n{opponent_response}\n\n"
-                f"Please defend your position and rebut their claims."
+                f"Here is the debate so far:\n\n{transcript_text}\n\n"
+                f"It is your turn. Please defend your position and rebut their claims."
             )
             proposer_response = await proposer_executor.run(defense_prompt)
             transcript.append(f"{self._proposer.name} (Proposer):\n{proposer_response}")
-            current_argument = proposer_response
 
         # Judge decides
         transcript_text = "\n\n---\n\n".join(transcript)
         judge_prompt = (
-            f"You are the judge. The topic of the debate was: {self._topic}\n\n"
+            f"You are {self._judge.name}, acting as: {self._judge.role}.\n"
+            f"The topic of the debate was: {self._topic}\n\n"
             f"Here is the transcript of the debate:\n\n{transcript_text}\n\n"
             f"Based on the arguments presented, synthesize the best points from both sides "
             f"and provide a final, well-reasoned decision."

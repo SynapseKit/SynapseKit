@@ -191,7 +191,7 @@ class TestPythonREPLTool:
     async def test_timeout_on_slow_operation(self):
         """Test that slow operations are terminated by timeout."""
         repl = PythonREPLTool(timeout=1.0)
-        r = await repl.run(code="import time; time.sleep(5)")
+        r = await repl.run(code="import time; time.sleep(10)")
         assert r.is_error
         assert "timed out" in r.error.lower()
 
