@@ -546,6 +546,7 @@ module = [
     "synapsekit.agents.tools.slack",
     "synapsekit.agents.tools.jira",
     "synapsekit.agents.tools.github_api",
+    "synapsekit.agents.tools.gitlab_api",
     "synapsekit.agents.tools.email_tool",
     "synapsekit.agents.tools.news",
     "synapsekit.agents.tools.linear",
