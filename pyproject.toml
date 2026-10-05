@@ -366,6 +366,7 @@ dev = [
     "anthropic>=0.39",
     "mistralai>=1.0",
     "nbformat>=5.9",
+    "mcp>=1.28.1",
 ]
 
 bench = [
@@ -589,6 +590,13 @@ warn_return_any = false
 # from __future__ import annotations causes mypy to misinterpret
 # async generator return types as Coroutine[..., AsyncGenerator]
 disable_error_code = ["override", "operator", "arg-type", "misc", "attr-defined", "no-any-return", "import-untyped"]
+
+[[tool.mypy.overrides]]
+module = ["synapsekit.mcp.server.core"]
+# mcp 1.x's Tool/Resource use camelCase field names (inputSchema, mimeType);
+# mcp 2.x renamed them to snake_case but kept the camelCase alias, so these
+# calls work on both at runtime even though mypy only sees the 2.x signature.
+disable_error_code = ["call-arg", "arg-type"]
 
 [tool.deptry]
 pep621_dev_dependency_groups = ["dev"]

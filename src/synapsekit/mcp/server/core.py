@@ -8,6 +8,46 @@ from typing import Any
 from ...agents.base import BaseTool
 
 
+def _make_server(server_cls: Any, name: str, handlers: dict[str, Any]) -> Any:
+    if hasattr(server_cls, "list_tools"):
+        # mcp 1.x: register the handlers with decorators.
+        server = server_cls(name)
+        for key, fn in handlers.items():
+            getattr(server, key)()(fn)
+        return server
+
+    # mcp 2.x: the handlers go to the constructor and return result models.
+    from mcp.types import (
+        CallToolResult,
+        ListResourcesResult,
+        ListToolsResult,
+        ReadResourceResult,
+        TextResourceContents,
+    )
+
+    async def on_list_tools(ctx: Any, params: Any) -> Any:
+        return ListToolsResult(tools=await handlers["list_tools"]())
+
+    async def on_call_tool(ctx: Any, params: Any) -> Any:
+        content = await handlers["call_tool"](params.name, params.arguments)
+        return CallToolResult(content=content)
+
+    kwargs: dict[str, Any] = {"on_list_tools": on_list_tools, "on_call_tool": on_call_tool}
+    if "list_resources" in handlers:
+
+        async def on_list_resources(ctx: Any, params: Any) -> Any:
+            return ListResourcesResult(resources=await handlers["list_resources"]())
+
+        async def on_read_resource(ctx: Any, params: Any) -> Any:
+            text = await handlers["read_resource"](params.uri)
+            contents = [TextResourceContents(uri=params.uri, mime_type="text/plain", text=text)]
+            return ReadResourceResult(contents=contents)
+
+        kwargs["on_list_resources"] = on_list_resources
+        kwargs["on_read_resource"] = on_read_resource
+    return server_cls(name, **kwargs)
+
+
 class MCPServer:
     """Expose SynapseKit tools, RAG, or Agents as an MCP server.
 
@@ -83,9 +123,8 @@ class MCPServer:
         except ImportError:
             raise ImportError("mcp package required: pip install mcp") from None
 
-        server = Server(self._name)
-
         target = self._target
+        resource_handlers: dict[str, Any] = {}
 
         # ------------------------------------------------------------------ #
         # RAG Mode
@@ -93,7 +132,6 @@ class MCPServer:
         if target is not None and type(target).__name__ == "KnowledgeMesh":
             tools_map = {tool.name: tool for tool in target.as_mcp_tools()}
 
-            @server.list_tools()
             async def list_tools() -> list[Tool]:
                 return [
                     Tool(
@@ -104,7 +142,6 @@ class MCPServer:
                     for tool in tools_map.values()
                 ]
 
-            @server.call_tool()
             async def call_tool(
                 name: str, arguments: dict[str, Any] | None = None
             ) -> list[TextContent]:
@@ -122,7 +159,6 @@ class MCPServer:
 
         elif target is not None and type(target).__name__ in ("RAG", "RAGPipeline"):
 
-            @server.list_tools()
             async def list_tools() -> list[Tool]:
                 return [
                     Tool(
@@ -138,7 +174,6 @@ class MCPServer:
                     )
                 ]
 
-            @server.call_tool()
             async def call_tool(
                 name: str, arguments: dict[str, Any] | None = None
             ) -> list[TextContent]:
@@ -158,18 +193,15 @@ class MCPServer:
                         return [TextContent(type="text", text=f"Error querying RAG: {e}")]
                 return [TextContent(type="text", text=f"Unknown tool: {name}")]
 
-            @server.list_resources()
             async def list_resources() -> list[Resource]:
                 resources = []
                 vs = getattr(target, "_vectorstore", None)
                 if vs and hasattr(vs, "_texts") and hasattr(vs, "_metadata"):
                     for i, meta in enumerate(vs._metadata):
                         uri = f"document://{i}"
-                        from pydantic import AnyUrl
-
                         resources.append(
                             Resource(
-                                uri=AnyUrl(uri),
+                                uri=uri,
                                 name=f"Document {i}",
                                 mimeType="text/plain",
                                 description=json.dumps(meta) if meta else "RAG Document",
@@ -177,7 +209,6 @@ class MCPServer:
                         )
                 return resources
 
-            @server.read_resource()
             async def read_resource(uri: str | Any) -> str | bytes:
                 uri_str = str(uri)
                 vs = getattr(target, "_vectorstore", None)
@@ -189,6 +220,8 @@ class MCPServer:
                         raise ValueError(f"Resource not found: {uri_str}") from None
                 raise ValueError(f"Resource not found: {uri_str}")
 
+            resource_handlers = {"list_resources": list_resources, "read_resource": read_resource}
+
         # ------------------------------------------------------------------ #
         # Agent Mode
         # ------------------------------------------------------------------ #
@@ -198,7 +231,6 @@ class MCPServer:
             "ReActAgent",
         ):
 
-            @server.list_tools()
             async def list_tools() -> list[Tool]:
                 return [
                     Tool(
@@ -214,7 +246,6 @@ class MCPServer:
                     )
                 ]
 
-            @server.call_tool()
             async def call_tool(
                 name: str, arguments: dict[str, Any] | None = None
             ) -> list[TextContent]:
@@ -233,7 +264,6 @@ class MCPServer:
         else:
             tools_map = self._tools
 
-            @server.list_tools()
             async def list_tools() -> list[Tool]:
                 result = []
                 for t in tools_map.values():
@@ -246,7 +276,6 @@ class MCPServer:
                     )
                 return result
 
-            @server.call_tool()
             async def call_tool(
                 name: str, arguments: dict[str, Any] | None = None
             ) -> list[TextContent]:
@@ -262,6 +291,8 @@ class MCPServer:
                 except Exception as e:
                     return [TextContent(type="text", text=f"Tool error: {e}")]
 
+        handlers = {"list_tools": list_tools, "call_tool": call_tool, **resource_handlers}
+        server = _make_server(Server, self._name, handlers)
         self._server = server
         return server
 
