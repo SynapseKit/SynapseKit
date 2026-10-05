@@ -160,6 +160,10 @@ def build_backend(name: str) -> SandboxBackend:
         from .fake import FakeBackend
 
         return FakeBackend()
+    if normalized == "podman":
+        from .podman import PodmanBackend
+
+        return PodmanBackend()
     raise BackendUnavailableError(f"Unknown sandbox backend: {name!r}.")
 
 

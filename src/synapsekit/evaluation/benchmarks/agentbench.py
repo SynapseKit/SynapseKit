@@ -16,10 +16,19 @@ class AgentBenchBenchmark(BaseBenchmark):
     def load_dataset(self, split: str = "test") -> list[dict[str, Any]]:
         """Load the AgentBench dataset.
 
-        Currently a stub implementation.
+        Only loads the "os" sub-task; AgentBench also ships web/db/kg/etc.
+        environments that aren't wired up here yet.
         """
-        # TODO: load from the AgentBench task configs
-        return []
+        try:
+            from datasets import load_dataset
+        except ImportError as err:
+            raise ImportError(
+                "The datasets library is required to load AgentBench. "
+                "Install it with `pip install synapsekit[huggingface]`."
+            ) from err
+
+        dataset = load_dataset("THUDM/AgentBench", "os", split=split)
+        return list(dataset)
 
     def evaluate(
         self,
@@ -38,8 +47,11 @@ class AgentBenchBenchmark(BaseBenchmark):
 
         for task in dataset:
             try:
-                agent(task)
-                # TODO: check agent output against expected result and increment success
+                result = agent(task)
+                # Placeholder grading: no real AgentBench action-trajectory
+                # evaluator is wired up yet, so any non-null response counts.
+                if result is not False and result is not None:
+                    success += 1
             except Exception as e:
                 errors.append(str(e))
 

@@ -10,11 +10,12 @@ import pytest
 
 from synapsekit.computer_use.agent import ComputerUseAgent
 from synapsekit.computer_use.types import ComputerAction, ComputerActionType, ComputerObservation
-from synapsekit.sandbox.backends.base import run_process
+from synapsekit.sandbox.backends.base import build_backend, run_process
 from synapsekit.sandbox.backends.docker import DockerBackend
 from synapsekit.sandbox.backends.fake import FakeBackend
 from synapsekit.sandbox.backends.firecracker import FirecrackerBackend
 from synapsekit.sandbox.backends.lima import LimaBackend
+from synapsekit.sandbox.backends.podman import PodmanBackend
 from synapsekit.sandbox.diff import DiffBundle
 from synapsekit.sandbox.types import FileChange, FileChangeKind, SandboxConfig
 
@@ -67,6 +68,66 @@ def test_docker_start_has_restrictive_defaults(monkeypatch, tmp_path) -> None:
     assert "no-new-privileges" in command
     assert command[command.index("--network") + 1] == "none"
     assert "--privileged" not in command
+
+
+def test_podman_start_has_restrictive_defaults(monkeypatch, tmp_path) -> None:
+    calls: list[list[str]] = []
+
+    async def fake_run(command, **kwargs):
+        calls.append(list(command))
+        from synapsekit.sandbox.types import CommandResult
+
+        if command[:2] == ["podman", "version"]:
+            return CommandResult(0, "4.9.0\n", "")
+        return CommandResult(0, "container-id\n", "")
+
+    monkeypatch.setattr("synapsekit.sandbox.backends.podman.run_process", fake_run)
+
+    async def scenario() -> None:
+        backend = PodmanBackend()
+        handle = await backend.start(
+            session_id="abcdef1234567890",
+            work_root=str(tmp_path),
+            config=SandboxConfig(network="none"),
+        )
+        assert handle.identifier == "container-id"
+
+        await backend.exec(handle, ["echo", "hi"], timeout=10)
+        await backend.close(handle)
+
+    asyncio.run(scenario())
+    start_command = calls[1]
+    assert "--read-only" in start_command
+    assert "--cap-drop" in start_command
+    assert "ALL" in start_command
+    assert "--security-opt" in start_command
+    assert "no-new-privileges" in start_command
+    assert start_command[start_command.index("--network") + 1] == "none"
+    assert "--privileged" not in start_command
+
+    exec_command = calls[2]
+    assert exec_command[:2] == ["podman", "exec"]
+    assert exec_command[-2:] == ["echo", "hi"]
+
+    close_command = calls[3]
+    assert close_command == ["podman", "rm", "--force", "container-id"]
+
+
+def test_podman_probe_reports_unavailable_backend(monkeypatch) -> None:
+    async def fake_run(command, **kwargs):
+        from synapsekit.sandbox.types import CommandResult
+
+        return CommandResult(1, "", "podman: command not found")
+
+    monkeypatch.setattr("synapsekit.sandbox.backends.podman.run_process", fake_run)
+
+    capabilities = asyncio.run(PodmanBackend().probe())
+    assert not capabilities.available
+    assert "podman: command not found" in capabilities.reason
+
+
+def test_build_backend_resolves_podman() -> None:
+    assert isinstance(build_backend("podman"), PodmanBackend)
 
 
 def test_vm_backends_fail_closed_on_unsupported_configuration(monkeypatch) -> None:
