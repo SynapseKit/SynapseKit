@@ -69,7 +69,9 @@ def patch_agents():
         from ..agents.react import ReActAgent
         from ..agents.reasoning_agent import ReasoningAgent
 
-        def _serve_method(self: Any, host: str = "0.0.0.0", port: int = 8000, path: str = "/chat") -> None:
+        def _serve_method(
+            self: Any, host: str = "0.0.0.0", port: int = 8000, path: str = "/chat"
+        ) -> None:
             serve_agent(self, host=host, port=port, path=path)
 
         ReActAgent.serve = _serve_method  # type: ignore[attr-defined]
