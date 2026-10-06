@@ -102,7 +102,7 @@ async def main() -> None:
     except ImportError:
         raise SystemExit(
             "openai is required. Install: pip install 'synapsekit[openai]'"
-        )
+        ) from None
 
     # ── STT ───────────────────────────────────────────────────────────────────
     if args.stt == "local":

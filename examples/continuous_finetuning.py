@@ -29,6 +29,8 @@ import tempfile
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
+import contextlib
+
 from synapsekit.training.ab_testing import ABTestRouter
 from synapsekit.training.cost_analysis import CostBenefitAnalyzer, InferenceProfile
 from synapsekit.training.dataset import TrainingDataGenerator
@@ -288,10 +290,8 @@ async def main() -> None:
 
     # ── Cleanup ───────────────────────────────────────────────────────────────
     await collector.stop()
-    try:
+    with contextlib.suppress(FileNotFoundError):
         os.unlink(DATASET_PATH)
-    except FileNotFoundError:
-        pass
 
     print("\n" + "=" * 60)
     print("  Demo complete.")

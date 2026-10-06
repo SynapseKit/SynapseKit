@@ -40,7 +40,7 @@ async def run_benchmark(
     runs: int,
 ) -> dict[str, Any]:
     # Initialize cache store and backend
-    cache_store = KVCacheStore(".synapsekit_bench_cag_cache")
+    KVCacheStore(".synapsekit_bench_cag_cache")
     backend = LlamaCppCAGBackend()
 
     # Clean cache first
