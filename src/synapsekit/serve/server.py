@@ -69,11 +69,11 @@ def patch_agents():
         from ..agents.react import ReActAgent
         from ..agents.reasoning_agent import ReasoningAgent
 
-        def _serve_method(self, host: str = "0.0.0.0", port: int = 8000, path: str = "/chat"):
+        def _serve_method(self: Any, host: str = "0.0.0.0", port: int = 8000, path: str = "/chat") -> None:
             serve_agent(self, host=host, port=port, path=path)
 
-        ReActAgent.serve = _serve_method
-        FunctionCallingAgent.serve = _serve_method
-        ReasoningAgent.serve = _serve_method
+        ReActAgent.serve = _serve_method  # type: ignore[attr-defined]
+        FunctionCallingAgent.serve = _serve_method  # type: ignore[attr-defined]
+        ReasoningAgent.serve = _serve_method  # type: ignore[attr-defined]
     except ImportError:
         pass

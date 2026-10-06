@@ -38,7 +38,6 @@ from synapsekit.training.orchestrator import ContinuousTrainer
 from synapsekit.training.rollout import AutoRolloutManager
 from synapsekit.training.types import ABTestResult, RolloutPolicy
 
-
 # ── Configuration ──────────────────────────────────────────────────────────────
 
 BASE_MODEL = "claude-3-haiku-20240307"

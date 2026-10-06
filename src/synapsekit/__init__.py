@@ -623,6 +623,9 @@ patch_agents()
 
 __version__ = "2.0.1"
 __all__ = [
+    # Serve
+    "serve_agent",
+    "patch_agents",
     # Facade
     "RAG",
     "SelfHealingRAG",
@@ -1672,8 +1675,6 @@ __all__.extend(
         "gdpr_rulepack",
         "hipaa_rulepack",
         "pci_rulepack",
-        "serve_agent",
-        "patch_agents",
     ]
 )
 

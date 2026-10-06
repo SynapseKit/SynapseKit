@@ -38,7 +38,6 @@ from synapsekit.voice import (
 )
 from synapsekit.voice.types import PipelineEvent, PipelineState
 
-
 # ── Event callback ─────────────────────────────────────────────────────────────
 
 async def on_event(event: PipelineEvent) -> None:

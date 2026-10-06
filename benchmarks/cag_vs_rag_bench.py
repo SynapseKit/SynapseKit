@@ -13,12 +13,10 @@ import time
 from typing import Any
 from unittest.mock import MagicMock
 
+from synapsekit.llm._llamacpp_cag_backend import LlamaCppCAGBackend
 from synapsekit.llm.base import BaseLLM, LLMConfig
 from synapsekit.llm.llamacpp import LlamaCppLLM
-from synapsekit.llm._llamacpp_cag_backend import LlamaCppCAGBackend
-from synapsekit.rag.cag_router import CAGRouter
 from synapsekit.rag.kv_cache_store import KVCacheStore
-from synapsekit.retrieval.full_context import FullContextRetriever
 from synapsekit.retrieval.retriever import Retriever
 
 
@@ -90,7 +88,7 @@ async def run_benchmark(
     # 3. Measure CAG Warm (uses pre-built and pre-saved cache)
     # First, build and save the cache once
     cache_handle = await backend.build_cache(llm, corpus_text)
-    
+
     cag_warm_latencies: list[float] = []
     for _ in range(runs):
         for query in queries:
