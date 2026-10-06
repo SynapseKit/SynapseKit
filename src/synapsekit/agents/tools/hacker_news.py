@@ -34,10 +34,14 @@ class HackerNewsTool(BaseTool):
         "required": ["action"],
     }
 
-    async def run(self, action: str = "top_stories", item_id: int | None = None, **kwargs: Any) -> ToolResult:
+    async def run(
+        self, action: str = "top_stories", item_id: int | None = None, **kwargs: Any
+    ) -> ToolResult:
         """Run the tool."""
         # Fallback to kwargs if arguments were mapped directly
-        _action = kwargs.get("input", action) if action == "top_stories" and "input" in kwargs else action
+        _action = (
+            kwargs.get("input", action) if action == "top_stories" and "input" in kwargs else action
+        )
         if _action not in ("top_stories", "get_item"):
             _action = "top_stories"
 
@@ -58,7 +62,9 @@ class HackerNewsTool(BaseTool):
                         story_data = json.loads(s_response.read().decode("utf-8"))
                         if story_data:
                             title = story_data.get("title", "")
-                            url = story_data.get("url", f"https://news.ycombinator.com/item?id={story_id}")
+                            url = story_data.get(
+                                "url", f"https://news.ycombinator.com/item?id={story_id}"
+                            )
                             score = story_data.get("score", 0)
                             stories.append(f"- {title} (Score: {score}) - {url}")
 

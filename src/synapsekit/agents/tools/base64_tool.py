@@ -48,6 +48,8 @@ class Base64Tool(BaseTool):
                 decoded_bytes = base64.b64decode(_text.encode("utf-8"), validate=True)
                 return ToolResult(output=decoded_bytes.decode("utf-8"))
             else:
-                return ToolResult(output="", error=f"Unknown action: {_action!r}. Use 'encode' or 'decode'.")
+                return ToolResult(
+                    output="", error=f"Unknown action: {_action!r}. Use 'encode' or 'decode'."
+                )
         except Exception as e:
             return ToolResult(output="", error=f"Base64 error: {e}")
