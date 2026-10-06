@@ -1,6 +1,7 @@
 from .api_builder import APIBuilderTool
 from .arxiv_search import ArxivSearchTool
 from .aws_lambda import AWSLambdaTool
+from .base64_tool import Base64Tool
 from .bing_search import BingSearchTool
 from .brave_search import BraveSearchTool
 from .browser import BrowserTool
@@ -54,6 +55,7 @@ __all__ = [
     "APIBuilderTool",
     "ArxivSearchTool",
     "AWSLambdaTool",
+    "Base64Tool",
     "BingSearchTool",
     "BraveSearchTool",
     "BrowserTool",
