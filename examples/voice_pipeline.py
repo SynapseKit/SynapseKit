@@ -38,7 +38,6 @@ from synapsekit.voice import (
 )
 from synapsekit.voice.types import PipelineEvent, PipelineState
 
-
 # ── Event callback ─────────────────────────────────────────────────────────────
 
 async def on_event(event: PipelineEvent) -> None:
@@ -103,7 +102,7 @@ async def main() -> None:
     except ImportError:
         raise SystemExit(
             "openai is required. Install: pip install 'synapsekit[openai]'"
-        )
+        ) from None
 
     # ── STT ───────────────────────────────────────────────────────────────────
     if args.stt == "local":

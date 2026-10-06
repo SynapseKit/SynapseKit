@@ -143,10 +143,10 @@ async def main() -> None:
 
     # ── LLM ───────────────────────────────────────────────────────────────────
     try:
-        from synapsekit.llm.openai import OpenAILLM
         from synapsekit.llm.base import LLMConfig
+        from synapsekit.llm.openai import OpenAILLM
     except ImportError:
-        raise SystemExit("Install openai: pip install 'synapsekit[openai]'")
+        raise SystemExit("Install openai: pip install 'synapsekit[openai]'") from None
 
     llm = OpenAILLM(LLMConfig(
         model=args.llm_model,

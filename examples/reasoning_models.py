@@ -16,7 +16,7 @@ import os
 
 
 async def main():
-    api_key = os.environ.get("OPENAI_API_KEY") or os.environ.get("ANTHROPIC_API_KEY") or ""
+    os.environ.get("OPENAI_API_KEY") or os.environ.get("ANTHROPIC_API_KEY") or ""
 
     print("=" * 60)
     print("ReasoningLLM - Unified API for Reasoning Models")
