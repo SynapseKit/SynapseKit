@@ -183,8 +183,9 @@ def _run_inspect_evolution(args: Any) -> None:
     rows = [
         patch
         for patch in log.list(limit=args.limit)
-        if args.agent_id in {patch.before.get("agent_id"), patch.after.get("agent_id")}
-        or patch.metadata.get("agent_id") == args.agent_id
+        if args.agent_id
+        in {(patch.before or {}).get("agent_id"), (patch.after or {}).get("agent_id")}
+        or (patch.metadata or {}).get("agent_id") == args.agent_id
         or args.agent_id == "all"
     ]
 
