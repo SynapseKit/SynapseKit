@@ -69,14 +69,7 @@ def test_diff_bundle_rejects_invalid_integer_formats() -> None:
         "host_root": "/tmp",
         "base_fingerprint": "base",
         "sandbox_id": "sandbox",
-        "changes": [
-            {
-                "kind": "add",
-                "path": "file.txt",
-                "size": "invalid_size",
-                "mode": 0
-            }
-        ]
+        "changes": [{"kind": "add", "path": "file.txt", "size": "invalid_size", "mode": 0}],
     }
     with pytest.raises(SandboxSecurityError, match="Invalid integer format"):
         DiffBundle.from_dict(manifest)
