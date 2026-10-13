@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from ..llm.base import BaseLLM
 
 
 class SemanticCompressorMemory:
@@ -18,7 +18,7 @@ class SemanticCompressorMemory:
 
     def __init__(
         self,
-        llm: Any,
+        llm: BaseLLM,
         max_tokens: int = 4000,
         compression_threshold: float = 0.8,
         chars_per_token: int = 4,
