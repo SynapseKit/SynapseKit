@@ -47,12 +47,11 @@ def _parse_int(value: Any, default: Any = None) -> Any:
     if value is None:
         return default
     if not isinstance(value, (int, str)):
-        return default
+        raise SandboxSecurityError(f"Invalid integer format: {value!r}")
     try:
         return int(value)
     except (ValueError, TypeError) as exc:
         raise SandboxSecurityError(f"Invalid integer format: {value!r}") from exc
-
 
 
 def _change_to_dict(change: FileChange, *, include_payload: bool) -> dict[str, Any]:
