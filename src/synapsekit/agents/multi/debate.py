@@ -98,14 +98,19 @@ class DebateOrchestrator:
         proposer_response = await proposer_executor.run(prompt)
         transcript.append(f"{self._proposer.name} (Proposer):\n{proposer_response}")
 
-        current_argument = proposer_response
+        # Each executor's underlying ReActAgent clears its scratchpad at the start
+        # of every run(), so it has no memory of its own earlier turns. The full
+        # transcript so far is re-injected into every prompt to avoid "context
+        # amnesia" across rounds.
+        def _transcript_so_far() -> str:
+            return "\n\n---\n\n".join(transcript)
 
         # Subsequent rounds of debate
         for _ in range(self._rounds):
             # Opponent rebuts
             rebuttal_prompt = (
                 f"The topic is: {self._topic}\n\n"
-                f"Your opponent argued:\n{current_argument}\n\n"
+                f"Debate so far:\n{_transcript_so_far()}\n\n"
                 f"Please provide your rebuttal and counter-arguments."
             )
             opponent_response = await opponent_executor.run(rebuttal_prompt)
@@ -114,12 +119,11 @@ class DebateOrchestrator:
             # Proposer defends
             defense_prompt = (
                 f"The topic is: {self._topic}\n\n"
-                f"Your opponent replied:\n{opponent_response}\n\n"
+                f"Debate so far:\n{_transcript_so_far()}\n\n"
                 f"Please defend your position and rebut their claims."
             )
             proposer_response = await proposer_executor.run(defense_prompt)
             transcript.append(f"{self._proposer.name} (Proposer):\n{proposer_response}")
-            current_argument = proposer_response
 
         # Judge decides
         transcript_text = "\n\n---\n\n".join(transcript)
