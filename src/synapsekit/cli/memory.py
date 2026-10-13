@@ -21,7 +21,7 @@ def run_memory(args: argparse.Namespace) -> None:
     elif cmd == "clear" or cmd == "prune":
         _run_clear(args)
     else:
-        print("Usage: synapsekit memory {review,apply,revert,log,clear}", file=sys.stderr)
+        print("Usage: synapsekit memory {review,apply,revert,log,clear/prune}", file=sys.stderr)
         sys.exit(1)
 
 
@@ -155,10 +155,13 @@ def _run_clear(args: argparse.Namespace) -> None:
         return
 
     if not getattr(args, "force", False):
-        confirm = input(f"Are you sure you want to delete all {count} patches? [y/N] ")
+        try:
+            confirm = input(f"Are you sure you want to delete all {count} patches? [y/N] ")
+        except EOFError:
+            confirm = ""
         if confirm.lower() not in ("y", "yes"):
             print("Aborted.")
-            sys.exit(0)
+            return
 
     store.clear()
     print(f"Cleared {count} memory patches.")
