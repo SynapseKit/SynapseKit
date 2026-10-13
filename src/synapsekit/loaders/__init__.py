@@ -97,6 +97,7 @@ __all__ = [
     "TSVLoader",
     "TwitterLoader",
     "VideoLoader",
+    "VisionPDFLoader",
     "VisualPage",
     "PageRenderer",
     "DefaultPageRenderer",
@@ -113,7 +114,6 @@ __all__ = [
     "YAMLLoader",
     "YouTubeLoader",
     "ZendeskLoader",
-    "VisionPDFLoader",
 ]
 
 _LOADERS = {
@@ -139,6 +139,7 @@ _LOADERS = {
     "DocxLoader": ".docx",
     "AudioLoader": ".audio",
     "VideoLoader": ".video",
+    "VisionPDFLoader": ".vision_pdf",
     "VisualPage": ".visual",
     "PageRenderer": ".visual",
     "DefaultPageRenderer": ".visual",
@@ -204,7 +205,6 @@ _LOADERS = {
     "TrelloLoader": ".trello",
     "TwitterLoader": ".twitter",
     "ZendeskLoader": ".zendesk",
-    "VisionPDFLoader": ".vision_pdf",
 }
 
 

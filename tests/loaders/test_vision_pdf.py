@@ -1,10 +1,11 @@
-import asyncio
-import os
+import sys
+import types
+
 import pytest
-from unittest.mock import MagicMock, patch
 
 from synapsekit.llm.base import BaseLLM, LLMConfig
 from synapsekit.loaders.vision_pdf import VisionPDFLoader
+
 
 class DummyVLM(BaseLLM):
     def __init__(self):
@@ -16,47 +17,76 @@ class DummyVLM(BaseLLM):
     async def stream(self, prompt, **kw):
         yield "dummy"
 
+
+class FakePixmap:
+    def tobytes(self, fmt: str) -> bytes:
+        return b"fake-png-data"
+
+
+class FakePage:
+    def get_pixmap(self, dpi: int) -> FakePixmap:
+        return FakePixmap()
+
+
+class FakeFitzDocument:
+    """Hand-written fake standing in for a fitz.Document (2 pages)."""
+
+    def __init__(self, num_pages: int = 2):
+        self._num_pages = num_pages
+        self.closed = False
+
+    def __len__(self) -> int:
+        return self._num_pages
+
+    def load_page(self, index: int) -> FakePage:
+        return FakePage()
+
+    def close(self) -> None:
+        self.closed = True
+
+
 @pytest.fixture
-def mock_fitz_doc():
-    """Mock PyMuPDF document."""
-    mock_doc = MagicMock()
-    mock_doc.__len__.return_value = 2  # 2 pages
-    
-    mock_page = MagicMock()
-    mock_pix = MagicMock()
-    mock_pix.tobytes.return_value = b"fake-png-data"
-    mock_page.get_pixmap.return_value = mock_pix
-    
-    mock_doc.load_page.return_value = mock_page
-    return mock_doc
+def fake_fitz_module(monkeypatch):
+    """Install a hand-written fake `fitz` module so the test doesn't need PyMuPDF installed."""
+    fake_doc = FakeFitzDocument(num_pages=2)
+    module = types.SimpleNamespace(open=lambda path: fake_doc)
+    monkeypatch.setitem(sys.modules, "fitz", module)
+    return fake_doc
+
+
+@pytest.fixture
+def pdf_path(tmp_path):
+    path = tmp_path / "dummy.pdf"
+    path.write_bytes(b"%PDF-1.4 fake content for VisionPDFLoader tests")
+    return str(path)
+
 
 @pytest.mark.asyncio
-async def test_vision_pdf_loader_async(mock_fitz_doc, tmp_path):
-    # Mock os.path.exists so it doesn't fail on our fake path
-    with patch("os.path.exists", return_value=True), \
-         patch("mimetypes.guess_type", return_value=("application/pdf", None)), \
-         patch.dict("sys.modules", {"fitz": MagicMock(open=MagicMock(return_value=mock_fitz_doc))}):
-        
-        llm = DummyVLM()
-        loader = VisionPDFLoader("dummy.pdf", llm=llm, max_concurrency=2)
-        
-        docs = await loader.aload()
-        
-        assert len(docs) == 2
-        for i, doc in enumerate(docs):
-            assert "Dummy Markdown" in doc.text
-            assert doc.metadata["source"] == "dummy.pdf"
-            assert doc.metadata["page"] == i + 1
-            assert doc.metadata["loader"] == "VisionPDFLoader"
+async def test_vision_pdf_loader_async(fake_fitz_module, pdf_path):
+    llm = DummyVLM()
+    loader = VisionPDFLoader(pdf_path, llm=llm, max_concurrency=2)
 
-def test_vision_pdf_loader_sync(mock_fitz_doc):
-    with patch("os.path.exists", return_value=True), \
-         patch("mimetypes.guess_type", return_value=("application/pdf", None)), \
-         patch.dict("sys.modules", {"fitz": MagicMock(open=MagicMock(return_value=mock_fitz_doc))}):
-        
-        llm = DummyVLM()
-        loader = VisionPDFLoader("dummy.pdf", llm=llm)
-        
-        docs = loader.load()
-        assert len(docs) == 2
-        assert "Dummy Markdown" in docs[0].text
+    docs = await loader.aload()
+
+    assert len(docs) == 2
+    assert fake_fitz_module.closed
+    for i, doc in enumerate(docs):
+        assert "Dummy Markdown" in doc.text
+        assert doc.metadata["source"] == pdf_path
+        assert doc.metadata["page"] == i + 1
+        assert doc.metadata["loader"] == "VisionPDFLoader"
+
+
+def test_vision_pdf_loader_sync(fake_fitz_module, pdf_path):
+    llm = DummyVLM()
+    loader = VisionPDFLoader(pdf_path, llm=llm)
+
+    docs = loader.load()
+    assert len(docs) == 2
+    assert "Dummy Markdown" in docs[0].text
+
+
+def test_vision_pdf_loader_missing_file(fake_fitz_module, tmp_path):
+    loader = VisionPDFLoader(str(tmp_path / "missing.pdf"), llm=DummyVLM())
+    with pytest.raises(FileNotFoundError):
+        loader.load()

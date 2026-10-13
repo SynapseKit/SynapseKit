@@ -63,12 +63,20 @@ class VisionPDFLoader:
 
         docs: list[Document | None] = [None] * total_pages
         semaphore = asyncio.Semaphore(self._max_concurrency)
+        # fitz.Document is not safe for concurrent access from multiple threads;
+        # serialize page rasterization while letting the (slow) LLM call run concurrently.
+        render_lock = asyncio.Lock()
+
+        async def _rasterize_page(page_index: int) -> bytes:
+            async with render_lock:
+                page = doc.load_page(page_index)
+                pix = await asyncio.to_thread(page.get_pixmap, dpi=self._dpi)
+                image_bytes: bytes = pix.tobytes("png")
+                return image_bytes
 
         async def _process_page(page_index: int) -> None:
             async with semaphore:
-                page = doc.load_page(page_index)
-                pix = await asyncio.to_thread(page.get_pixmap, dpi=self._dpi)
-                image_bytes = pix.tobytes("png")
+                image_bytes = await _rasterize_page(page_index)
 
                 # Convert to base64, then to ImageContent
                 import base64
@@ -113,10 +121,11 @@ class VisionPDFLoader:
                     },
                 )
 
-        tasks = [_process_page(i) for i in range(total_pages)]
-        await asyncio.gather(*tasks)
-
-        doc.close()
+        try:
+            tasks = [_process_page(i) for i in range(total_pages)]
+            await asyncio.gather(*tasks)
+        finally:
+            doc.close()
 
         # Filter out None in case any failed (though exceptions will raise out of gather)
         return [d for d in docs if d is not None]
