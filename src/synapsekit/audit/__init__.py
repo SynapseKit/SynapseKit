@@ -24,6 +24,12 @@ Typical flow::
 from __future__ import annotations
 
 from .bundle import BUNDLE_SCHEMA_VERSION, export_audit_bundle, export_selective_bundle
+from .compliance import (
+    RemoteBiometricIdentificationProfile,
+    RetentionPolicy,
+    end_agent_lifetime,
+    record_biometric_use,
+)
 from .merkle import MerkleHasher, MerkleProof
 from .metrics import AuditMetrics
 from .otel import OTelAuditExporter, record_to_span_dict
@@ -149,4 +155,9 @@ __all__ = [
     "VerifiableAgent",
     "audited",
     "infer_kind_pair",
+    # EU AI Act record-keeping mode
+    "RetentionPolicy",
+    "RemoteBiometricIdentificationProfile",
+    "end_agent_lifetime",
+    "record_biometric_use",
 ]

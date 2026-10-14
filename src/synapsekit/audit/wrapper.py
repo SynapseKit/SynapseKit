@@ -37,12 +37,20 @@ import contextvars
 import functools
 import inspect
 import uuid
-from collections.abc import Callable
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
+from .compliance import (
+    COMPLIANCE_MODES,
+    PAYLOAD_KEY,
+    ComplianceMode,
+    RemoteBiometricIdentificationProfile,
+    RetentionPolicy,
+    validate_purposes,
+)
 from .redact import PIIRedactor
 from .trace import AuditTracer
-from .types import EventKind
+from .types import AuditRecord, EventKind
 
 _current_event_id: contextvars.ContextVar[str | None] = contextvars.ContextVar(
     "synapsekit_audit_current_event_id", default=None
@@ -155,14 +163,127 @@ class VerifiableAgent:
         actor: str | None = None,
         kind_overrides: dict[str, EventKind] | None = None,
         instrument_attrs: list[str] | None = None,
+        compliance: ComplianceMode | None = None,
+        retention: RetentionPolicy | None = None,
+        purposes: Mapping[EventKind | str, Sequence[str]] | None = None,
+        profile: RemoteBiometricIdentificationProfile | None = None,
     ) -> None:
+        """Wrap ``agent``.
+
+        ``compliance="eu_ai_act"`` turns on the EU AI Act record-keeping
+        mode (see :mod:`synapsekit.audit.compliance`): ``retention`` is then
+        required — ``RetentionPolicy(role="provider")`` (Article 19(1)) or
+        ``RetentionPolicy(role="deployer")`` (Article 26(6)), six months
+        unless a period is given — ``purposes`` optionally narrows the
+        Article 12(2) purposes per event kind, and ``profile`` adds the
+        Article 12(3) fields for Annex III point 1(a) systems.
+        """
+        if compliance is not None and compliance not in COMPLIANCE_MODES:
+            raise ValueError(
+                f"compliance must be one of {list(COMPLIANCE_MODES)}, got {compliance!r}"
+            )
+        if compliance is None:
+            given = [
+                name
+                for name, value in (
+                    ("retention", retention),
+                    ("purposes", purposes),
+                    ("profile", profile),
+                )
+                if value is not None
+            ]
+            if given:
+                raise ValueError(
+                    f"{', '.join(given)} only apply with compliance='eu_ai_act'; "
+                    "pass compliance='eu_ai_act' or drop them"
+                )
+            purpose_map: dict[str, tuple[str, ...]] = {}
+        else:
+            if retention is None:
+                raise ValueError(
+                    "compliance='eu_ai_act' needs a retention policy, and its role decides the "
+                    "article: pass retention=RetentionPolicy(role='provider') (Article 19(1)) or "
+                    "retention=RetentionPolicy(role='deployer') (Article 26(6)); the period "
+                    "defaults to six months"
+                )
+            if not isinstance(retention, RetentionPolicy):
+                raise TypeError(
+                    f"retention must be a RetentionPolicy, got {type(retention).__name__}"
+                )
+            if profile is not None and not isinstance(
+                profile, RemoteBiometricIdentificationProfile
+            ):
+                raise TypeError(
+                    "profile must be a RemoteBiometricIdentificationProfile, "
+                    f"got {type(profile).__name__}"
+                )
+            purpose_map = validate_purposes(purposes)
+            # Every record is tagged by its kind, so an override outside the
+            # taxonomy would only fail after the wrapped call had already run.
+            for method_name, override in (kind_overrides or {}).items():
+                value = override.value if isinstance(override, EventKind) else override
+                if type(value) is not str or value not in purpose_map:
+                    raise ValueError(
+                        f"kind_overrides[{method_name!r}] must be an EventKind, got {override!r}"
+                    )
         object.__setattr__(self, "_agent", agent)
         object.__setattr__(self, "tracer", tracer if tracer is not None else AuditTracer())
         object.__setattr__(self, "_redactor", redactor)
         object.__setattr__(self, "_actor", actor or f"agent:{type(agent).__name__}")
         object.__setattr__(self, "_kind_overrides", kind_overrides or {})
+        object.__setattr__(self, "_compliance", compliance)
+        object.__setattr__(self, "_compliance_retention", retention)
+        object.__setattr__(self, "_compliance_profile", profile)
+        object.__setattr__(self, "_compliance_purposes", purpose_map)
+        object.__setattr__(self, "_compliance_ended", False)
+        if compliance is not None:
+            self._record_lifecycle("agent_lifetime_started")
         for attr_name in instrument_attrs or []:
             self._instrument_attr_in_place(attr_name)
+
+    def _tag(self, kind: EventKind | str, payload: dict[str, Any]) -> dict[str, Any]:
+        """Add the Article 12(2) purposes to ``payload`` (inside the hashed payload)."""
+        if self._compliance is None:
+            return payload
+        kind_value = kind.value if isinstance(kind, EventKind) else str(kind)
+        tag = {"purposes": list(self._compliance_purposes[kind_value])}
+        return {**payload, PAYLOAD_KEY: {**payload.get(PAYLOAD_KEY, {}), **tag}}
+
+    def _record_compliance_event(
+        self, kind: EventKind, payload: dict[str, Any], *, redact: bool = True
+    ) -> AuditRecord:
+        # Lifecycle events carry only this wrapper's own configuration (no
+        # call data), so they skip the wrapper's redactor: a custom detector
+        # must not be able to rewrite the recorded legal basis.
+        tracer: AuditTracer = self.tracer
+        return tracer.record(
+            kind,
+            self._finalize(payload, kind) if redact else self._tag(kind, payload),
+            actor=self._actor,
+            parent_id=_current_event_id.get(),
+        )
+
+    def _record_lifecycle(self, event: str) -> AuditRecord | None:
+        if event == "agent_lifetime_ended":
+            if self._compliance_ended:
+                return None
+            object.__setattr__(self, "_compliance_ended", True)
+        retention = self._compliance_retention
+        assert retention is not None  # guaranteed in compliance mode
+        profile = self._compliance_profile
+        body: dict[str, Any] = {"event": event, "mode": self._compliance}
+        if event == "agent_lifetime_started":
+            body.update(
+                {
+                    "regulation": "Regulation (EU) 2024/1689",
+                    "retention": retention.to_dict(),
+                    "purpose_map": {k: list(v) for k, v in self._compliance_purposes.items()},
+                    "profile": profile.to_dict() if profile is not None else None,
+                }
+            )
+        return self._record_compliance_event(
+            EventKind.SYSTEM_EVENT, {PAYLOAD_KEY: body}, redact=False
+        )
 
     def _kinds_for(self, name: str) -> tuple[EventKind, EventKind | None]:
         override = self._kind_overrides.get(name)
@@ -211,20 +332,22 @@ class VerifiableAgent:
             "kwargs": _safe_value(kwargs),
         }
 
-    def _finalize(self, payload: dict[str, Any]) -> dict[str, Any]:
+    def _finalize(self, payload: dict[str, Any], kind: EventKind | str) -> dict[str, Any]:
         # Redaction must cover the full payload — including output/error,
         # not just the pre-call args/kwargs — since those can echo back
         # PII from the call's inputs (see redact.py's module docstring).
         if self._redactor is not None:
             payload = self._redactor.redact_payload(payload)
-        return payload
+        # Compliance tags go on after redaction so a detector can never
+        # rewrite an article reference such as "12(2)(a)".
+        return self._tag(kind, payload)
 
     def _record_call(
         self, call_kind: EventKind, payload: dict[str, Any], parent_id: str | None, event_id: str
     ) -> None:
         self.tracer.record(
             call_kind,
-            self._finalize(payload),
+            self._finalize(payload, call_kind),
             actor=self._actor,
             parent_id=parent_id,
             event_id=event_id,
@@ -251,13 +374,13 @@ class VerifiableAgent:
         if paired:
             # The response/result is a child of its own call event.
             self.tracer.record(
-                kind, self._finalize(payload), actor=self._actor, parent_id=call_event_id
+                kind, self._finalize(payload, kind), actor=self._actor, parent_id=call_event_id
             )
         else:
             # No pairing — this IS the call event (reuses its event_id).
             self.tracer.record(
                 kind,
-                self._finalize(payload),
+                self._finalize(payload, kind),
                 actor=self._actor,
                 parent_id=parent_id,
                 event_id=call_event_id,
