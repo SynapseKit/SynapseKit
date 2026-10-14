@@ -1,5 +1,6 @@
 from ._cache import AsyncLRUCache
 from .base import BaseLLM, LLMConfig
+from .repair import PromptRepairMiddleware, RepairEvent
 from .cost_quality_router import CostQualityRouter
 from .cost_router import QUALITY_TABLE, CostRouter, CostRouterConfig, RouterModelSpec
 from .edge import EdgeFallbackBlockedError, EdgeRouteMetadata, EdgeRuntime, FallbackPolicy
@@ -108,6 +109,8 @@ __all__ = [
     "XaiLLM",
     "ZhipuLLM",
     "generate_structured",
+    "PromptRepairMiddleware",
+    "RepairEvent",
 ]
 
 _PROVIDERS = {

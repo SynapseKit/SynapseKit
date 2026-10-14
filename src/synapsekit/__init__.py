@@ -323,6 +323,7 @@ from .llm.reasoning import (
     ReasoningResponse,
     ReasoningStreamChunk,
 )
+from .llm.repair import PromptRepairMiddleware, RepairEvent
 from .llm.structured import generate_structured
 from .loaders.arxiv import ArXivLoader
 from .loaders.azure_blob import AzureBlobLoader
@@ -632,6 +633,8 @@ __all__ = [
     "MemcachedCacheBackend",
     "BaseLLM",
     "LLMConfig",
+    "PromptRepairMiddleware",
+    "RepairEvent",
     "CostQualityRouter",
     "CostRouter",
     "CostRouterConfig",
