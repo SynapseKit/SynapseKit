@@ -11,13 +11,15 @@ import pytest
 from synapsekit.computer_use.agent import ComputerUseAgent
 from synapsekit.computer_use.types import ComputerAction, ComputerActionType, ComputerObservation
 from synapsekit.sandbox.backends.base import build_backend, run_process
+from synapsekit.sandbox.backends.bwrap import BubblewrapBackend
 from synapsekit.sandbox.backends.docker import DockerBackend
 from synapsekit.sandbox.backends.fake import FakeBackend
 from synapsekit.sandbox.backends.firecracker import FirecrackerBackend
 from synapsekit.sandbox.backends.lima import LimaBackend
 from synapsekit.sandbox.backends.podman import PodmanBackend
 from synapsekit.sandbox.diff import DiffBundle
-from synapsekit.sandbox.types import FileChange, FileChangeKind, SandboxConfig
+from synapsekit.sandbox.errors import BackendUnavailableError
+from synapsekit.sandbox.types import FileChange, FileChangeKind, NetworkPolicy, SandboxConfig
 
 
 def test_fake_backend_executes_in_the_worktree(tmp_path) -> None:
@@ -128,6 +130,185 @@ def test_podman_probe_reports_unavailable_backend(monkeypatch) -> None:
 
 def test_build_backend_resolves_podman() -> None:
     assert isinstance(build_backend("podman"), PodmanBackend)
+
+
+def test_build_backend_resolves_bubblewrap() -> None:
+    assert isinstance(build_backend("bubblewrap"), BubblewrapBackend)
+    assert isinstance(build_backend("bwrap"), BubblewrapBackend)
+
+
+def test_bubblewrap_probe_reports_unavailable_on_non_linux(monkeypatch) -> None:
+    monkeypatch.setattr("synapsekit.sandbox.backends.bwrap.platform_is_linux", lambda: False)
+
+    capabilities = asyncio.run(BubblewrapBackend().probe())
+    assert not capabilities.available
+    assert "requires Linux" in (capabilities.reason or "")
+
+
+def test_bubblewrap_probe_reports_unavailable_when_bwrap_missing(monkeypatch) -> None:
+    monkeypatch.setattr("synapsekit.sandbox.backends.bwrap.platform_is_linux", lambda: True)
+
+    async def fake_run(command, **kwargs):
+        from synapsekit.sandbox.types import CommandResult
+
+        return CommandResult(1, "", "bwrap: command not found")
+
+    monkeypatch.setattr("synapsekit.sandbox.backends.bwrap.run_process", fake_run)
+
+    capabilities = asyncio.run(BubblewrapBackend().probe())
+    assert not capabilities.available
+    assert "bwrap: command not found" in (capabilities.reason or "")
+
+
+def test_bubblewrap_probe_reports_available(monkeypatch) -> None:
+    monkeypatch.setattr("synapsekit.sandbox.backends.bwrap.platform_is_linux", lambda: True)
+
+    async def fake_run(command, **kwargs):
+        from synapsekit.sandbox.types import CommandResult
+
+        return CommandResult(0, "bubblewrap 0.8.0\n", "")
+
+    monkeypatch.setattr("synapsekit.sandbox.backends.bwrap.run_process", fake_run)
+
+    capabilities = asyncio.run(BubblewrapBackend().probe())
+    assert capabilities.available
+    assert capabilities.name == "bubblewrap"
+    assert not capabilities.native_cow
+    assert not capabilities.gui
+    assert NetworkPolicy.NONE.value in capabilities.network_policies
+    assert NetworkPolicy.EGRESS_ONLY.value in capabilities.network_policies
+
+
+def test_bubblewrap_start_fails_closed_when_probe_unavailable(monkeypatch, tmp_path) -> None:
+    monkeypatch.setattr("synapsekit.sandbox.backends.bwrap.platform_is_linux", lambda: False)
+
+    backend = BubblewrapBackend()
+    with pytest.raises(BackendUnavailableError, match="requires Linux"):
+        asyncio.run(
+            backend.start(
+                session_id="session123",
+                work_root=str(tmp_path),
+                config=SandboxConfig(),
+            )
+        )
+
+
+def test_bubblewrap_start_and_exec_has_restrictive_defaults(monkeypatch, tmp_path) -> None:
+    monkeypatch.setattr("synapsekit.sandbox.backends.bwrap.platform_is_linux", lambda: True)
+    calls: list[list[str]] = []
+
+    async def fake_run(command, **kwargs):
+        calls.append(list(command))
+        from synapsekit.sandbox.types import CommandResult
+
+        if command[:2] == ["bwrap", "--version"]:
+            return CommandResult(0, "bubblewrap 0.8.0\n", "")
+        return CommandResult(0, "ok\n", "")
+
+    monkeypatch.setattr("synapsekit.sandbox.backends.bwrap.run_process", fake_run)
+
+    async def scenario() -> None:
+        backend = BubblewrapBackend()
+        handle = await backend.start(
+            session_id="abcdef1234567890",
+            work_root=str(tmp_path),
+            config=SandboxConfig(
+                network=NetworkPolicy.NONE.value,
+                environment={"CUSTOM_KEY": "custom_val"},
+            ),
+        )
+        assert handle.identifier == "synapsekit-bwrap-abcdef1234567890"
+
+        res = await backend.exec(handle, ["python", "-c", "print(1)"], timeout=15)
+        assert res.ok
+        await backend.close(handle)
+
+    asyncio.run(scenario())
+
+    # Probe call
+    assert calls[0] == ["bwrap", "--version"]
+
+    # Exec call
+    exec_cmd = calls[1]
+    assert exec_cmd[0] == "bwrap"
+    assert "--ro-bind" in exec_cmd
+    ro_idx = exec_cmd.index("--ro-bind")
+    assert exec_cmd[ro_idx + 1] == "/"
+    assert exec_cmd[ro_idx + 2] == "/"
+
+    assert "--dev" in exec_cmd
+    assert exec_cmd[exec_cmd.index("--dev") + 1] == "/dev"
+
+    assert "--proc" in exec_cmd
+    assert exec_cmd[exec_cmd.index("--proc") + 1] == "/proc"
+
+    assert "--tmpfs" in exec_cmd
+    assert exec_cmd[exec_cmd.index("--tmpfs") + 1] == "/tmp"
+
+    assert "--dir" in exec_cmd
+    assert exec_cmd[exec_cmd.index("--dir") + 1] == "/workspace"
+
+    assert "--bind" in exec_cmd
+    bind_idx = exec_cmd.index("--bind")
+    assert exec_cmd[bind_idx + 1] == str(tmp_path)
+    assert exec_cmd[bind_idx + 2] == "/workspace"
+
+    assert "--chdir" in exec_cmd
+    assert exec_cmd[exec_cmd.index("--chdir") + 1] == "/workspace"
+
+    assert "--die-with-parent" in exec_cmd
+    assert "--new-session" in exec_cmd
+    assert "--unshare-user" in exec_cmd
+    assert "--unshare-pid" in exec_cmd
+    assert "--unshare-ipc" in exec_cmd
+    assert "--unshare-uts" in exec_cmd
+    assert "--unshare-net" in exec_cmd
+    assert "--clearenv" in exec_cmd
+
+    # Environment variables
+    assert "--setenv" in exec_cmd
+    assert "PATH" in exec_cmd
+    assert "HOME" in exec_cmd
+    assert "TMPDIR" in exec_cmd
+    assert "CUSTOM_KEY" in exec_cmd
+    assert "custom_val" in exec_cmd
+
+    # Trailing command
+    sep_idx = exec_cmd.index("--")
+    assert exec_cmd[sep_idx + 1 :] == ["python", "-c", "print(1)"]
+
+
+def test_bubblewrap_start_allows_egress_when_configured(monkeypatch, tmp_path) -> None:
+    monkeypatch.setattr("synapsekit.sandbox.backends.bwrap.platform_is_linux", lambda: True)
+    calls: list[list[str]] = []
+
+    async def fake_run(command, **kwargs):
+        calls.append(list(command))
+        from synapsekit.sandbox.types import CommandResult
+
+        if command[:2] == ["bwrap", "--version"]:
+            return CommandResult(0, "bubblewrap 0.8.0\n", "")
+        return CommandResult(0, "egress ok\n", "")
+
+    monkeypatch.setattr("synapsekit.sandbox.backends.bwrap.run_process", fake_run)
+
+    async def scenario() -> None:
+        backend = BubblewrapBackend()
+        handle = await backend.start(
+            session_id="egress_test_session",
+            work_root=str(tmp_path),
+            config=SandboxConfig(network=NetworkPolicy.EGRESS_ONLY.value),
+        )
+        await backend.exec(handle, ["curl", "https://example.com"], timeout=10)
+
+    asyncio.run(scenario())
+
+    exec_cmd = calls[1]
+    assert "--unshare-net" not in exec_cmd
+    assert "--unshare-user" in exec_cmd
+    assert "--unshare-pid" in exec_cmd
+    sep_idx = exec_cmd.index("--")
+    assert exec_cmd[sep_idx + 1 :] == ["curl", "https://example.com"]
 
 
 def test_vm_backends_fail_closed_on_unsupported_configuration(monkeypatch) -> None:

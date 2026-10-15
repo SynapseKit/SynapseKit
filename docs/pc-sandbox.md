@@ -1,4 +1,4 @@
-﻿# Sandboxed PC Twin
+# Sandboxed PC Twin
 
 `PCSandbox` provides a reviewable working copy for destructive agent tasks. The
 agent operates on the copy, while the original host tree remains unchanged
@@ -69,7 +69,10 @@ path = sandbox.environment.export_audit_bundle(
 
 ## Backends
 
-`docker` is the production backend when Docker is available. `orbstack` uses
+`docker` is the production backend when Docker is available. `podman` provides
+a rootless, daemonless alternative for Linux environments. `bubblewrap` (or `bwrap`)
+provides an unprivileged, daemonless Linux sandbox using kernel user and mount
+namespaces without requiring container runtimes or root privileges. `orbstack` uses
 the Docker-compatible runtime on macOS. `fake` is intentionally a local
 process backend for deterministic tests and development only; it is not a
 security boundary.
