@@ -1,6 +1,5 @@
 from ._cache import AsyncLRUCache
 from .base import BaseLLM, LLMConfig
-from .repair import PromptRepairMiddleware, RepairEvent
 from .cost_quality_router import CostQualityRouter
 from .cost_router import QUALITY_TABLE, CostRouter, CostRouterConfig, RouterModelSpec
 from .edge import EdgeFallbackBlockedError, EdgeRouteMetadata, EdgeRuntime, FallbackPolicy
@@ -24,6 +23,7 @@ from .finops import (
     SpendAttribution,
 )
 from .hedging import HedgedLLM, HedgingConfig, HedgingStats
+from .repair import PromptRepairMiddleware, RepairEvent
 from .structured import generate_structured
 
 __all__ = [

@@ -32,9 +32,9 @@ from __future__ import annotations
 
 import json
 import logging
-from collections.abc import AsyncGenerator
-from dataclasses import dataclass, field
-from typing import Any, Callable
+from collections.abc import AsyncGenerator, Callable
+from dataclasses import dataclass
+from typing import Any
 
 from .base import BaseLLM, LLMConfig
 
@@ -173,9 +173,7 @@ class PromptRepairMiddleware(BaseLLM):
         self._on_repair = on_repair
 
         _default_modes = {"empty", "refusal", "json_error", "tool_loop"}
-        self._detect: set[str] = (
-            set(detect) if detect is not None else _default_modes
-        )
+        self._detect: set[str] = set(detect) if detect is not None else _default_modes
         if expect_json:
             self._detect.add("json_error")
 
@@ -222,8 +220,7 @@ class PromptRepairMiddleware(BaseLLM):
 
             if attempt == self._max_retries:
                 logger.warning(
-                    "PromptRepairMiddleware: giving up after %d repair(s) "
-                    "(last failure_mode=%r).",
+                    "PromptRepairMiddleware: giving up after %d repair(s) (last failure_mode=%r).",
                     self._max_retries,
                     failure,
                 )
@@ -379,9 +376,7 @@ class PromptRepairMiddleware(BaseLLM):
     def supports_multimodal(self) -> bool:  # type: ignore[override]
         return bool(getattr(self._llm, "supports_multimodal", False))
 
-    async def generate_with_messages(
-        self, messages: list[dict[str, Any]], **kw: Any
-    ) -> str:
+    async def generate_with_messages(self, messages: list[dict[str, Any]], **kw: Any) -> str:
         return await self._llm.generate_with_messages(messages, **kw)
 
     async def stream_with_messages(
