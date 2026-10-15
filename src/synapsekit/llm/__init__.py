@@ -22,6 +22,7 @@ from .finops import (
     SimulationTask,
     SpendAttribution,
 )
+from .repair import PromptRepairMiddleware, RepairEvent
 from .structured import generate_structured
 
 __all__ = [
@@ -108,6 +109,8 @@ __all__ = [
     "XaiLLM",
     "ZhipuLLM",
     "generate_structured",
+    "PromptRepairMiddleware",
+    "RepairEvent",
 ]
 
 _PROVIDERS = {
