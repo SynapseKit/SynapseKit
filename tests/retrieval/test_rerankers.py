@@ -32,11 +32,12 @@ def test_reranker_abc_requires_retrieve_and_retrieve_with_scores():
 
 
 def test_cohere_and_cross_encoder_subclass_reranker():
-    from synapsekit import CohereReranker, CrossEncoderReranker
+    from synapsekit import CohereReranker, CrossEncoderReranker, FlashRankReranker
     from synapsekit.retrieval.reranker import Reranker
 
     assert issubclass(CohereReranker, Reranker)
     assert issubclass(CrossEncoderReranker, Reranker)
+    assert issubclass(FlashRankReranker, Reranker)
 
 
 # --------------------------------------------------------------------------- #

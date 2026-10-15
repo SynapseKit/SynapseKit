@@ -473,6 +473,7 @@ from .retrieval.crag import CRAGRetriever
 from .retrieval.cross_encoder import CrossEncoderReranker
 from .retrieval.ensemble import EnsembleRetriever
 from .retrieval.flare import FLARERetriever
+from .retrieval.flashrank_reranker import FlashRankReranker
 from .retrieval.graphrag import GraphRAGRetriever, KnowledgeGraph
 from .retrieval.hybrid_search import HybridSearchRetriever
 from .retrieval.hyde import HyDERetriever
@@ -756,6 +757,7 @@ __all__ = [
     "CrossEncoderReranker",
     "EnsembleRetriever",
     "FLARERetriever",
+    "FlashRankReranker",
     "HyDERetriever",
     "ParentDocumentRetriever",
     "QueryDecompositionRetriever",

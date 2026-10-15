@@ -10,6 +10,7 @@ from .document_augmentation import DocumentAugmentationRetriever
 from .ensemble import EnsembleRetriever
 from .federated import FederatedRetriever
 from .flare import FLARERetriever
+from .flashrank_reranker import FlashRankReranker
 from .full_context import FullContextRetriever
 from .graphrag import GraphRAGRetriever, KnowledgeGraph
 from .hybrid_search import HybridSearchRetriever
@@ -94,6 +95,7 @@ __all__ = [
     "FederatedRetriever",
     "FAISSVectorStore",
     "FLARERetriever",
+    "FlashRankReranker",
     "FullContextRetriever",
     "GraphRAGRetriever",
     "GraphVectorStore",
