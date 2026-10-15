@@ -65,9 +65,9 @@ anthropic = ["anthropic>=0.25"]
 # torch-backed semantic/ColBERT extras are temporarily manual installs.
 semantic = []
 colbert = []
-pdf = ["pypdf>=6.15.0"]
+pdf = ["pypdf>=6.19.0"]
 visual = [
-    "pypdf>=6.15.0",
+    "pypdf>=6.19.0",
     "pymupdf>=1.24",
     "python-pptx>=0.6",
     "transformers>=5.10.0",
@@ -251,7 +251,7 @@ performance = ["orjson>=3.9", "uvloop>=0.19; sys_platform != 'win32'", "xxhash>=
 all = [
     "openai>=1.0",
     "anthropic>=0.25",
-    "pypdf>=6.13.3",
+    "pypdf>=6.19.0",
     "pymupdf>=1.24",
     "python-pptx>=0.6",
     "transformers>=5.10.0",
@@ -425,6 +425,9 @@ constraint-dependencies = [
     "httplib2>=0.32.0",
     "setuptools>=83.0.0",
     "h2>=4.4.1",
+    "pyjwt>=2.15.0",
+    "urllib3>=2.8.0",
+    "virtualenv>=21.7.13",
     "anyio>=4.14.2",
     "soupsieve>=2.9.0",
     "httpx2>=2.12.0",
