@@ -5,18 +5,17 @@ from __future__ import annotations
 import json
 from collections.abc import AsyncGenerator
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 
 from synapsekit.llm.base import BaseLLM, LLMConfig
 from synapsekit.llm.repair import (
-    PromptRepairMiddleware,
-    RepairEvent,
     _REFUSAL_PHRASES,
     _REPAIR_INSTRUCTIONS,
+    PromptRepairMiddleware,
+    RepairEvent,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -141,7 +140,7 @@ class TestDetectFailure:
 
     def test_json_array_valid(self) -> None:
         mw, _ = _wrap(["ok"])
-        assert mw._detect_failure('[1, 2, 3]') != "json_error"
+        assert mw._detect_failure("[1, 2, 3]") != "json_error"
 
     def test_markdown_fenced_json_valid(self) -> None:
         mw, _ = _wrap(["ok"])
@@ -345,9 +344,7 @@ class TestToolLoopDetection:
 
     def test_custom_loop_instruction(self) -> None:
         inner = _FakeLLM(["ok"])
-        mw = PromptRepairMiddleware(
-            inner, repair_instructions={"tool_loop": "STOP LOOPING!"}
-        )
+        mw = PromptRepairMiddleware(inner, repair_instructions={"tool_loop": "STOP LOOPING!"})
         assert mw.loop_repair_instruction == "STOP LOOPING!"
 
 
@@ -439,15 +436,15 @@ class TestRepairEvent:
 
 class TestPublicImport:
     def test_importable_from_synapsekit(self) -> None:
-        from synapsekit import PromptRepairMiddleware as PRM  # noqa: F401
-        from synapsekit import RepairEvent as RE  # noqa: F401
+        from synapsekit import PromptRepairMiddleware as PRM
+        from synapsekit import RepairEvent as RE
 
         assert PRM is PromptRepairMiddleware
         assert RE is RepairEvent
 
     def test_importable_from_synapsekit_llm(self) -> None:
-        from synapsekit.llm import PromptRepairMiddleware as PRM  # noqa: F401
-        from synapsekit.llm import RepairEvent as RE  # noqa: F401
+        from synapsekit.llm import PromptRepairMiddleware as PRM
+        from synapsekit.llm import RepairEvent as RE
 
         assert PRM is PromptRepairMiddleware
         assert RE is RepairEvent
