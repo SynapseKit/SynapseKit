@@ -164,6 +164,10 @@ def build_backend(name: str) -> SandboxBackend:
         from .podman import PodmanBackend
 
         return PodmanBackend()
+    if normalized in {"bubblewrap", "bwrap"}:
+        from .bwrap import BubblewrapBackend
+
+        return BubblewrapBackend()
     raise BackendUnavailableError(f"Unknown sandbox backend: {name!r}.")
 
 
