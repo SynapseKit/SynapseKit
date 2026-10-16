@@ -22,6 +22,7 @@ from .finops import (
     SimulationTask,
     SpendAttribution,
 )
+from .hedging import HedgedLLM, HedgingConfig, HedgingStats
 from .structured import generate_structured
 
 __all__ = [
@@ -61,6 +62,9 @@ __all__ = [
     "GPT4AllLLM",
     "GroqLLM",
     "FriendliLLM",
+    "HedgedLLM",
+    "HedgingConfig",
+    "HedgingStats",
     "HyperbolicLLM",
     "HuggingFaceLLM",
     "LLMConfig",

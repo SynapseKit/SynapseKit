@@ -316,6 +316,7 @@ from .llm.finops import (
     SimulationTask,
     SpendAttribution,
 )
+from .llm.hedging import HedgedLLM, HedgingConfig, HedgingStats
 from .llm.multimodal import AudioContent, ImageContent, MultimodalMessage
 from .llm.reasoning import (
     BaseReasoningProvider,
@@ -644,6 +645,9 @@ __all__ = [
     "FallbackPolicy",
     "FallbackChain",
     "FallbackChainConfig",
+    "HedgedLLM",
+    "HedgingConfig",
+    "HedgingStats",
     "BudgetAlert",
     "BudgetLedger",
     "BudgetPolicy",
