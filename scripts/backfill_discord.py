@@ -29,10 +29,9 @@ import os
 import subprocess
 import sys
 import time
+import urllib.request
 from pathlib import Path
 from typing import Any
-
-import urllib.request
 
 REPO = os.environ.get("BACKFILL_REPO", "SynapseKit/SynapseKit")
 STATE_FILE = Path(os.environ.get("BACKFILL_STATE", ".discord_backfill_state.json"))
