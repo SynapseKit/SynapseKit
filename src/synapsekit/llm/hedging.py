@@ -30,6 +30,30 @@ logger = logging.getLogger(__name__)
 T = TypeVar("T")
 
 
+async def _drain_stream(gen: AsyncGenerator[str], queue: asyncio.Queue[tuple[str, Any]]) -> None:
+    """Fully drive a candidate stream inside a single task, funnelling tokens to a queue.
+
+    The generator's whole lifetime (first ``__anext__`` through close) runs in this
+    task's context, so contextvar-based instrumentation (e.g. ``synapsekit.observe``
+    spans) sets and resets its token in the *same* context. Driving ``__anext__()``
+    directly inside ``asyncio.create_task`` would instead copy the context, breaking
+    the span reset. The queue carries ``("item", token)`` per chunk, ``("done", None)``
+    on normal exhaustion, and ``("error", exc)`` on failure.
+    """
+    try:
+        async for tok in gen:
+            await queue.put(("item", tok))
+        await queue.put(("done", None))
+    except asyncio.CancelledError:
+        raise
+    except Exception as exc:
+        # Surfaced to the consumer via the queue rather than raised in-task.
+        await queue.put(("error", exc))
+    finally:
+        with contextlib.suppress(Exception):
+            await gen.aclose()
+
+
 @dataclass
 class HedgingStats:
     """Observability and FinOps metrics for request hedging."""
@@ -189,135 +213,138 @@ class HedgedLLM(BaseLLM):
         """Execute tool calling with tail-latency hedging."""
         return dict(await self._execute_hedged(lambda llm: llm.call_with_tools(messages, tools)))
 
+    @staticmethod
+    async def _cancel_task(task: asyncio.Task[Any] | None) -> None:
+        """Cancel a task (if still running) and await it, swallowing its teardown."""
+        if task is None:
+            return
+        if not task.done():
+            task.cancel()
+        with contextlib.suppress(asyncio.CancelledError, Exception):
+            await task
+
+    async def _emit_queue(
+        self,
+        first_msg: tuple[str, Any],
+        queue: asyncio.Queue[tuple[str, Any]],
+        drain_task: asyncio.Task[None],
+    ) -> AsyncGenerator[str]:
+        """Yield the winner's tokens from its queue, then tear its drain task down."""
+        try:
+            msg = first_msg
+            while True:
+                kind, value = msg
+                if kind == "item":
+                    yield value
+                elif kind == "done":
+                    return
+                else:  # "error"
+                    raise value
+                msg = await queue.get()
+        finally:
+            await self._cancel_task(drain_task)
+
     async def _stream_hedged(
         self,
         stream_factory: Callable[[BaseLLM], AsyncGenerator[str]],
     ) -> AsyncGenerator[str]:
         self.stats.total_requests += 1
+
         primary_gen = stream_factory(self.primary)
-        task_primary: asyncio.Task[str] = asyncio.create_task(primary_gen.__anext__())
-        primary_failed = False
+        primary_q: asyncio.Queue[tuple[str, Any]] = asyncio.Queue()
+        primary_task = asyncio.create_task(_drain_stream(primary_gen, primary_q))
+
+        # Race the primary's first signal against the hedge-delay SLA deadline.
+        # The getter is left pending (not cancelled) on timeout so no first token
+        # is lost: it simply joins the hedge race below.
+        get_primary: asyncio.Task[tuple[str, Any]] = asyncio.ensure_future(primary_q.get())
+        timer = asyncio.ensure_future(asyncio.sleep(self.hedge_delay))
+        watch: set[asyncio.Future[Any]] = {get_primary, timer}
+        done, _ = await asyncio.wait(watch, return_when=asyncio.FIRST_COMPLETED)
+
         primary_exc: Exception | None = None
+        primary_dead = False
 
-        try:
-            first_token = await asyncio.wait_for(
-                asyncio.shield(task_primary), timeout=self.hedge_delay
-            )
-            self.stats.primary_won += 1
-            self._last_winner = "primary"
-            try:
-                yield first_token
-                async for token in primary_gen:
-                    yield token
-            finally:
-                with contextlib.suppress(Exception):
-                    await primary_gen.aclose()
-            return
-        except TimeoutError:
-            pass
-        except StopAsyncIteration:
-            self.stats.primary_won += 1
-            self._last_winner = "primary"
-            with contextlib.suppress(Exception):
-                await primary_gen.aclose()
-            return
-        except Exception as exc:
-            primary_failed = True
-            primary_exc = exc
-            with contextlib.suppress(Exception):
-                await primary_gen.aclose()
+        if get_primary in done:
+            await self._cancel_task(timer)
+            msg = get_primary.result()
+            if msg[0] != "error":
+                # Primary responded within the SLA: it wins outright, no hedge.
+                self.stats.primary_won += 1
+                self._last_winner = "primary"
+                async for item in self._emit_queue(msg, primary_q, primary_task):
+                    yield item
+                return
+            # Primary failed before the deadline: hedge immediately.
+            primary_exc = msg[1]
+            primary_dead = True
+            await self._cancel_task(primary_task)
+        # else: deadline hit; `get_primary` stays pending for the race.
 
+        # Dispatch the hedged backup request.
         self.stats.hedged_requests += 1
         secondary_gen = stream_factory(self.secondary)
+        secondary_q: asyncio.Queue[tuple[str, Any]] = asyncio.Queue()
+        secondary_task = asyncio.create_task(_drain_stream(secondary_gen, secondary_q))
 
-        if primary_failed:
+        if primary_dead:
+            # Primary already dead; cancel its stray getter and lean on the secondary.
+            await self._cancel_task(get_primary)
+            sec_first = await secondary_q.get()
+            if sec_first[0] == "error":
+                await self._cancel_task(secondary_task)
+                raise sec_first[1] from primary_exc
             self.stats.hedge_won += 1
             self._last_winner = "secondary"
-            try:
-                async for token in secondary_gen:
-                    yield token
-                return
-            except Exception as sec_exc:
-                raise sec_exc from primary_exc
-            finally:
-                with contextlib.suppress(Exception):
-                    await secondary_gen.aclose()
+            async for item in self._emit_queue(sec_first, secondary_q, secondary_task):
+                yield item
+            return
 
-        # Both streams are racing for the first token
-        task_secondary: asyncio.Task[str] = asyncio.create_task(secondary_gen.__anext__())
-        pending: set[asyncio.Task[str]] = {task_primary, task_secondary}
-        winner_gen: AsyncGenerator[str] | None = None
-        winner_token: str | None = None
+        # True race: primary still in flight (timed out) vs freshly dispatched secondary.
+        queues = {"primary": primary_q, "secondary": secondary_q}
+        drain_tasks = {"primary": primary_task, "secondary": secondary_task}
+        getters: dict[str, asyncio.Task[tuple[str, Any]]] = {
+            "primary": get_primary,
+            "secondary": asyncio.ensure_future(secondary_q.get()),
+        }
+        winner: str | None = None
+        winner_msg: tuple[str, Any] | None = None
         last_exc: Exception | None = None
 
-        while pending:
-            done, pending = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
-            for task in done:
-                try:
-                    tok = task.result()
-                    if task is task_primary:
-                        winner_gen = primary_gen
-                        self.stats.primary_won += 1
-                        self._last_winner = "primary"
-                        for p in pending:
-                            p.cancel()
-                            with contextlib.suppress(asyncio.CancelledError, Exception):
-                                await p
-                        with contextlib.suppress(Exception):
-                            await secondary_gen.aclose()
-                    else:
-                        winner_gen = secondary_gen
-                        self.stats.hedge_won += 1
-                        self._last_winner = "secondary"
-                        for p in pending:
-                            p.cancel()
-                            with contextlib.suppress(asyncio.CancelledError, Exception):
-                                await p
-                        with contextlib.suppress(Exception):
-                            await primary_gen.aclose()
-                    winner_token = tok
+        while getters and winner is None:
+            race_done, _ = await asyncio.wait(getters.values(), return_when=asyncio.FIRST_COMPLETED)
+            for name in list(getters):
+                if getters[name] not in race_done:
+                    continue
+                result = getters[name].result()
+                if result[0] == "error":
+                    last_exc = result[1]
+                    del getters[name]
+                    await self._cancel_task(drain_tasks.pop(name))
+                else:
+                    winner = name
+                    winner_msg = result
                     break
-                except StopAsyncIteration:
-                    if task is task_primary:
-                        winner_gen = primary_gen
-                        self.stats.primary_won += 1
-                        self._last_winner = "primary"
-                        for p in pending:
-                            p.cancel()
-                            with contextlib.suppress(asyncio.CancelledError, Exception):
-                                await p
-                        with contextlib.suppress(Exception):
-                            await secondary_gen.aclose()
-                    else:
-                        winner_gen = secondary_gen
-                        self.stats.hedge_won += 1
-                        self._last_winner = "secondary"
-                        for p in pending:
-                            p.cancel()
-                            with contextlib.suppress(asyncio.CancelledError, Exception):
-                                await p
-                        with contextlib.suppress(Exception):
-                            await primary_gen.aclose()
-                    winner_token = ""
-                    break
-                except Exception as exc:
-                    last_exc = exc
-            if winner_gen is not None:
-                break
 
-        if winner_gen is None:
+        if winner is None or winner_msg is None:
             if last_exc is not None:
                 raise last_exc
             raise RuntimeError("All hedged streaming attempts failed")
 
-        try:
-            if winner_token:
-                yield winner_token
-            async for token in winner_gen:
-                yield token
-        finally:
-            with contextlib.suppress(Exception):
-                await winner_gen.aclose()
+        # Cancel the losing racer (if any) and its drain task.
+        for name, getter in getters.items():
+            if name != winner:
+                await self._cancel_task(getter)
+                await self._cancel_task(drain_tasks[name])
+
+        if winner == "primary":
+            self.stats.primary_won += 1
+        else:
+            self.stats.hedge_won += 1
+        self._last_winner = winner
+
+        async for item in self._emit_queue(winner_msg, queues[winner], drain_tasks[winner]):
+            yield item
 
     async def stream(self, prompt: str, **kw: Any) -> AsyncGenerator[str]:
         """Stream tokens with tail-latency hedging on first token arrival."""
