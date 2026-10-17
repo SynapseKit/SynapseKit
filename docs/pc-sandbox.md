@@ -72,7 +72,13 @@ path = sandbox.environment.export_audit_bundle(
 `docker` is the production backend when Docker is available. `podman` provides
 a rootless, daemonless alternative for Linux environments. `bubblewrap` (or `bwrap`)
 provides an unprivileged, daemonless Linux sandbox using kernel user and mount
-namespaces without requiring container runtimes or root privileges. `orbstack` uses
+namespaces without requiring container runtimes or root privileges. It binds only a
+minimal read-only system rootfs (never the host root or home directory) plus the
+workspace overlay, and always runs with an isolated network. Because bwrap has no
+cgroup controls it does not enforce `memory`/`cpus`/`pids_limit` and reports
+`enforces_resource_limits=False`, and it has no NAT so it supports only the `none`
+network policy (requesting `egress_only` fails closed — use `podman`/`docker` for
+outbound access). `orbstack` uses
 the Docker-compatible runtime on macOS. `fake` is intentionally a local
 process backend for deterministic tests and development only; it is not a
 security boundary.
