@@ -79,6 +79,7 @@ class BackendCapabilities:
     native_cow: bool = False
     gui: bool = False
     network_policies: tuple[str, ...] = (NetworkPolicy.NONE.value,)
+    enforces_resource_limits: bool = True
     reason: str | None = None
 
 
