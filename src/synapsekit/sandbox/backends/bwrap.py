@@ -39,7 +39,7 @@ class BubblewrapBackend(SandboxBackend):
             available=True,
             native_cow=False,
             gui=False,
-            network_policies=(NetworkPolicy.NONE.value, NetworkPolicy.EGRESS_ONLY.value),
+            network_policies=(NetworkPolicy.NONE.value,),
             reason=result.stdout.strip() or None,
         )
 
@@ -53,6 +53,14 @@ class BubblewrapBackend(SandboxBackend):
         capabilities = await self.probe()
         if not capabilities.available:
             raise BackendUnavailableError(capabilities.reason or "Bubblewrap is unavailable.")
+
+        if config.network == NetworkPolicy.EGRESS_ONLY.value:
+            raise BackendUnavailableError(
+                "The Bubblewrap backend only supports the 'none' network policy "
+                "(fully isolated). bwrap cannot provide egress-only networking "
+                "without a userspace network helper such as slirp4netns; use the "
+                "'podman' or 'docker' backend if the sandbox needs outbound access."
+            )
 
         identifier = f"synapsekit-bwrap-{session_id[:20]}"
         metadata: dict[str, str] = {
@@ -121,16 +129,17 @@ class BubblewrapBackend(SandboxBackend):
             # Lifecycle and session isolation
             "--die-with-parent",
             "--new-session",
-            # Namespace isolation
+            # Namespace isolation. The network namespace is ALWAYS unshared:
+            # bwrap cannot provide egress-only networking (it has no NAT), so
+            # the only safe policy is full isolation. start() rejects any
+            # request for egress_only, so by the time we get here the policy
+            # is always "none".
             "--unshare-user",
             "--unshare-pid",
             "--unshare-ipc",
             "--unshare-uts",
+            "--unshare-net",
         ]
-
-        network = handle.metadata.get("network", NetworkPolicy.NONE.value)
-        if network == NetworkPolicy.NONE.value:
-            bwrap_cmd.append("--unshare-net")
 
         # Environment sanitization
         bwrap_cmd.append("--clearenv")

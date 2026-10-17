@@ -176,7 +176,8 @@ def test_bubblewrap_probe_reports_available(monkeypatch) -> None:
     assert not capabilities.native_cow
     assert not capabilities.gui
     assert NetworkPolicy.NONE.value in capabilities.network_policies
-    assert NetworkPolicy.EGRESS_ONLY.value in capabilities.network_policies
+    # bwrap cannot provide egress-only networking, so it must not advertise it.
+    assert NetworkPolicy.EGRESS_ONLY.value not in capabilities.network_policies
 
 
 def test_bubblewrap_start_fails_closed_when_probe_unavailable(monkeypatch, tmp_path) -> None:
@@ -286,7 +287,31 @@ def test_bubblewrap_start_and_exec_has_restrictive_defaults(monkeypatch, tmp_pat
     assert exec_cmd[sep_idx + 1 :] == ["python", "-c", "print(1)"]
 
 
-def test_bubblewrap_start_allows_egress_when_configured(monkeypatch, tmp_path) -> None:
+def test_bubblewrap_start_fails_closed_on_egress_only(monkeypatch, tmp_path) -> None:
+    monkeypatch.setattr("synapsekit.sandbox.backends.bwrap.platform_is_linux", lambda: True)
+
+    async def fake_run(command, **kwargs):
+        from synapsekit.sandbox.types import CommandResult
+
+        return CommandResult(0, "bubblewrap 0.8.0\n", "")
+
+    monkeypatch.setattr("synapsekit.sandbox.backends.bwrap.run_process", fake_run)
+
+    backend = BubblewrapBackend()
+    # bwrap has no NAT, so sharing the host network namespace for "egress" would
+    # also expose host loopback services and the cloud metadata endpoint. It must
+    # refuse the policy rather than silently weaken isolation.
+    with pytest.raises(BackendUnavailableError, match="only supports the 'none' network policy"):
+        asyncio.run(
+            backend.start(
+                session_id="egress_test_session",
+                work_root=str(tmp_path),
+                config=SandboxConfig(network=NetworkPolicy.EGRESS_ONLY.value),
+            )
+        )
+
+
+def test_bubblewrap_exec_always_isolates_the_network(monkeypatch, tmp_path) -> None:
     monkeypatch.setattr("synapsekit.sandbox.backends.bwrap.platform_is_linux", lambda: True)
     calls: list[list[str]] = []
 
@@ -296,23 +321,23 @@ def test_bubblewrap_start_allows_egress_when_configured(monkeypatch, tmp_path) -
 
         if command[:2] == ["bwrap", "--version"]:
             return CommandResult(0, "bubblewrap 0.8.0\n", "")
-        return CommandResult(0, "egress ok\n", "")
+        return CommandResult(0, "ok\n", "")
 
     monkeypatch.setattr("synapsekit.sandbox.backends.bwrap.run_process", fake_run)
 
     async def scenario() -> None:
         backend = BubblewrapBackend()
         handle = await backend.start(
-            session_id="egress_test_session",
+            session_id="net_session",
             work_root=str(tmp_path),
-            config=SandboxConfig(network=NetworkPolicy.EGRESS_ONLY.value),
+            config=SandboxConfig(network=NetworkPolicy.NONE.value),
         )
         await backend.exec(handle, ["curl", "https://example.com"], timeout=10)
 
     asyncio.run(scenario())
 
     exec_cmd = calls[1]
-    assert "--unshare-net" not in exec_cmd
+    assert "--unshare-net" in exec_cmd
     assert "--unshare-user" in exec_cmd
     assert "--unshare-pid" in exec_cmd
     sep_idx = exec_cmd.index("--")
