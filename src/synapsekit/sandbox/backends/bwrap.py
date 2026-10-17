@@ -165,14 +165,13 @@ class BubblewrapBackend(SandboxBackend):
         bwrap_cmd.extend(["--setenv", "HOME", "/workspace"])
         bwrap_cmd.extend(["--setenv", "TMPDIR", "/tmp"])
 
+        # env is serialized by start() via json.dumps, so this is trusted input;
+        # a decode error here is a real bug and should surface, not be swallowed.
         env_raw = handle.metadata.get("environment")
         if env_raw:
-            try:
-                env_dict = json.loads(env_raw)
-                for k, v in env_dict.items():
-                    bwrap_cmd.extend(["--setenv", str(k), str(v)])
-            except Exception:
-                pass
+            env_dict = json.loads(env_raw)
+            for k, v in env_dict.items():
+                bwrap_cmd.extend(["--setenv", str(k), str(v)])
 
         bwrap_cmd.extend(["--", *command])
         return bwrap_cmd
