@@ -77,10 +77,31 @@ class BubblewrapBackend(SandboxBackend):
         """Construct the full bwrap invocation with restrictive sandboxing flags."""
         bwrap_cmd: list[str] = [
             "bwrap",
-            # Read-only host root filesystem
-            "--ro-bind",
-            "/",
-            "/",
+            # Minimal read-only system rootfs. We deliberately do NOT bind the
+            # host root ("--ro-bind / /") or the host home directory: the sandbox
+            # is meant to see only the filtered workspace overlay, and binding the
+            # real root would expose ~/.ssh, ~/.aws, ~/.env and every other host
+            # secret (the exact files SandboxConfig.exclude strips from the copy).
+            # Only the system directories needed to run interpreters/tools are
+            # mounted; "--ro-bind-try" skips any that do not exist on this host.
+            "--ro-bind-try",
+            "/usr",
+            "/usr",
+            "--ro-bind-try",
+            "/bin",
+            "/bin",
+            "--ro-bind-try",
+            "/sbin",
+            "/sbin",
+            "--ro-bind-try",
+            "/lib",
+            "/lib",
+            "--ro-bind-try",
+            "/lib64",
+            "/lib64",
+            "--ro-bind-try",
+            "/etc",
+            "/etc",
             # Safe virtual filesystems
             "--dev",
             "/dev",

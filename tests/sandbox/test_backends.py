@@ -231,10 +231,18 @@ def test_bubblewrap_start_and_exec_has_restrictive_defaults(monkeypatch, tmp_pat
     # Exec call
     exec_cmd = calls[1]
     assert exec_cmd[0] == "bwrap"
-    assert "--ro-bind" in exec_cmd
-    ro_idx = exec_cmd.index("--ro-bind")
-    assert exec_cmd[ro_idx + 1] == "/"
-    assert exec_cmd[ro_idx + 2] == "/"
+
+    # The host root must NEVER be bound: that would expose ~/.ssh, ~/.aws,
+    # ~/.env and every other host secret the overlay is designed to exclude.
+    triples = list(zip(exec_cmd, exec_cmd[1:], exec_cmd[2:], strict=False))
+    assert ("--ro-bind", "/", "/") not in triples
+    assert ("--bind", "/", "/") not in triples
+    # Only a minimal, read-only system rootfs is mounted.
+    assert ("--ro-bind-try", "/usr", "/usr") in triples
+    assert ("--ro-bind-try", "/etc", "/etc") in triples
+    # No host home / user data directories are ever bound in.
+    for leaky in ("/home", "/root", "/mnt", "/media", "/run"):
+        assert leaky not in exec_cmd
 
     assert "--dev" in exec_cmd
     assert exec_cmd[exec_cmd.index("--dev") + 1] == "/dev"
