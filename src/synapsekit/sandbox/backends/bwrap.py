@@ -16,6 +16,17 @@ class BubblewrapBackend(SandboxBackend):
     Bubblewrap allows running unprivileged, hermetic sandboxes without requiring root
     privileges, sudo, or background container daemons (like Docker or Podman). It leverages
     Linux kernel user namespaces, mount namespaces, and network namespaces directly.
+
+    Limitations compared with the container/VM backends:
+
+    - **Network**: only the fully-isolated ``none`` policy is supported. bwrap has no
+      NAT, so it cannot offer egress-only networking; ``egress_only`` is rejected.
+    - **Resource limits**: ``config.memory``, ``config.cpus`` and ``config.pids_limit``
+      are NOT enforced (bwrap has no cgroup controls); ``probe()`` reports
+      ``enforces_resource_limits=False``. Use a container/VM backend for hard caps.
+    - **Sessions**: each ``exec`` runs a fresh bwrap invocation. Only ``/workspace``
+      (the bound work tree) persists between calls; ``/tmp`` is a new tmpfs each time
+      and no background processes survive across ``exec`` calls.
     """
 
     name = "bubblewrap"
@@ -40,6 +51,10 @@ class BubblewrapBackend(SandboxBackend):
             native_cow=False,
             gui=False,
             network_policies=(NetworkPolicy.NONE.value,),
+            # bwrap has no cgroup controls of its own, so config.memory,
+            # config.cpus and config.pids_limit are NOT enforced. Signal this so
+            # callers that need hard resource caps pick a container/VM backend.
+            enforces_resource_limits=False,
             reason=result.stdout.strip() or None,
         )
 
@@ -63,9 +78,10 @@ class BubblewrapBackend(SandboxBackend):
             )
 
         identifier = f"synapsekit-bwrap-{session_id[:20]}"
+        # Note: config.pids_limit/memory/cpus are intentionally not recorded or
+        # applied here -- bwrap cannot enforce them (see probe()).
         metadata: dict[str, str] = {
             "network": config.network,
-            "pids_limit": str(config.pids_limit),
         }
         if config.environment:
             metadata["environment"] = json.dumps(config.sanitized_environment)

@@ -175,6 +175,8 @@ def test_bubblewrap_probe_reports_available(monkeypatch) -> None:
     assert capabilities.name == "bubblewrap"
     assert not capabilities.native_cow
     assert not capabilities.gui
+    # bwrap has no cgroup controls, so it must not claim to enforce resource limits.
+    assert not capabilities.enforces_resource_limits
     assert NetworkPolicy.NONE.value in capabilities.network_policies
     # bwrap cannot provide egress-only networking, so it must not advertise it.
     assert NetworkPolicy.EGRESS_ONLY.value not in capabilities.network_policies
