@@ -65,9 +65,9 @@ anthropic = ["anthropic>=0.25"]
 # torch-backed semantic/ColBERT extras are temporarily manual installs.
 semantic = []
 colbert = []
-pdf = ["pypdf>=6.15.0"]
+pdf = ["pypdf>=6.19.0"]
 visual = [
-    "pypdf>=6.15.0",
+    "pypdf>=6.19.0",
     "pymupdf>=1.24",
     "python-pptx>=0.6",
     "transformers>=5.10.0",
@@ -228,8 +228,8 @@ jira = ["httpx>=0.27"]
 hubspot = ["hubspot-api-client>=8.0"]
 sql = ["sqlalchemy>=2.0"]
 snowflake = ["snowflake-connector-python>=4.7.1"]
-mongodb = ["pymongo>=4.0"]
-mongodb-vector = ["pymongo>=4.0"]
+mongodb = ["pymongo>=4.18.2"]
+mongodb-vector = ["pymongo>=4.18.2"]
 salesforce = ["simple-salesforce>=1.12"]
 azure = ["azure-storage-blob>=12.0"]
 s3 = ["boto3>=1.34"]
@@ -252,7 +252,7 @@ performance = ["orjson>=3.9", "uvloop>=0.19; sys_platform != 'win32'", "xxhash>=
 all = [
     "openai>=1.0",
     "anthropic>=0.25",
-    "pypdf>=6.13.3",
+    "pypdf>=6.19.0",
     "pymupdf>=1.24",
     "python-pptx>=0.6",
     "transformers>=5.10.0",
@@ -311,7 +311,7 @@ all = [
     "gitpython>=3.1.59",
     "hubspot-api-client>=8.0",
     "supabase>=2.0",
-    "pymongo>=4.0",
+    "pymongo>=4.18.2",
     "google-cloud-firestore>=2.13",
     "azure-cosmos>=4.0",
     "simple-salesforce>=1.12",
@@ -389,7 +389,7 @@ integration = [
     "pgvector>=0.2",
     "redis>=5.0",
     "elasticsearch>=8.0,<9",
-    "pymongo>=4.0",
+    "pymongo>=4.18.2",
     "google-cloud-firestore>=2.13",
     # azure.cosmos.aio.CosmosClient (used by CosmosDBMemoryBackend/CosmosDBCheckpointer
     # and by the cosmos_config test fixture's readiness probe) requires an async
@@ -426,6 +426,15 @@ constraint-dependencies = [
     "httplib2>=0.32.0",
     "setuptools>=83.0.0",
     "h2>=4.4.1",
+    "pyjwt>=2.15.0",
+    "urllib3>=2.8.0",
+    "virtualenv>=21.7.13",
+    "fsspec>=2026.6.0",
+    "multidict>=6.9.1",
+    # mcp is a direct extra dep floored at >=1.28.1; GHSA affects 2.0.0<=v<2.2.0.
+    # Constrain the resolved version here rather than raising the published floor
+    # to 2.x, which would force a breaking major bump on downstream 1.x users.
+    "mcp>=2.2.0",
     "anyio>=4.14.2",
     "soupsieve>=2.9.0",
     "httpx2>=2.12.0",
