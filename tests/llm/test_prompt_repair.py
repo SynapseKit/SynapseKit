@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 from collections.abc import AsyncGenerator
 from typing import Any
-from unittest.mock import AsyncMock
 
 import pytest
 
@@ -36,6 +35,10 @@ class _FakeLLM(BaseLLM):
         self._responses = list(responses)
         self._call_count = 0
         self.received_prompts: list[str] = []
+        # Recorders for the delegating interface (no mocks — real attributes).
+        self.messages_calls: list[list[dict[str, Any]]] = []
+        self.tool_calls: list[tuple[list[dict[str, Any]], list[dict[str, Any]]]] = []
+        self.aclose_count = 0
 
     async def stream(self, prompt: str, **kw: Any) -> AsyncGenerator[str]:
         self.received_prompts.append(prompt)
@@ -46,6 +49,19 @@ class _FakeLLM(BaseLLM):
         )
         self._call_count += 1
         yield response
+
+    async def generate_with_messages(self, messages: list[dict[str, Any]], **kw: Any) -> str:
+        self.messages_calls.append(messages)
+        return "msg_response"
+
+    async def call_with_tools(
+        self, messages: list[dict[str, Any]], tools: list[dict[str, Any]]
+    ) -> dict[str, Any]:
+        self.tool_calls.append((messages, tools))
+        return {"tool": "result"}
+
+    async def aclose(self) -> None:
+        self.aclose_count += 1
 
 
 def _wrap(responses: list[str], **kw: Any) -> tuple[PromptRepairMiddleware, _FakeLLM]:
@@ -389,26 +405,26 @@ class TestPassthrough:
     @pytest.mark.asyncio
     async def test_generate_with_messages_delegates(self) -> None:
         inner = _FakeLLM(["ok"])
-        inner.generate_with_messages = AsyncMock(return_value="msg_response")  # type: ignore
         mw = PromptRepairMiddleware(inner)
-        result = await mw.generate_with_messages([{"role": "user", "content": "hi"}])
+        messages = [{"role": "user", "content": "hi"}]
+        result = await mw.generate_with_messages(messages)
         assert result == "msg_response"
+        assert inner.messages_calls == [messages]
 
     @pytest.mark.asyncio
     async def test_call_with_tools_delegates(self) -> None:
         inner = _FakeLLM(["ok"])
-        inner.call_with_tools = AsyncMock(return_value={"tool": "result"})  # type: ignore
         mw = PromptRepairMiddleware(inner)
         result = await mw.call_with_tools([], [])
         assert result == {"tool": "result"}
+        assert inner.tool_calls == [([], [])]
 
     @pytest.mark.asyncio
     async def test_aclose_delegates(self) -> None:
         inner = _FakeLLM(["ok"])
-        inner.aclose = AsyncMock()  # type: ignore
         mw = PromptRepairMiddleware(inner)
         await mw.aclose()
-        inner.aclose.assert_awaited_once()
+        assert inner.aclose_count == 1
 
     def test_config_property_returns_inner_config(self) -> None:
         cfg = _make_config(model="gpt-4o")
