@@ -130,13 +130,15 @@ class PromptRepairMiddleware(BaseLLM):
         Maximum number of repair attempts (default: 3).  Each attempt appends
         a targeted corrective instruction to the prompt.
     detect:
-        Iterable of failure modes to watch for.  Defaults to all four modes.
+        Iterable of failure modes to watch for.  Defaults to ``"empty"``,
+        ``"refusal"`` and ``"tool_loop"``.  ``"json_error"`` is opt-in (see
+        *expect_json*) because ordinary prose responses are not valid JSON.
         Valid values: ``"empty"``, ``"refusal"``, ``"json_error"``,
         ``"tool_loop"``.
     expect_json:
-        When ``True`` the ``json_error`` detector is always active even if
-        ``"json_error"`` is not in *detect*.  Useful when you know the
-        downstream consumer requires JSON.
+        When ``True`` the ``json_error`` detector is active even if
+        ``"json_error"`` is not in *detect*.  Set this when the downstream
+        consumer requires JSON.
     tool_loop_threshold:
         How many identical consecutive tool calls before declaring a loop
         (default: 3).
@@ -172,8 +174,12 @@ class PromptRepairMiddleware(BaseLLM):
         self._tool_loop_threshold = tool_loop_threshold
         self._on_repair = on_repair
 
-        _default_modes = {"empty", "refusal", "json_error", "tool_loop"}
-        self._detect: set[str] = set(detect) if detect is not None else _default_modes
+        # ``json_error`` is intentionally *not* a default mode: most LLM calls
+        # return prose, and a plain-text response is not valid JSON. Enabling it
+        # by default would misclassify every normal answer as a failure. Opt in
+        # via ``expect_json=True`` or by naming it explicitly in ``detect``.
+        _default_modes = {"empty", "refusal", "tool_loop"}
+        self._detect: set[str] = set(detect) if detect is not None else set(_default_modes)
         if expect_json:
             self._detect.add("json_error")
 

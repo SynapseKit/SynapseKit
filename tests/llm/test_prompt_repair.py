@@ -70,10 +70,17 @@ class TestInit:
         mw = PromptRepairMiddleware(inner, max_retries=0)
         assert mw._max_retries == 0
 
-    def test_default_detect_includes_all_modes(self) -> None:
+    def test_default_detect_excludes_json_error(self) -> None:
+        # json_error is opt-in (prose is not valid JSON); the other three are on.
         inner = _FakeLLM(["ok"])
         mw = PromptRepairMiddleware(inner)
-        assert {"empty", "refusal", "json_error", "tool_loop"} == mw._detect
+        assert {"empty", "refusal", "tool_loop"} == mw._detect
+
+    def test_default_prose_response_not_flagged_as_json_error(self) -> None:
+        # Regression: default settings must not treat plain prose as a failure.
+        inner = _FakeLLM(["ok"])
+        mw = PromptRepairMiddleware(inner)
+        assert mw._detect_failure("The answer is 42.") is None
 
     def test_custom_detect_limits_modes(self) -> None:
         inner = _FakeLLM(["ok"])
@@ -135,7 +142,7 @@ class TestDetectFailure:
         assert mw._detect_failure('{"name": "Alice", "age": 30}') != "json_error"
 
     def test_truncated_json_detected(self) -> None:
-        mw, _ = _wrap(["ok"])
+        mw, _ = _wrap(["ok"], expect_json=True)
         assert mw._detect_failure('{"name": "Alice"') == "json_error"
 
     def test_json_array_valid(self) -> None:
@@ -148,7 +155,7 @@ class TestDetectFailure:
         assert mw._detect_failure(resp) != "json_error"
 
     def test_markdown_fenced_broken_json_detected(self) -> None:
-        mw, _ = _wrap(["ok"])
+        mw, _ = _wrap(["ok"], expect_json=True)
         resp = '```json\n{"key":\n```'
         assert mw._detect_failure(resp) == "json_error"
 
