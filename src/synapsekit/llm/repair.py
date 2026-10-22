@@ -367,12 +367,11 @@ class PromptRepairMiddleware(BaseLLM):
 
     @config.setter
     def config(self, value: LLMConfig) -> None:
-        # BaseLLM.__init__ writes self.config; redirect to inner LLM after init.
+        # BaseLLM.__init__ writes self.config before ``_llm`` is set; that
+        # initial write is a no-op here since ``config`` reads through to the
+        # inner LLM. Later writes are redirected to the wrapped instance.
         if hasattr(self, "_llm"):
             self._llm.config = value
-        else:
-            # Called during super().__init__ — store temporarily.
-            object.__setattr__(self, "_init_config", value)
 
     @property
     def tokens_used(self) -> dict[str, int]:
