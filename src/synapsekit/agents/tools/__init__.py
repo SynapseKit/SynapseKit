@@ -18,6 +18,7 @@ from .gitlab_api import GitLabAPITool
 from .google_calendar import GoogleCalendarTool
 from .google_search import GoogleSearchTool
 from .graphql import GraphQLTool
+from .hacker_news import HackerNewsTool
 from .http_request import HTTPRequestTool
 from .human_input import HumanInputTool
 from .image_analysis import ImageAnalysisTool
@@ -73,6 +74,7 @@ __all__ = [
     "GoogleSearchTool",
     "GraphQLTool",
     "HTTPRequestTool",
+    "HackerNewsTool",
     "HumanInputTool",
     "ImageAnalysisTool",
     "JiraTool",
