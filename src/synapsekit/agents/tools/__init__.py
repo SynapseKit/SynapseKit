@@ -1,6 +1,7 @@
 from .api_builder import APIBuilderTool
 from .arxiv_search import ArxivSearchTool
 from .aws_lambda import AWSLambdaTool
+from .base64_tool import Base64Tool
 from .bing_search import BingSearchTool
 from .brave_search import BraveSearchTool
 from .browser import BrowserTool
@@ -17,6 +18,7 @@ from .gitlab_api import GitLabAPITool
 from .google_calendar import GoogleCalendarTool
 from .google_search import GoogleSearchTool
 from .graphql import GraphQLTool
+from .hacker_news import HackerNewsTool
 from .http_request import HTTPRequestTool
 from .human_input import HumanInputTool
 from .image_analysis import ImageAnalysisTool
@@ -54,6 +56,7 @@ __all__ = [
     "APIBuilderTool",
     "ArxivSearchTool",
     "AWSLambdaTool",
+    "Base64Tool",
     "BingSearchTool",
     "BraveSearchTool",
     "BrowserTool",
@@ -71,6 +74,7 @@ __all__ = [
     "GoogleSearchTool",
     "GraphQLTool",
     "HTTPRequestTool",
+    "HackerNewsTool",
     "HumanInputTool",
     "ImageAnalysisTool",
     "JiraTool",
