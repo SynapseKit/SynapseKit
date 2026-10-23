@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import asyncio
 import json
-import urllib.error
 import urllib.request
 from typing import Any
 
 from ..base import BaseTool, ToolResult
+
+_DEFAULT_BASE_URL = "https://hacker-news.firebaseio.com/v0"
 
 
 class HackerNewsTool(BaseTool):
@@ -34,6 +35,9 @@ class HackerNewsTool(BaseTool):
         "required": ["action"],
     }
 
+    def __init__(self, base_url: str | None = None) -> None:
+        self._base_url = (base_url or _DEFAULT_BASE_URL).rstrip("/")
+
     async def run(
         self, action: str = "top_stories", item_id: int | None = None, **kwargs: Any
     ) -> ToolResult:
@@ -49,7 +53,7 @@ class HackerNewsTool(BaseTool):
 
     def _run_sync(self, action: str, item_id: int | None) -> ToolResult:
         if action == "top_stories":
-            url = "https://hacker-news.firebaseio.com/v0/topstories.json"
+            url = f"{self._base_url}/topstories.json"
             try:
                 with urllib.request.urlopen(url, timeout=10) as response:
                     data = json.loads(response.read().decode("utf-8"))
@@ -57,16 +61,16 @@ class HackerNewsTool(BaseTool):
                 top_ids = data[:10]
                 stories = []
                 for story_id in top_ids:
-                    story_url = f"https://hacker-news.firebaseio.com/v0/item/{story_id}.json"
+                    story_url = f"{self._base_url}/item/{story_id}.json"
                     with urllib.request.urlopen(story_url, timeout=5) as s_response:
                         story_data = json.loads(s_response.read().decode("utf-8"))
                         if story_data:
                             title = story_data.get("title", "")
-                            url = story_data.get(
+                            story_link = story_data.get(
                                 "url", f"https://news.ycombinator.com/item?id={story_id}"
                             )
                             score = story_data.get("score", 0)
-                            stories.append(f"- {title} (Score: {score}) - {url}")
+                            stories.append(f"- {title} (Score: {score}) - {story_link}")
 
                 output = "Top 10 Hacker News Stories:\n" + "\n".join(stories)
                 return ToolResult(output=output)
@@ -76,7 +80,7 @@ class HackerNewsTool(BaseTool):
         elif action == "get_item":
             if not item_id:
                 return ToolResult(output="", error="item_id is required for get_item action.")
-            url = f"https://hacker-news.firebaseio.com/v0/item/{item_id}.json"
+            url = f"{self._base_url}/item/{item_id}.json"
             try:
                 with urllib.request.urlopen(url, timeout=10) as response:
                     data = json.loads(response.read().decode("utf-8"))
