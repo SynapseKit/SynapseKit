@@ -526,6 +526,7 @@ from .retrieval.world_model import (
     WorldModelQueryResult,
     WorldModelRAG,
 )
+from .serve import patch_agents, serve_agent
 from .structured_output import (
     IncrementalJSONBuffer,
     StructuredOutput,
@@ -620,8 +621,14 @@ from .ump import (
     auto_detect_and_convert,
 )
 
+# Patch agents to support .serve() immediately on import
+patch_agents()
+
 __version__ = "2.0.1"
 __all__ = [
+    # Serve
+    "serve_agent",
+    "patch_agents",
     # Facade
     "RAG",
     "SelfHealingRAG",
@@ -1679,3 +1686,5 @@ __all__.extend(
         "pci_rulepack",
     ]
 )
+
+_LAZY_IMPORTS.update({"serve_agent": "serve", "patch_agents": "serve"})

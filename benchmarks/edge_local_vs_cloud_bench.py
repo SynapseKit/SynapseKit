@@ -62,7 +62,7 @@ async def run_task(llm: BaseLLM, task: EdgeTask) -> EvalRecord:
     started = time.perf_counter()
     try:
         output = await llm.generate(task.prompt)
-    except Exception as exc:  # noqa: BLE001 - a failed task is a scored 0, not a crash
+    except Exception as exc:
         output = f"<error: {exc}>"
     latency_ms = (time.perf_counter() - started) * 1000
 
