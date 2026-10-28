@@ -11,19 +11,30 @@ from ..base import BaseTool, ToolResult
 class GitHubAPITool(BaseTool):
     """Interact with the GitHub REST API.
 
-    Supports searching repos, getting repo info, searching issues, and
-    getting issue details.  Uses stdlib ``urllib`` — no extra dependencies.
+    Supports searching repos, getting repo info, searching issues, getting
+    issue details, and fetching pull requests together with their unified
+    diff.  Uses stdlib ``urllib`` — no extra dependencies.
 
     Usage::
 
         tool = GitHubAPITool(token="ghp_...")
         result = await tool.run(action="search_repos", query="langchain")
+        pr = await tool.run(
+            action="get_pull_request_diff",
+            owner="SynapseKit",
+            repo="SynapseKit",
+            pull_number=1056,
+        )
+
+    ``base_url`` defaults to the public API host and can be overridden to point
+    at a GitHub Enterprise instance (or a test server).
     """
 
     name = "github_api"
     description = (
         "Interact with GitHub API to search repos, get repo info, "
-        "search issues, and get issue details."
+        "search issues, get issue details, get a pull request, and "
+        "fetch a pull request's unified diff."
     )
     parameters = {
         "type": "object",
@@ -31,7 +42,14 @@ class GitHubAPITool(BaseTool):
             "action": {
                 "type": "string",
                 "description": "Action to perform",
-                "enum": ["search_repos", "get_repo", "search_issues", "get_issue"],
+                "enum": [
+                    "search_repos",
+                    "get_repo",
+                    "search_issues",
+                    "get_issue",
+                    "get_pull_request",
+                    "get_pull_request_diff",
+                ],
             },
             "query": {
                 "type": "string",
@@ -39,22 +57,35 @@ class GitHubAPITool(BaseTool):
             },
             "owner": {
                 "type": "string",
-                "description": "Repository owner (for get_repo and get_issue)",
+                "description": (
+                    "Repository owner (for get_repo, get_issue, get_pull_request, "
+                    "get_pull_request_diff)"
+                ),
             },
             "repo": {
                 "type": "string",
-                "description": "Repository name (for get_repo and get_issue)",
+                "description": (
+                    "Repository name (for get_repo, get_issue, get_pull_request, "
+                    "get_pull_request_diff)"
+                ),
             },
             "issue_number": {
                 "type": "integer",
                 "description": "Issue number (for get_issue)",
             },
+            "pull_number": {
+                "type": "integer",
+                "description": (
+                    "Pull request number (for get_pull_request and get_pull_request_diff)"
+                ),
+            },
         },
         "required": ["action"],
     }
 
-    def __init__(self, token: str | None = None) -> None:
+    def __init__(self, token: str | None = None, base_url: str = "https://api.github.com") -> None:
         self._token = token or os.environ.get("GITHUB_TOKEN")
+        self._base_url = base_url.rstrip("/")
 
     async def run(self, action: str = "", **kwargs: Any) -> ToolResult:
         if not action:
@@ -65,6 +96,8 @@ class GitHubAPITool(BaseTool):
             "get_repo": self._get_repo,
             "search_issues": self._search_issues,
             "get_issue": self._get_issue,
+            "get_pull_request": self._get_pull_request,
+            "get_pull_request_diff": self._get_pull_request_diff,
         }
 
         handler = handlers.get(action)
@@ -79,12 +112,12 @@ class GitHubAPITool(BaseTool):
         except Exception as e:
             return ToolResult(output="", error=f"GitHub API error: {e}")
 
-    def _build_request(self, url: str) -> Any:
+    def _build_request(self, url: str, accept: str = "application/vnd.github.v3+json") -> Any:
         import urllib.request
 
         headers = {
             "User-Agent": "SynapseKit/1.0",
-            "Accept": "application/vnd.github.v3+json",
+            "Accept": accept,
         }
         if self._token:
             headers["Authorization"] = f"token {self._token}"
@@ -104,6 +137,19 @@ class GitHubAPITool(BaseTool):
 
         return await loop.run_in_executor(None, _fetch)
 
+    async def _api_get_text(self, url: str, accept: str) -> str:
+        import asyncio
+        import urllib.request
+
+        loop = asyncio.get_running_loop()
+        req = self._build_request(url, accept=accept)
+
+        def _fetch() -> str:
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                return resp.read().decode()
+
+        return await loop.run_in_executor(None, _fetch)
+
     async def _search_repos(self, query: str = "", **kwargs: Any) -> ToolResult:
         if not query:
             return ToolResult(output="", error="No query provided for search_repos.")
@@ -111,7 +157,7 @@ class GitHubAPITool(BaseTool):
         from urllib.parse import quote_plus
 
         data = await self._api_get(
-            f"https://api.github.com/search/repositories?q={quote_plus(query)}&per_page=5"
+            f"{self._base_url}/search/repositories?q={quote_plus(query)}&per_page=5"
         )
         items = data.get("items", [])
         if not items:
@@ -130,7 +176,7 @@ class GitHubAPITool(BaseTool):
         if not owner or not repo:
             return ToolResult(output="", error="Both 'owner' and 'repo' are required.")
 
-        data = await self._api_get(f"https://api.github.com/repos/{owner}/{repo}")
+        data = await self._api_get(f"{self._base_url}/repos/{owner}/{repo}")
         return ToolResult(
             output=(
                 f"**{data['full_name']}** ({data.get('stargazers_count', 0)} stars, "
@@ -148,7 +194,7 @@ class GitHubAPITool(BaseTool):
         from urllib.parse import quote_plus
 
         data = await self._api_get(
-            f"https://api.github.com/search/issues?q={quote_plus(query)}&per_page=5"
+            f"{self._base_url}/search/issues?q={quote_plus(query)}&per_page=5"
         )
         items = data.get("items", [])
         if not items:
@@ -169,9 +215,7 @@ class GitHubAPITool(BaseTool):
         if not owner or not repo or not issue_number:
             return ToolResult(output="", error="'owner', 'repo', and 'issue_number' are required.")
 
-        data = await self._api_get(
-            f"https://api.github.com/repos/{owner}/{repo}/issues/{issue_number}"
-        )
+        data = await self._api_get(f"{self._base_url}/repos/{owner}/{repo}/issues/{issue_number}")
         body = (data.get("body") or "No description")[:500]
         return ToolResult(
             output=(
@@ -182,3 +226,37 @@ class GitHubAPITool(BaseTool):
                 f"{body}"
             )
         )
+
+    async def _get_pull_request(
+        self, owner: str = "", repo: str = "", pull_number: int = 0, **kwargs: Any
+    ) -> ToolResult:
+        if not owner or not repo or not pull_number:
+            return ToolResult(output="", error="'owner', 'repo', and 'pull_number' are required.")
+
+        data = await self._api_get(f"{self._base_url}/repos/{owner}/{repo}/pulls/{pull_number}")
+        body = (data.get("body") or "No description")[:500]
+        return ToolResult(
+            output=(
+                f"**{data['title']}** (#{data['number']})\n"
+                f"State: {data.get('state', 'unknown')}\n"
+                f"Author: {data.get('user', {}).get('login', 'unknown')}\n"
+                f"Changes: +{data.get('additions', 0)} -{data.get('deletions', 0)} "
+                f"across {data.get('changed_files', 0)} file(s)\n"
+                f"URL: {data.get('html_url', '')}\n\n"
+                f"{body}"
+            )
+        )
+
+    async def _get_pull_request_diff(
+        self, owner: str = "", repo: str = "", pull_number: int = 0, **kwargs: Any
+    ) -> ToolResult:
+        if not owner or not repo or not pull_number:
+            return ToolResult(output="", error="'owner', 'repo', and 'pull_number' are required.")
+
+        diff = await self._api_get_text(
+            f"{self._base_url}/repos/{owner}/{repo}/pulls/{pull_number}",
+            accept="application/vnd.github.v3.diff",
+        )
+        if not diff.strip():
+            return ToolResult(output="(empty diff)")
+        return ToolResult(output=diff)
