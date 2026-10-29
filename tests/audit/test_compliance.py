@@ -413,6 +413,48 @@ async def test_every_event_is_tagged_and_lifetime_is_bracketed() -> None:
     AuditTracer.verify_chain(list(records))
 
 
+class _FlakyTracer(AuditTracer):
+    """Hand-written tracer that fails the next ``record`` call once (no mocks)."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.fail_next = False
+
+    def record(self, *args: Any, **kwargs: Any) -> Any:
+        if self.fail_next:
+            self.fail_next = False
+            raise RuntimeError("transient record failure")
+        return super().record(*args, **kwargs)
+
+
+async def test_end_agent_lifetime_is_retriable_after_a_record_failure() -> None:
+    # Regression for #1089: the end record must not be lost forever when a
+    # transient record() failure interrupts the first end_agent_lifetime call.
+    tracer = _FlakyTracer()
+    v = VerifiableAgent(
+        FakeAgent(),
+        compliance="eu_ai_act",
+        retention=RetentionPolicy(role="provider"),
+        tracer=tracer,
+    )
+    tracer.fail_next = True
+    with pytest.raises(RuntimeError, match="transient record failure"):
+        await end_agent_lifetime(v)
+
+    # The guard must not have latched — otherwise the end bracket is dropped.
+    assert v._compliance_ended is False
+
+    record = await end_agent_lifetime(v)  # retry succeeds
+    assert record is not None
+    assert await end_agent_lifetime(v) is None  # now recorded once only
+
+    ended = [
+        r for r in tracer.records if _payload(r)["eu_ai_act"].get("event") == "agent_lifetime_ended"
+    ]
+    assert len(ended) == 1
+    AuditTracer.verify_chain(list(tracer.records))
+
+
 async def test_purposes_can_be_narrowed_per_event_kind() -> None:
     v = _agent(purposes={EventKind.ERROR: ["12(2)(a)"], "TOOL_CALL": ("12(2)(c)", "12(2)(b)")})
     await _exercise(v)

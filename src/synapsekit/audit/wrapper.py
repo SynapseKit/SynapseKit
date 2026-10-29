@@ -264,10 +264,8 @@ class VerifiableAgent:
         )
 
     def _record_lifecycle(self, event: str) -> AuditRecord | None:
-        if event == "agent_lifetime_ended":
-            if self._compliance_ended:
-                return None
-            object.__setattr__(self, "_compliance_ended", True)
+        if event == "agent_lifetime_ended" and self._compliance_ended:
+            return None
         retention = self._compliance_retention
         assert retention is not None  # guaranteed in compliance mode
         profile = self._compliance_profile
@@ -281,9 +279,15 @@ class VerifiableAgent:
                     "profile": profile.to_dict() if profile is not None else None,
                 }
             )
-        return self._record_compliance_event(
+        # Set the "ended" guard only after the record is actually appended, so a
+        # transient record() failure can be retried instead of silently dropping
+        # the end bracket forever (nothing is ever dropped silently).
+        record = self._record_compliance_event(
             EventKind.SYSTEM_EVENT, {PAYLOAD_KEY: body}, redact=False
         )
+        if event == "agent_lifetime_ended":
+            object.__setattr__(self, "_compliance_ended", True)
+        return record
 
     def _kinds_for(self, name: str) -> tuple[EventKind, EventKind | None]:
         override = self._kind_overrides.get(name)
