@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 import pytest
+import tomllib
 from packaging.version import Version
 from scripts.check_dependency_security import (
     check_security_policy,
@@ -334,6 +335,13 @@ def test_main_returns_an_error_for_malformed_snapshot_collections(
 
     assert result == 1
     assert expected in capsys.readouterr().out
+
+
+def test_youtube_transcript_extra_declares_patched_certifi_floor() -> None:
+    pyproject = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    requirements = pyproject["project"]["optional-dependencies"]["youtube_transcript"]
+
+    assert "certifi>=2026.10.19" in requirements
 
 
 def test_repository_snapshot_covers_all_open_alerts_and_separate_exceptions() -> None:
