@@ -1,0 +1,1081 @@
+{
+  "metadata": {
+    "repository": "SynapseKit/SynapseKit",
+    "immutable_main_sha": "b4cea59023ddf329caf6d20f650814fc8efd346a",
+    "inventory_date": "2026-11-01",
+    "open_alert_count": 99,
+    "expected_open_alert_ids": [
+      144, 145, 180, 181, 182, 183, 184, 185, 186, 187, 189, 190,
+      191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202,
+      203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214,
+      215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226,
+      227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238,
+      239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250,
+      251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262,
+      263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274,
+      275, 276, 277
+    ],
+    "source_evidence": [
+      "ledger.json",
+      "alerts.json"
+    ]
+  },
+  "candidate_floors": {
+    "pillow": "13.0.0",
+    "pypdf": "6.21.4",
+    "authlib": "1.9.1",
+    "filelock": "4.2.1",
+    "aiohttp": "3.14.4",
+    "gitpython": "3.2.1",
+    "oauthlib": "4.0.0",
+    "pyasn1": "0.6.5",
+    "joserfc": "1.7.6",
+    "certifi": "2026.10.19",
+    "dnspython": "2.9.0",
+    "setuptools": "84.1.0",
+    "virtualenv": "21.14.13",
+    "opentelemetry-api": "1.45.2"
+  },
+  "alerts": [
+    {
+      "id": 277,
+      "state": "open",
+      "package": "pypdf",
+      "vulnerable_version_range": "< 6.21.4",
+      "first_patched_version": "6.21.4",
+      "ghsa": "GHSA-5849-834g-hvw5",
+      "cve": "CVE-2026-119203",
+      "summary": "pypdf has possible infinite loop when hitting EOF in standard xref table during trailer search"
+    },
+    {
+      "id": 276,
+      "state": "open",
+      "package": "pypdf",
+      "vulnerable_version_range": "< 6.21.4",
+      "first_patched_version": "6.21.4",
+      "ghsa": "GHSA-cggf-277g-3q54",
+      "cve": "CVE-2026-119204",
+      "summary": "pypdf has possible large memory usage when parsing page tree"
+    },
+    {
+      "id": 275,
+      "state": "open",
+      "package": "pypdf",
+      "vulnerable_version_range": "< 6.21.4",
+      "first_patched_version": "6.21.4",
+      "ghsa": "GHSA-mfr5-77xh-9j7h",
+      "cve": "CVE-2026-119205",
+      "summary": "pypdf has possible infinite loop when cloning dictionaries"
+    },
+    {
+      "id": 274,
+      "state": "open",
+      "package": "Authlib",
+      "vulnerable_version_range": ">= 0.15, <= 1.9.0",
+      "first_patched_version": "1.9.1",
+      "ghsa": "GHSA-c73q-w75p-j82v",
+      "cve": "CVE-2026-116672",
+      "summary": "Authlib RFC 7592 examples omit registration-access-token client binding"
+    },
+    {
+      "id": 273,
+      "state": "open",
+      "package": "pypdf",
+      "vulnerable_version_range": "< 6.21.3",
+      "first_patched_version": "6.21.3",
+      "ghsa": "GHSA-42gh-23hr-vphw",
+      "cve": "CVE-2026-119206",
+      "summary": "pypdf has possible long runtimes when retrieving page labels"
+    },
+    {
+      "id": 272,
+      "state": "open",
+      "package": "pypdf",
+      "vulnerable_version_range": "< 6.21.3",
+      "first_patched_version": "6.21.3",
+      "ghsa": "GHSA-4vqv-7265-gm2w",
+      "cve": "CVE-2026-119207",
+      "summary": "pypdf has possible large memory usage for exceptions in strict mode"
+    },
+    {
+      "id": 271,
+      "state": "open",
+      "package": "pypdf",
+      "vulnerable_version_range": "< 6.21.3",
+      "first_patched_version": "6.21.3",
+      "ghsa": "GHSA-62m5-6wh8-28x7",
+      "cve": "CVE-2026-119208",
+      "summary": "pypdf has possible long runtimes/large memory usage for encrypted PDF files"
+    },
+    {
+      "id": 270,
+      "state": "open",
+      "package": "pypdf",
+      "vulnerable_version_range": "< 6.21.3",
+      "first_patched_version": "6.21.3",
+      "ghsa": "GHSA-x3rh-gjgm-fmqc",
+      "cve": "CVE-2026-119209",
+      "summary": "pypdf has possible large memory usage when parsing cross-reference streams"
+    },
+    {
+      "id": 269,
+      "state": "open",
+      "package": "pyasn1",
+      "vulnerable_version_range": "<= 0.6.4",
+      "first_patched_version": "0.6.5",
+      "ghsa": "GHSA-2qm8-x737-gmw5",
+      "cve": "CVE-2026-119196",
+      "summary": "pyasn1 has quadratic CPU consumption in constructed BIT STRING decoding"
+    },
+    {
+      "id": 268,
+      "state": "open",
+      "package": "pyasn1",
+      "vulnerable_version_range": "<= 0.6.4",
+      "first_patched_version": "0.6.5",
+      "ghsa": "GHSA-mm57-4v3p-rchx",
+      "cve": "CVE-2026-119197",
+      "summary": "pyasn1 has quadratic-complexity denial of service in binary REAL decoding"
+    },
+    {
+      "id": 267,
+      "state": "open",
+      "package": "pyasn1",
+      "vulnerable_version_range": "<= 0.6.4",
+      "first_patched_version": "0.6.5",
+      "ghsa": "GHSA-9m75-vc3g-4x39",
+      "cve": "CVE-2026-119195",
+      "summary": "pyasn1 has quadratic-time denial of service in constructed string and indefinite-length ANY decoding"
+    },
+    {
+      "id": 266,
+      "state": "open",
+      "package": "pyasn1",
+      "vulnerable_version_range": ">= 0.3.3, < 0.6.5",
+      "first_patched_version": "0.6.5",
+      "ghsa": "GHSA-fm9c-5rcf-2q5p",
+      "cve": "CVE-2026-119194",
+      "summary": "pyasn1 has quadratic CPU use in schemaless BER/CER/DER container decoding"
+    },
+    {
+      "id": 265,
+      "state": "open",
+      "package": "oauthlib",
+      "vulnerable_version_range": "< 4.0.0",
+      "first_patched_version": "4.0.0",
+      "ghsa": "GHSA-7984-qgvg-3j9c",
+      "cve": "CVE-2026-118669",
+      "summary": "OAuthLib: Token grants can use attacker-supplied client_id for authorization after authenticating a different client"
+    },
+    {
+      "id": 264,
+      "state": "open",
+      "package": "joserfc",
+      "vulnerable_version_range": "< 1.7.6",
+      "first_patched_version": "1.7.6",
+      "ghsa": "GHSA-9pg5-8c7x-5hfx",
+      "cve": "CVE-2026-119284",
+      "summary": "joserfc: Compact JWS size guard allocates attacker-controlled segments before rejection"
+    },
+    {
+      "id": 263,
+      "state": "open",
+      "package": "joserfc",
+      "vulnerable_version_range": "< 1.7.5",
+      "first_patched_version": "1.7.5",
+      "ghsa": "GHSA-jpxq-7h8p-2q76",
+      "cve": "CVE-2026-119283",
+      "summary": "joserfc: Unbounded JWE General JSON `recipients` Array Leads to CPU Exhaustion (DoS) via Repeated RSA Private-Key Decryption"
+    },
+    {
+      "id": 262,
+      "state": "open",
+      "package": "filelock",
+      "vulnerable_version_range": ">= 3.10.0, <= 4.2.0",
+      "first_patched_version": "4.2.1",
+      "ghsa": "GHSA-8mx5-7m5m-r77g",
+      "cve": "CVE-2026-112910",
+      "summary": "filelock: WindowsFileLock ignores mode: a 0o600 lock file and the ReadWriteLock database inherit the directory ACL"
+    },
+    {
+      "id": 261,
+      "state": "open",
+      "package": "filelock",
+      "vulnerable_version_range": ">= 3.20.4, <= 4.2.0",
+      "first_patched_version": "4.2.1",
+      "ghsa": "GHSA-cwqr-hh33-gh44",
+      "cve": "CVE-2026-112915",
+      "summary": "filelock ReadWriteLock: a crafted lock database makes every acquire stall or hang regardless of timeout"
+    },
+    {
+      "id": 260,
+      "state": "open",
+      "package": "filelock",
+      "vulnerable_version_range": ">= 3.22.0, <= 4.2.0",
+      "first_patched_version": "4.2.1",
+      "ghsa": "GHSA-rfpc-qcw5-3pc4",
+      "cve": "CVE-2026-112939",
+      "summary": "filelock: SoftFileLock removes a live holder's marker when another user forges the PID in a writable marker"
+    },
+    {
+      "id": 259,
+      "state": "open",
+      "package": "filelock",
+      "vulnerable_version_range": "<= 4.2.0",
+      "first_patched_version": "4.2.1",
+      "ghsa": "GHSA-69hj-f68j-2879",
+      "cve": "CVE-2026-112909",
+      "summary": "filelock: UnixFileLock truncates and chmods any regular file another user renames or hard-links onto the lock path"
+    },
+    {
+      "id": 258,
+      "state": "open",
+      "package": "filelock",
+      "vulnerable_version_range": ">= 3.20.4, <= 4.0.8",
+      "first_patched_version": "4.0.9",
+      "ghsa": "GHSA-j8f7-rjxc-mr56",
+      "cve": "CVE-2026-112936",
+      "summary": "filelock: ReadWriteLock follows a symlink at the lock path into SQLite"
+    },
+    {
+      "id": 257,
+      "state": "open",
+      "package": "filelock",
+      "vulnerable_version_range": ">= 3.22.0, <= 4.2.0",
+      "first_patched_version": "4.2.1",
+      "ghsa": "GHSA-fq56-3cx3-fjxp",
+      "cve": "CVE-2026-112935",
+      "summary": "filelock: SoftFileLock stale-lock break removes a live lock file on a reused inode number and admits two holders"
+    },
+    {
+      "id": 256,
+      "state": "open",
+      "package": "Authlib",
+      "vulnerable_version_range": "< 1.9.1",
+      "first_patched_version": "1.9.1",
+      "ghsa": "GHSA-8m4g-j4wp-wgcg",
+      "cve": "CVE-2026-114616",
+      "summary": "Authlib accepts an empty HMAC key, allowing JWS/JWT signature forgery (HS256/HS384/HS512)"
+    },
+    {
+      "id": 255,
+      "state": "open",
+      "package": "authlib",
+      "vulnerable_version_range": ">= 1.6.0, < 1.9.0",
+      "first_patched_version": "1.9.0",
+      "ghsa": "GHSA-x4rv-c3wx-4cr8",
+      "cve": "CVE-2026-114620",
+      "summary": "Authlib: Unvalidated request_uri fetch in JWT-secured authorization request (JAR) leading to SSRF"
+    },
+    {
+      "id": 254,
+      "state": "open",
+      "package": "authlib",
+      "vulnerable_version_range": "<= 1.8.0",
+      "first_patched_version": "1.9.0",
+      "ghsa": "GHSA-c5mf-xmp2-59rc",
+      "cve": "CVE-2026-114617",
+      "summary": "Authlib: ID token can disable its own nonce validation via the nonce_supported claim"
+    },
+    {
+      "id": 253,
+      "state": "open",
+      "package": "authlib",
+      "vulnerable_version_range": "< 1.9.0",
+      "first_patched_version": "1.9.0",
+      "ghsa": "GHSA-fch4-3c6x-j4gc",
+      "cve": "CVE-2026-114618",
+      "summary": "Authlib: Default JWT bearer grant accepts assertions for the wrong audience"
+    },
+    {
+      "id": 252,
+      "state": "open",
+      "package": "authlib",
+      "vulnerable_version_range": "< 1.9.0",
+      "first_patched_version": "1.9.0",
+      "ghsa": "GHSA-q686-2qmg-hqc7",
+      "cve": "CVE-2026-114619",
+      "summary": "Authlib: OpenID implicit grant checks raw scope instead of allowed scope before issuing ID tokens"
+    },
+    {
+      "id": 251,
+      "state": "open",
+      "package": "authlib",
+      "vulnerable_version_range": ">= 1.3.1, <= 1.8.0",
+      "first_patched_version": "1.9.0",
+      "ghsa": "GHSA-7vr2-2fgp-9w7p",
+      "cve": "CVE-2026-114615",
+      "summary": "Authlib incomplete algorithm-confusion fix permits HMAC forgery with prefixed public keys"
+    },
+    {
+      "id": 250,
+      "state": "open",
+      "package": "authlib",
+      "vulnerable_version_range": "<= 1.7.2",
+      "first_patched_version": "1.8.0",
+      "ghsa": "GHSA-jj7h-c3hg-m23x",
+      "cve": "CVE-2026-114614",
+      "summary": "Authlib: is_secure_transport() loopback exemption can be bypassed with a userinfo component, allowing cleartext-HTTP URLs to non-loopback hosts"
+    },
+    {
+      "id": 249,
+      "state": "open",
+      "package": "dnspython",
+      "vulnerable_version_range": "< 2.9.0",
+      "first_patched_version": "2.9.0",
+      "ghsa": "GHSA-45c3-73f7-pv4m",
+      "cve": "CVE-2026-114605",
+      "summary": "dnspython dns.name.from_wire_parser() excessive CPU use"
+    },
+    {
+      "id": 248,
+      "state": "open",
+      "package": "GitPython",
+      "vulnerable_version_range": "<= 3.1.62",
+      "first_patched_version": "3.2.0",
+      "ghsa": "GHSA-23mf-xhv8-69c2",
+      "cve": null,
+      "summary": "GitPython: arbitrary file read via attacker-controlled branch name in `Head.checkout()` (incomplete fix of CVE-2026-78679)"
+    },
+    {
+      "id": 247,
+      "state": "open",
+      "package": "GitPython",
+      "vulnerable_version_range": "< 3.2.0",
+      "first_patched_version": "3.2.0",
+      "ghsa": "GHSA-gq48-pqfc-9p58",
+      "cve": null,
+      "summary": "GitPython: Submodule.move() follows an attacker-committed intermediate symlink outside the worktree"
+    },
+    {
+      "id": 246,
+      "state": "open",
+      "package": "GitPython",
+      "vulnerable_version_range": ">= 3.1.30, < 3.2.0",
+      "first_patched_version": "3.2.0",
+      "ghsa": "GHSA-f9j4-qggq-h239",
+      "cve": null,
+      "summary": "GitPython Remote.pull() refspec bypasses the --upload-pack unsafe-option guard, enabling arbitrary command execution"
+    },
+    {
+      "id": 245,
+      "state": "open",
+      "package": "GitPython",
+      "vulnerable_version_range": "<= 3.1.62",
+      "first_patched_version": "3.2.0",
+      "ghsa": "GHSA-w8jc-g24h-crhw",
+      "cve": null,
+      "summary": "GitPython command wrappers omit unsafe protocol and option checks"
+    },
+    {
+      "id": 244,
+      "state": "open",
+      "package": "GitPython",
+      "vulnerable_version_range": "<= 3.1.62",
+      "first_patched_version": "3.2.0",
+      "ghsa": "GHSA-fx3j-rwgx-fr94",
+      "cve": null,
+      "summary": "GitPython: separate_git_dir leaks env vars via crafted .gitmodules submodule name"
+    },
+    {
+      "id": 243,
+      "state": "open",
+      "package": "GitPython",
+      "vulnerable_version_range": "<= 3.1.62",
+      "first_patched_version": "3.2.0",
+      "ghsa": "GHSA-m64x-33q8-m5h7",
+      "cve": null,
+      "summary": "GitPython parse_actor_and_date() is vulnerable to quadratic backtracking on malformed identity lines"
+    },
+    {
+      "id": 242,
+      "state": "open",
+      "package": "authlib",
+      "vulnerable_version_range": "<= 1.8.0",
+      "first_patched_version": "1.9.0",
+      "ghsa": "GHSA-6v38-4h7w-rj9h",
+      "cve": "CVE-2026-96760",
+      "summary": "Authlib: empty signatures validation in JWS JSON deserialization"
+    },
+    {
+      "id": 241,
+      "state": "open",
+      "package": "oauthlib",
+      "vulnerable_version_range": ">= 3.3.0, < 4.0.0",
+      "first_patched_version": "4.0.0",
+      "ghsa": "GHSA-3jp2-3mrg-2vxc",
+      "cve": "CVE-2026-49272",
+      "summary": "OAuthLib: Bearer token can be retrieved as long as client knows a valid client ID for device workflow"
+    },
+    {
+      "id": 240,
+      "state": "open",
+      "package": "certifi",
+      "vulnerable_version_range": ">= 2019.03.09, < 2026.10.18",
+      "first_patched_version": "2026.10.18",
+      "ghsa": "GHSA-6q48-6c7w-9gw2",
+      "cve": null,
+      "summary": "certifi bundles emSign root CAs with compromised intermediate CA keys"
+    },
+    {
+      "id": 239,
+      "state": "open",
+      "package": "filelock",
+      "vulnerable_version_range": ">= 3.20.4, <= 4.2.0",
+      "first_patched_version": "4.2.1",
+      "ghsa": "GHSA-9vhv-jxww-xfm5",
+      "cve": "CVE-2026-112913",
+      "summary": "filelock: ReadWriteLock on Windows acts on SQLite side files another local user places beside its database"
+    },
+    {
+      "id": 238,
+      "state": "open",
+      "package": "filelock",
+      "vulnerable_version_range": ">= 3.22.0, <= 4.2.0",
+      "first_patched_version": "4.2.1",
+      "ghsa": "GHSA-567q-5qvw-pf92",
+      "cve": "CVE-2026-112907",
+      "summary": "filelock: On Windows an oplock on a soft lock's marker holds SoftFileLock.acquire() past its timeout and blocks the stale break"
+    },
+    {
+      "id": 237,
+      "state": "open",
+      "package": "filelock",
+      "vulnerable_version_range": ">= 3.20.4, <= 4.2.0",
+      "first_patched_version": "4.2.1",
+      "ghsa": "GHSA-v4x8-3wr5-3wq8",
+      "cve": "CVE-2026-112940",
+      "summary": "filelock ReadWriteLock: SQLite reopens the lock database by name, so a planted symlink or journal file makes the lock user's process overwrite or unlink its own files"
+    },
+    {
+      "id": 236,
+      "state": "open",
+      "package": "pillow",
+      "vulnerable_version_range": "<= 12.3.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-5x8w-8jj5-q52h",
+      "cve": "CVE-2026-112398",
+      "summary": "Pillow: Heap buffer overflow in FlashPix (FPX) JPEG decoding leads to code execution"
+    },
+    {
+      "id": 235,
+      "state": "open",
+      "package": "Pillow",
+      "vulnerable_version_range": ">= 11.2.1, < 13.0.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-654x-cwwv-5j9c",
+      "cve": "CVE-2026-114501",
+      "summary": "Pillow: Arrow export leaks stale heap memory when PILLOW_ALIGNMENT > 1"
+    },
+    {
+      "id": 234,
+      "state": "open",
+      "package": "setuptools",
+      "vulnerable_version_range": ">= 38.2.2, < 84.1.0",
+      "first_patched_version": "84.1.0",
+      "ghsa": "GHSA-xmj3-9gf7-h52w",
+      "cve": null,
+      "summary": "setuptools: Windows path escape via namespace_packages.txt during legacy wheel installation  Description"
+    },
+    {
+      "id": 233,
+      "state": "open",
+      "package": "pypdf",
+      "vulnerable_version_range": "< 6.21.2",
+      "first_patched_version": "6.21.2",
+      "ghsa": "GHSA-6c7f-9265-g8fw",
+      "cve": "CVE-2026-115572",
+      "summary": "pypdf: Possible long runtimes for repeated references to the same missing object"
+    },
+    {
+      "id": 232,
+      "state": "open",
+      "package": "pypdf",
+      "vulnerable_version_range": "< 6.21.2",
+      "first_patched_version": "6.21.2",
+      "ghsa": "GHSA-jr96-gvgh-j3r4",
+      "cve": "CVE-2026-115585",
+      "summary": "pypdf: Possible long runtimes for repeated malformed cross-reference entries (Follow-up)"
+    },
+    {
+      "id": 231,
+      "state": "open",
+      "package": "pypdf",
+      "vulnerable_version_range": "< 6.21.2",
+      "first_patched_version": "6.21.2",
+      "ghsa": "GHSA-gmh7-3g9r-mjh5",
+      "cve": "CVE-2026-115580",
+      "summary": "pypdf: Possible long runtimes for large xref table header limits"
+    },
+    {
+      "id": 230,
+      "state": "open",
+      "package": "virtualenv",
+      "vulnerable_version_range": ">= 21.14.9, < 21.14.13",
+      "first_patched_version": "21.14.13",
+      "ghsa": "GHSA-cx6f-vjhg-g3cc",
+      "cve": "CVE-2026-115586",
+      "summary": "virtualenv: Bash activator leaves the --prompt value unescaped in PS1 when promptvars is off, so prompt expansion later executes it (regression in 21.14.9)"
+    },
+    {
+      "id": 229,
+      "state": "open",
+      "package": "pillow",
+      "vulnerable_version_range": ">= 11.1.0, < 13.0.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-78g4-xqwv-q3g8",
+      "cve": null,
+      "summary": "Pillow: Bundled libopenjp2 2.5.4 in all wheels since 11.1.0 carries OSV-2025-219 heap-buffer-overflow write reachable from Image.open().load()"
+    },
+    {
+      "id": 228,
+      "state": "open",
+      "package": "Gitpython",
+      "vulnerable_version_range": "<= 3.2.0",
+      "first_patched_version": "3.2.1",
+      "ghsa": "GHSA-83vg-56qc-22m7",
+      "cve": "CVE-2026-114145",
+      "summary": "GitPython validates a submodule's \".git\" path only after cloning into it (RCE)"
+    },
+    {
+      "id": 227,
+      "state": "open",
+      "package": "opentelemetry-api",
+      "vulnerable_version_range": "<= 1.45.0",
+      "first_patched_version": "1.45.1",
+      "ghsa": "GHSA-xcq7-p3pf-p88h",
+      "cve": "CVE-2026-114603",
+      "summary": "OpenTelemetry Python: Unbounded tracestate parsing in opentelemetry-api"
+    },
+    {
+      "id": 226,
+      "state": "open",
+      "package": "Pillow",
+      "vulnerable_version_range": ">= 9.4.0, < 13.0.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-g7cr-3p24-7wf7",
+      "cve": "CVE-2026-96778",
+      "summary": "Pillow: Heap buffer overflow writing JPEG comment after ICC profile fills buffer"
+    },
+    {
+      "id": 225,
+      "state": "open",
+      "package": "Pillow",
+      "vulnerable_version_range": "< 13.0.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-9v9v-9qvf-h2hj",
+      "cve": "CVE-2026-96644",
+      "summary": "Pillow: Heap over-read in WMF/EMF rendering via 16-bit dimension truncation (Windows builds)"
+    },
+    {
+      "id": 224,
+      "state": "open",
+      "package": "Pillow",
+      "vulnerable_version_range": ">= 11.0.0, < 13.0.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-g4qv-2jxx-769h",
+      "cve": "CVE-2026-96643",
+      "summary": "Pillow: PNG eXIf chunk makes EXIF parsing run in quadratic time"
+    },
+    {
+      "id": 223,
+      "state": "open",
+      "package": "Pillow",
+      "vulnerable_version_range": "< 13.0.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-3j72-p6qg-6xp7",
+      "cve": "CVE-2026-96642",
+      "summary": "Pillow: TarIO negative size field causes infinite CPU-spin loop"
+    },
+    {
+      "id": 222,
+      "state": "open",
+      "package": "pillow",
+      "vulnerable_version_range": "< 13.0.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-4rm8-3hmm-39fg",
+      "cve": "CVE-2026-96641",
+      "summary": "Pillow: Reachable undefined behavior in native integer operations, potentially leading to denial of service or logic integrity compromise"
+    },
+    {
+      "id": 221,
+      "state": "open",
+      "package": "Pillow",
+      "vulnerable_version_range": ">= 5.1.0, < 13.0.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-mrfp-p49p-3hf2",
+      "cve": "CVE-2026-96640",
+      "summary": "Pillow PDF append accepts malformed shared page-tree DAG causing resource exhaustion"
+    },
+    {
+      "id": 220,
+      "state": "open",
+      "package": "Pillow",
+      "vulnerable_version_range": ">= 11.0.0, < 13.0.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-v9pv-5gc8-w2m6",
+      "cve": "CVE-2026-96639",
+      "summary": "Pillow multi-frame loaders can reuse stale native image storage after mode transitions"
+    },
+    {
+      "id": 219,
+      "state": "open",
+      "package": "pillow",
+      "vulnerable_version_range": ">= 9.1.0, < 13.0.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-24rc-8hj2-v98c",
+      "cve": "CVE-2026-96638",
+      "summary": "Pillow: BMP RLE decoder memory-amplification DoS via unbounded delta escape / absolute mode"
+    },
+    {
+      "id": 218,
+      "state": "open",
+      "package": "pillow",
+      "vulnerable_version_range": "< 13.0.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-g842-9rc4-69pw",
+      "cve": "CVE-2026-96637",
+      "summary": "Pillow: Decompression bomb check bypass in SpiderImagePlugin.seek() leads to unbounded allocation DoS"
+    },
+    {
+      "id": 217,
+      "state": "open",
+      "package": "Pillow",
+      "vulnerable_version_range": "< 13.0.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-p8hx-v2p6-rp84",
+      "cve": "CVE-2026-96636",
+      "summary": "Pillow: Decompression-bomb protection bypass via multi-frame seek() in MPO and DCX (MpoImageFile.seek / DcxImageFile.seek)"
+    },
+    {
+      "id": 216,
+      "state": "open",
+      "package": "Pillow",
+      "vulnerable_version_range": "<= 12.3.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-xvh5-g6gv-559v",
+      "cve": "CVE-2026-112902",
+      "summary": " Pillow: Memory disclosure and segfault in libtiff encoder via crafted TIFF tags"
+    },
+    {
+      "id": 215,
+      "state": "open",
+      "package": "Pillow",
+      "vulnerable_version_range": ">= 2.0.0, < 13.0.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-332p-7hrc-92wf",
+      "cve": "CVE-2026-112393",
+      "summary": "Pillow: Heap buffer overflow in _tiffWriteProc when saving TIFF to BytesIO"
+    },
+    {
+      "id": 214,
+      "state": "open",
+      "package": "pillow",
+      "vulnerable_version_range": ">= 11.3.0, < 13.0.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-4rr5-89j8-mwwm",
+      "cve": "CVE-2026-112396",
+      "summary": "Pillow: Heap use-after-free when encoding TIFF to an in-memory buffer"
+    },
+    {
+      "id": 213,
+      "state": "open",
+      "package": "Pillow",
+      "vulnerable_version_range": ">= 5.1.0, < 13.0.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-f2g6-542v-9j58",
+      "cve": "CVE-2026-112406",
+      "summary": "Pillow: Infinite loop in PdfParser.rewrite_pages on page tree Parent cycle"
+    },
+    {
+      "id": 212,
+      "state": "open",
+      "package": "Pillow",
+      "vulnerable_version_range": ">= 8.1.0, < 13.0.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-5xm2-6676-qcp9",
+      "cve": "CVE-2026-112399",
+      "summary": "Pillow: APNG background disposal allocates full canvas before decompression bomb check"
+    },
+    {
+      "id": 211,
+      "state": "open",
+      "package": "pillow",
+      "vulnerable_version_range": ">= 4.1.0, < 13.0.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-gg2r-wvfm-q9rx",
+      "cve": "CVE-2026-112892",
+      "summary": "Pillow: MSP RLE decoder expands a tiny file into unbounded memory"
+    },
+    {
+      "id": 210,
+      "state": "open",
+      "package": "Pillow",
+      "vulnerable_version_range": ">= 5.1.0, < 13.0.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-jg86-v3jv-hrpm",
+      "cve": "CVE-2026-112894",
+      "summary": "Pillow: Quadratic-time DoS in PDF save_all (PdfParser.next_object_id)"
+    },
+    {
+      "id": 209,
+      "state": "open",
+      "package": "Pillow",
+      "vulnerable_version_range": ">= 5.1.0, < 13.0.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-254f-3936-288h",
+      "cve": "CVE-2026-112391",
+      "summary": "Pillow: PdfParser can recurse without limit in get_value() and linearize_page_tree()"
+    },
+    {
+      "id": 208,
+      "state": "open",
+      "package": "Pillow",
+      "vulnerable_version_range": "<= 12.3.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-xgh8-jp6q-p5x8",
+      "cve": "CVE-2026-112901",
+      "summary": "Pillow: ReDoS in XbmImagePlugin: 512-byte file stalls Image.open() for minutes"
+    },
+    {
+      "id": 207,
+      "state": "open",
+      "package": "Pillow",
+      "vulnerable_version_range": ">= 9.1.0, < 13.0.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-rfgq-q3w2-pmv2",
+      "cve": "CVE-2026-112898",
+      "summary": "Pillow: Image.quantize() with empty palette leaks uninitialized stack memory"
+    },
+    {
+      "id": 206,
+      "state": "open",
+      "package": "Pillow",
+      "vulnerable_version_range": ">= 5.4.0, < 13.0.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-74r2-7ff9-mjj2",
+      "cve": "CVE-2026-112401",
+      "summary": "Pillow: Quadratic GIF comment concatenation allows DoS in Image.open()"
+    },
+    {
+      "id": 205,
+      "state": "open",
+      "package": "Pillow",
+      "vulnerable_version_range": ">= 7.2.0, < 13.0.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-22hg-r758-rrw9",
+      "cve": "CVE-2026-112390",
+      "summary": "Pillow: Infinite loop in MIC n_frames when the embedded TIFF"
+    },
+    {
+      "id": 204,
+      "state": "open",
+      "package": "pillow",
+      "vulnerable_version_range": ">= 9.2.0, < 13.0.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-fc9g-5qg7-mf45",
+      "cve": "CVE-2026-112891",
+      "summary": "Pillow: Quadratic GIF comment copying during save"
+    },
+    {
+      "id": 203,
+      "state": "open",
+      "package": "Pillow",
+      "vulnerable_version_range": "<= 12.3.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-27h8-gf7j-v5hc",
+      "cve": "CVE-2026-112392",
+      "summary": "Pillow: NULL dereference in ImagingExpand via rank filters on zero-size images"
+    },
+    {
+      "id": 202,
+      "state": "open",
+      "package": "pillow",
+      "vulnerable_version_range": ">= 12.0.0, < 13.0.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-cp9v-662q-vvx9",
+      "cve": "CVE-2026-112405",
+      "summary": "Pillow: NULL pointer dereference in Image.merge via an unvalidated band 0"
+    },
+    {
+      "id": 201,
+      "state": "open",
+      "package": "pillow",
+      "vulnerable_version_range": ">= 10.0.0, < 13.0.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-j4m9-6w36-pw47",
+      "cve": "CVE-2026-112893",
+      "summary": "Pillow: Invalid free in FreeType glyph rendering when a stroker is active"
+    },
+    {
+      "id": 200,
+      "state": "open",
+      "package": "Pillow",
+      "vulnerable_version_range": "<= 12.3.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-7mwm-ghpf-9vrm",
+      "cve": "CVE-2026-112402",
+      "summary": "Pillow: Double free in ImagingScaleAffine on calloc failure via Image.transform"
+    },
+    {
+      "id": 199,
+      "state": "open",
+      "package": "Pillow",
+      "vulnerable_version_range": "<= 12.3.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-4558-3h8r-v8xp",
+      "cve": "CVE-2026-112394",
+      "summary": "Pillow: P;2L and P;4L decoders may read 1 to 3 bytes past the passed buffer size"
+    },
+    {
+      "id": 198,
+      "state": "open",
+      "package": "Pillow",
+      "vulnerable_version_range": ">= 2.6.0, < 13.0.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-w889-685w-c8fh",
+      "cve": "CVE-2026-112900",
+      "summary": "Pillow: Argument Injection in Ghostscript call, potentially leading into RCE"
+    },
+    {
+      "id": 197,
+      "state": "open",
+      "package": "Pillow",
+      "vulnerable_version_range": "<= 12.3.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-58r4-6rv3-gfh8",
+      "cve": "CVE-2026-112397",
+      "summary": "Pillow: Out-of-bounds access in _imagingmorph on a zero-width image"
+    },
+    {
+      "id": 196,
+      "state": "open",
+      "package": "Pillow",
+      "vulnerable_version_range": ">= 9.2.0, < 13.0.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-65qm-jvmh-6pqg",
+      "cve": "CVE-2026-112400",
+      "summary": "Pillow: GIF seek keeps rejected size after DecompressionBombError, allowing DoS"
+    },
+    {
+      "id": 195,
+      "state": "open",
+      "package": "Pillow",
+      "vulnerable_version_range": ">= 2.3.0, <= 12.3.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-vx6w-vv9f-6gvg",
+      "cve": "CVE-2026-112899",
+      "summary": "Pillow: EPS load(scale) lets Ghostscript render past the decompression bomb limit"
+    },
+    {
+      "id": 194,
+      "state": "open",
+      "package": "Pillow",
+      "vulnerable_version_range": ">= 5.3.0, < 13.0.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-q45j-58j2-45rg",
+      "cve": "CVE-2026-112897",
+      "summary": "Pillow: TiffDecode returns uninitialized memory as pixels for short JPEG strips"
+    },
+    {
+      "id": 193,
+      "state": "open",
+      "package": "Pillow",
+      "vulnerable_version_range": "<= 12.3.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-pchr-8j38-3x4p",
+      "cve": "CVE-2026-112896",
+      "summary": "Pillow: TIFF encoder ColorMap plane-size mismatch causes a heap out-of-bounds read"
+    },
+    {
+      "id": 192,
+      "state": "open",
+      "package": "pillow",
+      "vulnerable_version_range": ">= 5.1.0, < 13.0.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-p4wg-p73j-c528",
+      "cve": "CVE-2026-112895",
+      "summary": "Pillow: Unbounded recursion parsing a PDF page tree or trailer chain (incomplete fix for CVE-2026-42310)"
+    },
+    {
+      "id": 191,
+      "state": "open",
+      "package": "pillow",
+      "vulnerable_version_range": ">= 8.2.0, < 13.0.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-462x-pgg6-55fp",
+      "cve": "CVE-2026-112395",
+      "summary": "Pillow tiled-TIFF decoder reads past tile buffer in copy4 (Unpack.c:1290)"
+    },
+    {
+      "id": 190,
+      "state": "open",
+      "package": "Pillow",
+      "vulnerable_version_range": ">= 8.1.0, < 13.0.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-c6hw-5grf-ff96",
+      "cve": "CVE-2026-112404",
+      "summary": "Pillow: OOB read in TiffDecode.c tile and RGBA paths leaks heap memory into pixels"
+    },
+    {
+      "id": 189,
+      "state": "open",
+      "package": "Pillow",
+      "vulnerable_version_range": "<= 12.3.0",
+      "first_patched_version": "13.0.0",
+      "ghsa": "GHSA-8g5g-8vmr-9782",
+      "cve": "CVE-2026-112403",
+      "summary": "Pillow: Heap buffer overflow in ImagingJpegDecode"
+    },
+    {
+      "id": 187,
+      "state": "open",
+      "package": "aiohttp",
+      "vulnerable_version_range": ">= 2.0.0, < 3.14.4",
+      "first_patched_version": "3.14.4",
+      "ghsa": "GHSA-9xw5-w5jj-pvcg",
+      "cve": "CVE-2026-111066",
+      "summary": "AIOHTTP: File descriptor exhaustion in multipart requests"
+    },
+    {
+      "id": 186,
+      "state": "open",
+      "package": "aiohttp",
+      "vulnerable_version_range": "<= 3.14.3",
+      "first_patched_version": "3.14.4",
+      "ghsa": "GHSA-f9xw-jh8m-3mwq",
+      "cve": "CVE-2026-111748",
+      "summary": "AIOHTTP: Absolute-form request targets can spoof Request.scheme"
+    },
+    {
+      "id": 185,
+      "state": "open",
+      "package": "aiohttp",
+      "vulnerable_version_range": "<= 3.14.3",
+      "first_patched_version": "3.14.4",
+      "ghsa": "GHSA-gx76-c99x-2c96",
+      "cve": "CVE-2026-111749",
+      "summary": "AIOHTTP: Cookie from subdomain can remove Host-Only Scope from existing cookies"
+    },
+    {
+      "id": 184,
+      "state": "open",
+      "package": "aiohttp",
+      "vulnerable_version_range": "<= 3.14.3",
+      "first_patched_version": "3.14.4",
+      "ghsa": "GHSA-6cjc-53gc-5rqm",
+      "cve": "CVE-2026-111065",
+      "summary": "AIOHTTP: Connector pool exhaustion via Max-Age overflow"
+    },
+    {
+      "id": 183,
+      "state": "open",
+      "package": "aiohttp",
+      "vulnerable_version_range": "<= 3.14.3",
+      "first_patched_version": "3.14.4",
+      "ghsa": "GHSA-pqxq-w44r-73xw",
+      "cve": "CVE-2026-111750",
+      "summary": "AIOHTTP: Pure-Python parser request smuggling"
+    },
+    {
+      "id": 182,
+      "state": "open",
+      "package": "aiohttp",
+      "vulnerable_version_range": "<= 3.14.3",
+      "first_patched_version": "3.14.4",
+      "ghsa": "GHSA-2g87-pp6c-29x5",
+      "cve": null,
+      "summary": "aiohttp: Multiple instances of excessive or unbounded memory/CPU use"
+    },
+    {
+      "id": 181,
+      "state": "open",
+      "package": "aiohttp",
+      "vulnerable_version_range": "<= 3.14.3",
+      "first_patched_version": "3.14.4",
+      "ghsa": "GHSA-5wr8-gcqf-gqf3",
+      "cve": "CVE-2026-111064",
+      "summary": "aiohttp server lacks an initial request/header timeout"
+    },
+    {
+      "id": 180,
+      "state": "open",
+      "package": "aiohttp",
+      "vulnerable_version_range": "<= 3.14.3",
+      "first_patched_version": "3.14.4",
+      "ghsa": "GHSA-494j-54xm-rwp3",
+      "cve": "CVE-2026-111063",
+      "summary": "AIOHTTP: Secure attribute not enforced for shared cookie"
+    },
+    {
+      "id": 145,
+      "state": "open",
+      "package": "oauthlib",
+      "vulnerable_version_range": ">= 3.0.0, < 4.0.0",
+      "first_patched_version": "4.0.0",
+      "ghsa": "GHSA-xpv3-w29h-x7cv",
+      "cve": "CVE-2026-49265",
+      "summary": "Oauthlib: Timing Attack Vulnerability in PKCE code_verifier Comparison (CWE-208)"
+    },
+    {
+      "id": 144,
+      "state": "open",
+      "package": "oauthlib",
+      "vulnerable_version_range": ">= 0.6.1, <= 3.3.1",
+      "first_patched_version": "4.0.0",
+      "ghsa": "GHSA-hj66-6f7g-4r5v",
+      "cve": "CVE-2026-49264",
+      "summary": "Oauthlib : Unsafe JSONP callback injection in RevocationEndpoint allows arbitrary JavaScript response generation"
+    }
+  ],
+  "dismissed_exception_ledger": [
+    {
+      "id": 129,
+      "state": "dismissed",
+      "package": "chromadb",
+      "vulnerable_version_range": ">= 0.4.17, <= 1.5.9",
+      "first_patched_version": null,
+      "ghsa": "GHSA-36p7-vc44-83pf",
+      "cve": "CVE-2026-45833",
+      "summary": "ChromaDB has a code injection vulnerability",
+      "dismissed_reason": "no_bandwidth",
+      "dismissed_comment": "No fixed chromadb release exists (1.5.9 is top of every vulnerable range). Requires chromadb's server auth/multi-tenancy/RBAC; SynapseKit uses chromadb embedded-only. Full triage in PR #943.",
+      "disposition": "dismissed_exception_not_fixed",
+      "current_dependency_cap": "<1.0.0",
+      "adapter_mode": "embedded-only",
+      "rationale": "SynapseKit uses Chroma PersistentClient/EphemeralClient embedded adapters, not the Chroma server endpoints requiring authentication, multi-tenancy, or RBAC. No patched release is recorded for these affected ranges; dismissal is an exception, not a fix."
+    },
+    {
+      "id": 128,
+      "state": "dismissed",
+      "package": "chromadb",
+      "vulnerable_version_range": ">= 0.4.17, <= 1.5.9",
+      "first_patched_version": null,
+      "ghsa": "GHSA-2wm9-hf6c-p5cr",
+      "cve": "CVE-2026-45830",
+      "summary": "ChromaDB allows any authenticated users to arbitrarily read, write, update, or delete data in any tenant's collection",
+      "dismissed_reason": "no_bandwidth",
+      "dismissed_comment": "No fixed chromadb release exists (1.5.9 is top of every vulnerable range). Requires chromadb's server auth/multi-tenancy/RBAC; SynapseKit uses chromadb embedded-only. Full triage in PR #943.",
+      "disposition": "dismissed_exception_not_fixed",
+      "current_dependency_cap": "<1.0.0",
+      "adapter_mode": "embedded-only",
+      "rationale": "SynapseKit uses Chroma PersistentClient/EphemeralClient embedded adapters, not the Chroma server endpoints requiring authentication, multi-tenancy, or RBAC. No patched release is recorded for these affected ranges; dismissal is an exception, not a fix."
+    },
+    {
+      "id": 127,
+      "state": "dismissed",
+      "package": "chromadb",
+      "vulnerable_version_range": ">= 0.5.0, <= 1.5.9",
+      "first_patched_version": null,
+      "ghsa": "GHSA-xph7-9rjv-w5fr",
+      "cve": "CVE-2026-45831",
+      "summary": "ChromaDB's SimpleRBACAuthorizationProvider doesn't check which tenant, database, or collection a permission applies to",
+      "dismissed_reason": "no_bandwidth",
+      "dismissed_comment": "No fixed chromadb release exists (1.5.9 is top of every vulnerable range). Requires chromadb's server auth/multi-tenancy/RBAC; SynapseKit uses chromadb embedded-only. Full triage in PR #943.",
+      "disposition": "dismissed_exception_not_fixed",
+      "current_dependency_cap": "<1.0.0",
+      "adapter_mode": "embedded-only",
+      "rationale": "SynapseKit uses Chroma PersistentClient/EphemeralClient embedded adapters, not the Chroma server endpoints requiring authentication, multi-tenancy, or RBAC. No patched release is recorded for these affected ranges; dismissal is an exception, not a fix."
+    }
+  ]
+}
