@@ -33,12 +33,14 @@ WORKDIR /app
 ARG EXTRAS=""
 
 # Copy only what the build backend needs to resolve + install the package.
-COPY pyproject.toml README.md ./
+COPY pyproject.toml README.md uv.lock ./
 COPY src ./src
 
 # Install into an isolated venv so the runtime stage stays lean.
+# Constraints cover the unlocked image install; the lockfile is the source of those floors.
 RUN uv venv /opt/venv \
-    && VIRTUAL_ENV=/opt/venv uv pip install --no-cache ".${EXTRAS}"
+    && uv export --frozen --no-emit-project --no-dev --no-hashes --all-extras -o /tmp/constraints.txt \
+    && VIRTUAL_ENV=/opt/venv uv pip install --no-cache --constraint /tmp/constraints.txt ".${EXTRAS}"
 
 # ── Stage 2: runtime ─────────────────────────────────────────────────────────
 # Redeclare the global ARG so it is in scope for this stage's FROM.
