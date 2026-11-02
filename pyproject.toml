@@ -72,7 +72,7 @@ visual = [
     "python-pptx>=0.6",
     "transformers>=5.10.0",
     "certifi>=2026.10.19",
-    "filelock>=4.2.1,<5.0.0",
+    "filelock>=4.2.1",
 ]
 wikipedia = ["wikipedia-api>=0.6", "certifi>=2026.10.19"]
 arxiv = ["arxiv>=2.0", "certifi>=2026.10.19"]
@@ -90,27 +90,27 @@ web = ["httpx>=0.27", "beautifulsoup4>=4.12", "certifi>=2026.10.19"]
 # retrieval/chroma.py), which per each advisory does not expose the vulnerable
 # endpoints, so users are not affected. Stay on the pre-1.0 embedded-client line
 # until upstream ships a fix.
-chroma = ["chromadb>=0.5,<1.0.0", "aiohttp>=3.14.4,<4.0.0", "certifi>=2026.10.19", "filelock>=4.2.1,<5.0.0", "oauthlib>=4.0.0,<5.0.0", "opentelemetry-api>=1.45.2,<2.0.0", "opentelemetry-exporter-otlp-proto-grpc>=1.45.2,<2.0.0", "opentelemetry-instrumentation-asgi>=0.66b2,<1.0.0", "opentelemetry-instrumentation-fastapi>=0.66b2,<1.0.0", "opentelemetry-sdk>=1.45.2,<2.0.0", "opentelemetry-semantic-conventions>=0.66b2,<1.0.0", "opentelemetry-util-http>=0.66b2,<1.0.0"]
+chroma = ["chromadb>=0.5,<1.0.0", "aiohttp>=3.14.4", "certifi>=2026.10.19", "filelock>=4.2.1", "oauthlib>=4.0.0", "opentelemetry-api>=1.45.2", "opentelemetry-exporter-otlp-proto-grpc>=1.45.2", "opentelemetry-instrumentation-asgi>=0.66b2", "opentelemetry-instrumentation-fastapi>=0.66b2", "opentelemetry-sdk>=1.45.2", "opentelemetry-semantic-conventions>=0.66b2", "opentelemetry-util-http>=0.66b2"]
 faiss = ["faiss-cpu>=1.7"]
 qdrant = ["qdrant-client>=1.9", "certifi>=2026.10.19"]
 pinecone = ["pinecone>=3.0", "certifi>=2026.10.19"]
-weaviate = ["weaviate-client>=4.0", "authlib>=1.9.1,<2.0.0", "certifi>=2026.10.19", "joserfc>=1.7.6,<2.0.0"]
+weaviate = ["weaviate-client>=4.0", "authlib>=1.9.1", "certifi>=2026.10.19", "joserfc>=1.7.6"]
 milvus = ["pymilvus>=2.4", "certifi>=2026.10.19", "setuptools>=84.1.0"]
 lancedb = ["lancedb>=0.5"]
 sqlite-vec = ["sqlite-vec>=0.1"]
 kuzu = ["kuzu>=0.8"]
 mesh = ["sqlite-vec>=0.1", "kuzu>=0.8"]
-cassandra = ["astrapy>=1.0", "cassandra-driver>=3.28", "certifi>=2026.10.19", "dnspython>=2.9.0,<3.0.0"]
+cassandra = ["astrapy>=1.0", "cassandra-driver>=3.28", "certifi>=2026.10.19", "dnspython>=2.9.0"]
 firestore = ["google-cloud-firestore>=2.13", "certifi>=2026.10.19"]
 cosmos = ["azure-cosmos>=4.0", "certifi>=2026.10.19"]
 clickhouse = ["clickhouse-connect>=0.7", "certifi>=2026.10.19"]
-turbopuffer = ["turbopuffer>=0.1", "aiohttp>=3.14.4,<4.0.0", "certifi>=2026.10.19"]
+turbopuffer = ["turbopuffer>=0.1", "aiohttp>=3.14.4", "certifi>=2026.10.19"]
 azure-ai-search = ["azure-search-documents>=11.4", "certifi>=2026.10.19"]
 vertex-vector = ["google-cloud-aiplatform>=1.38", "certifi>=2026.10.19"]
 singlestore = ["singlestoredb>=1.0", "certifi>=2026.10.19"]
 tidb = ["pymysql>=1.1"]
 couchbase = ["couchbase>=4.2"]
-surrealdb = ["surrealdb>=1.0", "aiohttp>=3.14.4,<4.0.0", "certifi>=2026.10.19"]
+surrealdb = ["surrealdb>=1.0", "aiohttp>=3.14.4", "certifi>=2026.10.19"]
 deeplake = ["deeplake>=4.0", "certifi>=2026.10.19"]
 myscale = ["clickhouse-connect>=0.7", "certifi>=2026.10.19"]
 duckdb-vector = ["duckdb>=0.10"]
@@ -122,15 +122,15 @@ ollama = ["ollama>=0.2", "certifi>=2026.10.19"]
 lmstudio = ["openai>=1.0", "certifi>=2026.10.19"]
 vllm = ["openai>=1.0", "certifi>=2026.10.19"]
 ai21 = ["ai21>=2.0", "certifi>=2026.10.19"]
-cohere = ["cohere>=5.0", "certifi>=2026.10.19", "filelock>=4.2.1,<5.0.0"]
-mistral = ["mistralai>=2.9.2,<3.0.0", "certifi>=2026.10.19", "opentelemetry-api>=1.45.2,<2.0.0", "opentelemetry-semantic-conventions>=0.66b2,<1.0.0"]
+cohere = ["cohere>=5.0", "certifi>=2026.10.19", "filelock>=4.2.1"]
+mistral = ["mistralai>=2.9.2", "certifi>=2026.10.19", "opentelemetry-api>=1.45.2", "opentelemetry-semantic-conventions>=0.66b2"]
 gemini = ["google-generativeai>=0.7", "google-genai>=1.0", "certifi>=2026.10.19"]
 # Hosted embeddings/rerankers over raw HTTP (OpenAI-compatible endpoints)
 voyage = ["httpx>=0.27", "certifi>=2026.10.19"]
 jina = ["httpx>=0.27", "certifi>=2026.10.19"]
 nomic = ["httpx>=0.27", "certifi>=2026.10.19"]
 mixedbread = ["httpx>=0.27", "certifi>=2026.10.19"]
-flashrank = ["flashrank>=0.2.0", "certifi>=2026.10.19", "filelock>=4.2.1,<5.0.0"]
+flashrank = ["flashrank>=0.2.0", "certifi>=2026.10.19", "filelock>=4.2.1"]
 bedrock = ["boto3>=1.34"]
 gcal-tool = ["google-api-python-client>=2.0", "httplib2>=0.32.0", "certifi>=2026.10.19"]
 gmail = ["google-api-python-client>=2.0", "google-auth>=2.0", "httplib2>=0.32.0", "certifi>=2026.10.19"]
@@ -140,7 +140,7 @@ groq = ["groq>=0.9", "certifi>=2026.10.19"]
 audio = ["openai>=1.0", "certifi>=2026.10.19"]
 video = ["openai>=1.0", "certifi>=2026.10.19"]
 voice = ["openai>=1.0", "sounddevice>=0.4", "soundfile>=0.12", "certifi>=2026.10.19"]
-voice-local = ["faster-whisper>=1.0", "pyttsx3>=2.90", "sounddevice>=0.4", "soundfile>=0.12", "certifi>=2026.10.19", "filelock>=4.2.1,<5.0.0", "setuptools>=84.1.0"]
+voice-local = ["faster-whisper>=1.0", "pyttsx3>=2.90", "sounddevice>=0.4", "soundfile>=0.12", "certifi>=2026.10.19", "filelock>=4.2.1", "setuptools>=84.1.0"]
 voice-stream = ["sounddevice>=0.4", "soundfile>=0.12"]
 voice-piper = ["piper-tts>=1.2"]
 voice-cartesia = ["cartesia>=0.1", "certifi>=2026.10.19"]
@@ -157,24 +157,24 @@ docx = ["python-docx>=1.0"]
 yaml = ["PyYAML>=6.0"]
 okf = ["PyYAML>=6.0"]
 teams = ["httpx>=0.27", "certifi>=2026.10.19"]
-http = ["aiohttp>=3.14.4,<4.0.0"]
+http = ["aiohttp>=3.14.4"]
 search = ["duckduckgo-search>=6.0"]
-huggingface = ["huggingface-hub>=0.20", "httpx>=0.27", "datasets>=2.16.0", "aiohttp>=3.14.4,<4.0.0", "certifi>=2026.10.19", "filelock>=4.2.1,<5.0.0"]
+huggingface = ["huggingface-hub>=0.20", "httpx>=0.27", "datasets>=2.16.0", "aiohttp>=3.14.4", "certifi>=2026.10.19", "filelock>=4.2.1"]
 # transformers floored to >=5.10.0: fixes CVE-2026-9856 (save_pretrained chat-
 # template path traversal → arbitrary file write), fixed upstream in 5.10.0 with
 # no back-port to older lines. The lockfile already resolved 5.9.0, so this
 # codifies the 5.x major already shipped rather than widening it.
-transformers = ["transformers>=5.10.0", "certifi>=2026.10.19", "filelock>=4.2.1,<5.0.0"]
+transformers = ["transformers>=5.10.0", "certifi>=2026.10.19", "filelock>=4.2.1"]
 tiktoken = ["tiktoken>=0.12", "certifi>=2026.10.19"]
 google-search = ["google-search-results>=2.4", "certifi>=2026.10.19"]
 tavily = ["tavily-python>=0.3", "certifi>=2026.10.19"]
 youtube = ["youtube-search-python>=1.6", "certifi>=2026.10.19"]
-mcp = ["mcp>=1.28.1", "python-multipart>=0.0.31", "starlette>=1.3.1", "opentelemetry-api>=1.45.2,<2.0.0"]
+mcp = ["mcp>=1.28.1", "python-multipart>=0.0.31", "starlette>=1.3.1", "opentelemetry-api>=1.45.2"]
 redis = ["redis>=5.0"]
 memcached = ["aiomcache>=0.8"]
 vertex = ["google-cloud-aiplatform>=1.38", "certifi>=2026.10.19"]
 cloudflare = ["httpx>=0.27", "certifi>=2026.10.19"]
-aleph-alpha = ["aleph-alpha-client>=7.0", "aiohttp>=3.14.4,<4.0.0", "certifi>=2026.10.19", "filelock>=4.2.1,<5.0.0"]
+aleph-alpha = ["aleph-alpha-client>=7.0", "aiohttp>=3.14.4", "certifi>=2026.10.19", "filelock>=4.2.1"]
 # llama-cpp-python currently pulls diskcache, which has no patched release for
 # CVE-2025-69872. Keep the integration import-optional until upstream removes it.
 # This applies to every extra: `edge` must not pull it back in either -- install
@@ -182,12 +182,12 @@ aleph-alpha = ["aleph-alpha-client>=7.0", "aiohttp>=3.14.4,<4.0.0", "certifi>=20
 llamacpp = []
 gpt4all = ["gpt4all>=2.0", "certifi>=2026.10.19"]
 onnx = ["onnxruntime>=1.17"]
-mlx = ["mlx-lm>=0.20; platform_system == 'Darwin' and platform_machine == 'arm64'", "certifi>=2026.10.19", "filelock>=4.2.1,<5.0.0"]
+mlx = ["mlx-lm>=0.20; platform_system == 'Darwin' and platform_machine == 'arm64'", "certifi>=2026.10.19", "filelock>=4.2.1"]
 edge = [
     "onnxruntime>=1.17",
     "sqlite-vec>=0.1",
 ]
-ernie = ["erniebot>=0.5", "aiohttp>=3.14.4,<4.0.0", "certifi>=2026.10.19"]
+ernie = ["erniebot>=0.5", "aiohttp>=3.14.4", "certifi>=2026.10.19"]
 minimax = ["httpx>=0.27", "certifi>=2026.10.19"]
 serve = ["fastapi>=0.110", "starlette>=1.3.1", "uvicorn[standard]>=0.29"]
 hive = ["fastapi>=0.110", "starlette>=1.3.1", "uvicorn[standard]>=0.29"]
@@ -197,14 +197,14 @@ postgres = ["psycopg[binary]>=3.1", "asyncpg>=0.29"]
 pgvector = ["psycopg[binary]>=3.1", "pgvector>=0.2"]
 wolfram = ["wolframalpha>=5.0", "certifi>=2026.10.19"]
 dynamodb = ["boto3>=1.34"]
-discord = ["discord.py>=2.0", "aiohttp>=3.14.4,<4.0.0"]
+discord = ["discord.py>=2.0", "aiohttp>=3.14.4"]
 gcs = ["google-cloud-storage>=2.0", "certifi>=2026.10.19"]
 bigquery = ["google-cloud-bigquery>=3.0", "certifi>=2026.10.19"]
 gdrive = ["google-api-python-client>=2.0", "google-auth>=2.0", "httplib2>=0.32.0", "certifi>=2026.10.19"]
 asana = ["httpx>=0.27", "certifi>=2026.10.19"]
 box = ["httpx>=0.27", "certifi>=2026.10.19"]
 clickup = ["httpx>=0.27", "certifi>=2026.10.19"]
-databricks = ["databricks-sql-connector>=4.7.0,<5.0.0", "certifi>=2026.10.19", "oauthlib>=4.0.0,<5.0.0"]
+databricks = ["databricks-sql-connector>=4.7.0", "certifi>=2026.10.19", "oauthlib>=4.0.0"]
 delta = ["deltalake>=0.17", "pyarrow>=14.0"]
 figma = ["httpx>=0.27", "certifi>=2026.10.19"]
 graphql = ["httpx>=0.27", "certifi>=2026.10.19"]
@@ -225,14 +225,14 @@ linear = ["httpx>=0.27", "certifi>=2026.10.19"]
 monday = ["httpx>=0.27", "certifi>=2026.10.19"]
 shopify = ["httpx>=0.27", "certifi>=2026.10.19"]
 zoom = ["httpx>=0.27", "certifi>=2026.10.19"]
-git = ["gitpython>=3.2.1,<4.0.0"]
+git = ["gitpython>=3.2.1"]
 gsheets = ["google-api-python-client>=2.0", "google-auth>=2.0", "httplib2>=0.32.0", "certifi>=2026.10.19"]
 jira = ["httpx>=0.27", "certifi>=2026.10.19"]
 hubspot = ["hubspot-api-client>=8.0", "certifi>=2026.10.19"]
 sql = ["sqlalchemy>=2.0"]
-snowflake = ["snowflake-connector-python>=4.8.1,<5.0.0", "certifi>=2026.10.19", "filelock>=4.2.1,<5.0.0"]
-mongodb = ["pymongo>=4.18.2", "dnspython>=2.9.0,<3.0.0"]
-mongodb-vector = ["pymongo>=4.18.2", "dnspython>=2.9.0,<3.0.0"]
+snowflake = ["snowflake-connector-python>=4.8.1", "certifi>=2026.10.19", "filelock>=4.2.1"]
+mongodb = ["pymongo>=4.18.2", "dnspython>=2.9.0"]
+mongodb-vector = ["pymongo>=4.18.2", "dnspython>=2.9.0"]
 salesforce = ["simple-salesforce>=1.12", "certifi>=2026.10.19"]
 azure = ["azure-storage-blob>=12.0", "certifi>=2026.10.19"]
 s3 = ["boto3>=1.34"]
@@ -240,7 +240,7 @@ onedrive = []
 slack = ["slack-sdk>=3.0"]
 supabase = ["supabase>=2.0", "certifi>=2026.10.19"]
 notion = ["httpx>=0.27", "certifi>=2026.10.19"]
-confluence = ["atlassian-python-api>=3.0", "beautifulsoup4>=4.12", "certifi>=2026.10.19", "oauthlib>=4.0.0,<5.0.0"]
+confluence = ["atlassian-python-api>=3.0", "beautifulsoup4>=4.12", "certifi>=2026.10.19", "oauthlib>=4.0.0"]
 dropbox = ["dropbox>=12.0", "certifi>=2026.10.19"]
 symbolic = ["z3-solver>=4.13", "sympy>=1.12", "minizinc>=0.10"]
 rtf = ["striprtf>=0.0.26"]
@@ -277,7 +277,7 @@ all = [
     "ollama>=0.2",
     "ai21>=2.0",
     "cohere>=5.0",
-    "mistralai>=2.9.2,<3.0.0",
+    "mistralai>=2.9.2",
     "google-generativeai>=0.7",
     "google-genai>=1.0",
     "boto3>=1.34",
@@ -305,13 +305,13 @@ all = [
     "google-api-python-client>=2.0",
     "google-auth>=2.0",
     "httplib2>=0.32.0",
-    "databricks-sql-connector>=4.7.0,<5.0.0",
+    "databricks-sql-connector>=4.7.0",
     "deltalake>=0.17",
     "pyiceberg>=0.7",
     "kafka-python>=2.0",
     "google-cloud-bigquery>=3.0",
     "feedparser>=6.0",
-    "gitpython>=3.2.1,<4.0.0",
+    "gitpython>=3.2.1",
     "hubspot-api-client>=8.0",
     "supabase>=2.0",
     "pymongo>=4.18.2",
@@ -320,7 +320,7 @@ all = [
     "simple-salesforce>=1.12",
     "azure-storage-blob>=12.0",
     "elasticsearch>=8.0",
-    "snowflake-connector-python>=4.8.1,<5.0.0",
+    "snowflake-connector-python>=4.8.1",
     "pyairtable>=2.0",
     "playwright>=1.40",
     "pyautogui>=0.9",
@@ -346,20 +346,20 @@ all = [
     "striprtf>=0.0.26",
     "ebooklib>=0.18",
     "gpt4all>=2.0",
-    "aiohttp>=3.14.4,<4.0.0",
-    "authlib>=1.9.1,<2.0.0",
+    "aiohttp>=3.14.4",
+    "authlib>=1.9.1",
     "certifi>=2026.10.19",
-    "dnspython>=2.9.0,<3.0.0",
-    "filelock>=4.2.1,<5.0.0",
-    "joserfc>=1.7.6,<2.0.0",
-    "oauthlib>=4.0.0,<5.0.0",
-    "opentelemetry-api>=1.45.2,<2.0.0",
-    "opentelemetry-exporter-otlp-proto-grpc>=1.45.2,<2.0.0",
-    "opentelemetry-instrumentation-asgi>=0.66b2,<1.0.0",
-    "opentelemetry-instrumentation-fastapi>=0.66b2,<1.0.0",
-    "opentelemetry-sdk>=1.45.2,<2.0.0",
-    "opentelemetry-semantic-conventions>=0.66b2,<1.0.0",
-    "opentelemetry-util-http>=0.66b2,<1.0.0",
+    "dnspython>=2.9.0",
+    "filelock>=4.2.1",
+    "joserfc>=1.7.6",
+    "oauthlib>=4.0.0",
+    "opentelemetry-api>=1.45.2",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.45.2",
+    "opentelemetry-instrumentation-asgi>=0.66b2",
+    "opentelemetry-instrumentation-fastapi>=0.66b2",
+    "opentelemetry-sdk>=1.45.2",
+    "opentelemetry-semantic-conventions>=0.66b2",
+    "opentelemetry-util-http>=0.66b2",
     "setuptools>=84.1.0",
 ]
 
@@ -383,7 +383,7 @@ dev = [
     "respx>=0.21",
     "openai>=1.40",
     "anthropic>=0.39",
-    "mistralai>=2.9.2,<3.0.0",
+    "mistralai>=2.9.2",
     "nbformat>=5.9",
     "mcp>=1.28.1",
 ]
@@ -414,7 +414,7 @@ integration = [
     # HTTP transport; aiohttp is azure-core's default and was previously missing
     # from this group, masked because the Cosmos test always skipped before ever
     # reaching a real connection attempt.
-    "aiohttp>=3.14.4,<4.0.0",
+    "aiohttp>=3.14.4",
     "azure-cosmos>=4.0",
     "qdrant-client>=1.9",
     "weaviate-client>=4.0",
@@ -451,20 +451,20 @@ constraint-dependencies = [
     "virtualenv>=21.14.13",
     "fsspec>=2026.6.0",
     "multidict>=6.9.1",
-    "filelock>=4.2.1,<5.0.0",
+    "filelock>=4.2.1",
     "certifi>=2026.10.19",
-    "dnspython>=2.9.0,<3.0.0",
-    "aiohttp>=3.14.4,<4.0.0",
-    "authlib>=1.9.1,<2.0.0",
-    "joserfc>=1.7.6,<2.0.0",
-    "oauthlib>=4.0.0,<5.0.0",
-    "opentelemetry-api>=1.45.2,<2.0.0",
-    "opentelemetry-sdk>=1.45.2,<2.0.0",
-    "opentelemetry-exporter-otlp-proto-grpc>=1.45.2,<2.0.0",
-    "opentelemetry-instrumentation-fastapi>=0.66b2,<1.0.0",
-    "opentelemetry-instrumentation-asgi>=0.66b2,<1.0.0",
-    "opentelemetry-semantic-conventions>=0.66b2,<1.0.0",
-    "opentelemetry-util-http>=0.66b2,<1.0.0",
+    "dnspython>=2.9.0",
+    "aiohttp>=3.14.4",
+    "authlib>=1.9.1",
+    "joserfc>=1.7.6",
+    "oauthlib>=4.0.0",
+    "opentelemetry-api>=1.45.2",
+    "opentelemetry-sdk>=1.45.2",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.45.2",
+    "opentelemetry-instrumentation-fastapi>=0.66b2",
+    "opentelemetry-instrumentation-asgi>=0.66b2",
+    "opentelemetry-semantic-conventions>=0.66b2",
+    "opentelemetry-util-http>=0.66b2",
     # mcp is a direct extra dep floored at >=1.28.1; GHSA affects 2.0.0<=v<2.2.0.
     # Constrain the resolved version here rather than raising the published floor
     # to 2.x, which would force a breaking major bump on downstream 1.x users.
