@@ -6,12 +6,13 @@ from typing import Any
 
 from ..llm.base import BaseLLM
 from ..memory.agent_memory import AgentMemory as PersistentAgentMemory
+from ..serve.server import ServeMixin
 from .base import BaseTool
 from .memory import AgentScratchpad, AgentStep
 from .registry import ToolRegistry
 
 
-class FunctionCallingAgent:
+class FunctionCallingAgent(ServeMixin):
     """Function-calling agent with optional persistent memory integration."""
 
     def __init__(

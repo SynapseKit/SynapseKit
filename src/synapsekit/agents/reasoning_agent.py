@@ -8,6 +8,7 @@ from typing import Any, Literal
 from ..llm.base import BaseLLM
 from ..llm.reasoning import ReasoningLLM, ReasoningUsage
 from ..observability.budget_guard import BudgetExceededError
+from ..serve.server import ServeMixin
 from .base import BaseTool
 from .executor import AgentConfig, AgentExecutor
 
@@ -180,7 +181,7 @@ class _BudgetedReasoningLLM(BaseLLM):
         return result
 
 
-class ReasoningAgent:
+class ReasoningAgent(ServeMixin):
     def __init__(self, config: ReasoningAgentConfig) -> None:
         self._config = config
         self._classifier = ComplexityClassifier(

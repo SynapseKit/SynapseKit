@@ -1679,3 +1679,18 @@ __all__.extend(
         "pci_rulepack",
     ]
 )
+
+_LAZY_IMPORTS.update(
+    {
+        "ServeMixin": "serve",
+        "build_agent_app": "serve",
+        "serve_agent": "serve",
+    }
+)
+__all__.extend(
+    [
+        "ServeMixin",
+        "build_agent_app",
+        "serve_agent",
+    ]
+)
