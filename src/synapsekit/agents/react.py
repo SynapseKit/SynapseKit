@@ -6,6 +6,7 @@ from typing import Any
 
 from ..llm.base import BaseLLM
 from ..memory.agent_memory import AgentMemory as PersistentAgentMemory
+from ..serve.server import ServeMixin
 from .base import BaseTool
 from .memory import AgentScratchpad, AgentStep
 from .registry import ToolRegistry
@@ -63,7 +64,7 @@ def _parse_final_answer(text: str) -> str | None:
     return m.group(1).strip() if m else None
 
 
-class ReActAgent:
+class ReActAgent(ServeMixin):
     """Reasoning + Acting agent with optional persistent memory integration."""
 
     def __init__(
