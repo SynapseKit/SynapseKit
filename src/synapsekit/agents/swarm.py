@@ -10,6 +10,24 @@ from ..llm.base import BaseLLM
 from .base import BaseTool
 from .function_calling import FunctionCallingAgent
 
+
+def _strip_code_fence(text: str) -> str:
+    """Strip a surrounding Markdown code fence so fenced JSON still parses.
+
+    LLMs often wrap JSON output in ```json ... ``` or ``` ... ```; without this,
+    ``json.loads`` raises and task scoring/decomposition silently falls back.
+    """
+    cleaned = text.strip()
+    if not cleaned.startswith("```"):
+        return cleaned
+    lines = cleaned.splitlines()
+    if lines and lines[0].startswith("```"):
+        lines = lines[1:]
+    if lines and lines[-1].startswith("```"):
+        lines = lines[:-1]
+    return "\n".join(lines).strip()
+
+
 _COMPLEXITY_PROMPT = """\
 Rate the complexity of the following task on a scale from 0.0 (trivial) to 1.0 (highly complex).
 Respond with ONLY a JSON object with a single key "score" and a float value, e.g. {{"score": 0.8}}.
@@ -78,7 +96,7 @@ class SwarmAgent:
         prompt = _COMPLEXITY_PROMPT.format(task=task)
         raw = await self._llm.generate(prompt)
         try:
-            data = json.loads(raw.strip())
+            data = json.loads(_strip_code_fence(raw))
             score = float(data.get("score", 0.5))
         except (json.JSONDecodeError, ValueError, TypeError):
             # Attempt to extract a bare float from the response
@@ -92,7 +110,7 @@ class SwarmAgent:
         prompt = _DECOMPOSE_PROMPT.format(task=task, max_subtasks=self._max_agents)
         raw = await self._llm.generate(prompt)
         try:
-            subtasks: Any = json.loads(raw.strip())
+            subtasks: Any = json.loads(_strip_code_fence(raw))
             if isinstance(subtasks, list):
                 return [str(s) for s in subtasks][: self._max_agents]
         except (json.JSONDecodeError, ValueError):

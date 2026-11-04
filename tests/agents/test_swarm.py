@@ -353,3 +353,44 @@ def test_run_is_coroutine():
     llm = make_mock_llm()
     agent = SwarmAgent(llm=llm)
     assert inspect.iscoroutinefunction(agent.run)
+
+
+# ---------------------------------------------------------------------------
+# Markdown code-fence stripping (regression) — no mocks, real BaseLLM fake
+# ---------------------------------------------------------------------------
+
+from synapsekit.agents.swarm import _strip_code_fence  # noqa: E402
+from synapsekit.llm.base import BaseLLM, LLMConfig  # noqa: E402
+
+
+class _FenceLLM(BaseLLM):
+    """Returns a fixed response (e.g. fenced JSON) for every generate() call."""
+
+    def __init__(self, response: str) -> None:
+        super().__init__(LLMConfig(model="mock", api_key="test", provider="openai"))
+        self._response = response
+
+    async def generate(self, prompt: str, **kw) -> str:
+        return self._response
+
+    async def stream(self, prompt: str, **kw):
+        yield self._response
+
+
+def test_strip_code_fence_variants():
+    assert _strip_code_fence('```json\n{"score": 0.9}\n```') == '{"score": 0.9}'
+    assert _strip_code_fence("```\n[1, 2]\n```") == "[1, 2]"
+    # Unfenced text is returned (trimmed) unchanged.
+    assert _strip_code_fence('  {"score": 0.5}  ') == '{"score": 0.5}'
+
+
+@pytest.mark.asyncio
+async def test_score_complexity_parses_fenced_json():
+    agent = SwarmAgent(llm=_FenceLLM('```json\n{"score": 0.9}\n```'))
+    assert await agent._score_complexity("task") == pytest.approx(0.9)
+
+
+@pytest.mark.asyncio
+async def test_decompose_parses_fenced_json():
+    agent = SwarmAgent(llm=_FenceLLM('```json\n["a", "b", "c"]\n```'), max_agents=5)
+    assert await agent._decompose("task") == ["a", "b", "c"]
