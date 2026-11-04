@@ -108,3 +108,29 @@ async def test_debate_orchestrator_does_not_forget_earlier_rounds() -> None:
     round_2_defense_prompt = proposer_llm.seen_prompts[2]
     assert "Opening argument." in round_2_defense_prompt
     assert "Opponent rebuttal R1" in round_2_defense_prompt
+
+
+@pytest.mark.asyncio
+async def test_debate_prompts_identify_each_speaker_role_and_name() -> None:
+    """Each turn's prompt should tell the model who it is and its role.
+
+    Reaches the LLM only via the re-injected prompt text (ReActAgent wipes its
+    scratchpad every run), so asserting on the recorded prompts is sufficient.
+    """
+    proposer_llm = _RecordingLLM(["Opening argument.", "Proposer defense R1"])
+    opponent_llm = _RecordingLLM(["Opponent rebuttal R1"])
+    judge_llm = _RecordingLLM(["Final judged decision."])
+
+    debate = DebateOrchestrator(
+        topic="Microservices vs Monolith",
+        proposer=Debater(name="Alice", role="Microservices Advocate", llm=proposer_llm),
+        opponent=Debater(name="Bob", role="Monolith Advocate", llm=opponent_llm),
+        judge=Judge(name="Charlie", role="Senior Architect", llm=judge_llm),
+        rounds=1,
+    )
+
+    await debate.run()
+
+    assert "You are Alice, acting as: Microservices Advocate." in proposer_llm.seen_prompts[0]
+    assert "You are Bob, acting as: Monolith Advocate." in opponent_llm.seen_prompts[0]
+    assert "You are Charlie, acting as: Senior Architect." in judge_llm.seen_prompts[0]

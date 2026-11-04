@@ -94,7 +94,10 @@ class DebateOrchestrator:
         )
 
         # Round 1: Proposer makes the opening statement
-        prompt = f"The topic is: {self._topic}\nPlease make your opening argument."
+        prompt = (
+            f"You are {self._proposer.name}, acting as: {self._proposer.role}.\n"
+            f"The topic is: {self._topic}\nPlease make your opening argument."
+        )
         proposer_response = await proposer_executor.run(prompt)
         transcript.append(f"{self._proposer.name} (Proposer):\n{proposer_response}")
 
@@ -109,6 +112,7 @@ class DebateOrchestrator:
         for _ in range(self._rounds):
             # Opponent rebuts
             rebuttal_prompt = (
+                f"You are {self._opponent.name}, acting as: {self._opponent.role}.\n"
                 f"The topic is: {self._topic}\n\n"
                 f"Debate so far:\n{_transcript_so_far()}\n\n"
                 f"Please provide your rebuttal and counter-arguments."
@@ -118,6 +122,7 @@ class DebateOrchestrator:
 
             # Proposer defends
             defense_prompt = (
+                f"You are {self._proposer.name}, acting as: {self._proposer.role}.\n"
                 f"The topic is: {self._topic}\n\n"
                 f"Debate so far:\n{_transcript_so_far()}\n\n"
                 f"Please defend your position and rebut their claims."
@@ -128,7 +133,8 @@ class DebateOrchestrator:
         # Judge decides
         transcript_text = "\n\n---\n\n".join(transcript)
         judge_prompt = (
-            f"You are the judge. The topic of the debate was: {self._topic}\n\n"
+            f"You are {self._judge.name}, acting as: {self._judge.role}.\n"
+            f"The topic of the debate was: {self._topic}\n\n"
             f"Here is the transcript of the debate:\n\n{transcript_text}\n\n"
             f"Based on the arguments presented, synthesize the best points from both sides "
             f"and provide a final, well-reasoned decision."
