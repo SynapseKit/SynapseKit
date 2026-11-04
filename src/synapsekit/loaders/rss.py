@@ -1,10 +1,16 @@
 from __future__ import annotations
 
 import asyncio
+import re
 from urllib.parse import urlparse
 
 from ._url_guard import validate_public_url
 from .base import Document
+
+# A Windows absolute path (``C:\feeds.xml`` / ``C:/feeds.xml``) parses with a
+# single-letter urlparse "scheme" (the drive letter). Match it explicitly so a
+# real drive-letter path is treated as a local file, not a rejected URL scheme.
+_WINDOWS_DRIVE_RE = re.compile(r"^[A-Za-z]:[\\/]")
 
 
 class RSSLoader:
@@ -22,6 +28,8 @@ class RSSLoader:
         (``file``, ``ftp``, ...) is rejected. A bare path or inline XML string
         (no scheme) is still allowed so existing local usage keeps working.
         """
+        if _WINDOWS_DRIVE_RE.match(self._url):
+            return
         scheme = urlparse(self._url).scheme.lower()
         if scheme in ("http", "https"):
             validate_public_url(self._url)

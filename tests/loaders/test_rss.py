@@ -66,3 +66,29 @@ def test_import_error_without_feedparser():
         loader = RSSLoader("https://example.com/feed.xml")
         with pytest.raises(ImportError, match="feedparser required"):
             loader.load()
+
+
+def test_validate_allows_windows_drive_path():
+    from synapsekit.loaders.rss import RSSLoader
+
+    # Backslash and forward-slash drive-letter paths must be treated as local
+    # files, not rejected as an unknown URL scheme ("c").
+    RSSLoader(r"C:\feeds\news.xml")._validate()
+    RSSLoader("C:/feeds/news.xml")._validate()
+    RSSLoader("d:/data/feed.rss")._validate()
+
+
+def test_validate_allows_bare_local_path_and_inline_xml():
+    from synapsekit.loaders.rss import RSSLoader
+
+    RSSLoader("./feeds/news.xml")._validate()
+    RSSLoader("<rss><channel></channel></rss>")._validate()
+
+
+def test_validate_still_rejects_non_http_schemes():
+    from synapsekit.loaders.rss import RSSLoader
+
+    # The drive-letter allowance must not reopen the file:// / ftp:// SSRF holes.
+    for url in ("file:///etc/passwd", "ftp://example.com/feed.xml"):
+        with pytest.raises(ValueError):
+            RSSLoader(url)._validate()
