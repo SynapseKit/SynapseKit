@@ -686,6 +686,7 @@ snowflake-connector-python = "snowflake"
 "opensearch-py" = "opensearchpy"
 "deepgram-sdk" = "deepgram"
 "piper-tts" = "piper"
+ag-ui-protocol = "ag_ui"
 pymupdf = ["pymupdf", "fitz"]
 
 [tool.deptry.per_rule_ignores]
