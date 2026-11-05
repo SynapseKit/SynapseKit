@@ -12,6 +12,7 @@ from contextlib import suppress
 from pathlib import Path
 from typing import Any
 
+from .._audit_context import SourceAwareMessages, source_ids_from_results
 from .._compat import run_sync
 from ..embeddings.backend import SynapsekitEmbeddings
 from ..embeddings.multimodal import BaseMultimodalEmbeddings
@@ -602,7 +603,34 @@ class RAG:
                 "content": content if supports_images else prompt,
             }
         )
-        return messages
+        citation_locator_counts: dict[str, int] = {}
+        source_ids_by_locator: dict[str, list[str]] = {}
+        for result in packed_results:
+            if not result.get("_is_visual"):
+                continue
+            metadata = result.get("metadata") or {}
+            locator = (
+                f"page {metadata.get('page', '?')}, "
+                f"bbox {self._format_bbox(metadata.get('bbox', 'full-page'))}"
+            )
+            citation_locator_counts[locator] = citation_locator_counts.get(locator, 0) + 1
+            source_ids = source_ids_from_results([result])
+            if len(source_ids) == 1:
+                source_ids_by_locator.setdefault(locator, []).append(source_ids[0])
+        trusted_citation_ids = {
+            locator: source_ids[0]
+            for locator, source_ids in source_ids_by_locator.items()
+            if citation_locator_counts[locator] == 1 and len(source_ids) == 1
+        }
+        unresolvable_citation_ids = tuple(
+            locator for locator in citation_locator_counts if locator not in trusted_citation_ids
+        )
+        return SourceAwareMessages(
+            messages,
+            trusted_source_ids=source_ids_from_results(packed_results),
+            trusted_citation_ids=trusted_citation_ids,
+            unresolvable_citation_ids=unresolvable_citation_ids,
+        )
 
     def _pack_visual_context(
         self,

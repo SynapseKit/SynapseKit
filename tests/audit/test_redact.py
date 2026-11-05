@@ -140,3 +140,5 @@ class TestRedactionBeforeHashing:
 
         entries = read_zip_entries(path)
         assert b"alice@example.com" not in entries["trace.jsonl"]
+        assert b"alice@example.com" not in entries["provenance.json"]
+        assert b"sent" not in entries["provenance.json"]

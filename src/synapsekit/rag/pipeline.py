@@ -6,6 +6,7 @@ from collections.abc import AsyncGenerator
 from dataclasses import dataclass, field
 from typing import Any
 
+from .._audit_context import SourceAwareMessages, source_ids_from_results
 from ..evaluation.rag_evaluator import RAGEvaluator
 from ..llm.base import BaseLLM
 from ..loaders.base import Document
@@ -100,6 +101,10 @@ class RAGPipeline:
 
         lines: list[str] = []
         for key in (
+            "source_id",
+            "document_id",
+            "doc_id",
+            "citation_id",
             "source_type",
             "source",
             "chunk_type",
@@ -215,9 +220,7 @@ class RAGPipeline:
             context = "No context available."
         history = self.config.memory.format_context()
 
-        messages: list[dict] = [
-            {"role": "system", "content": self.config.system_prompt},
-        ]
+        messages: list[dict] = [{"role": "system", "content": self.config.system_prompt}]
         if history:
             messages.append({"role": "user", "content": f"Previous conversation:\n{history}"})
             messages.append({"role": "assistant", "content": "Understood."})
@@ -233,6 +236,10 @@ class RAGPipeline:
                 ),
             }
         )
+        audited_messages = SourceAwareMessages(
+            messages,
+            trusted_source_ids=source_ids_from_results(results),
+        )
 
         tracer = self.config.tracer
         t0 = tracer.start_timer() if tracer else 0.0
@@ -241,7 +248,7 @@ class RAGPipeline:
 
         answer_parts: list[str] = []
         try:
-            async for token in self.config.llm.stream_with_messages(messages):
+            async for token in self.config.llm.stream_with_messages(audited_messages):
                 answer_parts.append(token)
                 yield token
         except Exception as exc:

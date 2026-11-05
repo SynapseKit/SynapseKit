@@ -5,6 +5,8 @@ import pytest
 
 from synapsekit import RAG
 from synapsekit import MultimodalRAG as TopLevelMultimodalRAG
+from synapsekit.audit import AuditTracer, EventKind, VerifiableAgent, build_provenance
+from synapsekit.audit.provenance import source_id_hash
 from synapsekit.embeddings.multimodal import BaseMultimodalEmbeddings
 from synapsekit.loaders.base import Document
 from synapsekit.loaders.pdf import PDFLoader
@@ -117,6 +119,7 @@ async def test_rag_visual_ask_sends_page_images_and_appends_citations():
                 image=b"page-a",
                 text="The answer is in the highlighted cell.",
                 metadata={
+                    "source_id": "visual-doc-4",
                     "source": "report.pdf",
                     "page": 4,
                     "bbox": [12.0, 24.0, 120.0, 240.0],
@@ -135,6 +138,8 @@ async def test_rag_visual_ask_sends_page_images_and_appends_citations():
     answer = await rag.ask("What is the answer?")
 
     content = captured["messages"][-1]["content"]
+    assert captured["messages"]._trusted_source_ids == ("visual-doc-4",)
+    assert all("trusted_source_ids" not in message for message in captured["messages"])
     assert isinstance(content, list)
     assert any(block.get("type") == "image_url" for block in content)
     prompt_text = next(block["text"] for block in content if block.get("type") == "text")
@@ -146,7 +151,152 @@ async def test_rag_visual_ask_sends_page_images_and_appends_citations():
     assert "source report.pdf" in answer
 
 
+async def _ask_audited_visual_rag(pages, answer):
+    rag = _make_rag(visual_embeddings=FakeVisualEmbeddings())
+    await rag.visual_retriever.add_pages(pages)
+    captured = {}
+
+    async def generate_with_messages(messages, **kwargs):
+        captured["messages"] = messages
+        return answer
+
+    rag._pipeline.config.llm.generate_with_messages = generate_with_messages
+    tracer = AuditTracer(run_id="audited-visual-rag")
+    agent = VerifiableAgent(
+        rag,
+        tracer=tracer,
+        instrument_attrs=["_visual_retriever", "_pipeline.config.llm"],
+    )
+    actual_answer = await agent.ask("What does the page show?")
+    return actual_answer, tracer, captured["messages"]
+
+
 @pytest.mark.asyncio
+async def test_runtime_visual_citation_resolves_to_its_retrieved_source():
+    locator = "page 4, bbox [12.0, 24.0, 120.0, 240.0]"
+    answer, tracer, provider_messages = await _ask_audited_visual_rag(
+        [
+            VisualPage(
+                image=b"page-a",
+                text="The answer is in the highlighted cell.",
+                metadata={
+                    "source_id": "visual-doc-4",
+                    "source": "report.pdf",
+                    "page": 4,
+                    "bbox": [12.0, 24.0, 120.0, 240.0],
+                },
+            )
+        ],
+        f"The cited value is 42 [{locator}].",
+    )
+
+    provenance = build_provenance(tracer.records)
+    source_entity_id = next(
+        identifier
+        for identifier, entity in provenance["entity"].items()
+        if entity.get("sk:sourceIdHash") == source_id_hash("visual-doc-4")
+    )
+    response = next(
+        record for record in tracer.records if record.kind == EventKind.LLM_RESPONSE.value
+    )
+    response_entity_id = next(
+        identifier
+        for identifier, entity in provenance["entity"].items()
+        if entity.get("sk:eventIdHash") == source_id_hash(response.event_id)
+    )
+    response_activity = next(
+        activity
+        for activity in provenance["activity"].values()
+        if activity.get("sk:eventIdHash") == source_id_hash(response.event_id)
+    )
+    llm_call = next(record for record in tracer.records if record.kind == EventKind.LLM_CALL.value)
+    prompt_text = next(
+        block["text"]
+        for message in provider_messages
+        if isinstance(message.get("content"), list)
+        for block in message["content"]
+        if block.get("type") == "text"
+    )
+
+    assert answer.startswith("The cited value is 42")
+    assert llm_call.payload.get("trusted_citation_ids") == {locator: "visual-doc-4"}
+    assert response_activity.get("sk:lineageStatus") == "resolved"
+    assert any(
+        relation["prov:generatedEntity"] == response_entity_id
+        and relation["prov:usedEntity"] == source_entity_id
+        for relation in provenance["wasDerivedFrom"].values()
+    )
+    assert "trusted_citation_ids" not in response.payload
+    assert "visual-doc-4" not in prompt_text
+    assert all(
+        "trusted_source_ids" not in message and "trusted_citation_ids" not in message
+        for message in provider_messages
+    )
+
+
+@pytest.mark.asyncio
+async def test_runtime_visual_citation_with_duplicate_locators_stays_unresolved():
+    locator = "page 4, bbox [12.0, 24.0, 120.0, 240.0]"
+    _answer, tracer, provider_messages = await _ask_audited_visual_rag(
+        [
+            VisualPage(
+                image=b"page-a",
+                text="First candidate.",
+                metadata={
+                    "source_id": locator,
+                    "page": 4,
+                    "bbox": [12.0, 24.0, 120.0, 240.0],
+                },
+            ),
+            VisualPage(
+                image=b"page-b",
+                text="Second candidate.",
+                metadata={
+                    "source_id": "visual-doc-b",
+                    "page": 4,
+                    "bbox": [12.0, 24.0, 120.0, 240.0],
+                },
+            ),
+        ],
+        f"The cited value is ambiguous [{locator}].",
+    )
+
+    provenance = build_provenance(tracer.records)
+    source_entity_ids = {
+        identifier
+        for identifier, entity in provenance["entity"].items()
+        if entity.get("sk:sourceIdHash")
+        in {source_id_hash(locator), source_id_hash("visual-doc-b")}
+    }
+    assert len(source_entity_ids) == 2
+    llm_call = next(record for record in tracer.records if record.kind == EventKind.LLM_CALL.value)
+    assert llm_call.payload.get("trusted_citation_ids", {}) == {}
+    response = next(
+        record for record in tracer.records if record.kind == EventKind.LLM_RESPONSE.value
+    )
+    response_entity_id = next(
+        identifier
+        for identifier, entity in provenance["entity"].items()
+        if entity.get("sk:eventIdHash") == source_id_hash(response.event_id)
+    )
+    response_activity = next(
+        activity
+        for activity in provenance["activity"].values()
+        if activity.get("sk:eventIdHash") == source_id_hash(response.event_id)
+    )
+
+    assert response_activity.get("sk:lineageStatus") == "unresolved"
+    assert not any(
+        relation["prov:generatedEntity"] == response_entity_id
+        and relation["prov:usedEntity"] in source_entity_ids
+        for relation in provenance["wasDerivedFrom"].values()
+    )
+    assert llm_call.payload.get("unresolvable_citation_ids") == (locator,)
+    assert "unresolvable_citation_ids" not in response.payload
+    assert locator not in str(provenance)
+    assert all("unresolvable_citation_ids" not in message for message in provider_messages)
+
+
 async def test_rag_without_visual_backend_keeps_text_pipeline_path():
     rag = _make_rag()
     calls = []
