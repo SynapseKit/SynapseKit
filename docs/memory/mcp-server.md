@@ -106,3 +106,28 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
 ```
+
+## MCP Client Tool Pinning
+
+When consuming this or another MCP server with `MCPClient`, enable pinning with a stable, caller-chosen `server_id` and a persistent `pin_store_path`:
+
+```python
+from pathlib import Path
+from synapsekit.mcp.client import MCPClient
+from synapsekit.mcp.pinning import (
+    ToolApprovalRequiredError,
+    ToolDriftDetectedError,
+    ToolDriftWarning,
+)
+
+client = MCPClient(
+    server_id="personal-memory-prod",
+    pin_store_path=Path.home() / ".synapsekit" / "mcp-tool-pins.json",
+)
+```
+
+On first use, `connect_stdio()` or `connect_sse()` raises `ToolApprovalRequiredError` with reviewable `pending_tools`. Inspect each tool's name, description, and input schema; from an async context, call `await client.approve_current_tools()` only after review. Approval re-lists the server tools; if any definition changed since it was shown, it raises a fresh review error without pinning or returning adapters. The store persists fingerprints, not descriptions or schemas.
+
+Drift is blocking by default: changed or removed tools raise `ToolDriftDetectedError` before adapters are returned. Review its `changed_tools`, `removed_tool_names`, and `pending_tools`; from an async context, call `await client.approve_current_tools()` only after review to accept the current definitions. Set `block_on_drift=False` to report changed/removed tools with `ToolDriftWarning` and continue loading adapters. New, unpinned tools still require explicit approval in either mode.
+
+`ToolPinStore` serializes read-modify-write updates across instances in the same Python process. Atomic replacement prevents partial store files, but it does not coordinate writers in separate processes; concurrent cross-process updates to one store can still lose changes. Use a single writer or provide external interprocess coordination if multiple processes share the store.
