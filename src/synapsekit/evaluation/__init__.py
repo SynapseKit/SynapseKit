@@ -32,6 +32,15 @@ from .rag_evaluator import (
 from .regression import EvalRegression, EvalSnapshot, MetricDelta, RegressionReport
 from .relevancy import RelevancyMetric
 from .suite import EvalSuite, EvalSuiteResult
+from .trajectory import (
+    MatchMode,
+    ToolCall,
+    TrajectoryComparatorError,
+    TrajectoryMatchResult,
+    TrajectoryMismatch,
+    match_trajectory,
+    trajectory_from_audit_records,
+)
 
 __all__ = [
     "ContextLossDetector",
@@ -51,6 +60,7 @@ __all__ = [
     "GroundednessMetric",
     "LLMContextLossJudge",
     "LoopDetector",
+    "MatchMode",
     "MetricDelta",
     "MetricResult",
     "MisroutingDetector",
@@ -73,5 +83,11 @@ __all__ = [
     "RegressionReport",
     "RelevancyMetric",
     "Transfer",
+    "ToolCall",
+    "TrajectoryComparatorError",
+    "TrajectoryMatchResult",
+    "TrajectoryMismatch",
     "eval_case",
+    "match_trajectory",
+    "trajectory_from_audit_records",
 ]
