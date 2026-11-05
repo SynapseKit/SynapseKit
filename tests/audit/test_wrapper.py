@@ -7,7 +7,9 @@ import inspect
 
 import pytest
 
-from synapsekit.audit import AuditTracer, EventKind, VerifiableAgent
+from synapsekit._audit_context import SourceAwareMessages
+from synapsekit.audit import AuditTracer, EventKind, VerifiableAgent, build_provenance
+from synapsekit.audit.provenance import source_id_hash
 from synapsekit.audit.wrapper import audited, infer_kind_pair
 
 
@@ -24,6 +26,29 @@ class DummyAgent:
 
     async def failing_tool(self, x: int) -> int:
         raise ValueError("boom")
+
+
+class _KeywordMessagesAgent:
+    async def generate_with_messages(self, *, messages):
+        return "keyword message received"
+
+
+def test_wrapper_captures_source_aware_messages_from_keyword_argument():
+    async def scenario() -> None:
+        tracer = AuditTracer()
+        agent = VerifiableAgent(_KeywordMessagesAgent(), tracer=tracer)
+        messages = SourceAwareMessages(
+            [{"role": "user", "content": "question"}],
+            trusted_source_ids=("keyword-source",),
+        )
+
+        assert await agent.generate_with_messages(messages=messages) == "keyword message received"
+        llm_call = next(
+            record for record in tracer.records if record.kind == EventKind.LLM_CALL.value
+        )
+        assert llm_call.payload.get("trusted_source_ids") == ("keyword-source",)
+
+    asyncio.run(scenario())
 
 
 class TestInferKindPair:
@@ -449,3 +474,64 @@ class TestAsyncGeneratorInstrumentation:
         assert error.payload["output"] == ("partial-",)
         assert error.payload["chunk_count"] == 1
         assert "0x" not in str(error.payload)
+
+
+class _CitationRetriever:
+    async def search(self, query: str) -> list[dict]:
+        return [
+            {
+                "text": "private retrieved passage",
+                "metadata": {"source_id": "rag-document-1"},
+            }
+        ]
+
+
+class _AgentWithCitationRetriever:
+    def __init__(self) -> None:
+        self.retriever = _CitationRetriever()
+
+    async def run(self, query: str) -> dict[str, object]:
+        documents = await self.retriever.search(query)
+        return {
+            "answer": f"Answer citing [rag-document-1] from {len(documents)} source.",
+            "citation_ids": ["rag-document-1"],
+        }
+
+
+class TestRetrievalSourceProvenance:
+    @pytest.mark.asyncio
+    async def test_nested_retriever_source_is_not_linked_from_tool_result_citation(self):
+        tracer = AuditTracer(run_id="rag-tool-run")
+        agent = VerifiableAgent(
+            _AgentWithCitationRetriever(), tracer=tracer, instrument_attrs=["retriever"]
+        )
+
+        answer = await agent.run("question")
+        provenance = build_provenance(tracer.records)
+
+        assert "[rag-document-1]" in answer["answer"]
+        source_entity = next(
+            identifier
+            for identifier, entity in provenance["entity"].items()
+            if entity.get("sk:sourceIdHash") == source_id_hash("rag-document-1")
+        )
+        answer_activity = next(
+            identifier
+            for identifier, activity in provenance["activity"].items()
+            if activity["sk:kind"] == EventKind.TOOL_RESULT.value
+        )
+        answer_entity = next(
+            relation["prov:entity"]
+            for relation in provenance["wasGeneratedBy"].values()
+            if relation["prov:activity"] == answer_activity
+        )
+        assert not any(
+            relation["prov:generatedEntity"] == answer_entity
+            and relation["prov:usedEntity"] == source_entity
+            for relation in provenance["wasDerivedFrom"].values()
+        )
+        assert any(
+            entity.get("sk:sourceIdHash") == source_id_hash("rag-document-1")
+            for entity in provenance["entity"].values()
+        )
+        assert "private retrieved passage" not in str(provenance)
