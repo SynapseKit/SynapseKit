@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import AsyncGenerator
 from typing import Any
 
+from ..effort import EffortClassifier, EffortInput
 from ..reasoning import BaseReasoningProvider, ReasoningResponse, ReasoningStreamChunk
 from ..utils import extract_text
 
@@ -16,6 +17,8 @@ class AnthropicThinking(BaseReasoningProvider):
         api_key: str | None = None,
         budget_tokens: int | None = None,
         thinking: bool = True,
+        effort: EffortInput | None = None,
+        effort_classifier: EffortClassifier | None = None,
     ) -> None:
         super().__init__(
             model=model,
@@ -23,6 +26,8 @@ class AnthropicThinking(BaseReasoningProvider):
             budget_tokens=budget_tokens,
             thinking=thinking,
             provider="anthropic",
+            effort=effort,
+            effort_classifier=effort_classifier,
         )
         self._client: Any = None
 
@@ -40,6 +45,8 @@ class AnthropicThinking(BaseReasoningProvider):
     def _thinking_payload(self) -> dict[str, Any] | None:
         if not self.thinking:
             return None
+        if self.effort is not None:
+            return {"type": "adaptive"}
         budget = self.budget_tokens if self.budget_tokens is not None else _DEFAULT_THINKING_BUDGET
         return {"type": "enabled", "budget_tokens": budget}
 
@@ -51,9 +58,12 @@ class AnthropicThinking(BaseReasoningProvider):
             "max_tokens": 8192,
             "timeout": 30.0,
         }
+        effort = self._effort_for_prompt(prompt)
         thinking_payload = self._thinking_payload()
         if thinking_payload is not None:
             kwargs["thinking"] = thinking_payload
+        if effort is not None:
+            kwargs["output_config"] = {"effort": effort.value}
 
         try:
             response = await client.messages.create(**kwargs)
@@ -94,9 +104,12 @@ class AnthropicThinking(BaseReasoningProvider):
             "stream": True,
             "timeout": 30.0,
         }
+        effort = self._effort_for_prompt(prompt)
         thinking_payload = self._thinking_payload()
         if thinking_payload is not None:
             kwargs["thinking"] = thinking_payload
+        if effort is not None:
+            kwargs["output_config"] = {"effort": effort.value}
 
         try:
             stream = await client.messages.create(**kwargs)

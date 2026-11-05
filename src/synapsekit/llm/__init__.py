@@ -3,6 +3,7 @@ from .base import BaseLLM, LLMConfig
 from .cost_quality_router import CostQualityRouter
 from .cost_router import QUALITY_TABLE, CostRouter, CostRouterConfig, RouterModelSpec
 from .edge import EdgeFallbackBlockedError, EdgeRouteMetadata, EdgeRuntime, FallbackPolicy
+from .effort import EffortLevel, classify_effort
 from .fallback_chain import FallbackChain, FallbackChainConfig
 from .finops import (
     BudgetAlert,
@@ -48,6 +49,7 @@ __all__ = [
     "EdgeFallbackBlockedError",
     "EdgeRouteMetadata",
     "EdgeRuntime",
+    "EffortLevel",
     "ErnieLLM",
     "FallbackChain",
     "FallbackChainConfig",
@@ -113,6 +115,7 @@ __all__ = [
     "XaiLLM",
     "ZhipuLLM",
     "generate_structured",
+    "classify_effort",
     "PromptRepairMiddleware",
     "RepairEvent",
 ]

@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import AsyncGenerator
 from typing import Any
 
+from ..effort import EffortClassifier, EffortInput
 from ..reasoning import BaseReasoningProvider, ReasoningResponse, ReasoningStreamChunk
 from ..utils import extract_reasoning, extract_reasoning_tokens, extract_text
 
@@ -14,6 +15,8 @@ class OpenAIReasoning(BaseReasoningProvider):
         api_key: str | None = None,
         budget_tokens: int | None = None,
         thinking: bool = True,
+        effort: EffortInput | None = None,
+        effort_classifier: EffortClassifier | None = None,
     ) -> None:
         super().__init__(
             model=model,
@@ -21,6 +24,8 @@ class OpenAIReasoning(BaseReasoningProvider):
             budget_tokens=budget_tokens,
             thinking=thinking,
             provider="openai",
+            effort=effort,
+            effort_classifier=effort_classifier,
         )
         self._client: Any = None
 
@@ -35,7 +40,10 @@ class OpenAIReasoning(BaseReasoningProvider):
             self._client = AsyncOpenAI(api_key=self.api_key)
         return self._client
 
-    def _reasoning_effort(self) -> str:
+    def _reasoning_effort(self, prompt: str = "") -> str:
+        effort = self._effort_for_prompt(prompt)
+        if effort is not None:
+            return effort.value
         if not self.thinking:
             return "low"
         if self.budget_tokens is None:
@@ -52,7 +60,7 @@ class OpenAIReasoning(BaseReasoningProvider):
             response = await client.chat.completions.create(
                 model=self.model,
                 messages=[{"role": "user", "content": prompt}],
-                reasoning_effort=self._reasoning_effort(),
+                reasoning_effort=self._reasoning_effort(prompt),
                 timeout=30.0,
             )
         except Exception as e:
@@ -93,7 +101,7 @@ class OpenAIReasoning(BaseReasoningProvider):
             stream = await client.chat.completions.create(
                 model=self.model,
                 messages=[{"role": "user", "content": prompt}],
-                reasoning_effort=self._reasoning_effort(),
+                reasoning_effort=self._reasoning_effort(prompt),
                 stream=True,
                 timeout=30.0,
             )
