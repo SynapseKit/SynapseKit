@@ -215,6 +215,66 @@ def test_legacy_provider_budget_behavior_is_unchanged_when_effort_is_omitted() -
     assert google_provider._generation_config() == {"thinkingConfig": {"thinkingBudget": 768}}
 
 
+@pytest.mark.parametrize("reasoner_class", [OpenAIReasoning, ReasoningLLM])
+def test_uninitialized_reasoner_defaults_to_legacy_effort(reasoner_class) -> None:
+    provider = reasoner_class.__new__(reasoner_class)
+
+    assert provider._effort_for_prompt("Explain this") is None
+
+
+@pytest.mark.asyncio
+async def test_google_generate_defaults_to_legacy_budget_without_effort_attributes() -> None:
+    response = SimpleNamespace(
+        candidates=[],
+        text="answer",
+        usage_metadata=SimpleNamespace(
+            candidates_token_count=2,
+            thoughts_token_count=1,
+            total_token_count=3,
+        ),
+    )
+    generate = AsyncMock(return_value=response)
+    provider = GoogleThinking.__new__(GoogleThinking)
+    provider.model = "gemini-2.5-pro"
+    provider.budget_tokens = 768
+    provider.thinking = True
+    provider.api_key = None
+    provider.provider = "google"
+    provider._model = SimpleNamespace(generate_content_async=generate)
+
+    await provider.generate("Explain this")
+
+    assert generate.call_args.kwargs["generation_config"] == {
+        "thinkingConfig": {"thinkingBudget": 768}
+    }
+
+
+@pytest.mark.asyncio
+async def test_google_stream_defaults_to_legacy_budget_without_effort_attributes() -> None:
+    class _FakeStream:
+        def __aiter__(self):
+            return self._chunks()
+
+        async def _chunks(self):
+            yield SimpleNamespace(text="answer")
+
+    generate = AsyncMock(return_value=_FakeStream())
+    provider = GoogleThinking.__new__(GoogleThinking)
+    provider.model = "gemini-2.5-pro"
+    provider.budget_tokens = 768
+    provider.thinking = True
+    provider.api_key = None
+    provider.provider = "google"
+    provider._model = SimpleNamespace(generate_content_async=generate)
+
+    chunks = [chunk async for chunk in provider.stream("Explain this")]
+
+    assert [chunk.text for chunk in chunks] == ["answer"]
+    assert generate.call_args.kwargs["generation_config"] == {
+        "thinkingConfig": {"thinkingBudget": 768}
+    }
+
+
 @pytest.mark.asyncio
 async def test_google_effort_uses_google_genai_thinking_config() -> None:
     class _HttpOptions:

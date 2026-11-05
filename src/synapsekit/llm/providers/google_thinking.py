@@ -91,7 +91,7 @@ class GoogleThinking(BaseReasoningProvider):
         return {"thinkingConfig": {"thinkingBudget": budget}}
 
     async def generate(self, prompt: str) -> ReasoningResponse:
-        if self.effort is None:
+        if getattr(self, "effort", None) is None:
             model = self._get_model()
             kwargs: dict[str, Any] = {}
             generation_config = self._generation_config()
@@ -142,7 +142,7 @@ class GoogleThinking(BaseReasoningProvider):
         )
 
     async def stream(self, prompt: str) -> AsyncGenerator[ReasoningStreamChunk, None]:
-        if self.effort is None:
+        if getattr(self, "effort", None) is None:
             model = self._get_model()
             kwargs: dict[str, Any] = {"stream": True}
             generation_config = self._generation_config()

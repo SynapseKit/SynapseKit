@@ -74,7 +74,11 @@ class BaseReasoningProvider(ABC):
         self.effort_classifier = effort_classifier
 
     def _effort_for_prompt(self, prompt: str) -> EffortLevel | None:
-        return resolve_effort(self.effort, prompt, self.effort_classifier)
+        return resolve_effort(
+            getattr(self, "effort", None),
+            prompt,
+            getattr(self, "effort_classifier", None),
+        )
 
     @abstractmethod
     async def generate(self, prompt: str) -> ReasoningResponse:
@@ -298,7 +302,11 @@ class ReasoningLLM(BaseLLM):
         )
 
     def _effort_for_prompt(self, prompt: str) -> EffortLevel | None:
-        return resolve_effort(self.effort, prompt, self.effort_classifier)
+        return resolve_effort(
+            getattr(self, "effort", None),
+            prompt,
+            getattr(self, "effort_classifier", None),
+        )
 
     def _openai_reasoning_effort(self, prompt: str = "") -> str:
         effort = self._effort_for_prompt(prompt)
