@@ -52,6 +52,18 @@ constraints = [
 build-constraints = [{ name = "setuptools", specifier = ">=84.1.0" }]
 
 [[package]]
+name = "ag-ui-protocol"
+version = "1.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/57/92/d88fdc7f4648dc38d3d54c595066bb3e63a4c091884ffb2f98272c33eef8/ag_ui_protocol-1.0.0.tar.gz", hash = "sha256:cfebecef2e7bc942cc8a52d908a4ea86a98f631d2ffdc6ec5812bb843eac74fb", size = 30759, upload-time = "2026-09-17T18:31:19.448Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/82/b0/850be4576e6443dc575daa54188d8136ae2b2eca3f19e098e7a088fc9ebc/ag_ui_protocol-1.0.0-py3-none-any.whl", hash = "sha256:0058eaf0522201089d444e430fc35180bc8ad0222cae39e8568b313e8105d9e6", size = 36842, upload-time = "2026-09-17T18:31:18.471Z" },
+]
+
+[[package]]
 name = "ai21"
 version = "4.3.0"
 source = { registry = "https://pypi.org/simple" }
@@ -10603,6 +10615,9 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+ag-ui = [
+    { name = "ag-ui-protocol" },
+]
 ai21 = [
     { name = "ai21" },
     { name = "certifi" },
@@ -11441,6 +11456,7 @@ integration = [
 
 [package.metadata]
 requires-dist = [
+    { name = "ag-ui-protocol", marker = "extra == 'ag-ui'", specifier = ">=1.0,<2" },
     { name = "ai21", marker = "extra == 'ai21'", specifier = ">=2.0" },
     { name = "ai21", marker = "extra == 'all'", specifier = ">=2.0" },
     { name = "aiohttp", marker = "extra == 'aleph-alpha'", specifier = ">=3.14.4" },
@@ -11903,7 +11919,7 @@ requires-dist = [
     { name = "youtube-transcript-api", marker = "extra == 'youtube-transcript'", specifier = ">=0.6" },
     { name = "z3-solver", marker = "extra == 'symbolic'", specifier = ">=4.13" },
 ]
-provides-extras = ["graph", "openai", "nvidia-nim", "watsonx", "snowflake-cortex", "deepinfra", "nebius", "baseten", "upstage", "reka", "hyperbolic", "friendli", "clarifai", "anthropic", "semantic", "colbert", "pdf", "visual", "wikipedia", "arxiv", "html", "web", "chroma", "faiss", "qdrant", "pinecone", "weaviate", "milvus", "lancedb", "sqlite-vec", "kuzu", "mesh", "cassandra", "firestore", "cosmos", "clickhouse", "turbopuffer", "azure-ai-search", "vertex-vector", "singlestore", "tidb", "couchbase", "surrealdb", "deeplake", "myscale", "duckdb-vector", "marqo", "opensearch", "vespa", "replicate", "ollama", "lmstudio", "vllm", "ai21", "cohere", "mistral", "gemini", "voyage", "jina", "nomic", "mixedbread", "flashrank", "bedrock", "gcal-tool", "gmail", "aws-lambda", "rss", "groq", "audio", "video", "voice", "voice-local", "voice-stream", "voice-piper", "voice-cartesia", "voice-elevenlabs", "voice-deepgram", "voice-silero", "training", "cron", "ambient", "excel", "pptx", "docx", "yaml", "okf", "teams", "http", "search", "huggingface", "transformers", "tiktoken", "google-search", "tavily", "youtube", "mcp", "redis", "memcached", "vertex", "cloudflare", "aleph-alpha", "llamacpp", "gpt4all", "onnx", "mlx", "edge", "ernie", "minimax", "serve", "hive", "graph-ui", "observe", "postgres", "pgvector", "wolfram", "dynamodb", "discord", "gcs", "bigquery", "gdrive", "asana", "box", "clickup", "databricks", "delta", "figma", "graphql", "iceberg", "kafka", "streaming-kafka", "streaming-pulsar", "streaming-kinesis", "streaming-cdc", "streaming", "linear", "monday", "shopify", "zoom", "git", "gsheets", "jira", "hubspot", "sql", "snowflake", "mongodb", "mongodb-vector", "salesforce", "azure", "s3", "onedrive", "slack", "supabase", "notion", "confluence", "dropbox", "symbolic", "rtf", "epub", "parquet", "elasticsearch", "browser", "computer-use", "youtube-transcript", "airtable", "performance", "all"]
+provides-extras = ["graph", "openai", "nvidia-nim", "watsonx", "snowflake-cortex", "deepinfra", "nebius", "baseten", "upstage", "reka", "hyperbolic", "friendli", "clarifai", "anthropic", "semantic", "colbert", "pdf", "visual", "wikipedia", "arxiv", "html", "web", "chroma", "faiss", "qdrant", "pinecone", "weaviate", "milvus", "lancedb", "sqlite-vec", "kuzu", "mesh", "cassandra", "firestore", "cosmos", "clickhouse", "turbopuffer", "azure-ai-search", "vertex-vector", "singlestore", "tidb", "couchbase", "surrealdb", "deeplake", "myscale", "duckdb-vector", "marqo", "opensearch", "vespa", "replicate", "ollama", "lmstudio", "vllm", "ai21", "cohere", "mistral", "gemini", "voyage", "jina", "nomic", "mixedbread", "flashrank", "bedrock", "gcal-tool", "gmail", "aws-lambda", "rss", "groq", "ag-ui", "audio", "video", "voice", "voice-local", "voice-stream", "voice-piper", "voice-cartesia", "voice-elevenlabs", "voice-deepgram", "voice-silero", "training", "cron", "ambient", "excel", "pptx", "docx", "yaml", "okf", "teams", "http", "search", "huggingface", "transformers", "tiktoken", "google-search", "tavily", "youtube", "mcp", "redis", "memcached", "vertex", "cloudflare", "aleph-alpha", "llamacpp", "gpt4all", "onnx", "mlx", "edge", "ernie", "minimax", "serve", "hive", "graph-ui", "observe", "postgres", "pgvector", "wolfram", "dynamodb", "discord", "gcs", "bigquery", "gdrive", "asana", "box", "clickup", "databricks", "delta", "figma", "graphql", "iceberg", "kafka", "streaming-kafka", "streaming-pulsar", "streaming-kinesis", "streaming-cdc", "streaming", "linear", "monday", "shopify", "zoom", "git", "gsheets", "jira", "hubspot", "sql", "snowflake", "mongodb", "mongodb-vector", "salesforce", "azure", "s3", "onedrive", "slack", "supabase", "notion", "confluence", "dropbox", "symbolic", "rtf", "epub", "parquet", "elasticsearch", "browser", "computer-use", "youtube-transcript", "airtable", "performance", "all"]
 
 [package.metadata.requires-dev]
 bench = [

@@ -113,6 +113,56 @@ observe.configure(
 )
 ```
 
+## AG-UI Live stream
+
+SynapseKit Live can expose its existing in-process event stream as AG-UI Server-Sent
+Events. Install the protocol SDK as an optional extra:
+
+```bash
+pip install 'synapsekit[ag-ui]'
+```
+
+Start Live as usual, then connect a custom read-only AG-UI SSE consumer to
+`GET /agui/events?token=<token>`. This is a passive event feed, not the standard
+AG-UI HTTP-SSE agent binding: it does not accept `POST RunAgentInput`, and a
+standard `HttpAgent` cannot use it to start a run. The per-process token is
+included in the URL returned by `serve()` and used by the dashboard. The route
+reuses Live's bounded
+event history and subscriber queue, sends an initial connection comment and
+periodic heartbeats, and unsubscribes when the client disconnects. Without the
+extra, the endpoint returns `503` with the install instruction; importing
+`synapsekit.live` still works without AG-UI installed.
+
+The server binds to `127.0.0.1` by default. The AG-UI route is a read-only GET
+stream of events already published in this process: it does not add a POST or
+remote execution surface. The existing raw dashboard stream at `/events` is
+unchanged. Do not expose the server on a non-loopback interface unless you have
+a deliberate network-access policy; the token is a local access gate, not a
+substitute for a trusted deployment boundary.
+
+Supported event mapping:
+
+| SynapseKit Live source | AG-UI output |
+| --- | --- |
+| `run.start` | `RUN_STARTED` |
+| `tool.call` with `attributes.tool` | `TOOL_CALL_START`, `TOOL_CALL_END` |
+| `span` named `llm.generate` with string `attributes["llm.output"]` | `TEXT_MESSAGE_START`, `TEXT_MESSAGE_CONTENT`, `TEXT_MESSAGE_END` |
+| `span` or `tool.call` with `status="error"` | Generic `RUN_ERROR` without traceback/details |
+| `graph.snapshot` with `attributes.nodes` and `attributes.edges` | First event: `STATE_SNAPSHOT`; later events: `STATE_DELTA` with an RFC 6902 `replace` operation at `/graph` |
+
+Other event kinds are ignored. Tool arguments and results are not present in the
+current Live tool event and therefore are not emitted. Text is forwarded only
+when the supported `llm.output` source field contains an actual string; prompts,
+tracebacks, and arbitrary span attributes are never copied into AG-UI events.
+If LLM output tracing is enabled, that real output string will be visible to
+connected clients, so apply the same privacy controls as for other Live output.
+
+Live events do not currently provide thread, run, message, or tool-call IDs. The
+adapter generates UUID correlation IDs required by AG-UI and treats them as
+transport metadata, not source identities. No `RUN_FINISHED` event is inferred:
+the current Live source has no matching run-end event, and a client disconnect
+only removes its EventBus subscription.
+
 ## Jaeger docker-compose snippet
 
 ```yaml

@@ -137,6 +137,7 @@ gmail = ["google-api-python-client>=2.0", "google-auth>=2.0", "httplib2>=0.32.0"
 aws-lambda = ["boto3>=1.34"]
 rss = ["feedparser>=6.0"]
 groq = ["groq>=0.9", "certifi>=2026.10.19"]
+ag-ui = ["ag-ui-protocol>=1.0,<2"]
 audio = ["openai>=1.0", "certifi>=2026.10.19"]
 video = ["openai>=1.0", "certifi>=2026.10.19"]
 voice = ["openai>=1.0", "sounddevice>=0.4", "soundfile>=0.12", "certifi>=2026.10.19"]
