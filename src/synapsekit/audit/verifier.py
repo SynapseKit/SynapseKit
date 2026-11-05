@@ -192,10 +192,12 @@ class LoadedBundle:
     records: list[AuditRecord]
     hashes_doc: dict[str, Any]
     signatures_doc: list[dict[str, Any]]
+    provenance_doc: Any = None
+    provenance_present: bool = False
 
 
 def load_bundle(path: str | Path) -> LoadedBundle:
-    """Parse a bundle's four entries with no cryptographic checks (raw read)."""
+    """Parse required bundle entries and optional provenance without checks."""
     with zipfile.ZipFile(path) as zf:
         names = set(zf.namelist())
         missing = [n for n in REQUIRED_ENTRIES if n not in names]
@@ -205,6 +207,8 @@ def load_bundle(path: str | Path) -> LoadedBundle:
         manifest = json.loads(zf.read("manifest.json"))
         hashes_doc = json.loads(zf.read("hashes.merkle"))
         signatures_doc = json.loads(zf.read("signatures.json"))
+        provenance_present = "provenance.json" in names
+        provenance_doc = json.loads(zf.read("provenance.json")) if provenance_present else None
 
         trace_text = zf.read("trace.jsonl").decode("utf-8")
         records: list[AuditRecord] = []
@@ -215,7 +219,12 @@ def load_bundle(path: str | Path) -> LoadedBundle:
             records.append(AuditRecord.from_dict(json.loads(line)))
 
     return LoadedBundle(
-        manifest=manifest, records=records, hashes_doc=hashes_doc, signatures_doc=signatures_doc
+        manifest=manifest,
+        records=records,
+        hashes_doc=hashes_doc,
+        signatures_doc=signatures_doc,
+        provenance_doc=provenance_doc,
+        provenance_present=provenance_present,
     )
 
 
@@ -315,6 +324,110 @@ def _verify_manifest_signature(
         last_finding
         or (Verdict.UNVERIFIABLE, "no valid manifest signature found from a recognized key")
     ]
+
+
+def _verify_provenance_graph(provenance: Any) -> list[Finding]:
+    """Check the PROV-JSON node maps and relation endpoints without imports."""
+    if not isinstance(provenance, dict):
+        return [(Verdict.UNVERIFIABLE, "provenance document must be a JSON object")]
+
+    prefix = provenance.get("prefix")
+    if not isinstance(prefix, dict) or prefix.get("prov") != "http://www.w3.org/ns/prov#":
+        return [(Verdict.UNVERIFIABLE, "provenance document has no valid PROV namespace prefix")]
+
+    def is_qualified_name(identifier: str) -> bool:
+        if identifier.count(":") != 1:
+            return False
+        namespace, local_name = identifier.split(":", 1)
+        return bool(namespace and local_name and namespace in prefix)
+
+    node_maps: dict[str, dict[str, Any]] = {}
+    for section in ("entity", "activity", "agent"):
+        nodes = provenance.get(section)
+        if not isinstance(nodes, dict):
+            return [(Verdict.UNVERIFIABLE, f"provenance {section} map must be a JSON object")]
+        if any(
+            not isinstance(identifier, str)
+            or not is_qualified_name(identifier)
+            or not isinstance(attrs, dict)
+            for identifier, attrs in nodes.items()
+        ):
+            return [
+                (
+                    Verdict.UNVERIFIABLE,
+                    f"provenance {section} map has an invalid or unqualified node identifier",
+                )
+            ]
+        node_maps[section] = nodes
+
+    relation_fields = {
+        "used": {"prov:activity": "activity", "prov:entity": "entity"},
+        "wasGeneratedBy": {"prov:entity": "entity", "prov:activity": "activity"},
+        "wasDerivedFrom": {
+            "prov:generatedEntity": "entity",
+            "prov:usedEntity": "entity",
+        },
+        "wasAssociatedWith": {"prov:activity": "activity", "prov:agent": "agent"},
+    }
+    findings: list[Finding] = []
+    for relation_name, endpoints in relation_fields.items():
+        relations = provenance.get(relation_name, {})
+        if not isinstance(relations, dict):
+            findings.append(
+                (Verdict.UNVERIFIABLE, f"provenance {relation_name} map must be a JSON object")
+            )
+            continue
+        for relation_id, relation in relations.items():
+            if (
+                not isinstance(relation_id, str)
+                or not is_qualified_name(relation_id)
+                or not isinstance(relation, dict)
+            ):
+                findings.append(
+                    (Verdict.UNVERIFIABLE, f"provenance {relation_name} has an invalid relation")
+                )
+                continue
+            for field, node_section in endpoints.items():
+                target = relation.get(field)
+                if not isinstance(target, str) or target not in node_maps[node_section]:
+                    findings.append(
+                        (
+                            Verdict.UNVERIFIABLE,
+                            f"provenance {relation_name} relation {relation_id!r} has a dangling {field}",
+                        )
+                    )
+    return findings
+
+
+def _verify_optional_provenance(loaded: LoadedBundle) -> list[Finding]:
+    """Verify an optional provenance entry and its signed manifest digest."""
+    if loaded.manifest.get("selective_disclosure"):
+        if loaded.provenance_present or "provenance_hash" in loaded.manifest:
+            return [
+                (
+                    Verdict.UNVERIFIABLE,
+                    "provenance in a selective-disclosure bundle is not covered by a signed manifest",
+                )
+            ]
+        return []
+
+    digest = loaded.manifest.get("provenance_hash")
+    if not loaded.provenance_present:
+        if "provenance_hash" in loaded.manifest:
+            return [
+                (Verdict.DRIFT, "manifest declares provenance_hash but provenance.json is missing")
+            ]
+        return []
+    if not isinstance(digest, str):
+        return [(Verdict.DRIFT, "provenance.json is present but manifest has no provenance_hash")]
+
+    try:
+        recomputed = _payload_hash(loaded.provenance_doc)
+    except Exception as exc:
+        return [(Verdict.UNVERIFIABLE, f"provenance document could not be hashed: {exc}")]
+    if recomputed != digest:
+        return [(Verdict.DRIFT, "provenance_hash does not match provenance.json")]
+    return _verify_provenance_graph(loaded.provenance_doc)
 
 
 def _verify_record_self_consistency(rec: AuditRecord, i: int) -> list[Finding]:
@@ -488,6 +601,7 @@ def _record_metrics(m: AuditMetrics, findings: list[Finding]) -> None:
 
 _FAILURE_CATEGORIES: tuple[tuple[str, str], ...] = (
     ("schema version", "schema_version"),
+    ("provenance", "provenance"),
     ("prev_hash", "hash_chain"),
     ("hash does not match", "hash_chain"),
     ("parent_id", "parent_id"),
@@ -530,6 +644,8 @@ def verify(
        registry (see the module docstring on why that's a weaker claim)
     8. the manifest itself is signed and its metadata (record_count,
        run_ids, created_at, key registry, ...) matches that signature
+    9. when present, ``provenance.json`` matches the signed
+       ``provenance_hash`` and all PROV relation endpoints resolve
 
     Returns a :class:`~synapsekit.audit.types.VerificationResult` whose
     ``verdict`` is ``MATCH``, ``DRIFT`` (evidence contradicts a claim —
@@ -607,6 +723,7 @@ def verify(
             findings.extend(
                 _verify_manifest_signature(original_manifest, trusted_keys=trusted_keys)
             )
+        findings.extend(_verify_optional_provenance(loaded))
         findings.extend(_verify_selective(loaded, trusted_keys=trusted_keys))
         verdict, findings = _apply_trust_anchor_cap(
             _resolve_verdict(findings), findings, trust_anchor=trust_anchor
@@ -624,6 +741,7 @@ def verify(
         )
 
     findings.extend(_verify_manifest_signature(manifest, trusted_keys=trusted_keys))
+    findings.extend(_verify_optional_provenance(loaded))
 
     actual_run_ids = sorted({r.run_id for r in records})
     if manifest.get("run_ids") is not None and manifest.get("run_ids") != actual_run_ids:
