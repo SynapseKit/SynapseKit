@@ -166,8 +166,10 @@ class MCPClient:
         assert self._server_id is not None
         current_tools = self._snapshot_tool_sources(registered_tools)
 
-        comparison = self._pin_store.compare(
-            self._server_id, [definition for _, definition in current_tools]
+        comparison = await asyncio.to_thread(
+            self._pin_store.compare,
+            self._server_id,
+            [definition for _, definition in current_tools],
         )
 
         if (comparison.changed_tools or comparison.removed_tool_names) and self._block_on_drift:
@@ -335,8 +337,10 @@ class MCPClient:
             self._tools = []
             self._active_tool_generation = None
 
-            comparison = self._pin_store.compare(
-                self._server_id, [definition for _, definition in current_tools]
+            comparison = await asyncio.to_thread(
+                self._pin_store.compare,
+                self._server_id,
+                [definition for _, definition in current_tools],
             )
             if (comparison.changed_tools or comparison.removed_tool_names) and self._block_on_drift:
                 pending = [*comparison.unpinned_tools, *comparison.changed_tools]
@@ -360,7 +364,8 @@ class MCPClient:
             )
 
         self._ensure_approval_state_current(session, generation, pending_sources)
-        self._pin_store.pin(
+        await asyncio.to_thread(
+            self._pin_store.pin,
             self._server_id,
             [definition for _, definition in current_tools],
         )

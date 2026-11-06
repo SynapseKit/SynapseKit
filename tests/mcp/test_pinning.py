@@ -407,6 +407,37 @@ async def test_changed_description_is_detected_on_reconnect(tmp_path):
     assert error.value.changed_tools[0].description == "Search private records"
 
 
+async def test_pin_store_io_is_offloaded_and_does_not_block_the_event_loop(tmp_path):
+    # Regression: ToolPinStore.compare/pin perform blocking file IO (read,
+    # fsync, atomic replace). They are called from async methods, so they must
+    # be offloaded off the event loop; otherwise a store read/write stalls the
+    # whole loop. We prove non-blocking by making compare() wait on an event
+    # that only a concurrently-scheduled coroutine can set -- if compare ran
+    # inline on the loop, that coroutine could never run and this deadlocks.
+    module = _pinning_api("ToolPinStore", "ToolApprovalRequiredError")
+
+    release = threading.Event()
+
+    class _BlockingStore(module.ToolPinStore):
+        def compare(self, server_id: str, definitions: Any) -> Any:
+            assert release.wait(timeout=5.0), "event loop was blocked during pin-store IO"
+            return super().compare(server_id, definitions)
+
+    path = tmp_path / "tool-pins.json"
+    client = MCPClient(server_id="catalog-prod", pin_store_path=path)
+    client._pin_store = _BlockingStore(path)
+    client._session = _Session(_Tool("Search records"))
+
+    load = asyncio.create_task(client._load_tools())
+    # Yield so the load task runs far enough to reach the (offloaded) compare.
+    await asyncio.sleep(0.1)
+    # Reached only if the event loop was never blocked by compare().
+    release.set()
+
+    with pytest.raises(module.ToolApprovalRequiredError):
+        await asyncio.wait_for(load, timeout=5.0)
+
+
 async def test_client_without_pin_store_preserves_existing_behavior():
     client = MCPClient()
     client._session = _Session(_Tool("Search records"))
