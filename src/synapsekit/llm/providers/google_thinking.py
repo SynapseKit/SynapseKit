@@ -3,6 +3,11 @@ from __future__ import annotations
 from collections.abc import AsyncGenerator
 from typing import Any
 
+from ..effort import (
+    GEMINI_THINKING_BUDGETS,
+    EffortClassifier,
+    EffortInput,
+)
 from ..reasoning import BaseReasoningProvider, ReasoningResponse, ReasoningStreamChunk
 from ..utils import extract_text
 
@@ -25,6 +30,8 @@ class GoogleThinking(BaseReasoningProvider):
         api_key: str | None = None,
         budget_tokens: int | None = None,
         thinking: bool = True,
+        effort: EffortInput | None = None,
+        effort_classifier: EffortClassifier | None = None,
     ) -> None:
         super().__init__(
             model=model,
@@ -32,8 +39,11 @@ class GoogleThinking(BaseReasoningProvider):
             budget_tokens=budget_tokens,
             thinking=thinking,
             provider="google",
+            effort=effort,
+            effort_classifier=effort_classifier,
         )
         self._model: Any = None
+        self._effort_client: Any = None
 
     def _get_model(self):
         if self._model is None:
@@ -47,6 +57,33 @@ class GoogleThinking(BaseReasoningProvider):
             self._model = genai.GenerativeModel(model_name=self.model)
         return self._model
 
+    def _get_effort_client(self):
+        if self._effort_client is None:
+            try:
+                from google import genai
+            except ImportError:
+                raise ImportError(
+                    "google-genai>=1.0 required for Gemini effort routing; "
+                    "install synapsekit[gemini]"
+                ) from None
+            self._effort_client = genai.Client(api_key=self.api_key)
+        return self._effort_client
+
+    def _effort_generation_config(self, prompt: str) -> Any:
+        effort = self._effort_for_prompt(prompt)
+        if effort is None:
+            return None
+        try:
+            from google.genai import types
+        except ImportError:
+            raise ImportError(
+                "google-genai>=1.0 required for Gemini effort routing; install synapsekit[gemini]"
+            ) from None
+        return types.GenerateContentConfig(
+            thinking_config=types.ThinkingConfig(thinking_budget=GEMINI_THINKING_BUDGETS[effort]),
+            http_options=types.HttpOptions(timeout=30_000),
+        )
+
     def _generation_config(self) -> dict[str, Any] | None:
         if not self.thinking:
             return None
@@ -54,17 +91,29 @@ class GoogleThinking(BaseReasoningProvider):
         return {"thinkingConfig": {"thinkingBudget": budget}}
 
     async def generate(self, prompt: str) -> ReasoningResponse:
-        model = self._get_model()
-        kwargs: dict[str, Any] = {}
-        generation_config = self._generation_config()
-        if generation_config is not None:
-            kwargs["generation_config"] = generation_config
-        kwargs["request_options"] = {"timeout": 30.0}
+        if getattr(self, "effort", None) is None:
+            model = self._get_model()
+            kwargs: dict[str, Any] = {}
+            generation_config = self._generation_config()
+            if generation_config is not None:
+                kwargs["generation_config"] = generation_config
+            kwargs["request_options"] = {"timeout": 30.0}
 
-        try:
-            response = await model.generate_content_async(prompt, **kwargs)
-        except Exception as e:
-            raise RuntimeError(f"{self.provider} reasoning request failed: {e}") from e
+            try:
+                response = await model.generate_content_async(prompt, **kwargs)
+            except Exception as e:
+                raise RuntimeError(f"{self.provider} reasoning request failed: {e}") from e
+        else:
+            client = self._get_effort_client()
+            config = self._effort_generation_config(prompt)
+            try:
+                response = await client.aio.models.generate_content(
+                    model=self.model,
+                    contents=prompt,
+                    config=config,
+                )
+            except Exception as e:
+                raise RuntimeError(f"{self.provider} reasoning request failed: {e}") from e
 
         if response is None:
             return self._empty_response()
@@ -93,17 +142,29 @@ class GoogleThinking(BaseReasoningProvider):
         )
 
     async def stream(self, prompt: str) -> AsyncGenerator[ReasoningStreamChunk, None]:
-        model = self._get_model()
-        kwargs: dict[str, Any] = {"stream": True}
-        generation_config = self._generation_config()
-        if generation_config is not None:
-            kwargs["generation_config"] = generation_config
-        kwargs["request_options"] = {"timeout": 30.0}
+        if getattr(self, "effort", None) is None:
+            model = self._get_model()
+            kwargs: dict[str, Any] = {"stream": True}
+            generation_config = self._generation_config()
+            if generation_config is not None:
+                kwargs["generation_config"] = generation_config
+            kwargs["request_options"] = {"timeout": 30.0}
 
-        try:
-            stream = await model.generate_content_async(prompt, **kwargs)
-        except Exception as e:
-            raise RuntimeError(f"{self.provider} reasoning request failed: {e}") from e
+            try:
+                stream = await model.generate_content_async(prompt, **kwargs)
+            except Exception as e:
+                raise RuntimeError(f"{self.provider} reasoning request failed: {e}") from e
+        else:
+            client = self._get_effort_client()
+            config = self._effort_generation_config(prompt)
+            try:
+                stream = await client.aio.models.generate_content_stream(
+                    model=self.model,
+                    contents=prompt,
+                    config=config,
+                )
+            except Exception as e:
+                raise RuntimeError(f"{self.provider} reasoning request failed: {e}") from e
 
         if stream is None:
             return

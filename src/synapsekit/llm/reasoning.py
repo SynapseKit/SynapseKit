@@ -8,6 +8,13 @@ from typing import Any
 
 from ..observability.tracer import COST_TABLE
 from .base import BaseLLM, LLMConfig, _messages_to_prompt
+from .effort import (
+    EffortClassifier,
+    EffortInput,
+    EffortLevel,
+    normalize_effort,
+    resolve_effort,
+)
 from .utils import extract_reasoning_tokens, extract_text
 
 
@@ -50,12 +57,28 @@ class BaseReasoningProvider(ABC):
         budget_tokens: int | None = None,
         thinking: bool = True,
         provider: str | None = None,
+        effort: EffortInput | None = None,
+        effort_classifier: EffortClassifier | None = None,
     ) -> None:
+        normalized_effort = normalize_effort(effort)
+        if budget_tokens is not None and normalized_effort is not None:
+            raise ValueError("budget_tokens and effort cannot be used together")
+        if normalized_effort is not None and not thinking:
+            raise ValueError("effort cannot be used when thinking is disabled")
         self.model = model
         self.api_key = api_key
         self.budget_tokens = budget_tokens
         self.thinking = thinking
         self.provider = provider or "unknown"
+        self.effort = normalized_effort
+        self.effort_classifier = effort_classifier
+
+    def _effort_for_prompt(self, prompt: str) -> EffortLevel | None:
+        return resolve_effort(
+            getattr(self, "effort", None),
+            prompt,
+            getattr(self, "effort_classifier", None),
+        )
 
     @abstractmethod
     async def generate(self, prompt: str) -> ReasoningResponse:
@@ -84,8 +107,19 @@ class ReasoningLLM(BaseLLM):
         api_key: str | None = None,
         budget_tokens: int | None = None,
         thinking: bool = True,
+        effort: EffortInput | None = None,
+        effort_classifier: EffortClassifier | None = None,
     ) -> None:
+        normalized_effort = normalize_effort(effort)
+        if budget_tokens is not None and normalized_effort is not None:
+            raise ValueError("budget_tokens and effort cannot be used together")
+        if normalized_effort is not None and not thinking:
+            raise ValueError("effort cannot be used when thinking is disabled")
         provider = self._detect_provider(model)
+        if normalized_effort is not None and provider not in {"openai", "anthropic", "google"}:
+            raise ValueError(
+                "ReasoningLLM supports effort routing only for OpenAI, Anthropic, and Google."
+            )
         config = LLMConfig(
             model=model,
             api_key=api_key or "",
@@ -97,12 +131,16 @@ class ReasoningLLM(BaseLLM):
         self.provider = provider
         self.budget_tokens = budget_tokens
         self.thinking = thinking
+        self.effort = normalized_effort
+        self.effort_classifier = effort_classifier
         self._provider = self._build_provider(
             provider=provider,
             model=model,
             api_key=api_key,
             budget_tokens=budget_tokens,
             thinking=thinking,
+            effort=normalized_effort,
+            effort_classifier=effort_classifier,
         )
         self.last_response: ReasoningResponse | None = None
         self.last_usage: ReasoningUsage | None = None
@@ -129,6 +167,8 @@ class ReasoningLLM(BaseLLM):
         api_key: str | None,
         budget_tokens: int | None,
         thinking: bool,
+        effort: EffortInput | None,
+        effort_classifier: EffortClassifier | None,
     ) -> BaseReasoningProvider:
         if provider == "openai":
             from .providers.openai_reasoning import OpenAIReasoning
@@ -138,6 +178,8 @@ class ReasoningLLM(BaseLLM):
                 api_key=api_key,
                 budget_tokens=budget_tokens,
                 thinking=thinking,
+                effort=effort,
+                effort_classifier=effort_classifier,
             )
         if provider == "anthropic":
             from .providers.anthropic_thinking import AnthropicThinking
@@ -147,6 +189,8 @@ class ReasoningLLM(BaseLLM):
                 api_key=api_key,
                 budget_tokens=budget_tokens,
                 thinking=thinking,
+                effort=effort,
+                effort_classifier=effort_classifier,
             )
         if provider == "google":
             from .providers.google_thinking import GoogleThinking
@@ -156,6 +200,8 @@ class ReasoningLLM(BaseLLM):
                 api_key=api_key,
                 budget_tokens=budget_tokens,
                 thinking=thinking,
+                effort=effort,
+                effort_classifier=effort_classifier,
             )
         if provider in {"deepseek", "qwen"}:
             from .providers.deepseek_r1 import DeepSeekR1Reasoning
@@ -255,7 +301,17 @@ class ReasoningLLM(BaseLLM):
             f"ReasoningLLM does not support native function calling for provider '{self.provider}'."
         )
 
-    def _openai_reasoning_effort(self) -> str:
+    def _effort_for_prompt(self, prompt: str) -> EffortLevel | None:
+        return resolve_effort(
+            getattr(self, "effort", None),
+            prompt,
+            getattr(self, "effort_classifier", None),
+        )
+
+    def _openai_reasoning_effort(self, prompt: str = "") -> str:
+        effort = self._effort_for_prompt(prompt)
+        if effort is not None:
+            return effort.value
         if not self.thinking:
             return "low"
         if self.budget_tokens is None:
@@ -288,7 +344,7 @@ class ReasoningLLM(BaseLLM):
             messages=messages,
             tools=tools,
             tool_choice="auto",
-            reasoning_effort=self._openai_reasoning_effort(),
+            reasoning_effort=self._openai_reasoning_effort(_messages_to_prompt(messages)),
             timeout=30.0,
         )
         msg = response.choices[0].message
@@ -386,9 +442,17 @@ class ReasoningLLM(BaseLLM):
             "tools": anthropic_tools,
             "max_tokens": self.config.max_tokens,
         }
-        thinking_payload = self._anthropic_thinking_payload()
+        prompt = _messages_to_prompt(messages)
+        effort = self._effort_for_prompt(prompt)
+        thinking_payload = (
+            {"type": "adaptive"}
+            if effort is not None and self.thinking
+            else self._anthropic_thinking_payload()
+        )
         if thinking_payload is not None:
             kwargs["thinking"] = thinking_payload
+        if effort is not None:
+            kwargs["output_config"] = {"effort": effort.value}
 
         response = await client.messages.create(**kwargs)
 

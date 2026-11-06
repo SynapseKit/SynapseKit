@@ -36,6 +36,14 @@ jobs:
       - run: uv sync --group dev --python ${{ matrix.python-version }}
       - run: uv run --python ${{ matrix.python-version }} pytest tests/ -v
 
+  ag-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --locked --group dev --extra ag-ui
+      - run: uv run --locked --group dev --extra ag-ui pytest tests/live/test_agui.py tests/live/test_live.py -q
+
   deptry:
     runs-on: ubuntu-latest
     steps:

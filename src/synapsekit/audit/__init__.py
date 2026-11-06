@@ -33,6 +33,7 @@ from .compliance import (
 from .merkle import MerkleHasher, MerkleProof
 from .metrics import AuditMetrics
 from .otel import OTelAuditExporter, record_to_span_dict
+from .provenance import build_provenance, source_id_hash
 from .redact import (
     DEFAULT_DETECTORS,
     CreditCardDetector,
@@ -99,6 +100,9 @@ __all__ = [
     "DeterministicSerializer",
     "canonical_json",
     "hash_value",
+    # provenance
+    "build_provenance",
+    "source_id_hash",
     # trace
     "AuditTracer",
     "ChainIntegrityError",

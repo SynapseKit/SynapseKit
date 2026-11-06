@@ -6,8 +6,16 @@ import base64
 import json
 from pathlib import Path
 
-from synapsekit.audit import SigningPolicy, export_audit_bundle
-from synapsekit.audit.verifier import verify
+from synapsekit.audit import AuditTracer, EventKind, SigningPolicy, export_audit_bundle
+from synapsekit.audit.provenance import source_id_hash
+from synapsekit.audit.serializer import hash_value
+from synapsekit.audit.types import Verdict
+from synapsekit.audit.verifier import (
+    LoadedBundle,
+    _verify_optional_provenance,
+    _verify_provenance_graph,
+    verify,
+)
 
 from .conftest import (
     dump_trace_lines,
@@ -260,3 +268,151 @@ class TestKeyRotation:
 
         result = verify(out)
         assert not result.ok
+
+
+class TestProvenanceBundle:
+    def test_signed_bundle_contains_hashed_provenance_json(self, tmp_path, sample_records):
+        policy = SigningPolicy.ed25519()
+        path = export_audit_bundle(sample_records, policy, tmp_path / "provenance.zip")
+        entries = read_zip_entries(path)
+        manifest = json.loads(entries["manifest.json"])
+        provenance = json.loads(entries["provenance.json"])
+
+        assert manifest["provenance_hash"] == hash_value(provenance)
+        assert provenance["activity"]
+        assert verify(
+            path, trusted_keys={policy.provider.key_id: policy.provider.public_key_bytes()}
+        ).ok
+
+    def test_tampering_with_provenance_json_is_detected(self, tmp_path, sample_records):
+        policy = SigningPolicy.ed25519()
+        path = export_audit_bundle(sample_records, policy, tmp_path / "signed.zip")
+        entries = read_zip_entries(path)
+        provenance = json.loads(entries["provenance.json"])
+        first_activity = next(iter(provenance["activity"].values()))
+        first_activity["sk:kind"] = "TAMPERED"
+        entries["provenance.json"] = json.dumps(provenance).encode("utf-8")
+        tampered = tmp_path / "tampered_provenance.zip"
+        write_zip_entries(tampered, entries)
+
+        result = verify(
+            tampered,
+            trusted_keys={policy.provider.key_id: policy.provider.public_key_bytes()},
+        )
+
+        assert result.verdict == Verdict.DRIFT
+        assert any("provenance" in error.lower() for error in result.errors)
+
+    def test_bundle_without_optional_provenance_remains_verifiable(self, tmp_path, sample_records):
+        policy = SigningPolicy.ed25519()
+        path = export_audit_bundle(
+            sample_records,
+            policy,
+            tmp_path / "legacy-shape.zip",
+            include_provenance=False,
+        )
+        entries = read_zip_entries(path)
+        manifest = json.loads(entries["manifest.json"])
+
+        assert "provenance.json" not in entries
+        assert "provenance_hash" not in manifest
+        assert verify(
+            path, trusted_keys={policy.provider.key_id: policy.provider.public_key_bytes()}
+        ).ok
+
+    def test_answer_cited_sources_match_signed_provenance_lineage(self, tmp_path):
+        policy = SigningPolicy.ed25519()
+        tracer = AuditTracer(run_id="rag-citations")
+        tracer.record(
+            EventKind.RETRIEVAL,
+            {
+                "output": [
+                    {
+                        "text": "private retrieved text",
+                        "metadata": {"source_id": "document-17"},
+                    }
+                ]
+            },
+            actor="retriever",
+            event_id="retrieval-event",
+        )
+        llm_call = tracer.record(
+            EventKind.LLM_CALL,
+            {
+                "args": [[{"role": "user", "content": "private question"}]],
+                "trusted_source_ids": ["document-17"],
+            },
+            actor="llm",
+            event_id="answer-call",
+        )
+        tracer.record(
+            EventKind.LLM_RESPONSE,
+            {
+                "output": {
+                    "content": "Answer supported by [document-17]",
+                    "citation_ids": ["document-17"],
+                }
+            },
+            actor="llm",
+            parent_id=llm_call.event_id,
+            event_id="answer-event",
+        )
+        path = export_audit_bundle(tracer.records, policy, tmp_path / "cited.audit.zip")
+        entries = read_zip_entries(path)
+        provenance = json.loads(entries["provenance.json"])
+
+        source_entity = next(
+            entity_id
+            for entity_id, entity in provenance["entity"].items()
+            if entity.get("sk:sourceIdHash") == source_id_hash("document-17")
+        )
+        answer_entity = next(
+            entity_id
+            for entity_id, entity in provenance["entity"].items()
+            if entity.get("sk:eventIdHash") == source_id_hash("answer-event")
+        )
+        assert any(
+            relation["prov:generatedEntity"] == answer_entity
+            and relation["prov:usedEntity"] == source_entity
+            for relation in provenance["wasDerivedFrom"].values()
+        )
+        assert verify(
+            path,
+            trusted_keys={policy.provider.key_id: policy.provider.public_key_bytes()},
+        ).ok
+
+    def test_graph_validation_rejects_unqualified_prov_ids(self, sample_records):
+        from synapsekit.audit import build_provenance
+
+        provenance = build_provenance(sample_records)
+        provenance["entity"]["not-qualified"] = {}
+
+        findings = _verify_provenance_graph(provenance)
+
+        assert findings
+        assert any("qualified" in error.lower() for _verdict, error in findings)
+
+    def test_graph_validation_rejects_dangling_relation_endpoints(self, sample_records):
+        from synapsekit.audit import build_provenance
+
+        provenance = build_provenance(sample_records)
+        provenance["used"]["sk:broken-use"] = {
+            "prov:activity": "sk:missing-activity",
+            "prov:entity": "sk:missing-entity",
+        }
+
+        findings = _verify_provenance_graph(provenance)
+
+        assert any("dangling" in error.lower() for _verdict, error in findings)
+
+    def test_null_provenance_hash_without_entry_is_not_treated_as_legacy(self):
+        loaded = LoadedBundle(
+            manifest={"provenance_hash": None},
+            records=[],
+            hashes_doc={},
+            signatures_doc=[],
+        )
+
+        findings = _verify_optional_provenance(loaded)
+
+        assert findings

@@ -4,7 +4,16 @@ import asyncio
 
 import pytest
 
-from synapsekit.evaluation import EvalSuite, eval_case
+from synapsekit.evaluation import EvalSuite, ToolCall, eval_case, match_trajectory
+
+
+@eval_case(min_score=1.0)
+def _trajectory_case(prompt: str = ""):
+    result = match_trajectory(
+        [ToolCall("search", {"query": "alpha"})],
+        [ToolCall("search", {"query": prompt})],
+    )
+    return {"score": 1.0 if result.matched else 0.0}
 
 
 @eval_case(min_score=0.8)
@@ -21,6 +30,26 @@ def test_eval_suite_scores_prompt_cases():
     assert result.score == pytest.approx(0.9)
     assert result.cost_usd == pytest.approx(0.01)
     assert result.n_cases == 1
+
+
+def test_eval_case_can_use_trajectory_matching_without_a_provider():
+    suite = EvalSuite.from_cases([("trajectory_case", _trajectory_case)], threshold=1.0)
+
+    result = asyncio.run(suite.score_prompt("alpha"))
+
+    assert result.passed is True
+    assert result.score == pytest.approx(1.0)
+    assert result.n_cases == 1
+
+
+def test_eval_suite_fails_when_trajectory_differs_from_expected():
+    suite = EvalSuite.from_cases([("trajectory_case", _trajectory_case)], threshold=1.0)
+
+    result = asyncio.run(suite.score_prompt("beta"))
+
+    assert result.passed is False
+    assert result.score == pytest.approx(0.0)
+    assert result.case_scores == [0.0]
 
 
 def test_eval_suite_fails_threshold():

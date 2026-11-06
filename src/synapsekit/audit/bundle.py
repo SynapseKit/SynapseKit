@@ -4,10 +4,11 @@ Bundle format (open specification — see :mod:`synapsekit.audit.verifier`
 for a reader that only needs stdlib + ``cryptography``, not SynapseKit):
 
     bundle.zip
-    ├── manifest.json     schema_version, run metadata, key registry, signed
-    ├── trace.jsonl       one canonical-JSON AuditRecord per line, in order
-    ├── hashes.merkle     JSON: per-batch leaf hash lists + computed roots
-    └── signatures.json   JSON list of Signature dicts (one per batch)
+    |-- manifest.json     schema_version, run metadata, key registry, signed
+    |-- trace.jsonl       one canonical-JSON AuditRecord per line, in order
+    |-- hashes.merkle     JSON: per-batch leaf hash lists + computed roots
+    |-- signatures.json   JSON list of Signature dicts (one per batch)
+    `-- provenance.json   optional W3C PROV-JSON activity/entity graph
 
 A "batch" is a contiguous slice of ``trace.jsonl`` whose leaf hashes were
 combined into one Merkle root and signed once — see
@@ -15,10 +16,11 @@ combined into one Merkle root and signed once — see
 by a different key) support key rotation within a single bundle.
 
 ``manifest.json``'s own metadata (record_count, run_ids, created_at, the
-key registry) is itself hashed and signed by every key used in the
-export (``manifest_hash`` / ``manifest_signatures``) — a batch signature
-only covers its Merkle root, so without this, an attacker could alter
-manifest metadata freely without invalidating anything.
+key registry, and the optional ``provenance_hash``) is itself hashed and
+signed by every key used in the export (``manifest_hash`` /
+``manifest_signatures``) — a batch signature only covers its Merkle root,
+so without this, an attacker could alter manifest metadata freely without
+invalidating anything.
 
 Zip entries use a fixed timestamp so that exporting the same records
 twice produces byte-identical archives (aside from the inherently
@@ -36,6 +38,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from .merkle import MerkleHasher, hash_leaf
+from .provenance import build_provenance
 from .serializer import hash_value
 from .signer import SigningPolicy
 from .types import SCHEMA_VERSION, AuditRecord, Signature
@@ -99,6 +102,7 @@ def export_audit_bundle(
     *,
     batch_size: int | None = None,
     metrics: AuditMetrics | None = None,
+    include_provenance: bool = True,
 ) -> Path:
     """Export ``records`` as a signed, portable audit bundle.
 
@@ -110,6 +114,10 @@ def export_audit_bundle(
     - ``export_audit_bundle([], [(batch1, policy_a), (batch2, policy_b)],
       path)`` — pass pre-split ``(records, policy)`` batches explicitly,
       e.g. to simulate/exercise key rotation across a single export.
+
+    By default, a privacy-preserving PROV-JSON graph is included as
+    ``provenance.json`` and its digest is covered by the signed manifest.
+    Set ``include_provenance=False`` to omit this optional entry.
     """
     from .metrics import default_metrics
 
@@ -163,6 +171,9 @@ def export_audit_bundle(
             "run_ids": run_ids,
             "keys": keys,
         }
+        provenance_doc = build_provenance(all_records) if include_provenance else None
+        if provenance_doc is not None:
+            manifest["provenance_hash"] = hash_value(provenance_doc)
         _sign_manifest(manifest, manifest_policies)
 
         hashes_doc = {
@@ -192,6 +203,12 @@ def export_audit_bundle(
             _write_zip_entry(
                 zf, "signatures.json", json.dumps(signatures_doc, indent=2, sort_keys=True)
             )
+            if provenance_doc is not None:
+                _write_zip_entry(
+                    zf,
+                    "provenance.json",
+                    json.dumps(provenance_doc, indent=2, sort_keys=True),
+                )
             _write_zip_entry(zf, "manifest.json", json.dumps(manifest, indent=2, sort_keys=True))
     except Exception:
         m.record_bundle_export(ok=False)

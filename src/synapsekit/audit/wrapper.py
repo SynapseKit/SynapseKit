@@ -23,12 +23,17 @@ Because this is an external proxy, calls the *agent's own methods* make
 directly on ``self`` are, by default, invisible to it — there is no
 source to change, but also nothing to intercept there. Pass
 ``instrument_attrs=["llm", "retriever", ...]`` to close that gap for
-agents composed of named sub-components: each listed attribute's public
-methods are monkey-patched *in place* on the live object (not just on
-the outer proxy), so the agent's own internal ``self.llm.generate(...)``
-calls are captured too, without touching the agent's source. This still
+agents composed of named sub-components: each listed direct or dotted
+attribute path's public methods are monkey-patched *in place* on the live
+object (not just on the outer proxy), so internal calls are captured too.
+Mapping/sequence leaves instrument their contained objects, which supports
+paths such as ``"config.retriever"`` and ``"_registry._tools"``. This still
 can't help fully inlined logic with no delegated sub-object — for that,
 construct with already-:func:`audited` tools/LLM calls instead.
+
+With nested instrumentation enabled, children of a single-record proxy call
+retain the prior parent context: that call's own record is appended only when
+it returns, so using it as a parent would create a forward reference.
 """
 
 from __future__ import annotations
@@ -40,6 +45,7 @@ import uuid
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
+from .._audit_context import SourceAwareMessages
 from .compliance import (
     COMPLIANCE_MODES,
     PAYLOAD_KEY,
@@ -96,6 +102,8 @@ def infer_kind_pair(method_name: str) -> tuple[EventKind, EventKind | None]:
     # false positives inside longer method names (e.g. "call" inside
     # "recall_memory", "step" inside "decide_next_step").
     name = method_name.lower()
+    if name in {"call_with_tools", "generate_with_messages", "stream_with_messages"}:
+        return EventKind.LLM_CALL, EventKind.LLM_RESPONSE
     for kind, keywords in _SINGLE_KIND_KEYWORDS:
         if any(kw in name for kw in keywords):
             return kind, None
@@ -231,6 +239,7 @@ class VerifiableAgent:
         object.__setattr__(self, "_redactor", redactor)
         object.__setattr__(self, "_actor", actor or f"agent:{type(agent).__name__}")
         object.__setattr__(self, "_kind_overrides", kind_overrides or {})
+        object.__setattr__(self, "_instrument_attrs_enabled", bool(instrument_attrs))
         object.__setattr__(self, "_compliance", compliance)
         object.__setattr__(self, "_compliance_retention", retention)
         object.__setattr__(self, "_compliance_profile", profile)
@@ -303,19 +312,38 @@ class VerifiableAgent:
         return self._instrument(name, attr, call_kind, result_kind)
 
     def _instrument_attr_in_place(self, attr_name: str) -> None:
-        """Monkey-patch a named sub-attribute's methods on the *live* agent object.
+        """Instrument a direct/dotted object path or its mapping values."""
+        target: Any = self._agent
+        for part in attr_name.split("."):
+            if isinstance(target, Mapping):
+                target = target.get(part)
+            elif isinstance(target, Sequence) and not isinstance(target, str | bytes):
+                try:
+                    target = target[int(part)]
+                except (ValueError, IndexError):
+                    target = None
+            else:
+                target = getattr(target, part, None)
+            if target is None:
+                return
+        self._instrument_target(target)
 
-        Unlike the outer proxy (which only sees calls made through it),
-        this rewrites ``self._agent.<attr_name>``'s own methods so the
-        agent's *internal* code — e.g. ``self.llm.generate(...)`` called
-        from within its own ``run()`` — routes through the tracer too.
-        Best-effort: attributes that don't support instance-level
-        attribute assignment (slots, builtins, immutable types) are left
-        alone rather than raising.
-        """
-        target = getattr(self._agent, attr_name, None)
+    def _instrument_target(self, target: Any, *, component_name: str | None = None) -> None:
+        """Patch public methods on nested objects, not on registry containers."""
+        if isinstance(target, Mapping):
+            for key, value in target.items():
+                self._instrument_target(value, component_name=str(key))
+            return
+        if isinstance(target, Sequence) and not isinstance(target, str | bytes):
+            for index, value in enumerate(target):
+                self._instrument_target(value, component_name=str(index))
+            return
         if target is None:
             return
+
+        target_name = getattr(target, "name", None)
+        if isinstance(target_name, str) and target_name:
+            component_name = target_name
         for method_name in dir(target):
             if method_name.startswith("_"):
                 continue
@@ -323,18 +351,58 @@ class VerifiableAgent:
             if not callable(method):
                 continue
             call_kind, result_kind = self._kinds_for(method_name)
-            instrumented = self._instrument(method_name, method, call_kind, result_kind)
+            instrumented = self._instrument(
+                method_name,
+                method,
+                call_kind,
+                result_kind,
+                component_name=component_name,
+            )
             try:
                 object.__setattr__(target, method_name, instrumented)
             except (AttributeError, TypeError):
                 continue
 
-    def _base_payload(self, name: str, args: tuple, kwargs: dict) -> dict[str, Any]:
-        return {
+    def _base_payload(
+        self,
+        name: str,
+        args: tuple,
+        kwargs: dict,
+        *,
+        component_name: str | None = None,
+        call_kind: EventKind,
+    ) -> dict[str, Any]:
+        payload = {
             "method": name,
             "args": _safe_value(list(args)),
             "kwargs": _safe_value(kwargs),
         }
+        if call_kind == EventKind.LLM_CALL:
+            messages = next(
+                (argument for argument in args if isinstance(argument, SourceAwareMessages)),
+                None,
+            )
+            if messages is None:
+                keyword_messages = kwargs.get("messages")
+                if isinstance(keyword_messages, SourceAwareMessages):
+                    messages = keyword_messages
+            if messages is not None and messages._trusted_source_ids:
+                payload["trusted_source_ids"] = list(messages._trusted_source_ids)
+            if messages is not None and messages._trusted_citation_ids:
+                payload["trusted_citation_ids"] = dict(messages._trusted_citation_ids)
+            if messages is not None and messages._unresolvable_citation_ids:
+                payload["unresolvable_citation_ids"] = list(messages._unresolvable_citation_ids)
+        if component_name is not None:
+            payload["component"] = component_name
+        return payload
+
+    def _nested_event_context(
+        self, call_event_id: str, parent_id: str | None, *, paired: bool
+    ) -> str | None:
+        """Avoid forward parent references when nested components are instrumented."""
+        if self._instrument_attrs_enabled and not paired:
+            return parent_id
+        return call_event_id
 
     def _finalize(self, payload: dict[str, Any], kind: EventKind | str) -> dict[str, Any]:
         # Redaction must cover the full payload — including output/error,
@@ -368,6 +436,10 @@ class VerifiableAgent:
         call_event_id: str,
         is_error: bool,
     ) -> None:
+        if call_kind == EventKind.LLM_CALL:
+            payload.pop("trusted_source_ids", None)
+            payload.pop("trusted_citation_ids", None)
+            payload.pop("unresolvable_citation_ids", None)
         if is_error:
             kind = EventKind.ERROR
         elif paired:
@@ -391,7 +463,13 @@ class VerifiableAgent:
             )
 
     def _instrument(
-        self, name: str, fn: Callable[..., Any], call_kind: EventKind, result_kind: EventKind | None
+        self,
+        name: str,
+        fn: Callable[..., Any],
+        call_kind: EventKind,
+        result_kind: EventKind | None,
+        *,
+        component_name: str | None = None,
     ) -> Callable[..., Any]:
         paired = result_kind is not None
 
@@ -407,7 +485,13 @@ class VerifiableAgent:
                 # raised mid-stream would never be recorded at all.
                 parent_id = _current_event_id.get()
                 call_event_id = uuid.uuid4().hex
-                base_payload = self._base_payload(name, args, kwargs)
+                base_payload = self._base_payload(
+                    name,
+                    args,
+                    kwargs,
+                    component_name=component_name,
+                    call_kind=call_kind,
+                )
                 if paired:
                     self._record_call(call_kind, dict(base_payload), parent_id, call_event_id)
                 chunks: list[Any] = []
@@ -421,7 +505,9 @@ class VerifiableAgent:
                         # bare `async for … yield` implies (the resume may
                         # land in a different Context), so we set/reset
                         # around each __anext__ only.
-                        token = _current_event_id.set(call_event_id)
+                        token = _current_event_id.set(
+                            self._nested_event_context(call_event_id, parent_id, paired=paired)
+                        )
                         try:
                             item = await inner.__anext__()
                         except StopAsyncIteration:
@@ -479,10 +565,18 @@ class VerifiableAgent:
             async def async_wrapped(*args: Any, **kwargs: Any) -> Any:
                 parent_id = _current_event_id.get()
                 call_event_id = uuid.uuid4().hex
-                base_payload = self._base_payload(name, args, kwargs)
+                base_payload = self._base_payload(
+                    name,
+                    args,
+                    kwargs,
+                    component_name=component_name,
+                    call_kind=call_kind,
+                )
                 if paired:
                     self._record_call(call_kind, dict(base_payload), parent_id, call_event_id)
-                token = _current_event_id.set(call_event_id)
+                token = _current_event_id.set(
+                    self._nested_event_context(call_event_id, parent_id, paired=paired)
+                )
                 try:
                     result = await fn(*args, **kwargs)
                     payload = {**base_payload, "output": _safe_value(result), "status": "ok"}
@@ -522,10 +616,18 @@ class VerifiableAgent:
         def sync_wrapped(*args: Any, **kwargs: Any) -> Any:
             parent_id = _current_event_id.get()
             call_event_id = uuid.uuid4().hex
-            base_payload = self._base_payload(name, args, kwargs)
+            base_payload = self._base_payload(
+                name,
+                args,
+                kwargs,
+                component_name=component_name,
+                call_kind=call_kind,
+            )
             if paired:
                 self._record_call(call_kind, dict(base_payload), parent_id, call_event_id)
-            token = _current_event_id.set(call_event_id)
+            token = _current_event_id.set(
+                self._nested_event_context(call_event_id, parent_id, paired=paired)
+            )
             try:
                 result = fn(*args, **kwargs)
                 payload = {**base_payload, "output": _safe_value(result), "status": "ok"}

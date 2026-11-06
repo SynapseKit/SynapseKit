@@ -1,0 +1,31 @@
+{
+  "description": "Offline prompt set for effort-budget proxy evaluation; no provider calls.",
+  "baseline_effort": "high",
+  "output_cost_usd_per_1000_budget_tokens": 0.01,
+  "cases": [
+    {
+      "id": "simple-arithmetic",
+      "prompt": "What is 2 + 2?"
+    },
+    {
+      "id": "short-definition",
+      "prompt": "Define a hash table in one sentence."
+    },
+    {
+      "id": "index-explanation",
+      "prompt": "Explain how a database index speeds up a query, and give a brief example using a customer table."
+    },
+    {
+      "id": "queue-summary",
+      "prompt": "Summarize the purpose of a message queue and list two common use cases in short bullet points."
+    },
+    {
+      "id": "graph-traversal-comparison",
+      "prompt": "Compare breadth-first and depth-first traversal for a cyclic graph, derive their time and space complexity, and recommend one for finding shortest paths."
+    },
+    {
+      "id": "concurrency-debugging",
+      "prompt": "Debug this concurrency scenario: identify the race condition, explain its cause, and propose a test that would reliably reproduce it."
+    }
+  ]
+}

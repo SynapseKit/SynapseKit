@@ -33,8 +33,11 @@ class EventBus:
     def __init__(self, history: int = _HISTORY_MAX) -> None:
         self._lock = threading.Lock()
         self._subscribers: set[queue.Queue[dict[str, Any]]] = set()
+        self._delivery_locks: dict[queue.Queue[dict[str, Any]], threading.Lock] = {}
+        self._last_delivered: dict[queue.Queue[dict[str, Any]], int] = {}
         self._history: deque[dict[str, Any]] = deque(maxlen=history)
         self._seq = 0
+        self._generation = 0
         # Live is off by default; the server flips this on when it starts.
         self.enabled = False
 
@@ -45,13 +48,29 @@ class EventBus:
             return
         with self._lock:
             self._seq += 1
-            enriched = {"seq": self._seq, "ts": time.time(), **event}
+            sequence = self._seq
+            generation = self._generation
+            enriched = {**event, "seq": sequence, "ts": time.time()}
             self._history.append(enriched)
-            subscribers = tuple(self._subscribers)
-        for q in subscribers:
-            # Drop on backpressure — telemetry must never stall the agent.
-            with contextlib.suppress(queue.Full):
-                q.put_nowait(enriched)
+            subscribers = tuple((q, self._delivery_locks[q]) for q in self._subscribers)
+
+        # Fan-out is outside the bus lock. Contention drops this subscriber's
+        # event rather than stalling a producer; the sequence gap is observable.
+        for q, delivery_lock in subscribers:
+            if not delivery_lock.acquire(blocking=False):
+                continue
+            try:
+                with self._lock:
+                    if generation != self._generation or q not in self._subscribers:
+                        continue
+                    if sequence <= self._last_delivered[q]:
+                        continue
+                    self._last_delivered[q] = sequence
+                # Queue.Full is also a per-subscriber drop, never producer backpressure.
+                with contextlib.suppress(queue.Full):
+                    q.put_nowait(enriched)
+            finally:
+                delivery_lock.release()
 
     # -- consumer side ----------------------------------------------------
     def subscribe(self) -> queue.Queue[dict[str, Any]]:
@@ -64,11 +83,15 @@ class EventBus:
                 except queue.Full:
                     break
             self._subscribers.add(q)
+            self._delivery_locks[q] = threading.Lock()
+            self._last_delivered[q] = self._seq
         return q
 
     def unsubscribe(self, q: queue.Queue[dict[str, Any]]) -> None:
         with self._lock:
             self._subscribers.discard(q)
+            self._delivery_locks.pop(q, None)
+            self._last_delivered.pop(q, None)
 
     @property
     def subscriber_count(self) -> int:
@@ -80,9 +103,18 @@ class EventBus:
             return list(self._history)
 
     def clear(self) -> None:
+        """Clear replay history while preserving queued events for active clients.
+
+        A generation bump invalidates fan-out that has not started yet. Events
+        already queued (or currently being delivered) remain in subscriber
+        queues. Sequence numbers stay monotonic while subscribers are active;
+        without subscribers, clearing starts the next run at sequence 1.
+        """
         with self._lock:
             self._history.clear()
-            self._seq = 0
+            self._generation += 1
+            if not self._subscribers:
+                self._seq = 0
 
 
 # Process-wide singleton every SynapseKit component publishes to.
