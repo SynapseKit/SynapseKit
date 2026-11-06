@@ -355,6 +355,8 @@ def _build_provenance_records(records: Sequence[AuditRecord]) -> dict[str, Any]:
     for generated_entities, used_entity_ids in generated_by_record:
         for generated_entity in generated_entities:
             for used_entity in used_entity_ids:
+                if generated_entity == used_entity:
+                    continue
                 derivation_id = _relation_id("derivation", generated_entity, used_entity)
                 document["wasDerivedFrom"].setdefault(
                     derivation_id,

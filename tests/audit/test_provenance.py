@@ -298,6 +298,27 @@ def test_output_reference_is_the_same_entity_when_consumed_as_input():
     )
 
 
+def test_reference_that_is_both_input_and_output_does_not_self_derive():
+    # Regression: when a single record names the same reference as both its
+    # input and its output, the reference resolves to one entity for both
+    # roles. The derivation pass must not emit a wasDerivedFrom edge from that
+    # entity to itself (a semantically invalid self-cycle in the PROV graph).
+    tracer = AuditTracer(run_id="self-derivation")
+    _event(
+        tracer,
+        EventKind.TOOL_RESULT,
+        {"input_id": "ref-1", "output_id": "ref-1"},
+        event_id="roundtrip",
+    )
+
+    provenance = build_provenance(tracer.records)
+
+    assert all(
+        relation["prov:generatedEntity"] != relation["prov:usedEntity"]
+        for relation in provenance["wasDerivedFrom"].values()
+    )
+
+
 def test_provenance_ids_and_activity_order_are_stable():
     tracer = AuditTracer(run_id="stable-run")
     first = _event(tracer, EventKind.TOOL_CALL, {}, event_id="first")
