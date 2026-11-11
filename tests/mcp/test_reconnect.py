@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
 import sys
 import types
+import warnings
 from typing import Any
 
 import pytest
@@ -21,28 +23,46 @@ class _Recorder:
 def _install_fake_mcp(monkeypatch: pytest.MonkeyPatch, recorder: _Recorder) -> None:
     counter = {"n": 0}
 
-    class _Transport:
+    class _TaskBound:
+        """A fake anyio-style context manager that is bound to one task.
+
+        The real MCP transports / ``ClientSession`` are built on anyio cancel
+        scopes, so ``__aexit__`` must run on the task that entered them. These
+        fakes reproduce that: exiting on a different task raises, exactly as
+        the SDK does -- which is what #1099 was about.
+        """
+
+        name: str
+
+        async def __aenter__(self) -> Any:
+            self._enter_task = asyncio.current_task()
+            recorder.events.append(f"enter {self.name}")
+            return self._opened()
+
+        async def __aexit__(self, *args: Any) -> None:
+            if asyncio.current_task() is not self._enter_task:
+                raise RuntimeError(
+                    "Attempted to exit cancel scope in a different task than it was entered in"
+                )
+            recorder.events.append(f"exit {self.name}")
+
+        def _opened(self) -> Any:
+            raise NotImplementedError
+
+    class _Transport(_TaskBound):
         def __init__(self, name: str) -> None:
             self.name = name
 
-        async def __aenter__(self) -> tuple[str, str]:
-            recorder.events.append(f"enter {self.name}")
+        def _opened(self) -> tuple[str, str]:
             return ("read", "write")
 
-        async def __aexit__(self, *args: Any) -> None:
-            recorder.events.append(f"exit {self.name}")
-
-    class ClientSession:
+    class ClientSession(_TaskBound):
         def __init__(self, read: str, write: str) -> None:
             counter["n"] += 1
             self.name = f"session{counter['n']}"
 
-        async def __aenter__(self) -> ClientSession:
-            recorder.events.append(f"enter {self.name}")
+        def _opened(self) -> ClientSession:
             return self
-
-        async def __aexit__(self, *args: Any) -> None:
-            recorder.events.append(f"exit {self.name}")
 
         async def initialize(self) -> None:
             return None
@@ -124,3 +144,49 @@ async def test_close_after_reconnect_closes_only_the_live_connection(monkeypatch
     await client.close()
 
     assert recorder.events == ["exit session2", "exit stdio:server-b"]
+
+
+async def test_close_from_a_different_task_still_tears_down(monkeypatch):
+    # The transport/session are entered on MCPClient's own lifecycle task, so
+    # closing from a *different* task than connect must still exit them (and
+    # must not emit the best-effort RuntimeWarning). On the pre-#1099 code the
+    # exit ran on the caller's task and the task-bound fakes would raise.
+    recorder = _Recorder()
+    _install_fake_mcp(monkeypatch, recorder)
+    client = MCPClient()
+
+    await asyncio.create_task(client.connect_stdio("server-a"))
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", RuntimeWarning)
+        await asyncio.create_task(client.close())
+
+    assert recorder.events == [
+        "enter stdio:server-a",
+        "enter session1",
+        "exit session1",
+        "exit stdio:server-a",
+    ]
+
+
+async def test_reconnect_from_a_different_task_closes_the_previous_connection(monkeypatch):
+    # Same as above, but the second connect (not close) runs on a new task and
+    # must tear the first connection down cleanly before opening the new one.
+    recorder = _Recorder()
+    _install_fake_mcp(monkeypatch, recorder)
+    client = MCPClient()
+
+    await asyncio.create_task(client.connect_stdio("server-a"))
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", RuntimeWarning)
+        await asyncio.create_task(client.connect_stdio("server-b"))
+
+    assert recorder.events == [
+        "enter stdio:server-a",
+        "enter session1",
+        "exit session1",
+        "exit stdio:server-a",
+        "enter stdio:server-b",
+        "enter session2",
+    ]
