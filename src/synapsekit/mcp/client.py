@@ -6,7 +6,8 @@ import asyncio
 import copy
 import json
 import warnings
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
+from contextlib import AsyncExitStack, suppress
 from pathlib import Path
 from typing import Any
 
@@ -40,6 +41,85 @@ class MCPToolAdapter(BaseTool):
         return ToolResult(output="", error="Tool not connected to an MCP session.")
 
 
+class _MCPConnection:
+    """Owns the enter/exit of one MCP transport + session on a single task.
+
+    The MCP SDK's ``stdio_client`` / ``sse_client`` transports and
+    ``ClientSession`` are built on anyio cancel scopes, which are bound to the
+    task that entered them -- ``__aexit__`` raises ``RuntimeError`` if it runs
+    on a different task than ``__aenter__``. A reconnect or ``close()`` can
+    easily be driven from a different task than the original ``connect_*``
+    (#1099), which previously left the old subprocess/stream orphaned.
+
+    This runs the whole open/close lifecycle on one dedicated task: ``open``
+    enters the transport and session there and parks the task until
+    ``aclose`` signals it to unwind, so the exit always runs on the entering
+    task regardless of which task starts or stops the connection.
+    """
+
+    def __init__(
+        self,
+        session: Any,
+        close_event: asyncio.Event,
+        done: asyncio.Future[None],
+        task: asyncio.Task[None],
+    ) -> None:
+        self.session = session
+        self._close_event = close_event
+        self._done = done
+        self._task = task
+
+    @classmethod
+    async def open(
+        cls,
+        open_transport: Callable[[], Any],
+        make_session: Callable[[Any, Any], Any],
+    ) -> _MCPConnection:
+        """Enter ``open_transport()`` + a session on a dedicated task."""
+        loop = asyncio.get_running_loop()
+        ready: asyncio.Future[Any] = loop.create_future()
+        done: asyncio.Future[None] = loop.create_future()
+        close_event = asyncio.Event()
+
+        async def _run() -> None:
+            stack = AsyncExitStack()
+            try:
+                read_stream, write_stream = await stack.enter_async_context(open_transport())
+                session = make_session(read_stream, write_stream)
+                await stack.enter_async_context(session)
+                await session.initialize()
+            except BaseException as exc:
+                with suppress(BaseException):  # keep the original failure
+                    await stack.aclose()
+                if not ready.done():
+                    ready.set_exception(exc)
+                if not done.done():
+                    done.set_result(None)
+                return
+
+            ready.set_result(session)
+            await close_event.wait()
+            try:
+                await stack.aclose()
+            except BaseException as exc:
+                done.set_exception(exc)
+            else:
+                done.set_result(None)
+
+        task = loop.create_task(_run())
+        try:
+            session = await ready
+        except BaseException:
+            await done  # the task is already unwinding; wait for it to finish
+            raise
+        return cls(session, close_event, done, task)
+
+    async def aclose(self) -> None:
+        """Signal the owning task to exit the session and transport, and wait."""
+        self._close_event.set()
+        await self._done
+
+
 class MCPClient:
     """Connect to an MCP server and use its tools as SynapseKit tools.
 
@@ -68,8 +148,7 @@ class MCPClient:
             raise TypeError("block_on_drift must be a bool")
 
         self._session: Any = None
-        self._stdio_transport: Any = None
-        self._sse_transport: Any = None
+        self._connection: _MCPConnection | None = None
         self._transition_lock = asyncio.Lock()
 
         self._tools: list[MCPToolAdapter] = []
@@ -107,13 +186,8 @@ class MCPClient:
 
         await self._replace_connection_unlocked()
 
-        self._stdio_transport = stdio_client(params)
-        streams = await self._stdio_transport.__aenter__()
-        read_stream, write_stream = streams
-
-        self._session = ClientSession(read_stream, write_stream)
-        await self._session.__aenter__()
-        await self._session.initialize()
+        self._connection = await _MCPConnection.open(lambda: stdio_client(params), ClientSession)
+        self._session = self._connection.session
 
         return await self._load_tools_unlocked()
 
@@ -134,13 +208,10 @@ class MCPClient:
 
         await self._replace_connection_unlocked()
 
-        self._sse_transport = sse_client(url, headers=headers or {})
-        streams = await self._sse_transport.__aenter__()
-        read_stream, write_stream = streams
-
-        self._session = ClientSession(read_stream, write_stream)
-        await self._session.__aenter__()
-        await self._session.initialize()
+        self._connection = await _MCPConnection.open(
+            lambda: sse_client(url, headers=headers or {}), ClientSession
+        )
+        self._session = self._connection.session
 
         return await self._load_tools_unlocked()
 
@@ -396,18 +467,15 @@ class MCPClient:
         await self._release_connection_unlocked()
 
     async def _release_connection_unlocked(self) -> None:
-        """Exit the current session and transport, and forget them."""
-        session, self._session = self._session, None
-        transports = (self._stdio_transport, self._sse_transport)
-        self._stdio_transport = self._sse_transport = None
+        """Exit the current session and transport, and forget them.
 
-        try:
-            if session:
-                await session.__aexit__(None, None, None)
-        finally:
-            for transport in transports:
-                if transport is not None:
-                    await transport.__aexit__(None, None, None)
+        Teardown runs on the task that opened the connection (see
+        :class:`_MCPConnection`), so it is safe to call from any task.
+        """
+        connection, self._connection = self._connection, None
+        self._session = None
+        if connection is not None:
+            await connection.aclose()
 
     async def _replace_connection_unlocked(self) -> None:
         """Release the connection a new one replaces, so it is not leaked.
