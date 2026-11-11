@@ -767,6 +767,7 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) to get started. Look for issues tagged [
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/MohamedIdhries"><img src="https://avatars.githubusercontent.com/u/186328670?v=4" width="100px;" alt="MohamedIdhries"/><br /><sub><b>MohamedIdhries</b></sub></a><br /><a href="https://github.com/SynapseKit/SynapseKit/commits?author=MohamedIdhries" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/zaher-m"><img src="https://avatars.githubusercontent.com/u/63760610?v=4" width="100px;" alt="Mahmoud Zaher"/><br /><sub><b>Mahmoud Zaher</b></sub></a><br /><a href="https://github.com/SynapseKit/SynapseKit/commits?author=zaher-m" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/ramashishmaurya"><img src="https://avatars.githubusercontent.com/u/156994424?v=4" width="100px;" alt="MAURYA ASHISH"/><br /><sub><b>MAURYA ASHISH</b></sub></a><br /><a href="https://github.com/SynapseKit/SynapseKit/commits?author=ramashishmaurya" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/nazarli-shabnam"><img src="https://avatars.githubusercontent.com/u/193402395?v=4" width="100px;" alt="Shabnam"/><br /><sub><b>Shabnam</b></sub></a><br /><a href="https://github.com/SynapseKit/SynapseKit/commits?author=nazarli-shabnam" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>
