@@ -68,6 +68,8 @@ class MCPClient:
             raise TypeError("block_on_drift must be a bool")
 
         self._session: Any = None
+        self._stdio_transport: Any = None
+        self._sse_transport: Any = None
         self._transition_lock = asyncio.Lock()
 
         self._tools: list[MCPToolAdapter] = []
@@ -103,6 +105,8 @@ class MCPClient:
 
         params = StdioServerParameters(command=command, args=args or [], env=env)
 
+        await self._replace_connection_unlocked()
+
         self._stdio_transport = stdio_client(params)
         streams = await self._stdio_transport.__aenter__()
         read_stream, write_stream = streams
@@ -127,6 +131,8 @@ class MCPClient:
             from mcp.client.sse import sse_client
         except ImportError:
             raise ImportError("mcp package required: pip install mcp") from None
+
+        await self._replace_connection_unlocked()
 
         self._sse_transport = sse_client(url, headers=headers or {})
         streams = await self._sse_transport.__aenter__()
@@ -387,12 +393,35 @@ class MCPClient:
             self._active_tool_generation = None
             self._pending_tool_sources = None
             self._tools = []
-        if self._session:
-            await self._session.__aexit__(None, None, None)
-        if hasattr(self, "_stdio_transport"):
-            await self._stdio_transport.__aexit__(None, None, None)
-        if hasattr(self, "_sse_transport"):
-            await self._sse_transport.__aexit__(None, None, None)
+        await self._release_connection_unlocked()
+
+    async def _release_connection_unlocked(self) -> None:
+        """Exit the current session and transport, and forget them."""
+        session, self._session = self._session, None
+        transports = (self._stdio_transport, self._sse_transport)
+        self._stdio_transport = self._sse_transport = None
+
+        try:
+            if session:
+                await session.__aexit__(None, None, None)
+        finally:
+            for transport in transports:
+                if transport is not None:
+                    await transport.__aexit__(None, None, None)
+
+    async def _replace_connection_unlocked(self) -> None:
+        """Release the connection a new one replaces, so it is not leaked.
+
+        The old connection may already be dead, which must not stop the new one.
+        """
+        try:
+            await self._release_connection_unlocked()
+        except Exception as exc:
+            warnings.warn(
+                f"Failed to close the previous MCP connection: {exc!r}",
+                RuntimeWarning,
+                stacklevel=3,
+            )
 
     async def __aenter__(self) -> MCPClient:
         return self
