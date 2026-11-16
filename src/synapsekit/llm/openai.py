@@ -24,7 +24,10 @@ class OpenAILLM(BaseLLM):
                 raise ImportError(
                     "openai package required: pip install synapsekit[openai]"
                 ) from None
-            self._client = AsyncOpenAI(api_key=self.config.api_key)
+            # BaseLLM owns retries for generate and tool calls; do not multiply
+            # them by the SDK's independent default retries. Direct streams do
+            # not use the BaseLLM retry wrapper.
+            self._client = AsyncOpenAI(api_key=self.config.api_key, max_retries=0)
         return self._client
 
     async def stream(self, prompt: str, **kw) -> AsyncGenerator[str]:

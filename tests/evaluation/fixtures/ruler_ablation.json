@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "task": "Compute 2 + 2. Give the answer and explain it briefly.",
+  "baseline_exact_answer": "4",
+  "trajectories": [
+    {"id": "complete", "answer": "2 + 2 = 4 because two pairs make four.", "gold": 1.0, "canned_judge": 0.9},
+    {"id": "terse", "answer": "4", "gold": 0.7, "canned_judge": 0.6},
+    {"id": "partial", "answer": "Two plus two is an even number.", "gold": 0.3, "canned_judge": 0.4},
+    {"id": "wrong", "answer": "5", "gold": 0.0, "canned_judge": 0.0}
+  ]
+}

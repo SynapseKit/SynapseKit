@@ -1,4 +1,5 @@
 import inspect
+from decimal import Decimal
 
 import pytest
 
@@ -13,6 +14,7 @@ from synapsekit import (
 )
 from synapsekit.agents import AgentFederation, AgentMetadata, InMemoryAgentRegistry, Reputation
 from synapsekit.agents.agent_swarm import CoalitionFormer
+from synapsekit.agents.negotiation import Message, MessageKind, Negotiation, Terms
 
 
 class MarketClient:
@@ -195,6 +197,250 @@ async def test_federation_market_strategy_returns_swarm_result():
     assert isinstance(result, SwarmResult)
     assert result.winners == ["strong"]
     assert result.output["agent_id"] == "strong"
+
+
+def negotiated_session(seller, price, latency="100", availability="99.9", currency="USD"):
+    terms = Terms(
+        Decimal(price), currency, Decimal(latency), Decimal(availability), Decimal("3600")
+    )
+    offer = Message("neg-" + seller, "offer", "buyer", seller, MessageKind.OFFER, terms)
+    session = Negotiation(offer)
+    session.apply(
+        Message(offer.negotiation_id, "accept", seller, "buyer", MessageKind.ACCEPT, terms, "offer")
+    )
+    return session
+
+
+@pytest.mark.parametrize(
+    ("budget", "price", "currency"),
+    [
+        (0.3, "0.3", "USD"),
+        (0.1, "0.1", "EUR"),
+        (0.3, "0.3", "JPY"),
+        (1.7976931348623157e308, "1.7976931348623157e308", "USD"),
+        (5e-324, "5e-324", "USD"),
+        (0.0, "0", "USD"),
+    ],
+)
+async def test_negotiated_price_at_decimal_budget_is_eligible(budget, price, currency):
+    swarm, clients = make_swarm(policy=MarketPolicy(budget_per_task=budget, exploration_rate=0))
+    reservation = Terms(Decimal(price), currency, Decimal("200"), Decimal("99"), Decimal("3600"))
+    result = await swarm.execute(
+        "task",
+        negotiated_agreements={"planner": negotiated_session("planner", price, currency=currency)},
+        negotiation_buyer="buyer",
+        negotiation_requirements=reservation,
+    )
+    assert result.winners == ["planner"]
+    assert result.auction.settlement_cost == float(Decimal(price))
+    assert clients["planner"].calls == ["task"]
+    assert clients["planner"].settlements[0]["bid"].metadata["negotiated_terms"].price == Decimal(
+        price
+    )
+
+
+@pytest.mark.parametrize(
+    ("budget", "price", "currency"),
+    [
+        (0.3, "0.300000000000000001", "USD"),
+        (0.1, "0.100000000000000001", "EUR"),
+        (0.3, "0.300000000000000001", "JPY"),
+        (1.7976931348623157e308, "1.7976931348623158e308", "USD"),
+        (1.7976931348623157e308, "1e10000", "USD"),
+        (5e-324, "1e-10000", "USD"),
+    ],
+)
+async def test_negotiated_price_above_budget_or_unrepresentable_is_excluded(
+    budget, price, currency
+):
+    swarm, clients = make_swarm(policy=MarketPolicy(budget_per_task=budget, exploration_rate=0))
+    reservation = Terms(Decimal(price), currency, Decimal("200"), Decimal("99"), Decimal("3600"))
+    with pytest.raises(LookupError, match="eligible"):
+        await swarm.execute(
+            "task",
+            negotiated_agreements={
+                "planner": negotiated_session("planner", price, currency=currency)
+            },
+            negotiation_buyer="buyer",
+            negotiation_requirements=reservation,
+        )
+    assert all(not client.calls and not client.settlements for client in clients.values())
+
+
+async def test_opt_in_agreements_change_market_routing_and_settlement():
+    swarm, clients = make_swarm()
+    reservation = Terms(Decimal("100"), "USD", Decimal("200"), Decimal("99"), Decimal("3600"))
+    normal = await make_swarm()[0].execute("task")
+    result = await swarm.execute(
+        "task",
+        negotiated_agreements={
+            "researcher": negotiated_session("researcher", "90"),
+            "planner": negotiated_session("planner", "1"),
+            "summarizer": negotiated_session("summarizer", "1", latency="300"),
+        },
+        negotiation_buyer="buyer",
+        negotiation_requirements=reservation,
+    )
+    assert normal.winners == ["researcher"]
+    assert result.winners == ["planner"]
+    assert {bid.agent_id: bid.estimated_cost for bid in result.auction.bids} == {
+        "researcher": 90.0,
+        "planner": 1.0,
+    }
+    assert result.auction.settlement_cost == 1.0
+    assert clients["planner"].settlements[0]["bid"].metadata["negotiated_terms"] == (
+        negotiated_session("planner", "1").agreement
+    )
+
+
+async def test_ordinary_execution_preserves_overridden_auction_signature():
+    class CustomSwarm(AgentSwarm):
+        async def auction(self, task, candidates, *, task_category=None):
+            return await super().auction(task, candidates, task_category=task_category)
+
+    swarm, _ = make_swarm()
+    custom = CustomSwarm(
+        market=swarm.market, registry=swarm.registry, clients=swarm.federation.clients
+    )
+    assert (await custom.execute("task")).winners == ["researcher"]
+
+
+async def test_opt_in_agreements_fail_closed_when_over_budget_or_no_sla_match():
+    swarm, clients = make_swarm()
+    reservation = Terms(Decimal("1000"), "USD", Decimal("200"), Decimal("99"), Decimal("3600"))
+    with pytest.raises(LookupError, match="eligible"):
+        await swarm.execute(
+            "task",
+            negotiated_agreements={
+                "planner": negotiated_session("planner", "101"),
+                "researcher": negotiated_session("researcher", "1", availability="98"),
+            },
+            negotiation_buyer="buyer",
+            negotiation_requirements=reservation,
+        )
+    assert all(not client.calls for client in clients.values())
+
+
+async def test_opt_in_agreements_reject_wrong_parties_and_nonaccepted():
+    swarm, clients = make_swarm()
+    reservation = Terms(Decimal("100"), "USD", Decimal("200"), Decimal("99"), Decimal("3600"))
+    initial = negotiated_session("planner", "1").messages[0]
+    for agreements in (
+        {"planner": Negotiation(initial)},
+        {"researcher": negotiated_session("planner", "1")},
+    ):
+        with pytest.raises(ValueError):
+            await swarm.execute(
+                "task",
+                negotiated_agreements=agreements,
+                negotiation_buyer="buyer",
+                negotiation_requirements=reservation,
+            )
+    assert all(not client.calls for client in clients.values())
+
+
+async def test_federation_negotiation_flows_into_market_execution():
+    class NegotiatingClient(MarketClient):
+        def negotiate(self, proposal):
+            return Message(
+                proposal.negotiation_id,
+                "accepted",
+                proposal.recipient,
+                proposal.sender,
+                MessageKind.ACCEPT,
+                proposal.terms,
+                proposal.message_id,
+            )
+
+        def receive_negotiation(self, message):
+            self.received = message
+
+    federation = AgentFederation()
+    buyer = NegotiatingClient("buyer", cost=1, quality=0.5)
+    seller = NegotiatingClient("seller", cost=50, quality=0.8)
+    for name, client in (("buyer", buyer), ("seller", seller)):
+        federation.register_agent(AgentMetadata(id=name, model="test"), client=client)
+    reservation = Terms(Decimal("10"), "USD", Decimal("200"), Decimal("99"), Decimal("3600"))
+    offer = Message("real-neg", "offer", "buyer", "seller", MessageKind.OFFER, reservation)
+    agreement = await federation.negotiate(offer)
+    result = await federation.run(
+        "task",
+        strategy="market",
+        market=MarketPolicy(budget_per_task=100, exploration_rate=0),
+        negotiated_agreements={"seller": agreement},
+        negotiation_buyer="buyer",
+        negotiation_requirements=reservation,
+    )
+    assert buyer.received == agreement.messages[-1]
+    assert result.winners == ["seller"]
+    assert result.auction.settlement_cost == 10
+    assert result.auction.winners[0].metadata["negotiation_id"] == "real-neg"
+
+
+async def test_federation_rejects_negotiation_inputs_without_market_routing():
+    swarm, clients = make_swarm()
+    with pytest.raises(ValueError, match="market"):
+        await swarm.federation.run("task", agent_id="planner", negotiated_agreements={})
+    assert not clients["planner"].calls
+
+
+@pytest.mark.parametrize("auction_type", ["vickrey", "multi_winner", "coalition", "english"])
+async def test_negotiated_routing_rejects_other_auction_semantics(auction_type):
+    swarm, _ = make_swarm(policy=MarketPolicy(auction_type=auction_type, budget_per_task=100))
+    reservation = Terms(Decimal("100"), "USD", Decimal("200"), Decimal("99"), Decimal("3600"))
+    with pytest.raises(ValueError, match="sealed-bid"):
+        await swarm.execute(
+            "task",
+            negotiated_agreements={"planner": negotiated_session("planner", "1")},
+            negotiation_buyer="buyer",
+            negotiation_requirements=reservation,
+        )
+
+
+async def test_negotiated_market_rejects_nonfinite_budget():
+    swarm, _ = make_swarm(policy=MarketPolicy(budget_per_task=float("inf")))
+    reservation = Terms(Decimal("100"), "USD", Decimal("200"), Decimal("99"), Decimal("3600"))
+    with pytest.raises(ValueError, match="finite"):
+        await swarm.execute(
+            "task",
+            negotiated_agreements={"planner": negotiated_session("planner", "1")},
+            negotiation_buyer="buyer",
+            negotiation_requirements=reservation,
+        )
+
+
+async def test_negotiated_market_filters_wrong_currency_and_window():
+    swarm, _ = make_swarm()
+    reservation = Terms(Decimal("100"), "USD", Decimal("200"), Decimal("99"), Decimal("3600"))
+    wrong_window = negotiated_session("researcher", "1")
+    initial = wrong_window.messages[0]
+    from dataclasses import replace
+
+    initial = replace(
+        initial, terms=replace(initial.terms, availability_window_seconds=Decimal("60"))
+    )
+    wrong_window = Negotiation(initial)
+    wrong_window.apply(
+        Message(
+            initial.negotiation_id,
+            "accept",
+            "researcher",
+            "buyer",
+            MessageKind.ACCEPT,
+            initial.terms,
+            "offer",
+        )
+    )
+    with pytest.raises(LookupError, match="eligible"):
+        await swarm.execute(
+            "task",
+            negotiated_agreements={
+                "planner": negotiated_session("planner", "1", currency="EUR"),
+                "researcher": wrong_window,
+            },
+            negotiation_buyer="buyer",
+            negotiation_requirements=reservation,
+        )
 
 
 # ---------------------------------------------------------------------------

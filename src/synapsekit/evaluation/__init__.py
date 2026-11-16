@@ -31,6 +31,26 @@ from .rag_evaluator import (
 )
 from .regression import EvalRegression, EvalSnapshot, MetricDelta, RegressionReport
 from .relevancy import RelevancyMetric
+from .ruler import (
+    CalibrationReport,
+    FittedCalibration,
+    LLMRulerJudge,
+    RulerGroup,
+    RulerMessage,
+    RulerScore,
+    RulerScorer,
+    RulerTrajectory,
+    calibrate,
+    fit_calibration,
+)
+from .simulation import (
+    BookingAction,
+    BookingEnvironment,
+    BookingObservation,
+    Reward,
+    SimulationHarness,
+    SimulationResult,
+)
 from .suite import EvalSuite, EvalSuiteResult
 from .trajectory import (
     MatchMode,
@@ -43,6 +63,22 @@ from .trajectory import (
 )
 
 __all__ = [
+    "BookingAction",
+    "BookingEnvironment",
+    "BookingObservation",
+    "CalibrationReport",
+    "FittedCalibration",
+    "calibrate",
+    "fit_calibration",
+    "LLMRulerJudge",
+    "Reward",
+    "RulerGroup",
+    "RulerMessage",
+    "RulerScore",
+    "RulerScorer",
+    "RulerTrajectory",
+    "SimulationHarness",
+    "SimulationResult",
     "ContextLossDetector",
     "DetectorFinding",
     "EvalCaseMeta",

@@ -36,6 +36,16 @@ def _is_retryable(exc: BaseException) -> bool:
     if isinstance(exc, (asyncio.TimeoutError, TimeoutError, ConnectionError)):
         return True
 
+    # OpenAI wraps httpx connection and timeout failures in SDK-specific errors
+    # that do not inherit from ConnectionError. Classify by the optional SDK's
+    # exception type without importing the optional dependency here.
+    if any(
+        (cls.__module__ == "openai" or cls.__module__.startswith("openai."))
+        and cls.__name__ in {"APIConnectionError", "APITimeoutError"}
+        for cls in type(exc).__mro__
+    ):
+        return True
+
     # httpx errors — imported lazily so httpx stays an optional dependency.
     try:
         import httpx

@@ -67,6 +67,11 @@ from .multi import (
     Task,
     WorkerAgent,
 )
+from .negotiation import BoundedPolicy as BoundedNegotiationPolicy
+from .negotiation import Message as NegotiationMessage
+from .negotiation import MessageKind as NegotiationMessageKind
+from .negotiation import Negotiation, NegotiationRole, NegotiationStatus
+from .negotiation import Terms as NegotiationTerms
 from .pii_redactor import PIIRedactor, RedactionResult
 from .react import ReActAgent
 from .reasoning_agent import ReasoningAgent, ReasoningAgentConfig, ReasoningDecision
@@ -159,6 +164,13 @@ __all__ = [
     "AgentClient",
     "LocalAgentClient",
     "AgentFederation",
+    "Negotiation",
+    "BoundedNegotiationPolicy",
+    "NegotiationRole",
+    "NegotiationMessage",
+    "NegotiationMessageKind",
+    "NegotiationStatus",
+    "NegotiationTerms",
     "AgentRoutingStrategy",
     "RoutingStrategy",
     "AgentMemory",

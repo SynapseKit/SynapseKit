@@ -75,6 +75,11 @@ docs/*
 !docs/comparison-matrix.md
 !docs/agent-bundle-v1.md
 !docs/llm-reasoning.md
+!docs/mcp-tool-scanning.md
+!docs/agent-negotiation.md
+!docs/ruler-rewards.md
+!docs/user-simulation.md
+!docs/deliberation.md
 !docs/memory/
 
 # Saved vectorstores

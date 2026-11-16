@@ -1,0 +1,8 @@
+[
+  {"prompt": "What is 17 multiplied by 6? Return the integer only as your answer.", "answer": "102"},
+  {"prompt": "A bag has 12 red and 7 blue balls. How many balls are there in total? Return the integer only as your answer.", "answer": "19"},
+  {"prompt": "What is 144 divided by 12? Return the integer only as your answer.", "answer": "12"},
+  {"prompt": "If all roses are flowers and all flowers are plants, are all roses plants? Answer yes or no in lowercase.", "answer": "yes"},
+  {"prompt": "What is the remainder when 29 is divided by 5? Return the integer only as your answer.", "answer": "4"},
+  {"prompt": "A train leaves at 13:20 and travels for 45 minutes. Give its arrival time in 24-hour HH:MM format.", "answer": "14:05"}
+]

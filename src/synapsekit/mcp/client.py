@@ -7,8 +7,9 @@ import copy
 import json
 import warnings
 from collections.abc import Callable, Sequence
-from contextlib import AsyncExitStack, suppress
+from contextlib import suppress
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 from ..agents.base import BaseTool, ToolResult
@@ -17,9 +18,11 @@ from .pinning import (
     ToolDefinition,
     ToolDriftDetectedError,
     ToolDriftWarning,
+    ToolPinConflictError,
     ToolPinStore,
     make_tool_definition,
 )
+from .scanner import ScanReport, ToolScanBlockedError, _bounded_tools, scan_tools
 
 
 def _field(obj: Any, name: str, v2_name: str, default: Any = None) -> Any:
@@ -69,6 +72,52 @@ class _MCPConnection:
         self._done = done
         self._task = task
 
+    @staticmethod
+    async def _unwind(
+        session_context: Any | None,
+        transport_context: Any | None,
+        failure: BaseException | None,
+    ) -> BaseException | None:
+        """Exit nested contexts in order, shielding session cleanup only."""
+        if session_context is not None:
+            try:
+                exit_args = (
+                    type(failure) if failure is not None else None,
+                    failure,
+                    failure.__traceback__ if failure is not None else None,
+                )
+                task_group = getattr(session_context, "_task_group", None)
+                cancel_scope = getattr(task_group, "cancel_scope", None)
+                if failure is not None and cancel_scope is not None:
+                    # The SDK session exits its own cancel scope; shield that
+                    # scope in place because a nested CancelScope breaks LIFO.
+                    cancel_scope.shield = True
+                    suppressed = await session_context.__aexit__(*exit_args)
+                elif failure is not None:
+                    import anyio
+
+                    with anyio.CancelScope(shield=True):
+                        suppressed = await session_context.__aexit__(*exit_args)
+                else:
+                    suppressed = await session_context.__aexit__(*exit_args)
+                if suppressed:
+                    failure = None
+            except BaseException as exit_exc:
+                failure = exit_exc
+
+        if transport_context is not None:
+            try:
+                suppressed = await transport_context.__aexit__(
+                    type(failure) if failure is not None else None,
+                    failure,
+                    failure.__traceback__ if failure is not None else None,
+                )
+                if suppressed:
+                    failure = None
+            except BaseException as exit_exc:
+                failure = exit_exc
+        return failure
+
     @classmethod
     async def open(
         cls,
@@ -79,45 +128,99 @@ class _MCPConnection:
         loop = asyncio.get_running_loop()
         ready: asyncio.Future[Any] = loop.create_future()
         done: asyncio.Future[None] = loop.create_future()
+        # A child can fail after opening even if no caller ever closes us.
+        # Observe its exception without preventing a later close from raising it.
+        done.add_done_callback(
+            lambda future: future.exception() if not future.cancelled() else None
+        )
         close_event = asyncio.Event()
+        opening = True
 
         async def _run() -> None:
-            stack = AsyncExitStack()
+            nonlocal opening
+            transport_context = None
+            session_context = None
+            transport_entered = False
+            session_entered = False
+            failure: BaseException | None = None
             try:
-                read_stream, write_stream = await stack.enter_async_context(open_transport())
-                session = make_session(read_stream, write_stream)
-                await stack.enter_async_context(session)
+                transport_context = open_transport()
+                read_stream, write_stream = await transport_context.__aenter__()
+                transport_entered = True
+                session_context = make_session(read_stream, write_stream)
+                session = await session_context.__aenter__()
+                session_entered = True
                 await session.initialize()
             except BaseException as exc:
-                with suppress(BaseException):  # keep the original failure
-                    await stack.aclose()
+                opening = False
+                failure = await cls._unwind(
+                    session_context if session_entered else None,
+                    transport_context if transport_entered else None,
+                    exc,
+                )
                 if not ready.done():
-                    ready.set_exception(exc)
+                    ready.set_exception(failure if failure is not None else exc)
                 if not done.done():
                     done.set_result(None)
                 return
 
+            opening = False
             ready.set_result(session)
-            await close_event.wait()
             try:
-                await stack.aclose()
+                await close_event.wait()
             except BaseException as exc:
-                done.set_exception(exc)
+                failure = exc
+            failure = await cls._unwind(session_context, transport_context, failure)
+            if failure is not None:
+                done.set_exception(failure)
             else:
                 done.set_result(None)
 
         task = loop.create_task(_run())
         try:
-            session = await ready
+            # The owner, not its caller, controls these shared futures.
+            # Waiting on a non-raising waiter also avoids asyncio logging an
+            # abandoned shielded exception when the caller is cancelled.
+            await asyncio.shield(asyncio.wait({ready}))
+            session = ready.result()
+        except asyncio.CancelledError:
+            # Abort an in-flight initialization on the owner task so that its
+            # task-bound contexts unwind there, even if initialization stalls.
+            # Consume abandoned future exceptions if another cancellation stops
+            # this caller waiting for cleanup.
+            ready.add_done_callback(
+                lambda future: future.exception() if not future.cancelled() else None
+            )
+            done.add_done_callback(
+                lambda future: future.exception() if not future.cancelled() else None
+            )
+            close_event.set()
+
+            def cancel_initialization() -> None:
+                # Let a not-yet-started owner enter its try block first; do not
+                # interrupt teardown if it published readiness in the meantime.
+                if opening and not task.done():
+                    task.cancel()
+
+            loop.call_soon(cancel_initialization)
+            with suppress(BaseException):
+                await asyncio.shield(asyncio.wait({done}))
+            raise
         except BaseException:
-            await done  # the task is already unwinding; wait for it to finish
+            await asyncio.shield(done)  # the owner is already unwinding
             raise
         return cls(session, close_event, done, task)
 
     async def aclose(self) -> None:
         """Signal the owning task to exit the session and transport, and wait."""
         self._close_event.set()
-        await self._done
+        # A cancelled close must not cancel the owner's completion future. Its
+        # exception is observed even when no caller remains to await it.
+        self._done.add_done_callback(
+            lambda future: future.exception() if not future.cancelled() else None
+        )
+        await asyncio.shield(asyncio.wait({self._done}))
+        self._done.result()
 
 
 class MCPClient:
@@ -141,11 +244,14 @@ class MCPClient:
         server_id: str | None = None,
         pin_store_path: str | Path | None = None,
         block_on_drift: bool = True,
+        block_on_high_severity: bool = False,
     ) -> None:
         if pin_store_path is not None and (not isinstance(server_id, str) or not server_id.strip()):
             raise ValueError("server_id must be a non-empty stable string when pinning is enabled")
         if not isinstance(block_on_drift, bool):
             raise TypeError("block_on_drift must be a bool")
+        if not isinstance(block_on_high_severity, bool):
+            raise TypeError("block_on_high_severity must be a bool")
 
         self._session: Any = None
         self._connection: _MCPConnection | None = None
@@ -155,7 +261,10 @@ class MCPClient:
         self._server_id = server_id
         self._pin_store = ToolPinStore(pin_store_path) if pin_store_path is not None else None
         self._block_on_drift = block_on_drift
+        self._block_on_high_severity = block_on_high_severity
+        self.last_scan_report: ScanReport | None = None
         self._pending_tool_sources: list[tuple[Any, ToolDefinition]] | None = None
+        self._pending_pin_snapshot: tuple[tuple[str, str], ...] | None = None
         self._tool_generation = 0
         self._active_tool_generation: int | None = None
 
@@ -189,7 +298,7 @@ class MCPClient:
         self._connection = await _MCPConnection.open(lambda: stdio_client(params), ClientSession)
         self._session = self._connection.session
 
-        return await self._load_tools_unlocked()
+        return await self._load_initial_tools_unlocked()
 
     async def connect_sse(self, url: str, headers: dict[str, str] | None = None) -> list[BaseTool]:
         """Connect to an MCP server via SSE transport."""
@@ -213,7 +322,32 @@ class MCPClient:
         )
         self._session = self._connection.session
 
-        return await self._load_tools_unlocked()
+        return await self._load_initial_tools_unlocked()
+
+    async def _load_initial_tools_unlocked(self) -> list[BaseTool]:
+        try:
+            return await self._load_tools_unlocked()
+        except (ToolApprovalRequiredError, ToolDriftDetectedError):
+            # The user needs the live session to inspect and approve the tools.
+            raise
+        except BaseException:
+            # Repeated cancellation must not strand the owner task; never hide
+            # the original rejection if disposal itself fails.
+            self._active_tool_generation = None
+            self._pending_tool_sources = None
+            self._pending_pin_snapshot = None
+            self._tools = []
+            connection, self._connection = self._connection, None
+            self._session = None
+
+            async def dispose() -> None:
+                if connection is not None:
+                    with suppress(BaseException):
+                        await connection.aclose()
+
+            with suppress(BaseException):
+                await asyncio.shield(dispose())
+            raise
 
     async def _load_tools(self) -> list[BaseTool]:
         """Load tools from the connected MCP server."""
@@ -226,22 +360,34 @@ class MCPClient:
             raise RuntimeError("Not connected to an MCP server.")
 
         self._pending_tool_sources = None
-        if self._pin_store is not None:
+        self._pending_pin_snapshot = None
+        if self._pin_store is not None or self._block_on_high_severity:
             self._tool_generation += 1
             self._active_tool_generation = None
+            self._tools = []
+            self.last_scan_report = None
 
         result = await self._session.list_tools()
         self._tools = []
-        registered_tools = list(result.tools)
+        registered_tools = (
+            _bounded_tools(result.tools) if self._block_on_high_severity else list(result.tools)
+        )
 
-        if self._pin_store is None:
+        if self._pin_store is None and not self._block_on_high_severity:
             self._tools = self._make_adapters(
                 [(mcp_tool, None) for mcp_tool in registered_tools], generation=None
             )
             return list(self._tools)
 
-        assert self._server_id is not None
         current_tools = self._snapshot_tool_sources(registered_tools)
+        await self._scan_for_registration(current_tools)
+        if self._pin_store is None:
+            generation = self._tool_generation
+            self._tools = self._make_adapters(current_tools, generation=generation)
+            self._active_tool_generation = generation
+            return list(self._tools)
+
+        assert self._server_id is not None
 
         comparison = await asyncio.to_thread(
             self._pin_store.compare,
@@ -252,6 +398,7 @@ class MCPClient:
         if (comparison.changed_tools or comparison.removed_tool_names) and self._block_on_drift:
             pending = [*comparison.unpinned_tools, *comparison.changed_tools]
             self._pending_tool_sources = current_tools
+            self._pending_pin_snapshot = comparison.baseline_pins
             raise ToolDriftDetectedError(
                 [self._review_copy(definition) for definition in comparison.changed_tools],
                 removed_tool_names=comparison.removed_tool_names,
@@ -264,6 +411,7 @@ class MCPClient:
         if comparison.unpinned_tools:
             pending = [*comparison.unpinned_tools, *comparison.changed_tools]
             self._pending_tool_sources = current_tools
+            self._pending_pin_snapshot = comparison.baseline_pins
             raise ToolApprovalRequiredError(
                 [self._review_copy(definition) for definition in pending]
             )
@@ -272,6 +420,15 @@ class MCPClient:
         self._active_tool_generation = generation
         self._tools = self._make_adapters(current_tools, generation=generation)
         return list(self._tools)
+
+    async def _scan_for_registration(self, current_tools: list[tuple[Any, ToolDefinition]]) -> None:
+        if not self._block_on_high_severity:
+            return
+        self.last_scan_report = None
+        report = await scan_tools([definition for _, definition in current_tools])
+        self.last_scan_report = report
+        if any(finding.severity == "high" for finding in report.findings):
+            raise ToolScanBlockedError(report)
 
     @staticmethod
     def _snapshot_tool_sources(
@@ -325,7 +482,16 @@ class MCPClient:
         session = self._session
 
         for mcp_tool, definition in registered_tools:
-            adapter = MCPToolAdapter(mcp_tool)
+            source = (
+                mcp_tool
+                if definition is None
+                else SimpleNamespace(
+                    name=definition.name,
+                    description=definition.description,
+                    inputSchema=definition.input_schema,
+                )
+            )
+            adapter = MCPToolAdapter(source)
             if definition is not None:
                 adapter.name = definition.name
                 adapter.description = definition.description or f"MCP tool: {definition.name}"
@@ -333,7 +499,9 @@ class MCPClient:
 
             def _make_run(tool_name: str, _session: Any = session):
                 async def _run(**kwargs: Any) -> ToolResult:
-                    if self._pin_store is not None and self._active_tool_generation != generation:
+                    if (
+                        self._pin_store is not None or self._block_on_high_severity
+                    ) and self._active_tool_generation != generation:
                         return ToolResult(
                             output="",
                             error="MCP tool definition is not currently approved.",
@@ -355,7 +523,7 @@ class MCPClient:
 
                 return _run
 
-            adapter.run = _make_run(mcp_tool.name)  # type: ignore[assignment]
+            adapter.run = _make_run(source.name)  # type: ignore[assignment]
             adapters.append(adapter)
         return adapters
 
@@ -393,17 +561,27 @@ class MCPClient:
         session = self._session
         generation = self._tool_generation
         pending_sources = self._pending_tool_sources
+        expected_pin_snapshot = self._pending_pin_snapshot
         if pending_sources is None:
             raise RuntimeError("there are no pending MCP tool definitions to approve")
+        if expected_pin_snapshot is None:
+            raise RuntimeError("the reviewed MCP pin-store snapshot is unavailable")
         if not session:
             raise RuntimeError("Not connected to an MCP server.")
 
         reviewed_fingerprints = {
             definition.name: definition.fingerprint for _, definition in pending_sources
         }
+        if self._block_on_high_severity:
+            self.last_scan_report = None
         result = await session.list_tools()
         self._ensure_approval_state_current(session, generation, pending_sources)
-        current_tools = self._snapshot_tool_sources(list(result.tools))
+        registered_tools = (
+            _bounded_tools(result.tools) if self._block_on_high_severity else list(result.tools)
+        )
+        current_tools = self._snapshot_tool_sources(registered_tools)
+        await self._scan_for_registration(current_tools)
+        self._ensure_approval_state_current(session, generation, pending_sources)
         current_fingerprints = {
             definition.name: definition.fingerprint for _, definition in current_tools
         }
@@ -419,6 +597,7 @@ class MCPClient:
                 self._server_id,
                 [definition for _, definition in current_tools],
             )
+            self._pending_pin_snapshot = comparison.baseline_pins
             if (comparison.changed_tools or comparison.removed_tool_names) and self._block_on_drift:
                 pending = [*comparison.unpinned_tools, *comparison.changed_tools]
                 raise ToolDriftDetectedError(
@@ -441,16 +620,61 @@ class MCPClient:
             )
 
         self._ensure_approval_state_current(session, generation, pending_sources)
-        await asyncio.to_thread(
-            self._pin_store.pin,
-            self._server_id,
-            [definition for _, definition in current_tools],
-        )
+        import anyio
+
+        cancellation: asyncio.CancelledError | None = None
+        with anyio.CancelScope(shield=True):
+            pin_task = asyncio.get_running_loop().create_task(
+                asyncio.to_thread(
+                    self._pin_store.pin_if_unchanged,
+                    self._server_id,
+                    expected_pin_snapshot,
+                    [definition for _, definition in current_tools],
+                )
+            )
+            while not pin_task.done():
+                try:
+                    await asyncio.shield(pin_task)
+                except asyncio.CancelledError as exc:
+                    if cancellation is None:
+                        cancellation = exc
+                except BaseException:
+                    break
+
+        pin_error: BaseException | None = None
+        try:
+            pin_task.result()
+        except BaseException as exc:
+            pin_error = exc
+        if cancellation is not None:
+            raise cancellation
+        # Deliver a pending AnyIO cancellation only after the pin transaction
+        # is complete and its task result has been observed.
+        await asyncio.sleep(0)
+        if isinstance(pin_error, ToolPinConflictError):
+            self._ensure_approval_state_current(session, generation, pending_sources)
+            latest_pins = await asyncio.to_thread(self._pin_store.get_pins, self._server_id)
+            self._ensure_approval_state_current(session, generation, pending_sources)
+            self._pending_tool_sources = current_tools
+            self._pending_pin_snapshot = tuple(sorted(latest_pins.items()))
+            self._tools = []
+            self._active_tool_generation = None
+            raise ToolApprovalRequiredError(
+                [self._review_copy(definition) for _, definition in current_tools],
+                message=(
+                    "MCP tool pins changed since the definitions were reviewed; "
+                    "review the current definitions and approve again"
+                ),
+            ) from pin_error
+        if pin_error is not None:
+            raise pin_error
+
         adapters = self._make_adapters(current_tools, generation=generation)
         self._ensure_approval_state_current(session, generation, pending_sources)
         self._tools = adapters
         self._active_tool_generation = generation
         self._pending_tool_sources = None
+        self._pending_pin_snapshot = None
         return list(adapters)
 
     async def close(self) -> None:
@@ -460,10 +684,10 @@ class MCPClient:
 
     async def _close_unlocked(self) -> None:
         """Close the MCP connection."""
-        if self._pin_store is not None:
-            self._active_tool_generation = None
-            self._pending_tool_sources = None
-            self._tools = []
+        self._active_tool_generation = None
+        self._pending_tool_sources = None
+        self._pending_pin_snapshot = None
+        self._tools = []
         await self._release_connection_unlocked()
 
     async def _release_connection_unlocked(self) -> None:
@@ -483,7 +707,7 @@ class MCPClient:
         The old connection may already be dead, which must not stop the new one.
         """
         try:
-            await self._release_connection_unlocked()
+            await self._close_unlocked()
         except Exception as exc:
             warnings.warn(
                 f"Failed to close the previous MCP connection: {exc!r}",
