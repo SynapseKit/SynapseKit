@@ -2,6 +2,14 @@ from ._cache import AsyncLRUCache
 from .base import BaseLLM, LLMConfig
 from .cost_quality_router import CostQualityRouter
 from .cost_router import QUALITY_TABLE, CostRouter, CostRouterConfig, RouterModelSpec
+from .deliberation import (
+    BoundedAdapter,
+    Completion,
+    DeliberationResult,
+    OpenAIChatAdapter,
+    Trace,
+    deliberate,
+)
 from .edge import EdgeFallbackBlockedError, EdgeRouteMetadata, EdgeRuntime, FallbackPolicy
 from .effort import EffortLevel, classify_effort
 from .fallback_chain import FallbackChain, FallbackChainConfig
@@ -34,6 +42,12 @@ __all__ = [
     "AsyncLRUCache",
     "AzureOpenAILLM",
     "BaseLLM",
+    "BoundedAdapter",
+    "Completion",
+    "DeliberationResult",
+    "OpenAIChatAdapter",
+    "Trace",
+    "deliberate",
     "BaseReasoningProvider",
     "BedrockLLM",
     "CerebrasLLM",
