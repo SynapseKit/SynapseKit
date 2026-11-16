@@ -9,7 +9,8 @@ import math
 import random
 import time
 from collections.abc import Iterable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
+from decimal import Decimal
 from enum import Enum
 from typing import Any, Protocol, cast
 
@@ -25,6 +26,7 @@ from .agent_registry import (
     ReputationSnapshot,
 )
 from .federation import AgentFederation, LocalAgentClient
+from .negotiation import BoundedPolicy, Negotiation, NegotiationRole, NegotiationStatus, Terms
 
 
 class _TraceList(list):
@@ -301,8 +303,16 @@ class AgentSwarm:
         healthy_only: bool = True,
         reward: float | None = None,
         quality: float | None = None,
+        negotiated_agreements: dict[str, Negotiation] | None = None,
+        negotiation_buyer: str | None = None,
+        negotiation_requirements: Terms | None = None,
         **kwargs: Any,
     ) -> SwarmResult:
+        """Run a market task, optionally restricting bids to accepted agreements.
+
+        Negotiated routing requires a buyer, reservation terms and accepted
+        seller transcripts. SLA terms are claims, not measured guarantees.
+        """
         category = self._task_category(task, task_category)
         candidates = self.federation.discover(
             tools=tools,
@@ -313,7 +323,21 @@ class AgentSwarm:
         if not candidates:
             raise LookupError("No agents match the swarm discovery filters.")
 
-        auction = await self.auction(task, candidates, task_category=category)
+        negotiated_terms = None
+        if negotiated_agreements is not None:
+            negotiated_terms = self._negotiated_terms(
+                negotiated_agreements, negotiation_buyer, negotiation_requirements
+            )
+            candidates = [agent for agent in candidates if agent.id in negotiated_terms]
+        elif negotiation_buyer is not None or negotiation_requirements is not None:
+            raise ValueError("Negotiation inputs require negotiated_agreements.")
+
+        if negotiated_terms is None:
+            auction = await self.auction(task, candidates, task_category=category)
+        else:
+            auction = await self.auction(
+                task, candidates, task_category=category, _negotiated_terms=negotiated_terms
+            )
         if not auction.winners:
             raise LookupError("No agents submitted an eligible market bid.")
 
@@ -408,10 +432,24 @@ class AgentSwarm:
         candidates: list[AgentMetadata],
         *,
         task_category: str | None = None,
+        _negotiated_terms: dict[str, tuple[Terms, str, float]] | None = None,
     ) -> AuctionResult:
         category = self._task_category(task, task_category)
         started = time.perf_counter()
         bids = await self._collect_bids(task, candidates, category)
+        if _negotiated_terms is not None:
+            bids = [
+                replace(
+                    bid,
+                    estimated_cost=_negotiated_terms[bid.agent_id][2],
+                    metadata={
+                        **bid.metadata,
+                        "negotiated_terms": _negotiated_terms[bid.agent_id][0],
+                        "negotiation_id": _negotiated_terms[bid.agent_id][1],
+                    },
+                )
+                for bid in bids
+            ]
         eligible = self._eligible_bids(bids)
         scores = self._score_bids(eligible, category)
         winners = self._select_winners(eligible, scores)
@@ -430,6 +468,50 @@ class AgentSwarm:
             coalition=self.market.auction_type == AuctionType.COALITION,
         )
         self._record_auction_metric(category, result)
+        return result
+
+    def _negotiated_terms(
+        self, agreements: dict[str, Negotiation], buyer: str | None, requirements: Terms | None
+    ) -> dict[str, tuple[Terms, str, float]]:
+        if self.market.auction_type != AuctionType.SEALED_BID:
+            raise ValueError("Negotiated routing requires a sealed-bid auction.")
+        if not math.isfinite(self.market.budget_per_task):
+            raise ValueError("Negotiated routing requires a finite budget.")
+        # MarketPolicy stores a float; use its shortest round-trippable decimal
+        # spelling as the budget for exact negotiated-price comparisons.
+        budget = Decimal(str(self.market.budget_per_task))
+        if not isinstance(agreements, dict) or not isinstance(buyer, str) or not buyer.strip():
+            raise ValueError("Negotiated routing requires agreements and a buyer ID.")
+        if not isinstance(requirements, Terms):
+            raise ValueError("Negotiated routing requires buyer reservation terms.")
+        policy = BoundedPolicy(NegotiationRole.BUYER, requirements)
+        result = {}
+        for seller, session in agreements.items():
+            if not isinstance(session, Negotiation):
+                raise ValueError("Each agreement must be a Negotiation.")
+            initial = session.messages[0]
+            if (
+                session.status != NegotiationStatus.ACCEPTED
+                or initial.sender != buyer
+                or initial.recipient != seller
+            ):
+                raise ValueError(
+                    "Agreement must be accepted between the specified buyer and seller."
+                )
+            terms = session.agreement
+            assert terms is not None
+            try:
+                price = float(terms.price)
+            except OverflowError:
+                continue
+            if (
+                not math.isfinite(price)
+                or (terms.price != 0 and price == 0)
+                or terms.price > budget
+                or not policy.accepts(terms)
+            ):
+                continue
+            result[seller] = (terms, initial.negotiation_id, price)
         return result
 
     @property
