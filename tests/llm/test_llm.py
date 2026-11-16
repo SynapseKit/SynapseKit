@@ -112,6 +112,84 @@ class TestOpenAILLM:
 # ------------------------------------------------------------------ #
 
 
+@pytest.mark.asyncio
+@pytest.mark.parametrize("max_retries", [0, 2])
+@pytest.mark.parametrize("operation", ["generate", "messages", "tools", "stream"])
+async def test_openai_retry_count_is_not_multiplied_by_sdk(monkeypatch, max_retries, operation):
+    httpx = pytest.importorskip("httpx")
+    openai = pytest.importorskip("openai")
+
+    attempts = []
+
+    def respond(request):
+        attempts.append(request)
+        return httpx.Response(
+            429, headers={"retry-after": "0"}, json={"error": {"message": "busy"}}
+        )
+
+    sdk_client = openai.AsyncOpenAI
+    monkeypatch.setattr(
+        openai,
+        "AsyncOpenAI",
+        lambda **kw: sdk_client(
+            **kw, http_client=httpx.AsyncClient(transport=httpx.MockTransport(respond))
+        ),
+    )
+    llm = OpenAILLM(
+        LLMConfig(model="m", api_key="k", provider="openai", max_retries=max_retries, retry_delay=0)
+    )
+    try:
+        with pytest.raises(openai.RateLimitError):
+            if operation == "generate":
+                await llm.generate("q")
+            elif operation == "messages":
+                await llm.generate_with_messages([{"role": "user", "content": "q"}])
+            elif operation == "tools":
+                await llm.call_with_tools([{"role": "user", "content": "q"}], [])
+            else:
+                _ = [chunk async for chunk in llm.stream("q")]
+        assert len(attempts) == (1 if operation == "stream" else max_retries + 1)
+        assert llm._client.max_retries == 0
+    finally:
+        await llm.aclose()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("max_retries", [0, 2])
+@pytest.mark.parametrize("failure", ["connect", "timeout"])
+async def test_openai_transport_failures_use_base_retry_budget(monkeypatch, max_retries, failure):
+    httpx = pytest.importorskip("httpx")
+    openai = pytest.importorskip("openai")
+
+    attempts = []
+
+    def respond(request):
+        attempts.append(request)
+        if failure == "connect":
+            raise httpx.ConnectError("offline", request=request)
+        raise httpx.ReadTimeout("timed out", request=request)
+
+    sdk_client = openai.AsyncOpenAI
+
+    def make_client(**kwargs):
+        return sdk_client(
+            **kwargs,
+            http_client=httpx.AsyncClient(transport=httpx.MockTransport(respond)),
+        )
+
+    monkeypatch.setattr(openai, "AsyncOpenAI", make_client)
+    llm = OpenAILLM(
+        LLMConfig(model="m", api_key="k", provider="openai", max_retries=max_retries, retry_delay=0)
+    )
+    try:
+        with pytest.raises(openai.APIConnectionError):
+            await llm.generate("q")
+        assert len(attempts) == max_retries + 1
+        assert llm._client.max_retries == 0
+    finally:
+        await llm.aclose()
+
+
 class TestAnthropicLLM:
     @pytest.fixture
     def llm(self):
