@@ -15,6 +15,7 @@ from .agent_registry import (
     AgentRegistryBackend,
     InMemoryAgentRegistry,
 )
+from .negotiation import Message, Negotiation, NegotiationStatus
 
 
 class AgentClient(Protocol):
@@ -203,6 +204,57 @@ class AgentFederation:
                     method(agent.id)
                 return
 
+    async def negotiate(
+        self, initial: Message, *, max_rounds: int = 10, deliver_terminal: bool = True
+    ) -> Negotiation:
+        """Exchange proposals between two registered, explicitly capable clients.
+
+        ``negotiate(message)`` returns a response. By default,
+        both clients must also provide ``receive_negotiation(message)``; it is
+        called on the terminal recipient and may be async. Its exceptions propagate.
+        ``deliver_terminal=False`` records the result without notifying that party.
+        No routing, execution, or payment is performed.
+        """
+        if not isinstance(deliver_terminal, bool):
+            raise TypeError("deliver_terminal must be a bool.")
+        session = Negotiation(initial, max_rounds=max_rounds)
+        parties = {}
+        for agent_id in (initial.sender, initial.recipient):
+            agent = self.registry.get(agent_id)
+            if agent is None:
+                raise KeyError(f"Unknown agent id: {agent_id}")
+            if not self.registry.is_healthy(agent_id):
+                raise LookupError(f"Agent is not healthy: {agent_id}")
+            parties[agent_id] = self.get_client(agent)
+
+        handlers = {}
+        receivers = {}
+        for agent_id, client in parties.items():
+            target = client.executor if isinstance(client, LocalAgentClient) else client
+            handler = getattr(target, "negotiate", None)
+            if not callable(handler):
+                raise TypeError(f"Agent {agent_id} does not support negotiate(message).")
+            handlers[agent_id] = handler
+            if deliver_terminal:
+                receiver = getattr(target, "receive_negotiation", None)
+                if not callable(receiver):
+                    raise TypeError(
+                        f"Agent {agent_id} does not support receive_negotiation(message)."
+                    )
+                receivers[agent_id] = receiver
+
+        while session.status == NegotiationStatus.OPEN:
+            proposal = session.messages[-1]
+            response = handlers[proposal.recipient](proposal)
+            if inspect.isawaitable(response):
+                response = await response
+            session.apply(response)
+        if deliver_terminal:
+            delivered = receivers[response.recipient](response)
+            if inspect.isawaitable(delivered):
+                await delivered
+        return session
+
     async def run(
         self,
         prompt: str,
@@ -217,6 +269,11 @@ class AgentFederation:
         **kwargs: Any,
     ) -> Any:
         selected_strategy = self._normalise_strategy(strategy or self.default_strategy)
+        if (agent_id is not None or selected_strategy != RoutingStrategy.MARKET) and any(
+            key in kwargs
+            for key in ("negotiated_agreements", "negotiation_buyer", "negotiation_requirements")
+        ):
+            raise ValueError("Negotiation routing inputs require market strategy without agent_id.")
         if agent_id is None and selected_strategy == RoutingStrategy.MARKET:
             from .agent_swarm import AgentSwarm, MarketPolicy
 
