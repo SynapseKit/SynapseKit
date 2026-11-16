@@ -26,6 +26,10 @@ class ToolPinStoreError(ToolPinningError):
     """The persistent pin store is unreadable, invalid, or cannot be written."""
 
 
+class ToolPinConflictError(ToolPinningError):
+    """The pin set changed after a tool review was shown."""
+
+
 @dataclass(frozen=True, slots=True)
 class ToolDefinition:
     """A reviewable snapshot of an MCP tool definition and its fingerprint."""
@@ -43,6 +47,7 @@ class ToolPinComparison:
     unpinned_tools: tuple[ToolDefinition, ...]
     changed_tools: tuple[ToolDefinition, ...]
     removed_tool_names: tuple[str, ...]
+    baseline_pins: tuple[tuple[str, str], ...] = ()
 
 
 def _canonical_json(value: Any) -> str:
@@ -168,8 +173,31 @@ class ToolPinStore:
             {name: definition.fingerprint for name, definition in current.items()},
         )
 
+    def pin_if_unchanged(
+        self,
+        server_id: str,
+        expected_pins: Iterable[tuple[str, str]],
+        definitions: Iterable[ToolDefinition],
+    ) -> None:
+        """Pin reviewed definitions only if the saved server snapshot is unchanged."""
+        server_id = _validate_server_id(server_id)
+        expected = dict(expected_pins)
+        current = _definitions_by_name(definitions)
+        fingerprints = {name: definition.fingerprint for name, definition in current.items()}
+
+        with _STORE_WRITE_LOCK:
+            payload = self._read_all()
+            saved = payload["servers"].get(server_id, {})
+            if saved != expected:
+                raise ToolPinConflictError(
+                    "MCP tool pins changed after the definitions were shown for review"
+                )
+            payload["servers"][server_id] = fingerprints
+            self._write_all(payload)
+
     def compare(self, server_id: str, definitions: Iterable[ToolDefinition]) -> ToolPinComparison:
         """Classify current definitions as unpinned, changed, or removed."""
+        server_id = _validate_server_id(server_id)
         current = _definitions_by_name(definitions)
         pins = self.get_pins(server_id)
         return ToolPinComparison(
@@ -182,6 +210,7 @@ class ToolPinStore:
                 if name in pins and pins[name] != definition.fingerprint
             ),
             removed_tool_names=tuple(sorted(set(pins) - set(current))),
+            baseline_pins=tuple(sorted(pins.items())),
         )
 
     def _read_all(self) -> dict[str, Any]:
