@@ -76,6 +76,7 @@ docs/*
 !docs/agent-bundle-v1.md
 !docs/llm-reasoning.md
 !docs/memory/
+!docs/agent-serve.md
 
 # Saved vectorstores
 *.npz
